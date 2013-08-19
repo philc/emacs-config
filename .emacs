@@ -95,6 +95,9 @@
 (evil-mode t)
 (global-evil-leader-mode)
 
+; Disable macro recording on q. I activate this mistakenly all the time and record destructive macros.
+(define-key evil-normal-state-map (kbd "q") nil)
+
 (evil-leader/set-key
   "h" 'help
   "b" 'ido-switch-buffer
