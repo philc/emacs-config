@@ -62,7 +62,7 @@
 (load-theme 'tangotango t) ; A reasonable color scheme which lives in my .emacs.d.
 (set-face-attribute 'default nil :height 160)
 
-;; Whitespace
+;; Whitespace, line wrapping.
 (global-whitespace-mode t)
 (eval-after-load 'whitespace
   '(progn
@@ -72,6 +72,9 @@
 (add-hook 'before-save-hook 'delete-trailing-whitespace)
 (setq-default tab-width 2)
 (setq-default evil-shift-width 2)
+
+(setq fill-column 110) ; When wrapping with the fill commands, wrap at 110 chars.
+(auto-fill-mode t) ; When typing across the fill-column, hard-wrap the line.
 
 ;; Don't use tabs by default. Modes that really need tabs should enable indent-tabs-mode explicitly.
 ;; Makefile-mode already does that, for example.If indent-tabs-mode is off, untabify before saving.
