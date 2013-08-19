@@ -28,7 +28,6 @@
 ;;
 ;; General
 ;;
-
 ;; Turn off graphical toolbars.
 (if (display-graphic-p) (menu-bar-mode 1) (menu-bar-mode -1))
 (when (and (fboundp 'tool-bar-mode) tool-bar-mode) (tool-bar-mode -1))
@@ -167,10 +166,10 @@
 (global-set-key [escape] 'evil-exit-emacs-state)
 
 ;;
-;; OS X keybindings minor mode. Make it so the OSX keybindings you're used to always work.
+;; OS X keybindings minor mode.
+;; Make it so the OSX keybindings you're used to always work.
 ;; http://stackoverflow.com/questions/683425/globally-override-key-binding-in-emacs
 ;;
-
 (defvar osx-keys-minor-mode-map (make-keymap) "osx-keys-minor-mode-keymap")
 (define-key osx-keys-minor-mode-map (kbd "M-`") 'other-frame)
 (define-key osx-keys-minor-mode-map (kbd "M-w") 'vimlike-quit)
@@ -274,7 +273,6 @@
 ;;
 ;; Markdown
 ;;
-
 (defun markdown-insert-list-item-below ()
   "Inserts a new list item under the current one. markdown-insert-list-item inserts above, by default."
   (interactive)
