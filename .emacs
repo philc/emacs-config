@@ -261,3 +261,19 @@
 (define-key evil-normal-state-map (kbd "K") 'elscreen-next)
 (define-key evil-normal-state-map (kbd "J") 'elscreen-previous)
 (define-key evil-normal-state-map (kbd "M-t") 'elscreen-create)
+
+;;
+;; Markdown
+;;
+
+(defun markdown-insert-list-item-below ()
+  "Inserts a new list item under the current one. markdown-insert-list-item inserts above, by default."
+  (interactive)
+  (end-of-line)
+  (call-interactively 'markdown-insert-list-item)
+  (evil-append nil))
+
+(eval-after-load 'markdown-mode
+ '(progn
+    (evil-define-key 'normal markdown-mode-map
+      (kbd "<M-return>") 'markdown-insert-list-item-below)))
