@@ -43,7 +43,6 @@
 
 (defun always-insert-item ()
   (if (not (org-in-item-p))
-      ; (insert "\n- ")
       (insert "\n")
     (org-insert-item))
   )
@@ -87,7 +86,7 @@
           (kbd "M-H") 'org-shiftmetaleft
           (kbd "M-K") 'org-shiftmetaup
           (kbd "M-J") 'org-shiftmetadown
-    ; M-return creates a new todo item and enters insert mode.
+          ; M-return creates a new todo item and enters insert mode.
           (kbd "<M-return>") '(lambda () (interactive)
                                 (org-insert-heading-after-current)
                                 (evil-append nil))
