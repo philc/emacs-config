@@ -42,6 +42,7 @@
 (setq mac-option-modifier 'alt)
 (setq mac-command-modifier 'meta)
 (setq make-backup-files nil)
+(setq vc-follow-symlinks t) ; Don't ask confirmation to follow symlinks to edit files.
 
 (savehist-mode t) ; Save your minibuffer history across Emacs sessions. UX win!
 
