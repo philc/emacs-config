@@ -103,6 +103,7 @@
   "h" 'help
   "b" 'ido-switch-buffer
   "t" 'projectile-find-file
+  "q" 'fill-paragraph
   ; Shift-J is usually join line in Vim. I use Shift-J and K for tab switching.
   "j" (lambda () (interactive) (join-line t))
   "ee" 'open-emacs-config
@@ -240,7 +241,8 @@
 (require 'evil-org)
 (eval-after-load 'org
   '(progn
-     ; This enables "clean mode", such that sublists use whitespace for indentation ala markdown.
+     ; This enables "clean mode", such that sublists use whitespace for indentation (ala markdown) instead of
+     ; many stars.
      (setq org-startup-indented t)))
 
 ;; Moves the current heading (and all of its children) into the matching parent note in the archive file.
