@@ -87,6 +87,7 @@
 (setq evil-want-C-u-scroll t)
 (require 'evil)
 (require 'evil-leader) ; Provide configuration functions for assigning actions to a Vim leader key.
+(require 'evil-nerd-commenter)
 (evil-mode t)
 (global-evil-leader-mode)
 
@@ -132,6 +133,10 @@
 ;; Moving between Emacs windows (splits).
 (global-set-key (kbd "M-J") 'windmove-down)
 (global-set-key (kbd "M-K") 'windmove-up)
+
+;; Commenting via NERD commentor.
+(define-key evil-normal-state-map "," 'evilnc-comment-operator)
+(define-key evil-visual-state-map "," 'evilnc-comment-operator)
 
 ;; Make it so Esc means quit, no matter the context.
 ;; http://stackoverflow.com/a/10166400/46237
