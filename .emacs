@@ -61,23 +61,23 @@
 (load-theme 'tangotango t) ; A reasonable color scheme which lives in my .emacs.d.
 (set-face-attribute 'default nil :height 160)
 
-;; Whitespace, line wrapping.
+;; Whitespace & line wrapping.
 (global-whitespace-mode t)
 (eval-after-load 'whitespace
   '(progn
      (setq whitespace-line-column 110) ; When text flows past 110 chars, highlight it.
-     ; whitespace mode by default marks all whitespace. Show only tabs, trailing space, and trailing lines.
+     ; whitespace-mode by default highlights all whitespace. Show only tabs and trailing spaces.
      (setq whitespace-style '(face trailing tabs tab-mark lines-tail))))
 (add-hook 'before-save-hook 'delete-trailing-whitespace)
 (setq-default tab-width 2)
 (setq-default evil-shift-width 2)
 
-(setq fill-column 110) ; When wrapping with the fill commands, wrap at 110 chars.
-(auto-fill-mode t) ; When typing across the fill-column, hard-wrap the line.
+(setq fill-column 110) ; When wrapping with the Emacs fill commands, wrap at 110 chars.
+(auto-fill-mode t) ; When typing across the fill-column, hard-wrap the line as you type.
 (visual-line-mode t) ; Visually wrap long lines on word boundaries. By default, Emacs will wrap mid-word.
 
 ;; Don't use tabs by default. Modes that really need tabs should enable indent-tabs-mode explicitly.
-;; Makefile-mode already does that, for example.If indent-tabs-mode is off, untabify before saving.
+;; Makefile-mode already does that, for example. If indent-tabs-mode is off, untabify before saving.
 (setq-default indent-tabs-mode nil)
 (add-hook 'write-file-hooks
           (lambda ()
@@ -95,7 +95,7 @@
 (evil-mode t)
 (global-evil-leader-mode)
 
-; Disable macro recording on q. I activate this mistakenly all the time and record destructive macros.
+; Unbind "q" so it doesn't record macros. I activate this mistakenly all the time and wreak havoc.
 (define-key evil-normal-state-map (kbd "q") nil)
 
 (evil-leader/set-key
@@ -131,12 +131,12 @@
   (interactive "p")
   (kill-line (- 1 arg)))
 
-;; Enable Emacs/Bash insert-mode keybindings
+;; Enable Emacs/Bash insert-mode keybindings.
 (define-key evil-insert-state-map (kbd "C-k") 'kill-line)
 (define-key evil-insert-state-map (kbd "C-e") 'end-of-line)
 (define-key evil-insert-state-map (kbd "C-u") 'backward-kill-line)
 (define-key evil-insert-state-map (kbd "C-d") 'delete-char)
-(global-set-key (kbd "C-h") 'backward-delete-char) ; C-h in Emacs is the prefix for help functions.
+(global-set-key (kbd "C-h") 'backward-delete-char) ; Here we clobber C-h, which accesses Emacs's help.
 
 ;; Moving between Emacs windows (splits).
 (global-set-key (kbd "M-J") 'windmove-down)
@@ -148,6 +148,8 @@
 
 ;; Make it so Esc means quit, no matter the context.
 ;; http://stackoverflow.com/a/10166400/46237
+;; Note that when Emacs becomes unresponsive (e.g. because I accidentally grepped my home directory), I might
+;; still need to hold C-g (the Emacs ESC key) to bring it back.
 (defun minibuffer-keyboard-quit ()
   "Abort recursive edit. In Delete Selection mode, if the mark is active, just deactivate it;
    then it takes a second \\[keyboard-quit] to abort the minibuffer."
@@ -174,7 +176,7 @@
 (define-key osx-keys-minor-mode-map (kbd "M-`") 'other-frame)
 (define-key osx-keys-minor-mode-map (kbd "M-w") 'vimlike-quit)
 (define-key osx-keys-minor-mode-map (kbd "M-q") 'save-buffers-kill-terminal)
-(define-key osx-keys-minor-mode-map (kbd "M-N") 'new-frame)
+(define-key osx-keys-minor-mode-map (kbd "M-n") 'new-frame)
 (define-key osx-keys-minor-mode-map (kbd "M-s") 'save-buffer)
 (define-key osx-keys-minor-mode-map (kbd "M-v") 'clipboard-yank)
 (define-key osx-keys-minor-mode-map (kbd "M-c") 'clipboard-kill-ring-save)
@@ -235,7 +237,7 @@
 ;; Org mode, for TODOs and note taking.
 ;;
 (require 'org)
-; NOTE(philc): I've modified this evil-org-mode file to suit my desired shortcuts.
+; NOTE(philc): I've modified this evil-org-mode file to provide my desired shortcuts.
 (add-to-list 'load-path "~/.emacs.d/plugins/evil-org-mode")
 (require 'evil-org)
 (eval-after-load 'org
