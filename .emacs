@@ -68,7 +68,7 @@
   '(progn
      (setq whitespace-line-column 110) ; When text flows past 110 chars, highlight it.
      ; whitespace mode by default marks all whitespace. Show only tabs, trailing space, and trailing lines.
-     (setq whitespace-style '(face empty trailing tabs tab-mark lines-tail))))
+     (setq whitespace-style '(face trailing tabs tab-mark lines-tail))))
 (add-hook 'before-save-hook 'delete-trailing-whitespace)
 (setq-default tab-width 2)
 (setq-default evil-shift-width 2)
