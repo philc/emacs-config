@@ -284,5 +284,7 @@
 
 (eval-after-load 'markdown-mode
  '(progn
+    (evil-define-key 'insert markdown-mode-map
+      (kbd "<M-return>") 'markdown-insert-list-item-below)
     (evil-define-key 'normal markdown-mode-map
       (kbd "<M-return>") 'markdown-insert-list-item-below)))
