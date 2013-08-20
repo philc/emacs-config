@@ -291,3 +291,12 @@
       (kbd "<M-return>") 'markdown-insert-list-item-below)
     (evil-define-key 'normal markdown-mode-map
       (kbd "<M-return>") 'markdown-insert-list-item-below)))
+
+;;
+;; Auto save every few seconds.
+;;
+;; http://www.litchie.net/programs/real-auto-save.html
+(add-to-list 'load-path "~/.emacs.d/plugins/real-auto-save")
+(require 'real-auto-save)
+(add-hook 'text-mode-hook 'turn-on-real-auto-save)
+(setq real-auto-save-interval 10) ;; in seconds
