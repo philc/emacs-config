@@ -77,6 +77,7 @@
 
 (setq-default fill-column 110) ; When wrapping with the Emacs fill commands, wrap at 110 chars.
 (auto-fill-mode t) ; When typing across the fill-column, hard-wrap the line as you type.
+(add-hook 'text-mode-hook 'turn-on-auto-fill) ; Some modes, like markdown, turn off autofill. Force it!
 ; Visually wrap long lines on word boundaries. By default, Emacs will wrap mid-word. Note that Evil doesn't
 ; have good support for moving between visual lines versus logical lines. Here's the start of a solution:
 ;; https://lists.ourproject.org/pipermail/implementations-list/2011-December/001430.html
