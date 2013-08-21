@@ -19,6 +19,7 @@
                       markdown-mode
                       midje-mode
                       projectile ; Find file in project (ala CTRL-P).
+                      yasnippet
                       ))
 
 (dolist (p my-packages)
@@ -305,3 +306,12 @@
 ;; (require 'real-auto-save)
 ;; (add-hook 'text-mode-hook 'turn-on-real-auto-save)
 ;; (setq real-auto-save-interval 10) ;; in seconds
+
+;;
+;; Snippets
+;;
+;; Ignore the default snippets that come with yasnippet. My own are all I need, and I don't want any
+;; conflicts.
+(setq yas-snippet-dirs '("~/.emacs.d/snippets"))
+(require 'yasnippet)
+(yas-global-mode 1)
