@@ -275,8 +275,8 @@
 ;; elscreen (tabs on the window).
 ;;
 (elscreen-start)
-(define-key evil-normal-state-map (kbd "K") 'elscreen-next)
-(define-key evil-normal-state-map (kbd "J") 'elscreen-previous)
+(define-key evil-normal-state-map (kbd "<A-M-left>") 'elscreen-previous) ; Spark translates M-J to these keys.
+(define-key evil-normal-state-map (kbd "<A-M-right>") 'elscreen-next)
 (define-key evil-normal-state-map (kbd "M-t") 'elscreen-create)
 
 ;;
