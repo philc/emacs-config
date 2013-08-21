@@ -290,6 +290,9 @@
     (evil-define-key 'insert markdown-mode-map
       (kbd "<M-return>") 'markdown-insert-list-item-below)
     (evil-define-key 'normal markdown-mode-map
+      ; Autocomplete setext headers by typing "==" or "--" under the header's text
+      (kbd "==") '(lambda () (interactive) (insert "===") (markdown-complete))
+      (kbd "--") '(lambda () (interactive) (insert "---") (markdown-complete))
       (kbd "<M-return>") 'markdown-insert-list-item-below)))
 
 ;;
