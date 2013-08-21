@@ -34,6 +34,8 @@
 (when (and (fboundp 'tool-bar-mode) tool-bar-mode) (tool-bar-mode -1))
 (when (and (fboundp 'scroll-bar-mode) scroll-bar-mode) (scroll-bar-mode -1))
 
+(setq initial-scratch-message "") ; When opening a new buffer, don't show the scratch message.
+
 (global-auto-revert-mode t) ; Reload an open file from disk if it is changed outside of Emacs.
 
 (setq inhibit-startup-message t)
