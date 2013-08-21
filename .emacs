@@ -296,7 +296,9 @@
 ;; Auto save every few seconds.
 ;;
 ;; http://www.litchie.net/programs/real-auto-save.html
-(add-to-list 'load-path "~/.emacs.d/plugins/real-auto-save")
-(require 'real-auto-save)
-(add-hook 'text-mode-hook 'turn-on-real-auto-save)
-(setq real-auto-save-interval 10) ;; in seconds
+;; NOTE(philc): I'm turning this off for now because the truncation of whitespace throws me off while
+;; typing and messed up markdown syntax highlighting & indentation.
+;; (add-to-list 'load-path "~/.emacs.d/plugins/real-auto-save")
+;; (require 'real-auto-save)
+;; (add-hook 'text-mode-hook 'turn-on-real-auto-save)
+;; (setq real-auto-save-interval 10) ;; in seconds
