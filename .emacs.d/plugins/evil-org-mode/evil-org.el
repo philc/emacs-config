@@ -78,16 +78,12 @@
 ;; normal & insert state shortcuts.
 (mapc (lambda (state)
         (evil-define-key state evil-org-mode-map
-          (kbd "M-l") 'org-metaright
-          (kbd "M-h") 'org-metaleft
-          (kbd "M-k") 'org-metaup
-          (kbd "M-j") 'org-metadown
-          (kbd "M-L") 'org-shiftmetaright
-          (kbd "M-H") 'org-shiftmetaleft
-          (kbd "M-K") 'org-shiftmetaup
-          (kbd "M-J") 'org-shiftmetadown
+          (kbd "C-S-L") 'org-metaright
+          (kbd "C-S-H") 'org-metaleft
+          (kbd "C-S-K") 'org-metaup
+          (kbd "C-S-J") 'org-metadown
           ; M-return creates a new todo item and enters insert mode.
-          (kbd "<M-return>") '(lambda () (interactive)
+          (kbd "<C-return>") '(lambda () (interactive)
                                 (org-insert-heading-after-current)
                                 (evil-append nil))
           ))
