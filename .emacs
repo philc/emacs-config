@@ -146,8 +146,8 @@
 (global-set-key (kbd "C-h") 'backward-delete-char) ; Here we clobber C-h, which accesses Emacs's help.
 
 ;; Moving between Emacs windows (splits).
-(global-set-key (kbd "M-J") 'windmove-down)
-(global-set-key (kbd "M-K") 'windmove-up)
+;; If you want to have directional keys for switching windows, bind them to windmove-down, windmove-left, etc.
+(global-set-key (kbd "M-C-n") 'other-window)
 
 ;; Commenting via NERD commentor.
 (define-key evil-normal-state-map "," 'evilnc-comment-operator)
