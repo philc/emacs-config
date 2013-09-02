@@ -181,6 +181,8 @@
 ;;
 (defvar osx-keys-minor-mode-map (make-keymap) "osx-keys-minor-mode-keymap")
 (define-key osx-keys-minor-mode-map (kbd "M-`") 'other-frame)
+(define-key osx-keys-minor-mode-map (kbd "M-~")
+  '(lambda () (interactive) (other-frame -1)))
 (define-key osx-keys-minor-mode-map (kbd "M-w") 'vimlike-quit)
 (define-key osx-keys-minor-mode-map (kbd "M-q") 'save-buffers-kill-terminal)
 (define-key osx-keys-minor-mode-map (kbd "M-n") 'new-frame)
