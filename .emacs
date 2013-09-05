@@ -366,3 +366,13 @@
 (setq yas-snippet-dirs '("~/.emacs.d/snippets"))
 (require 'yasnippet)
 (yas-global-mode 1)
+
+;;
+;; Fill column indicator. Show a vertical bar at the fill column (for me, that's 110 chars).
+;;
+;; This is pretty broken for me because it does not handle text scaling due to this bug:
+;; https://github.com/alpaker/Fill-Column-Indicator/issues/15
+;; Even more importantly, activating this mode also disables line wrapping, which I don't want.
+;;
+;; (add-to-list 'load-path "~/.emacs.d/plugins/fill-column-indicator")
+;; (require 'fill-column-indicator)
