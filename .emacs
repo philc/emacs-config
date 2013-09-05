@@ -308,8 +308,8 @@
 ;; elscreen (tabs on the window).
 ;;
 (elscreen-start)
-(define-key evil-normal-state-map (kbd "<A-M-left>") 'elscreen-previous) ; Spark translates M-J to these keys.
-(define-key evil-normal-state-map (kbd "<A-M-right>") 'elscreen-next)
+(global-set-key (kbd "<A-M-left>") 'elscreen-previous) ; KeyRemap4Macbook translates M-J to these keys.
+(global-set-key (kbd "<A-M-right>") 'elscreen-next) ; KeyRemap4Macbook translates M-J to these keys.
 ;; I'm using elscreen-clone here instead of elscreen-create so that the new tab has the current directory set
 ;; properly, so projectile can be used immediately.
 (define-key evil-normal-state-map (kbd "M-t") 'elscreen-clone)
