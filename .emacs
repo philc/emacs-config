@@ -18,6 +18,7 @@
                       ido-vertical-mode ; Show ido results vertically.
                       markdown-mode
                       midje-mode
+                      powerline ; Improve the appearance & density of the Emacs status bar.
                       projectile ; Find file in project (ala CTRL-P).
                       yasnippet
                       ))
@@ -387,3 +388,10 @@
 (add-hook 'prog-mode-hook 'flyspell-prog-mode)
 ;; Disable showing messages for performance reasons, as suggested by http://www.emacswiki.org/emacs/FlySpell.
 (setq flyspell-issue-message-flag nil)
+
+;;
+;; Powerline: improve the appearance & density of the Emacs status bar.
+;;
+(require 'powerline)
+(powerline-default-theme)
+
