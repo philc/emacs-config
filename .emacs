@@ -319,14 +319,27 @@
   (call-interactively 'markdown-insert-list-item)
   (evil-append nil))
 
+(defun insert-markdown-header (header-line-text)
+  "With the cursor focused on the header's text, insert a setext header line below that text.
+   header-line-text: either '===' or '---'"
+  (end-of-line)
+  (insert (concat "\n" header-line-text))
+  (markdown-complete)
+  ;; markdown-complete inserts a newline after the header. Remove it and move the cursor to a logical place.
+  (next-line)
+  (next-line)
+  (delete-backward-char 1)
+  (next-line)
+  (beginning-of-line))
+
 (eval-after-load 'markdown-mode
  '(progn
     (evil-define-key 'insert markdown-mode-map
       (kbd "<C-return>") 'markdown-insert-list-item-below)
     (evil-define-key 'normal markdown-mode-map
-      ; Autocomplete setext headers by typing "==" or "--" under the header's text
-      (kbd "==") '(lambda () (interactive) (insert "===") (markdown-complete))
-      (kbd "--") '(lambda () (interactive) (insert "---") (markdown-complete))
+      ; Autocomplete setext headers by typing "==" or "--" on the header's line in normal mode.
+      (kbd "==") '(lambda () (interactive) (insert-markdown-header "=="))
+      (kbd "--") '(lambda () (interactive) (insert-markdown-header "--"))
       (kbd "<C-return>") 'markdown-insert-list-item-below)))
 
 ;;
