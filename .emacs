@@ -406,3 +406,9 @@
 (add-to-list 'auto-mode-alist '("Capfile$" . ruby-mode))
 (add-to-list 'auto-mode-alist '("Vagrantfile$" . ruby-mode))
 
+;;
+;; Clojure
+;;
+;; Count hyphens, etc. as word characters in lisps
+(add-hook 'clojure-mode-hook (lambda () (modify-syntax-entry ?- "w")))
+(add-hook 'emacs-lisp-mode-hook (lambda () (modify-syntax-entry ?- "w")))
