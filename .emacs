@@ -30,6 +30,7 @@
 ;; General
 ;;
 ;; Turn off graphical toolbars.
+(require 'cl)
 (if (display-graphic-p) (menu-bar-mode 1) (menu-bar-mode -1))
 (when (and (fboundp 'tool-bar-mode) tool-bar-mode) (tool-bar-mode -1))
 (when (and (fboundp 'scroll-bar-mode) scroll-bar-mode) (scroll-bar-mode -1))
@@ -309,6 +310,11 @@
 (define-key evil-normal-state-map (kbd "<A-M-right>") 'elscreen-next)
 (define-key evil-normal-state-map (kbd "M-t") 'elscreen-create)
 
+;; Make it so M-1 selects the first tab, etc.
+(dolist (i (number-sequence 1 9))
+  (lexical-let ((tab-index (- i 1)))
+    (global-set-key (kbd (concat "M-" (number-to-string i)))
+                    (lambda () (interactive) (elscreen-goto tab-index)))))
 ;;
 ;; Markdown
 ;;
