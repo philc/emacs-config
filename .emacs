@@ -48,6 +48,8 @@
 
 (savehist-mode t) ; Save your minibuffer history across Emacs sessions. UX win!
 
+(setq text-scale-mode-step 1.1) ;; When changing font size, change in small increments.
+
 ;; Start scrolling the window when the cursor reaches its edge.
 ;; http://stackoverflow.com/questions/3631220/fix-to-get-smooth-scrolling-in-emacs
 (setq redisplay-dont-pause t
@@ -189,6 +191,9 @@
 (define-key osx-keys-minor-mode-map (kbd "M-s") 'save-buffer)
 (define-key osx-keys-minor-mode-map (kbd "M-v") 'clipboard-yank)
 (define-key osx-keys-minor-mode-map (kbd "M-c") 'clipboard-kill-ring-save)
+(define-key osx-keys-minor-mode-map (kbd "M--") 'text-scale-decrease)
+(define-key osx-keys-minor-mode-map (kbd "M-=") 'text-scale-increase)
+(define-key osx-keys-minor-mode-map (kbd "M-0") (lambda () (interactive) (text-scale-increase 0)))
 
 (define-minor-mode osx-keys-minor-mode
   "A minor-mode for emulating osx keyboard shortcuts."
