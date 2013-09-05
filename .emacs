@@ -288,6 +288,14 @@
            org-archive-location)))
     ad-do-it))
 
+(defun org-show-todo-and-done-tree ()
+  "Shows only subtrees which are TODOs or DONE items. Similar to org-show-todo-tree, but it matches DONE items
+   as well."
+  (interactive)
+  (org-occur "\\(TODO\\|DONE\\)")
+  ; org-occur highlights every TODO and DONE string match in the doc, which is distracting. Remove it.
+  (org-remove-occur-highlights))
+
 ;;
 ;; Projectile (find file from the root of the current project).
 ;;

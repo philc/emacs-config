@@ -63,7 +63,7 @@
   "T" '(lambda () (interactive) (evil-org-eol-call '(org-insert-todo-heading nil)))
   "H" 'org-beginning-of-line
   "L" 'org-end-of-line
-  ";vt" 'org-show-todo-tree
+  ";vt" 'org-show-todo-and-done-tree
   "o" '(lambda () (interactive) (evil-org-eol-call 'always-insert-item))
   ; "O" '(lambda () (interactive) (evil-org-eol-call 'org-insert-heading))
   "$" 'org-end-of-line
