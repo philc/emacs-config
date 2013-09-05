@@ -310,7 +310,9 @@
 (elscreen-start)
 (define-key evil-normal-state-map (kbd "<A-M-left>") 'elscreen-previous) ; Spark translates M-J to these keys.
 (define-key evil-normal-state-map (kbd "<A-M-right>") 'elscreen-next)
-(define-key evil-normal-state-map (kbd "M-t") 'elscreen-create)
+;; I'm using elscreen-clone here instead of elscreen-create so that the new tab has the current directory set
+;; properly, so projectile can be used immediately.
+(define-key evil-normal-state-map (kbd "M-t") 'elscreen-clone)
 
 ;; Make it so M-1 selects the first tab, etc.
 (dolist (i (number-sequence 1 9))
