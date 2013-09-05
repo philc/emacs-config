@@ -356,8 +356,7 @@
 ;;
 ;; Snippets
 ;;
-;; Ignore the default snippets that come with yasnippet. My own are all I need, and I don't want any
-;; conflicts.
+;; Ignore the default snippets that come with yasnippet. I only need my own, and don't want any conflicts.
 (setq yas-snippet-dirs '("~/.emacs.d/snippets"))
 (require 'yasnippet)
 (yas-global-mode 1)
