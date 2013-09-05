@@ -376,3 +376,14 @@
 ;;
 ;; (add-to-list 'load-path "~/.emacs.d/plugins/fill-column-indicator")
 ;; (require 'fill-column-indicator)
+
+;;
+;; Spell checking
+;; http://www.emacswiki.org/emacs/FlySpell.
+;;
+;; You may need to install aspell (e.g. `brew install aspell`) to use it via Flyspell.
+(setq ispell-program-name "/usr/local/bin/aspell" ispell-extra-args '("--sug-mode=ultra"))
+(add-hook 'text-mode-hook 'flyspell-mode)
+(add-hook 'prog-mode-hook 'flyspell-prog-mode)
+;; Disable showing messages for performance reasons, as suggested by http://www.emacswiki.org/emacs/FlySpell.
+(setq flyspell-issue-message-flag nil)
