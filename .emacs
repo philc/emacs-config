@@ -115,6 +115,8 @@
   "b" 'ido-switch-buffer
   "t" 'projectile-find-file
   "q" 'fill-paragraph
+  "a" 'projectile-ack
+  "d" 'projectile-dired
   ; Shift-J is usually join line in Vim. I use Shift-J and K for tab switching.
   "j" (lambda () (interactive) (join-line t))
   "ee" 'open-emacs-config
