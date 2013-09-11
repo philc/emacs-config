@@ -105,6 +105,11 @@
                 (untabify (point-min) (point-max)))
             nil))
 
+;; Make highlighting during incremental search feel snappier.
+(setq lazy-highlight-initial-delay 0)
+(setq lazy-highlight-cleanup nil)
+(setq lazy-highlight-max-at-a-time nil)
+
 ;;
 ;; Evil mode -- Vim keybindings for Emacs.
 ;;
