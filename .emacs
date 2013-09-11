@@ -55,6 +55,9 @@
 
 (setq text-scale-mode-step 1.1) ;; When changing font size, change in small increments.
 
+;; Include path information in duplicate buffer names (e.g. a/foo.txt b/foo.txt)
+(require 'uniquify)
+(setq uniquify-buffer-name-style 'forward)
 ;; Start scrolling the window when the cursor reaches its edge.
 ;; http://stackoverflow.com/questions/3631220/fix-to-get-smooth-scrolling-in-emacs
 (setq redisplay-dont-pause t
