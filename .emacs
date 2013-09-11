@@ -21,6 +21,7 @@
                       nrepl
                       powerline ; Improve the appearance & density of the Emacs status bar.
                       projectile ; Find file in project (ala CTRL-P).
+                      rainbow-delimiters ; Highlight parentheses in rainbow colors.
                       yasnippet
                       ))
 
@@ -413,6 +414,10 @@
 ;;
 ;; Clojure
 ;;
+;; Docs:
+;; https://github.com/clojure-emacs/nrepl.el
+;; http://clojure-doc.org/articles/tutorials/emacs.html
+
 ;; Count hyphens, etc. as word characters in lisps
 (add-hook 'clojure-mode-hook (lambda () (modify-syntax-entry ?- "w")))
 (add-hook 'emacs-lisp-mode-hook (lambda () (modify-syntax-entry ?- "w")))
@@ -448,3 +453,9 @@
   ;; "ei" 'nrepl-jack-in
   "ex" 'nrepl-eval-expression-at-point
   "er" 'nrepl-eval-region)
+
+; Highlight parentheses in rainbow colors.
+(require 'rainbow-delimiters)
+(add-hook 'prog-mode-hook 'rainbow-delimiters-mode)
+(add-hook 'nrepl-mode-hook 'rainbow-delimiters-mode)
+
