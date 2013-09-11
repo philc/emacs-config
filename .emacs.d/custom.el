@@ -18,4 +18,11 @@
  ;; If there is more than one, they won't work right.
  '(elscreen-tab-control-face ((t (:background "#202424" :foreground "white" :underline t))))
  '(elscreen-tab-current-screen-face ((t (:background "#505454" :foreground "white"))))
- '(elscreen-tab-other-screen-face ((t (:background "black" :foreground "#bbbbbb" :underline t)))))
+ '(elscreen-tab-other-screen-face ((t (:background "black" :foreground "#bbbbbb" :underline t))))
+ '(rainbow-delimiters-depth-2-face ((t (:foreground "#3A8CD7"))))
+ '(rainbow-delimiters-depth-3-face ((t (:foreground "#44D7BC"))))
+ '(rainbow-delimiters-depth-4-face ((t (:foreground "#C9D736"))))
+ '(rainbow-delimiters-depth-5-face ((t (:foreground "#D79841"))))
+ '(rainbow-delimiters-depth-6-face ((t (:foreground "#D7604A"))))
+ '(rainbow-delimiters-depth-7-face ((t (:foreground "#D777A9"))))
+ '(rainbow-delimiters-depth-8-face ((t (:foreground "#5D7CD7")))))
