@@ -6,6 +6,7 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
+ '(elscreen-buffer-to-nickname-alist (quote (("[Ss]hell" . "shell") ("compilation" . "compile") ("-telnet" . "telnet") ("*WL:Message*" . "Wanderlust"))))
  '(elscreen-display-screen-number nil)
  '(elscreen-display-tab 20)
  '(elscreen-tab-display-kill-screen nil)
