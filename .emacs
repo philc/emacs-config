@@ -18,6 +18,7 @@
                       ido-vertical-mode ; Show ido results vertically.
                       markdown-mode
                       midje-mode
+                      nrepl
                       powerline ; Improve the appearance & density of the Emacs status bar.
                       projectile ; Find file in project (ala CTRL-P).
                       yasnippet
@@ -415,3 +416,35 @@
 ;; Count hyphens, etc. as word characters in lisps
 (add-hook 'clojure-mode-hook (lambda () (modify-syntax-entry ?- "w")))
 (add-hook 'emacs-lisp-mode-hook (lambda () (modify-syntax-entry ?- "w")))
+
+(evil-define-key 'normal clojure-mode-map "K" 'nrepl-doc)
+(evil-define-key 'normal clojure-mode-map "gf" 'nrepl-jump)
+
+(evil-define-operator evil-nrepl-eval (beg end)
+  "Evaluate the text region moved over by an evil motion."
+  (nrepl-eval-region beg end))
+
+;; References:
+;; https://github.com/emacsmirror/evil/blob/master/evil-commands.el
+(defun nrepl-eval-paragraph (beg end)
+  (interactive "r")
+  (let ((region (evil-a-paragraph 1 beg beg)))
+    (evil-nrepl-eval (first region) (nth 1 region))))
+
+(defun nrepl-show-nrepl-buffer ()
+  (interactive)
+  "Shows the nrepl buffer, but does not focus it."
+  (command-execute 'nrepl-switch-to-repl-buffer)
+  (command-execute 'nrepl-switch-to-last-clojure-buffer))
+
+; Enable eldoc integration in buffers
+(add-hook 'nrepl-interaction-mode-hook
+  'nrepl-turn-on-eldoc-mode)
+
+(evil-leader/set-key-for-mode 'clojure-mode
+  "eap" 'nrepl-eval-paragraph
+  "eb" 'nrepl-load-current-buffer
+  "ee" 'nrepl-show-nrepl-buffer
+  ;; "ei" 'nrepl-jack-in
+  "ex" 'nrepl-eval-expression-at-point
+  "er" 'nrepl-eval-region)
