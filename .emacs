@@ -457,6 +457,27 @@
   (command-execute 'nrepl-switch-to-repl-buffer)
   (command-execute 'nrepl-switch-to-last-clojure-buffer))
 
+;; Disable prompt on killing buffer with a process
+(setq kill-buffer-query-functions
+      (remq 'process-kill-buffer-query-function
+            kill-buffer-query-functions))
+
+(defun nrepl-kill ()
+  "Kill all nrepl buffers and processes"
+  (interactive)
+  (when (get-process "nrepl-server")
+    (set-process-sentinel (get-process "nrepl-server")
+                          (lambda (proc evt) t)))
+  (dolist (buffer (buffer-list))
+    (when (string-prefix-p "*nrepl" (buffer-name buffer))
+      (kill-buffer buffer))))
+
+(defun nrepl-restart ()
+  "Restarts or starts afresh the nrepl."
+  (interactive)
+  (nrepl-kill)
+  (nrepl-jack-in nil))
+
 ; Enable eldoc integration in buffers
 (add-hook 'nrepl-interaction-mode-hook
   'nrepl-turn-on-eldoc-mode)
@@ -465,7 +486,8 @@
   "eap" 'nrepl-eval-paragraph
   "eb" 'nrepl-load-current-buffer
   "ee" 'nrepl-show-nrepl-buffer
-  ;; "ei" 'nrepl-jack-in
+  ; nrepl-restart is more handy than nrepl-jack-in, because it doesn't leave existing repls running.
+  "en" 'nrepl-restart
   "ex" 'nrepl-eval-expression-at-point
   "er" 'nrepl-eval-region)
 
