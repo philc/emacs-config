@@ -138,7 +138,7 @@
   "h" 'help
   "b" 'ido-switch-buffer
   "t" 'projectile-find-file
-  "q" 'fill-paragraph
+  "q" 'evil-fill-around-paragraph
   "a" 'projectile-ack
   "d" 'projectile-dired
   ; Shift-J is usually join line in Vim. I use Shift-J and K for tab switching.
@@ -157,6 +157,12 @@
      ;; TODO(philc): Will I need these?
      ; (define-key evil-normal-state-map (kbd "M-,") nil)
      ; (define-key evil-normal-state-map (kbd "M-.") nil)))
+
+(defun evil-fill-around-paragraph (beg end)
+  "Fills (reflows/linewraps) the current paragraph. Equivalent to gqap in view."
+  (interactive "r")
+  (let ((region (evil-a-paragraph 1 beg beg)))
+    (evil-fill-and-move (first region) (nth 1 region))))
 
 (defun eval-surrounding-sexp (levels)
   (interactive "p")
