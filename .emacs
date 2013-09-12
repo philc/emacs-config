@@ -226,6 +226,7 @@
 (define-key osx-keys-minor-mode-map (kbd "M-s") 'save-buffer)
 (define-key osx-keys-minor-mode-map (kbd "M-v") 'clipboard-yank)
 (define-key osx-keys-minor-mode-map (kbd "M-c") 'clipboard-kill-ring-save)
+(define-key osx-keys-minor-mode-map (kbd "M-m") 'iconify-or-deiconify-frame)
 (define-key osx-keys-minor-mode-map (kbd "M--") 'text-scale-decrease)
 (define-key osx-keys-minor-mode-map (kbd "M-=") 'text-scale-increase)
 (define-key osx-keys-minor-mode-map (kbd "M-0") (lambda () (interactive) (text-scale-increase 0)))
