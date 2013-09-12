@@ -224,6 +224,7 @@
 (define-key osx-keys-minor-mode-map (kbd "M-q") 'save-buffers-kill-terminal)
 (define-key osx-keys-minor-mode-map (kbd "M-n") 'new-frame)
 (define-key osx-keys-minor-mode-map (kbd "M-s") 'save-buffer)
+(define-key osx-keys-minor-mode-map (kbd "M-a") 'mark-whole-buffer)
 (define-key osx-keys-minor-mode-map (kbd "M-v") 'clipboard-yank)
 (define-key osx-keys-minor-mode-map (kbd "M-c") 'clipboard-kill-ring-save)
 (define-key osx-keys-minor-mode-map (kbd "M-m") 'iconify-or-deiconify-frame)
