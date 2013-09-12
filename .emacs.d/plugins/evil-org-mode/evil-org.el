@@ -71,6 +71,7 @@
   "<" 'org-metaleft
   ">" 'org-metaright
   ";a" 'org-archive-subtree
+  ";g" 'org-set-tags-command
   ";va" 'org-agenda
   "-" 'org-cycle-list-bullet
   (kbd "TAB") 'org-cycle)
