@@ -48,8 +48,12 @@
 (setq ring-bell-function 'ignore)
 (setq mac-option-modifier 'alt)
 (setq mac-command-modifier 'meta)
-; Put backup files in your home directory, out of the way.
-(setq backup-directory-alist `(("." . "~/.backups")))
+
+;; Put backup and autosave files in your home directory, out of the way.
+;; http://www.emacswiki.org/emacs/AutoSave
+(setq backup-directory-alist `((".*" . "~/.backups")))
+(setq auto-save-file-name-transforms `((".*" "~/.backups" t)))
+
 (setq vc-follow-symlinks t) ; Don't ask confirmation to follow symlinks to edit files.
 
 (savehist-mode t) ; Save your minibuffer history across Emacs sessions. UX win!
@@ -497,4 +501,3 @@
 (require 'rainbow-delimiters)
 (add-hook 'prog-mode-hook 'rainbow-delimiters-mode)
 (add-hook 'nrepl-mode-hook 'rainbow-delimiters-mode)
-
