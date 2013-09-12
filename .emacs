@@ -10,6 +10,7 @@
 
 (defvar my-packages '(clojure-mode
                       clojure-test-mode
+                      coffee-mode ; For syntax highlighting coffeescript.
                       evil
                       evil-leader
                       evil-nerd-commenter
