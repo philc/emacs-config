@@ -1,0 +1,4 @@
+# name: shebang
+# key: shebang
+# --
+#!/usr/bin/env ruby

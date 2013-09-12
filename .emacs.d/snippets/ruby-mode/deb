@@ -1,0 +1,4 @@
+# name: deb
+# key: deb
+# --
+puts ">>>> $1: #{($1).inspect}"

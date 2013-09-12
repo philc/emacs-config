@@ -1,0 +1,4 @@
+# name: deb
+# key: deb
+# --
+(println ">>>> $1" $1)
