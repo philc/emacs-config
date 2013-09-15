@@ -145,8 +145,6 @@
   "q" 'evil-fill-around-paragraph
   "a" 'projectile-ack
   "d" 'projectile-dired
-  ; Shift-J is usually join line in Vim. I use Shift-J and K for tab switching.
-  "j" (lambda () (interactive) (join-line t))
   "ee" 'open-emacs-config
   "eb" 'eval-buffer
   "es" 'eval-last-sexp
