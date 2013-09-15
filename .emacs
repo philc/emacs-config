@@ -335,6 +335,11 @@
 ;; I'm using elscreen-clone here instead of elscreen-create so that the new tab has the current directory set
 ;; properly, so projectile can be used immediately.
 (define-key evil-normal-state-map (kbd "M-t") 'elscreen-clone)
+(define-key evil-insert-state-map (kbd "M-t") '(lambda ()
+                                                 ;; Exit out of insert mode when opening a new tab.
+                                                 (interactive)
+                                                 (evil-change-to-initial-state)
+                                                 (elscreen-clone)))
 
 ;; Make it so M-1 selects the first tab, etc.
 (dolist (i (number-sequence 1 9))
