@@ -437,6 +437,15 @@
 (add-to-list 'auto-mode-alist '("Vagrantfile$" . ruby-mode))
 
 ;;
+;; Emacs Lisp
+;;
+(evil-define-key 'normal emacs-lisp-mode-map "K" '(lambda ()
+                                                    (interactive)
+                                                    ;; Inspired from help-fns.el.
+                                                    (with-help-window "*Help*"
+                                                      (describe-function (intern (current-word))))))
+
+;;
 ;; Clojure
 ;;
 ;; Docs:
