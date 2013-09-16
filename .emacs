@@ -163,8 +163,8 @@
 (defun evil-fill-around-paragraph (beg end)
   "Fills (reflows/linewraps) the current paragraph. Equivalent to gqap in view."
   (interactive "r")
-  (let ((region (evil-a-paragraph 1 beg beg)))
-    (evil-fill-and-move (first region) (nth 1 region))))
+  (let ((region (evil-a-paragraph)))
+    (evil-fill-and-move (first region) (second region))))
 
 (defun eval-surrounding-sexp (levels)
   (interactive "p")
@@ -467,8 +467,8 @@
 ;; https://github.com/emacsmirror/evil/blob/master/evil-commands.el
 (defun nrepl-eval-paragraph (beg end)
   (interactive "r")
-  (let ((region (evil-a-paragraph 1 beg beg)))
-    (evil-nrepl-eval (first region) (nth 1 region))))
+  (let ((region (evil-a-paragraph)))
+    (evil-nrepl-eval (first region) (second region))))
 
 (defun nrepl-show-nrepl-buffer ()
   (interactive)
