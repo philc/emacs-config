@@ -214,7 +214,7 @@
 (global-set-key [escape] 'evil-exit-emacs-state)
 
 ;;
-;; OS X keybindings minor mode.
+;; Mac OS X keybindings minor mode.
 ;; Make it so the OSX keybindings you're used to always work.
 ;; http://stackoverflow.com/questions/683425/globally-override-key-binding-in-emacs
 ;;
@@ -487,11 +487,12 @@
   (interactive)
   (nrepl-kill)
   (nrepl-jack-in nil))
+;; Enable eldoc integration in buffers
 
-; Enable eldoc integration in buffers
 (add-hook 'nrepl-interaction-mode-hook
   'nrepl-turn-on-eldoc-mode)
 
+;; The all-important nREPL eval shortcuts.
 (evil-leader/set-key-for-mode 'clojure-mode
   "eap" 'nrepl-eval-paragraph
   "eb" 'nrepl-load-current-buffer
@@ -501,7 +502,7 @@
   "ex" 'nrepl-eval-expression-at-point
   "er" 'nrepl-eval-region)
 
-; Highlight parentheses in rainbow colors.
+;; Highlight parentheses in rainbow colors.
 (require 'rainbow-delimiters)
 (add-hook 'prog-mode-hook 'rainbow-delimiters-mode)
 (add-hook 'nrepl-mode-hook 'rainbow-delimiters-mode)
