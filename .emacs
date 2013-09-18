@@ -468,6 +468,10 @@
 ;; Count hyphens, etc. as word characters in lisps
 (add-hook 'clojure-mode-hook (lambda () (modify-syntax-entry ?- "w")))
 (add-hook 'emacs-lisp-mode-hook (lambda () (modify-syntax-entry ?- "w")))
+(add-hook 'clojure-mode-hook '(lambda ()
+                                (setq indent-line-function 'lisp-indent-line-single-semicolon-fix)
+                                ;; Comment lines using only one semi-colon instead of two.
+                                (setq comment-add 0)))
 
 (evil-define-key 'normal clojure-mode-map "K" 'nrepl-doc)
 (evil-define-key 'normal clojure-mode-map "gf" 'nrepl-jump)
