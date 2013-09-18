@@ -504,23 +504,13 @@
       (remq 'process-kill-buffer-query-function
             kill-buffer-query-functions))
 
-(defun nrepl-kill ()
-  "Kill all nrepl buffers and processes"
-  (interactive)
-  (when (get-process "nrepl-server")
-    (set-process-sentinel (get-process "nrepl-server")
-                          (lambda (proc evt) t)))
-  (dolist (buffer (buffer-list))
-    (when (string-prefix-p "*nrepl" (buffer-name buffer))
-      (kill-buffer buffer))))
-
 (defun nrepl-restart ()
   "Restarts or starts afresh the nrepl."
   (interactive)
-  (nrepl-kill)
+  (nrepl-quit)
   (nrepl-jack-in nil))
-;; Enable eldoc integration in buffers
 
+;; Enable eldoc integration in buffers
 (add-hook 'nrepl-interaction-mode-hook
   'nrepl-turn-on-eldoc-mode)
 
