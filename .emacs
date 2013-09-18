@@ -540,3 +540,28 @@
      (up 1) (down 1) (alter 1) (table 1)                       ; Lobos
      (with-eligible-values 1) (when-eligible 1)                ; Personal
      ))
+
+(defun lisp-indent-line-single-semicolon-fix (&optional whole-exp)
+  "Identical to the built-in function lisp-indent-line,
+but doesn't treat single semicolons as right-hand-side comments."
+  (interactive "P")
+  (let ((indent (calculate-lisp-indent)) shift-amt end
+        (pos (- (point-max) (point)))
+        (beg (progn (beginning-of-line) (point))))
+    (skip-chars-forward " \t")
+    (if (or (null indent) (looking-at "\\s<\\s<\\s<"))
+        ;; Don't alter indentation of a ;;; comment line
+        ;; or a line that starts in a string.
+        ;; FIXME: inconsistency: comment-indent moves ;;; to column 0.
+        (goto-char (- (point-max) pos))
+      (if (listp indent) (setq indent (car indent)))
+      (setq shift-amt (- indent (current-column)))
+      (if (zerop shift-amt)
+          nil
+        (delete-region beg (point))
+        (indent-to indent)))
+    ;; If initial point was within line's indentation,
+    ;; position after the indentation.  Else stay at same point in text.
+    (if (> (- (point-max) pos) (point))
+        (goto-char (- (point-max) pos)))))
+
