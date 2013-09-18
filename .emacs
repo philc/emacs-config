@@ -488,6 +488,12 @@
   (command-execute 'nrepl-switch-to-repl-buffer)
   (command-execute 'nrepl-switch-to-last-clojure-buffer))
 
+(defun nrepl-clear-buffer-inside-nrepl-buffer ()
+  (interactive)
+  (command-execute 'nrepl-switch-to-repl-buffer)
+  (nrepl-clear-buffer)
+  (command-execute 'nrepl-switch-to-last-clojure-buffer))
+
 ;; Disable prompt on killing buffer with a process
 (setq kill-buffer-query-functions
       (remq 'process-kill-buffer-query-function
@@ -518,6 +524,7 @@
   "eap" 'nrepl-eval-paragraph
   "eb" 'nrepl-load-current-buffer
   "ee" 'nrepl-show-nrepl-buffer
+  "ek" 'nrepl-clear-buffer-inside-nrepl-buffer
   ; nrepl-restart is more handy than nrepl-jack-in, because it doesn't leave existing repls running.
   "en" 'nrepl-restart
   "ex" 'nrepl-eval-expression-at-point
