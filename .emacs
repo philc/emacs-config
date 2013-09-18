@@ -475,8 +475,8 @@
   "Evaluate the text region moved over by an evil motion."
   (nrepl-eval-region beg end))
 
-;; References:
-;; https://github.com/emacsmirror/evil/blob/master/evil-commands.el
+;; Eval a paragraph. This is different from eval-surrounding-sexp in that it will eval multiple adjacent
+;; s-expressions which are not separated by a new line. It's equivalent to wrapping the expressions in a do.
 (defun nrepl-eval-paragraph (beg end)
   (interactive "r")
   (let ((region (evil-a-paragraph)))
