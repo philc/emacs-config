@@ -317,8 +317,9 @@
   "Shows only subtrees which are TODOs or DONE items. Similar to org-show-todo-tree, but it matches DONE items
    as well."
   (interactive)
-  (org-occur "\\(TODO\\|DONE\\|IP\\|WAITING\\)")
-  ; org-occur highlights every TODO and DONE string match in the doc, which is distracting. Remove it.
+  ;; Note that these tags are case insensitive.
+  (org-occur "\\(TODO\\|DONE\\|INPROGRESS\\|WAITING\\)")
+  ;; org-occur highlights every TODO and DONE string match in the doc, which is distracting. Remove it.
   (org-remove-occur-highlights))
 
 ;;
