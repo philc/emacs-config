@@ -415,10 +415,21 @@
 ;;
 ;; You may need to install aspell (e.g. `brew install aspell`) to use it via Flyspell.
 (setq ispell-program-name "/usr/local/bin/aspell" ispell-extra-args '("--sug-mode=ultra"))
-(add-hook 'text-mode-hook 'flyspell-mode)
-(add-hook 'prog-mode-hook 'flyspell-prog-mode)
+
+;; Highlight all mispellings when a file is opened. Flyspell only spellchecks words you modify.
+(add-hook 'text-mode-hook (lambda ()
+                            (flyspell-mode)
+                            (flyspell-buffer)))
+(add-hook 'prog-mode-hook (lambda ()
+                            (flyspell-prog-mode)
+                            (flyspell-buffer)))
+
+ ;; Triggers a spell-correction menu. I use this to add words to my dictionary (hit "i").
+(define-key evil-normal-state-map (kbd "zg") 'ispell-word)
+
 ;; Disable showing messages for performance reasons, as suggested by http://www.emacswiki.org/emacs/FlySpell.
 (setq flyspell-issue-message-flag nil)
+(setq ispell-personal-dictionary "~/.personal_dict.txt")
 
 ;;
 ;; Powerline: improve the appearance & density of the Emacs status bar.
