@@ -33,8 +33,12 @@
 ;;
 ;; General
 ;;
-;; Turn off graphical toolbars.
 (require 'cl)
+
+;; Anecdotally, this reduces the amount of display flicker on some Emacs startup.
+(setq redisplay-dont-pause t)
+
+;; Turn off graphical toolbars.
 (if (display-graphic-p) (menu-bar-mode 1) (menu-bar-mode -1))
 (when (and (fboundp 'tool-bar-mode) tool-bar-mode) (tool-bar-mode -1))
 (when (and (fboundp 'scroll-bar-mode) scroll-bar-mode) (scroll-bar-mode -1))
@@ -71,9 +75,10 @@
 ;; Include path information in duplicate buffer names (e.g. a/foo.txt b/foo.txt)
 (require 'uniquify)
 (setq uniquify-buffer-name-style 'forward)
+
 ;; Start scrolling the window when the cursor reaches its edge.
 ;; http://stackoverflow.com/questions/3631220/fix-to-get-smooth-scrolling-in-emacs
-(setq redisplay-dont-pause t
+(setq
   scroll-margin 5
   scroll-step 1
   scroll-conservatively 10000
