@@ -41,6 +41,14 @@
 
 (setq initial-scratch-message "") ; When opening a new buffer, don't show the scratch message.
 
+;; Use the same PATH variable as your shell does. From http://clojure-doc.org/articles/tutorials/emacs.html
+(defun set-exec-path-from-shell-PATH ()
+  (let ((path-from-shell (shell-command-to-string "$SHELL -i -c 'echo $PATH'")))
+    (setenv "PATH" path-from-shell)
+    (setq exec-path (split-string path-from-shell path-separator))))
+
+(when window-system (set-exec-path-from-shell-PATH))
+
 (global-auto-revert-mode t) ; Reload an open file from disk if it is changed outside of Emacs.
 
 (setq inhibit-startup-message t)
