@@ -171,6 +171,7 @@
   "es" 'eval-last-sexp
   "ex" 'eval-surrounding-sexp
   ; "v" is a mnemonic prefix for "view X".
+  "vg" 'mu4e
   "vo" (lambda () (interactive) (find-file "~/Dropbox/tasks.org"))
   "ve" (lambda () (interactive) (find-file "~/.emacs")))
 
@@ -585,3 +586,128 @@ but doesn't treat single semicolons as right-hand-side comments."
     (if (> (- (point-max) pos) (point))
         (goto-char (- (point-max) pos)))))
 
+;;
+;; mu4e - email & gmail in Emacs.
+;;
+;; References:
+;; * the mu4e manual
+;; * https://groups.google.com/forum/#!topic/mu-discuss/qJ2zvyLPBX0
+(add-to-list 'load-path "/usr/local/Cellar/mu/0.9.9.5/share/emacs/site-lisp/mu4e")
+(require 'mu4e)
+
+(setq mu4e-mu-binary "/usr/local/Cellar/mu/0.9.9.5/bin/mu")
+(setq mu4e-maildir "~/.Maildir")
+(setq mu4e-drafts-folder "/[Gmail].Drafts")
+(setq mu4e-sent-folder   "/[Gmail].Sent Mail")
+(setq mu4e-trash-folder  "/[Gmail].Trash")
+(setq mu4e-refile-folder  "/[Gmail].All Mail")
+
+;; Folder shortcuts for the "jump-to-maildir" command.
+(setq mu4e-maildir-shortcuts
+    '(("/INBOX"               . ?i)
+      ("/[Gmail].Sent Mail"   . ?s)
+      ("/1action"             . ?1)
+      ("/2hold"               . ?2)
+      ("/[Gmail].All Mail"    . ?a)))
+
+;; Use offline imap when fetching and reindexing mail.
+(setq mu4e-get-mail-command "offlineimap")
+
+(setq user-mail-address "phil.crosby@gmail.com"
+      user-full-name  "Phil Crosby")
+
+;; Don't save messages to Sent Messages, Gmail/IMAP takes care of this.
+(setq mu4e-sent-messages-behavior 'delete)
+
+;; Don't keep message buffers around.
+(setq message-kill-buffer-on-exit t)
+
+;; Use 'fancy' non-ascii characters in various places in mu4e
+(setq mu4e-use-fancy-chars t)
+
+(setq mu4e-attachment-dir "~/Downloads")
+
+;; Attempt to show images when viewing messages
+(setq mu4e-view-show-images t
+      mu4e-view-image-max-width 800)
+
+;; TODO(philc): what does this do?
+(setq mu4e-compose-dont-reply-to-self t)
+
+;; How tall to make the headers view when viewing headers+mail as a split.
+(setq mu4e-headers-visible-lines 22)
+
+;; Trim down the types of columns we show, to leave more room for the sender & subject.
+(setq mu4e-headers-fields '((:human-date . 12)
+                            ;; (:flags . 6)
+                            (:from-or-to . 22)
+                            (:subject . 74)))
+
+(eval-after-load 'mu4e
+  '(progn
+     (evil-make-overriding-map mu4e-main-mode-map 'normal t)
+     (evil-define-key 'normal mu4e-main-mode-map
+       "q" 'vimlike-quit
+       "j" nil ; originally "jump to maildir".
+       "gl" 'mu4e~headers-jump-to-maildir)
+
+     (evil-make-overriding-map mu4e-headers-mode-map 'normal t)
+     (evil-define-key 'normal mu4e-headers-mode-map
+       "j" 'evil-next-line
+       "k" 'evil-previous-line
+       "n" 'mu4e-headers-next
+       "p" 'mu4e-headers-prev
+       "#" 'mu4e-headers-mark-for-trash
+       "y" 'mu4e-headers-mark-for-refile
+       "/" 'mu4e-headers-search-edit
+       "z" 'mu4e-headers-mark-for-unmark
+       "x" 'mu4e-headers-mark-for-something
+       "gl" 'mu4e~headers-jump-to-maildir
+       ;; consider calling this with t, for "no confirmation".
+       "e" 'mu4e-mark-execute-all
+       "q" 'vimlike-quit
+       (kbd "RET") 'mu4e-headers-view-message
+       "ESC" nil
+       ;; TODO(philc): How can I reply-all without confirmation?
+       ;; TODO(philc): mu4e-headers-toggle-full-search - show all results or just up until the cap.
+       "r" 'mu4e-compose-reply
+       ;; TODO(philc): mu4e-view-action opens URL
+       "f" 'mu4e-compose-forward
+       (kbd "M-r") 'mu4e-update-mail-and-index
+       "c" 'mu4e-compose-new)
+
+     (evil-make-overriding-map mu4e-view-mode-map 'normal t)
+     (evil-define-key 'normal mu4e-view-mode-map
+       "n" 'mu4e-view-headers-next
+       "p" 'mu4e-view-headers-prev
+       "#" 'mu4e-view-mark-for-trash
+       "y" 'mu4e-view-mark-for-refile
+       "/" 'mu4e-view-search-edit
+       "x" 'mu4e-view-mark-for-something
+       "z" 'mu4e-view-mark-for-unmark
+       "q" 'vimlike-quit
+       "gl" (lambda ()
+              (interactive)
+              (switch-to-buffer-other-window "*mu4e-headers*")
+              (call-interactively 'mu4e~headers-jump-to-maildir))
+       ;; consider calling this with t, for "no confirmation".
+       "e" 'mu4e-view-marked-execute
+       (kbd "RET") 'mu4e-headers-view-message
+       "ESC" nil
+       ;; How to get reply-all without confirmation?
+       "r" 'mu4e-compose-reply
+       "f" 'mu4e-compose-forward
+       (kbd "M-r") 'mu4e-update-mail-and-index
+       "c" 'mu4e-compose-new)
+
+
+     (evil-make-overriding-map mu4e-compose-mode-map 'normal t)
+     (evil-define-key 'normal mu4e-compose-mode-map
+       "c" nil)))
+
+(require 'smtpmail)
+
+(setq message-send-mail-function 'smtpmail-send-it)
+(setq smtpmail-stream-type 'ssl)
+(setq smtpmail-smtp-server "smtp.gmail.com")
+(setq smtpmail-smtp-service 465)
