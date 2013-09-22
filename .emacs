@@ -128,6 +128,13 @@
 (setq lazy-highlight-cleanup nil)
 (setq lazy-highlight-max-at-a-time nil)
 
+;; Enable the common Bash text-editing shortcuts in the minibuffer.
+(define-key minibuffer-local-map (kbd "C-k") 'kill-line)
+(define-key minibuffer-local-map (kbd "C-e") 'end-of-line)
+(define-key minibuffer-local-map (kbd "C-u") 'backward-kill-line)
+(define-key minibuffer-local-map (kbd "C-d") 'delete-char)
+(define-key minibuffer-local-map (kbd "C-w") 'backward-kill-word)
+
 ;;
 ;; Evil mode -- Vim keybindings for Emacs.
 ;;
