@@ -1,0 +1,6 @@
+# name: <tr>...</tr>
+# key: tr
+# --
+<tr>
+  <td>$1</td>
+</tr>
