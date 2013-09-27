@@ -444,11 +444,10 @@
 (setq ispell-program-name "/usr/local/bin/aspell" ispell-extra-args '("--sug-mode=ultra"))
 
 ;; Highlight all mispellings when a file is opened. Flyspell only spellchecks words you modify.
+;; I would like to enable this for programming modes (by running (flyspell-prog-mode) in a prog-mode-hook,
+;; but it visibly slows down how quickly my can move through lines.
 (add-hook 'text-mode-hook (lambda ()
                             (flyspell-mode)
-                            (flyspell-buffer)))
-(add-hook 'prog-mode-hook (lambda ()
-                            (flyspell-prog-mode)
                             (flyspell-buffer)))
 
  ;; Triggers a spell-correction menu. I use this to add words to my dictionary (hit "i").
