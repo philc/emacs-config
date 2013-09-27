@@ -208,9 +208,6 @@
 (define-key evil-insert-state-map (kbd "C-d") 'delete-char)
 (global-set-key (kbd "C-h") 'backward-delete-char) ; Here we clobber C-h, which accesses Emacs's help.
 
-;; Moving between Emacs windows (splits).
-;; If you want to have directional keys for switching windows, bind them to windmove-down, windmove-left, etc.
-(global-set-key (kbd "M-C-n") 'other-window)
 
 ;; Commenting via NERD commentor.
 (define-key evil-normal-state-map "," 'evilnc-comment-operator)
@@ -258,6 +255,12 @@
 (define-key osx-keys-minor-mode-map (kbd "M--") 'text-scale-decrease)
 (define-key osx-keys-minor-mode-map (kbd "M-=") 'text-scale-increase)
 (define-key osx-keys-minor-mode-map (kbd "M-0") (lambda () (interactive) (text-scale-increase 0)))
+
+;; These aren't specifically replicating OSX shortcuts, but they manipulate the window, so I want them to take
+;; precedence over everything else.
+;; Moving between Emacs windows (splits).
+;; If you want to have directional keys for switching windows, bind them to windmove-down, windmove-left, etc.
+(define-key osx-keys-minor-mode-map (kbd "M-C-n") 'other-window)
 
 (define-minor-mode osx-keys-minor-mode
   "A minor-mode for emulating osx keyboard shortcuts."
