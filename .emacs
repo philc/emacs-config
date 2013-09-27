@@ -105,6 +105,8 @@
 ;; (setq-default mode-require-final-newline nil)
 (setq-default tab-width 2)
 (setq-default evil-shift-width 2)
+; Some modes have their own tab-width variables.
+(setq-default css-indent-offset 2)
 
 (setq-default fill-column 110) ; When wrapping with the Emacs fill commands, wrap at 110 chars.
 (auto-fill-mode t) ; When typing across the fill-column, hard-wrap the line as you type.
