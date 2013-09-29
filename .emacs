@@ -8,7 +8,7 @@
 (when (not package-archive-contents)
   (package-refresh-contents))
 
-(defvar my-packages '(autopair ; Insert matching delimiters.
+(defvar my-packages '(autopair ; Insert matching delimiters, e.g. insert closing braces.
                       clojure-mode
                       clojure-test-mode
                       coffee-mode ; For syntax highlighting coffeescript.
@@ -26,8 +26,7 @@
                       projectile ; Find file in project (ala CTRL-P).
                       rainbow-delimiters ; Highlight parentheses in rainbow colors.
                       ruby-electric ; Insert matching delimiters; unindent end blocks after you type them.
-                      yasnippet
-                      ))
+                      yasnippet))
 
 (dolist (p my-packages)
   (when (not (package-installed-p p))
