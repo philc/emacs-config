@@ -579,6 +579,13 @@
 (add-hook 'nrepl-interaction-mode-hook
   'nrepl-turn-on-eldoc-mode)
 
+(defun nrepl-eval-current-sexp ()
+  "Eval the sexp the current is currently in. In Emacs' syntax table, this is called a list of expressions."
+  (interactive)
+  (let ((position (bounds-of-thing-at-point 'list)))
+    (nrepl-interactive-eval (buffer-substring-no-properties (car position) (cdr position)))))
+
+
 ;; The all-important nREPL eval shortcuts.
 (evil-leader/set-key-for-mode 'clojure-mode
   "eap" 'nrepl-eval-paragraph
@@ -587,6 +594,7 @@
   "ek" 'nrepl-clear-buffer-inside-nrepl-buffer
   ; nrepl-restart is more handy than nrepl-jack-in, because it doesn't leave existing repls running.
   "en" 'nrepl-restart
+  "es" 'nrepl-eval-current-sexp
   "ex" 'nrepl-eval-expression-at-point
   "er" 'nrepl-eval-region)
 
