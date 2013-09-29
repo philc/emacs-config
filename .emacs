@@ -8,13 +8,15 @@
 (when (not package-archive-contents)
   (package-refresh-contents))
 
-(defvar my-packages '(clojure-mode
+(defvar my-packages '(autopair ; Insert matching delimiters.
+                      clojure-mode
                       clojure-test-mode
                       coffee-mode ; For syntax highlighting coffeescript.
                       evil
                       evil-leader
                       evil-nerd-commenter
                       flx ; Fuzzy matching for ido, which improves the UX of Projectile.
+                      less-css-mode ; Syntax highlighting for LESS CSS files.
                       ido-ubiquitous ; Make ido completions work everywhere.
                       ido-vertical-mode ; Show ido results vertically.
                       markdown-mode
@@ -23,6 +25,7 @@
                       powerline ; Improve the appearance & density of the Emacs status bar.
                       projectile ; Find file in project (ala CTRL-P).
                       rainbow-delimiters ; Highlight parentheses in rainbow colors.
+                      ruby-electric ; Insert matching delimiters; unindent end blocks after you type them.
                       yasnippet
                       ))
 
