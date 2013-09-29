@@ -128,11 +128,6 @@
                 (untabify (point-min) (point-max)))
             nil))
 
-;; Make highlighting during incremental search feel snappier.
-(setq lazy-highlight-initial-delay 0)
-(setq lazy-highlight-cleanup nil)
-(setq lazy-highlight-max-at-a-time nil)
-
 ;; Enable the common Bash text-editing shortcuts in the minibuffer.
 (define-key minibuffer-local-map (kbd "C-k") 'kill-line)
 (define-key minibuffer-local-map (kbd "C-e") 'end-of-line)
@@ -219,7 +214,7 @@
 ;; Make it so Esc means quit, no matter the context.
 ;; http://stackoverflow.com/a/10166400/46237
 ;; Note that when Emacs becomes unresponsive (e.g. because I accidentally grepped my home directory), I might
-;; still need to hold C-g (the Emacs ESC key) to bring it back.
+;; still need to hold C-g (the Emacs esc/cancel key) to bring it back.
 (defun minibuffer-keyboard-quit ()
   "Abort recursive edit. In Delete Selection mode, if the mark is active, just deactivate it;
    then it takes a second \\[keyboard-quit] to abort the minibuffer."
@@ -234,8 +229,19 @@
 (define-key minibuffer-local-ns-map [escape] 'minibuffer-keyboard-quit)
 (define-key minibuffer-local-completion-map [escape] 'minibuffer-keyboard-quit)
 (define-key minibuffer-local-must-match-map [escape] 'minibuffer-keyboard-quit)
-(define-key minibuffer-local-isearch-map [escape] 'minibuffer-keyboard-quit)
 (global-set-key [escape] 'evil-exit-emacs-state)
+
+;;
+;; Incremental search (isearch)
+;;
+;; Make highlighting during incremental search feel snappier.
+(setq case-fold-search t) ; Make searches case insensitive.
+(setq lazy-highlight-initial-delay 0)
+(setq lazy-highlight-max-at-a-time nil)
+;; Hitting esacpe aborts the search, restoring your cursor to the original position, as it does in Vim.
+(define-key isearch-mode-map (kbd "<escape>") 'isearch-abort)
+;; Make C-h act the same as backspace.
+(define-key isearch-mode-map (kbd "C-h") 'isearch-delete-char)
 
 ;;
 ;; Mac OS X keybindings minor mode.
