@@ -472,6 +472,35 @@
 (powerline-default-theme)
 
 ;;
+;; CSS
+;;
+(add-hook 'css-mode (lambda ()
+                      (autopair-mode) ; Auto-insert matching delimiters.
+                      ;; Properly unindent a closing brace after you type it and hit enter.
+                      (eletric-indent-mode)))
+
+;;
+;; Coffeescript
+;;
+(setq coffee-tab-width 2)
+(evil-leader/set-key-for-mode 'coffee-mode
+  "c" nil ; Establishes "c" as a "prefix key". I found this trick here: http://www.emacswiki.org/emacs/Evil
+  "cf" (lambda ()
+         (interactive)
+         (save-buffer)
+         (coffee-compile-file))
+  ;; The mnemonic for this is "compile & preview".
+  "cp" 'coffee-compile-buffer)
+
+;; Make return and open-line indent the cursor properly.
+(evil-define-key 'insert coffee-mode-map (kbd "RET") 'coffee-newline-and-indent))
+(evil-define-key 'normal coffee-mode-map "o" '(lambda ()
+                                                (interactive)
+                                                (end-of-line)
+                                                (evil-append nil)
+                                                (coffee-newline-and-indent)))
+
+;;
 ;; Ruby
 ;;
 (add-to-list 'auto-mode-alist '("\\.rake$" . ruby-mode))
@@ -482,9 +511,13 @@
 (add-to-list 'auto-mode-alist '("Capfile$" . ruby-mode))
 (add-to-list 'auto-mode-alist '("Vagrantfile$" . ruby-mode))
 
+;; Insert matching delimiters; unindent end blocks after you type them.
+(add-hook 'ruby-mode (lambda () (ruby-electric)))
+
 ;;
-;; Emacs Lisp
+;; Emacs Lisp (elisp)
 ;;
+(add-hook 'emacs-lisp-mode-hook (lambda () (modify-syntax-entry ?- "w")))
 (evil-define-key 'normal emacs-lisp-mode-map "K" '(lambda ()
                                                     (interactive)
                                                     ;; Inspired from help-fns.el.
@@ -500,11 +533,10 @@
 
 ;; Count hyphens, etc. as word characters in lisps
 (add-hook 'clojure-mode-hook (lambda () (modify-syntax-entry ?- "w")))
-(add-hook 'emacs-lisp-mode-hook (lambda () (modify-syntax-entry ?- "w")))
-(add-hook 'clojure-mode-hook '(lambda ()
-                                (setq indent-line-function 'lisp-indent-line-single-semicolon-fix)
-                                ;; Comment lines using only one semi-colon instead of two.
-                                (setq comment-add 0)))
+(add-hook 'clojure-mode-hook (lambda ()
+                               (setq indent-line-function 'lisp-indent-line-single-semicolon-fix)
+                               ;; Comment lines using only one semi-colon instead of two.
+                               (setq comment-add 0)))
 
 (evil-define-key 'normal clojure-mode-map "K" 'nrepl-doc)
 (evil-define-key 'normal clojure-mode-map "gf" 'nrepl-jump)
