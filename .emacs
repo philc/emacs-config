@@ -400,6 +400,9 @@
   (next-line)
   (beginning-of-line))
 
+(add-to-list 'auto-mode-alist '("\\.markdown$" . gfm-mode))
+(add-to-list 'auto-mode-alist '("\\.md$" . gfm-mode))
+
 (eval-after-load 'markdown-mode
  '(progn
     (evil-define-key 'insert markdown-mode-map
