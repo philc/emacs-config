@@ -470,7 +470,7 @@
 ;; CSS
 ;;
 (add-hook 'css-mode (lambda ()
-                      (autopair-mode) ; Auto-insert matching delimiters.
+                      (autopair-mode t) ; Auto-insert matching delimiters.
                       ;; Properly unindent a closing brace after you type it and hit enter.
                       (eletric-indent-mode)))
 
