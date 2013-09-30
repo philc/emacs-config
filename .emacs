@@ -493,7 +493,7 @@
   "cp" 'coffee-compile-buffer)
 
 ;; Make return and open-line indent the cursor properly.
-(evil-define-key 'insert coffee-mode-map (kbd "RET") 'coffee-newline-and-indent))
+(evil-define-key 'insert coffee-mode-map (kbd "RET") 'coffee-newline-and-indent)
 (evil-define-key 'normal coffee-mode-map "o" '(lambda ()
                                                 (interactive)
                                                 (end-of-line)
