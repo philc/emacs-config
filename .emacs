@@ -165,10 +165,6 @@
   "q" 'evil-fill-around-paragraph
   "a" 'projectile-ack
   "d" 'projectile-dired
-  "ee" 'open-emacs-config
-  "eb" 'eval-buffer
-  "es" 'eval-last-sexp
-  "ex" 'eval-surrounding-sexp
   ; "v" is a mnemonic prefix for "view X".
   "vg" 'mu4e
   "vo" (lambda () (interactive) (find-file "~/Dropbox/tasks.org"))
@@ -204,7 +200,6 @@
 (define-key evil-insert-state-map (kbd "C-u") 'backward-kill-line)
 (define-key evil-insert-state-map (kbd "C-d") 'delete-char)
 (global-set-key (kbd "C-h") 'backward-delete-char) ; Here we clobber C-h, which accesses Emacs's help.
-
 
 ;; Commenting via NERD commentor.
 (define-key evil-normal-state-map "," 'evilnc-comment-operator)
@@ -520,9 +515,24 @@
 (add-hook 'emacs-lisp-mode-hook (lambda () (modify-syntax-entry ?- "w")))
 (evil-define-key 'normal emacs-lisp-mode-map "K" '(lambda ()
                                                     (interactive)
-                                                    ;; Inspired from help-fns.el.
+                                                    ;; Run `describe-function` and show its output in a help
+                                                    ;; window. Inspired from help-fns.el.
                                                     (with-help-window "*Help*"
                                                       (describe-function (intern (current-word))))))
+
+(defun current-sexp ()
+  "Returns the text content of the sexp list around the cursor."
+  (let ((position (bounds-of-thing-at-point 'list)))
+    (buffer-substring-no-properties (car position) (cdr position))))
+
+(defun elisp-eval-current-sexp ()
+  (interactive)
+  (print (eval (read (current-sexp)))))
+
+(evil-leader/set-key-for-mode 'emacs-lisp-mode
+  "eb" 'eval-buffer
+  "es" 'elisp-eval-current-sexp
+  "ex" 'eval-defun)
 
 ;;
 ;; Clojure
@@ -582,9 +592,7 @@
 (defun nrepl-eval-current-sexp ()
   "Eval the sexp the current is currently in. In Emacs' syntax table, this is called a list of expressions."
   (interactive)
-  (let ((position (bounds-of-thing-at-point 'list)))
-    (nrepl-interactive-eval (buffer-substring-no-properties (car position) (cdr position)))))
-
+  (nrepl-interactive-eval (current-sexp)))
 
 ;; The all-important nREPL eval shortcuts.
 (evil-leader/set-key-for-mode 'clojure-mode
