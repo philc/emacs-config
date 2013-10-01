@@ -134,6 +134,11 @@
 (define-key minibuffer-local-map (kbd "C-d") 'delete-char)
 (define-key minibuffer-local-map (kbd "C-w") 'backward-kill-word)
 
+;; Creating window splits.
+(setq split-height-threshold 40)
+(setq split-width-threshold 200)
+(setq split-window-preferred-function 'split-window-sensibly-reverse)
+
 ;;
 ;; Evil mode -- Vim keybindings for Emacs.
 ;;
@@ -201,6 +206,11 @@
 (define-key evil-insert-state-map (kbd "C-d") 'delete-char)
 (global-set-key (kbd "C-h") 'backward-delete-char) ; Here we clobber C-h, which accesses Emacs's help.
 
+;; Window switching
+;; Evil's window map is the set of keys which control window functions. All of its keys must be prefixed
+;; by <C-w>.
+(define-key evil-window-map (kbd "x") 'delete-window)
+
 ;; Commenting via NERD commentor.
 (define-key evil-normal-state-map "," 'evilnc-comment-operator)
 (define-key evil-visual-state-map "," 'evilnc-comment-operator)
@@ -262,8 +272,11 @@
 ;; These aren't specifically replicating OSX shortcuts, but they manipulate the window, so I want them to take
 ;; precedence over everything else.
 ;; Moving between Emacs windows (splits).
-;; If you want to have directional keys for switching windows, bind them to windmove-down, windmove-left, etc.
 (define-key osx-keys-minor-mode-map (kbd "M-C-n") 'other-window)
+(define-key osx-keys-minor-mode-map (kbd "M-1") 'switch-to-window-1)
+(define-key osx-keys-minor-mode-map (kbd "M-2") 'switch-to-window-2)
+(define-key osx-keys-minor-mode-map (kbd "M-3") 'switch-to-window-3)
+(define-key osx-keys-minor-mode-map (kbd "M-4") 'switch-to-window-4)
 
 (define-minor-mode osx-keys-minor-mode
   "A minor-mode for emulating osx keyboard shortcuts."
@@ -278,6 +291,56 @@
         (assq-delete-all 'osx-keys-minor-mode minor-mode-map-alist)
         (add-to-list 'minor-mode-map-alist osx-keys))))
 (ad-activate 'load)
+
+;; These switch-to-window functions jump to a numbered window on-screen. They assume my convential window
+;; layout, which is either a single window on the left and 2 splits on the right, or 4 splits in a 2x2 grid.
+(defun switch-to-window-1 ()
+  (interactive)
+  (condition-case nil (windmove-up) (error nil))
+  (condition-case nil (windmove-left) (error nil)))
+
+(defun switch-to-window-2 ()
+  (interactive)
+  (call-interactively 'switch-to-window-1)
+  (condition-case nil (windmove-down) (error (windmove-right 1))))
+
+(defun switch-to-window-3 ()
+  (interactive)
+  (call-interactively 'switch-to-window-1)
+  (condition-case nil
+      (progn
+        (windmove-down)
+        (windmove-up)
+        (windmove-right 1))
+    (error (progn (windmove-right 1)
+                  (windmove-down)))))
+
+(defun switch-to-window-4 ()
+  (interactive)
+  (call-interactively 'switch-to-window-1)
+  (windmove-right)
+  (windmove-down))
+
+(defun split-window-sensibly-reverse (&optional window)
+  "Identical to the built-in function split-window-sensibly, but prefers horizontal splits over vertical."
+  (let ((window (or window (selected-window))))
+    (or (and (window-splittable-p window t)
+       ;; Split window horizontally.
+       (with-selected-window window
+         (split-window-right)))
+  (and (window-splittable-p window)
+       ;; Split window vertically.(column-marker-1 80)
+       (with-selected-window window
+         (split-window-below)))
+  (and (eq window (frame-root-window (window-frame window)))
+       (not (window-minibuffer-p window))
+       ;; If WINDOW is the only window on its frame and is not the
+       ;; minibuffer window, try to split it vertically disregarding
+       ;; the value of `split-height-threshold'.
+       (let ((split-height-threshold 0))
+         (when (window-splittable-p window)
+     (with-selected-window window
+       (split-window-below))))))))
 
 ; Closes the current elscreen, or if there's only one screen, use the ":q" Evil
 ; command. This simulates the ":q" behavior of Vim when used with tabs.
