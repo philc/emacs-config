@@ -544,10 +544,10 @@
 ;;
 ;; CSS
 ;;
-(add-hook 'css-mode (lambda ()
-                      (autopair-mode t) ; Auto-insert matching delimiters.
-                      ;; Properly unindent a closing brace after you type it and hit enter.
-                      (eletric-indent-mode)))
+(add-hook 'css-mode-hook (lambda ()
+                           (autopair-mode 1) ; Auto-insert matching delimiters.
+                           ;; Properly unindent a closing brace after you type it and hit enter.
+                           (eletric-indent-mode)))
 
 ;;
 ;; Coffeescript
