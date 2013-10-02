@@ -136,6 +136,12 @@
 (define-key minibuffer-local-map (kbd "C-u") 'backward-kill-line)
 (define-key minibuffer-local-map (kbd "C-d") 'delete-char)
 (define-key minibuffer-local-map (kbd "C-w") 'backward-kill-word)
+(define-key minibuffer-local-map (kbd "C-h") 'backward-delete-char)
+
+;; RecentF mode is the Emacs minor mode used when opening files via C-x C-f.
+(require 'recentf)
+(define-key recentf-mode-map (kbd "C-w") 'backward-kill-word)
+(define-key recentf-mode-map (kbd "C-h") 'backward-delete-char)
 
 ;; Creating window splits.
 (setq split-height-threshold 40)
