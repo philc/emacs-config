@@ -582,7 +582,7 @@
 (add-to-list 'auto-mode-alist '("Vagrantfile$" . ruby-mode))
 
 ;; Insert matching delimiters; unindent end blocks after you type them.
-(add-hook 'ruby-mode (lambda () (ruby-electric)))
+(add-hook 'ruby-mode-hook (lambda () (ruby-electric)))
 
 ;;
 ;; Emacs Lisp (elisp)
