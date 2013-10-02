@@ -626,6 +626,15 @@
 (evil-define-key 'normal clojure-mode-map "K" 'nrepl-doc)
 (evil-define-key 'normal clojure-mode-map "gf" 'nrepl-jump)
 
+;; Hide the uninteresting nrepl-connection and nrepl-server buffers from the buffer list.
+(setq nrepl-hide-special-buffers t)
+
+;; Don't ask confirmation for closing any open nrepl connections when exiting Emacs.
+;; http://stackoverflow.com/q/2706527/46237
+(defadvice save-buffers-kill-emacs (around no-query-kill-emacs activate)
+  "Prevent annoying \"Active processes exist\" query when you quit Emacs."
+  (flet ((process-list ())) ad-do-it))
+
 (evil-define-operator evil-nrepl-eval (beg end)
   "Evaluate the text region moved over by an evil motion."
   (nrepl-eval-region beg end))
