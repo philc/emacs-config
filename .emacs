@@ -645,6 +645,13 @@
 ;; Hide the uninteresting nrepl-connection and nrepl-server buffers from the buffer list.
 (setq nrepl-hide-special-buffers t)
 
+;; Prevent the auto-display of the REPL buffer in a separate window after connection is established.
+(setq nrepl-pop-to-repl-buffer-on-connect nil)
+
+;; Auto-focus the error buffer when it's displayed after evaluating some clojure code. This makes it easy
+;; to type "q" to dismiss the window, assuming you don't want this backtrace window hanging around.
+(setq nrepl-auto-select-error-buffer t)
+
 ;; Don't ask confirmation for closing any open nrepl connections when exiting Emacs.
 ;; http://stackoverflow.com/q/2706527/46237
 (defadvice save-buffers-kill-emacs (around no-query-kill-emacs activate)
