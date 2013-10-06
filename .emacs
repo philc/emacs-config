@@ -143,10 +143,14 @@
 (define-key recentf-mode-map (kbd "C-w") 'backward-kill-word)
 (define-key recentf-mode-map (kbd "C-h") 'backward-delete-char)
 
-;; Creating window splits.
+;; Settings for window splits.
 (setq split-height-threshold 40)
 (setq split-width-threshold 200)
 (setq split-window-preferred-function 'split-window-sensibly-reverse)
+
+;; The poorly-named winner mode saves the history of your window splits, so you can undo and redo changes to
+;; your window configuration.
+(winner-mode t)
 
 ;;
 ;; Evil mode -- Vim keybindings for Emacs.
@@ -215,12 +219,16 @@
 (define-key evil-insert-state-map (kbd "C-d") 'delete-char)
 (global-set-key (kbd "C-h") 'backward-delete-char) ; Here we clobber C-h, which accesses Emacs's help.
 
-;; Window switching
-;; Evil's window map is the set of keys which control window functions. All of its keys must be prefixed
-;; by <C-w>.
+;; Window switching & manipulation.
+;; Evil's window map is the set of keys which control window functions. All of its keys are prefixed with
+;; <C-w>.
 (define-key evil-window-map (kbd "x") 'delete-window)
 (define-key evil-window-map (kbd "v") 'split-window-horizontally-and-focus)
 (define-key evil-window-map (kbd "s") 'split-window-vertically-and-focus)
+(define-key evil-window-map (kbd "m") 'delete-other-windows) ; Delete other splits (maximize).
+;; Undo the last change you made to your window configuration. Very handy as a method for temporarily
+;; maximizing a window: first invoke delete-other-windows, and then invoke winner-undo..
+(define-key evil-window-map (kbd "b") 'winner-undo)
 
 ;; Commenting via NERD commentor.
 (define-key evil-normal-state-map "," 'evilnc-comment-operator)
