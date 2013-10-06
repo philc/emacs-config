@@ -535,24 +535,21 @@
 
 ;;
 ;; Spell checking
-;; http://www.emacswiki.org/emacs/FlySpell.
+;; http://www.emacswiki.org/emacs/SpeckMode
+;; FlySpell is the default choice for spellchecking, but I found it slow, even using every flyspell perf
+;; improvement I could find. Speck doesn't slow down your typing.
 ;;
-;; You may need to install aspell (e.g. `brew install aspell`) to use it via Flyspell.
-(setq ispell-program-name "/usr/local/bin/aspell" ispell-extra-args '("--sug-mode=ultra"))
+;; You may need to install aspell (e.g. `brew install aspell`).
 
-;; Highlight all mispellings when a file is opened. Flyspell only spellchecks words you modify.
-;; I would like to enable this for programming modes (by running (flyspell-prog-mode) in a prog-mode-hook,
-;; but it visibly slows down how quickly my can move through lines.
-(add-hook 'text-mode-hook (lambda ()
-                            (flyspell-mode)
-                            (flyspell-buffer)))
+(add-to-list 'load-path "~/.emacs.d/plugins/speck-mode")
 
+(require 'speck)
+;; This apparently needs to be a fully-qualified path.
+(setq speck-personal-dictionary-file "/Users/reformist/.personal_dict.txt")
+(setq speck-engine (quote Aspell))
+(add-hook 'text-mode-hook 'speck-mode)
  ;; Triggers a spell-correction menu. I use this to add words to my dictionary (hit "i").
-(define-key evil-normal-state-map (kbd "zg") 'ispell-word)
-
-;; Disable showing messages for performance reasons, as suggested by http://www.emacswiki.org/emacs/FlySpell.
-(setq flyspell-issue-message-flag nil)
-(setq ispell-personal-dictionary "~/.personal_dict.txt")
+(define-key evil-normal-state-map (kbd "zg") 'speck-popup-menu-at-point)
 
 ;;
 ;; Powerline: improve the appearance & density of the Emacs status bar.
