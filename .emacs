@@ -447,20 +447,19 @@
 (elscreen-start)
 (global-set-key (kbd "<A-M-left>") 'elscreen-previous) ; KeyRemap4Macbook translates M-J to these keys.
 (global-set-key (kbd "<A-M-right>") 'elscreen-next) ; KeyRemap4Macbook translates M-J to these keys.
-;; I'm using elscreen-clone here instead of elscreen-create so that the new tab has the current directory set
-;; properly, so projectile can be used immediately.
-(define-key evil-normal-state-map (kbd "M-t") 'elscreen-clone)
-(define-key evil-insert-state-map (kbd "M-t") '(lambda ()
-                                                 ;; Exit out of insert mode when opening a new tab.
-                                                 (interactive)
-                                                 (evil-change-to-initial-state)
-                                                 (elscreen-clone)))
 
-;; Make it so M-1 selects the first tab, etc.
-(dolist (i (number-sequence 1 9))
-  (lexical-let ((tab-index (- i 1)))
-    (global-set-key (kbd (concat "M-" (number-to-string i)))
-                    (lambda () (interactive) (elscreen-goto tab-index)))))
+(define-key evil-normal-state-map (kbd "M-t") 'open-current-buffer-in-new-tab)
+(define-key evil-insert-state-map (kbd "M-t") 'open-current-buffer-in-new-tab)
+
+(defun open-current-buffer-in-new-tab ()
+  (interactive)
+  ;; Exit out of insert mode when opening a new tab.
+  (evil-change-to-initial-state)
+  ;; I'm using elscreen-clone here instead of elscreen-create so that the new tab has the current directory set
+  ;; properly, so projectile can be used immediately.
+  (elscreen-clone)
+  (delete-other-windows))
+
 ;;
 ;; Markdown
 ;;
