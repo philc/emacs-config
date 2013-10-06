@@ -219,6 +219,8 @@
 ;; Evil's window map is the set of keys which control window functions. All of its keys must be prefixed
 ;; by <C-w>.
 (define-key evil-window-map (kbd "x") 'delete-window)
+(define-key evil-window-map (kbd "v") 'split-window-horizontally-and-focus)
+(define-key evil-window-map (kbd "s") 'split-window-vertically-and-focus)
 
 ;; Commenting via NERD commentor.
 (define-key evil-normal-state-map "," 'evilnc-comment-operator)
@@ -300,6 +302,16 @@
         (assq-delete-all 'osx-keys-minor-mode minor-mode-map-alist)
         (add-to-list 'minor-mode-map-alist osx-keys))))
 (ad-activate 'load)
+
+(defun split-window-vertically-and-focus ()
+  (interactive)
+  (split-window-vertically)
+  (other-window 1))
+
+(defun split-window-horizontally-and-focus ()
+  (interactive)
+  (split-window-horizontally)
+  (other-window 1))
 
 ;; These switch-to-window functions jump to a numbered window on-screen. They assume my convential window
 ;; layout, which is either a single window on the left and 2 splits on the right, or 4 splits in a 2x2 grid.
