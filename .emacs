@@ -63,10 +63,10 @@
 (setq mac-option-modifier 'alt)
 (setq mac-command-modifier 'meta)
 
-;; Put backup and autosave files in your home directory, out of the way.
-;; http://www.emacswiki.org/emacs/AutoSave
-(setq backup-directory-alist `((".*" . "~/.backups")))
-(setq auto-save-file-name-transforms `((".*" "~/.backups" t)))
+;; Turn off backups so we don't have ~ files strewn about the working directory. I've tried storing backups
+;; in my home directory as suggested by http://stackoverflow.com/q/151945/46237, but still I see the
+;; occasional backup file.
+(setq make-backup-files nil)
 
 (setq vc-follow-symlinks t) ; Don't ask confirmation to follow symlinks to edit files.
 
