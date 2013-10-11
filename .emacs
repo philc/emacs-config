@@ -772,6 +772,11 @@ but doesn't treat single semicolons as right-hand-side comments."
         (goto-char (- (point-max) pos)))))
 
 ;;
+;; HTML mode
+;;
+(add-to-list 'auto-mode-alist '("\\.erb$" . html-mode))
+
+;;
 ;; mu4e - email & gmail in Emacs.
 ;;
 ;; References:
