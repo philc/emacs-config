@@ -174,13 +174,21 @@
 (define-key evil-normal-state-map (kbd "K") 'info-lookup-symbol)
 
 ;; By default, Emacs will not indent when you hit enter/return within a comment.
-(define-key evil-insert-state-map (kbd "RET") 'comment-indent-new-line)
+(define-key evil-insert-state-map (kbd "RET") 'newline-and-indent)
+(global-set-key (kbd "C-A-M-h") 'help) ; Here we clobber C-h, which accesses Emacs's help.
+(global-set-key (kbd "C-A-M-b") 'describe-bindings) ; Here we clobber C-h, which accesses Emacs's help.
+
+;; gq is normally bound to evil-fill-and-move, but when I reflow a paragraph, I like the cursor to remain
+;; where it was.
+(define-key evil-normal-state-map "gq" 'evil-fill)
+(define-key evil-normal-state-map "-" 'evil-indent-without-move)
 
 (evil-leader/set-key
   "h" 'help
   "b" 'ido-switch-buffer
   "t" 'projectile-find-file
-  "q" 'evil-fill-around-paragraph
+  "q" 'evil-fill-around-paragraph ; Shortcut for Vim's gqap
+  "i" 'evil-indent-around-paragraph ; Shortcut to Vim's =ap
   "a" 'projectile-ack
   "d" 'projectile-dired
   ; "v" is a mnemonic prefix for "view X".
@@ -190,16 +198,18 @@
 
 (eval-after-load 'evil
   '(progn (setq evil-leader/leader ";")))
-     ;; Unbind these keys in evil so they can instead be used for code navigation.
-     ;; TODO(philc): Will I need these?
-     ; (define-key evil-normal-state-map (kbd "M-,") nil)
-     ; (define-key evil-normal-state-map (kbd "M-.") nil)))
 
 (defun evil-fill-around-paragraph (beg end)
-  "Fills (reflows/linewraps) the current paragraph. Equivalent to gqap in view."
+  "Fills (reflows/linewraps) the current paragraph. Equivalent to gqap in vim."
   (interactive "r")
   (let ((region (evil-a-paragraph)))
-    (evil-fill-and-move (first region) (second region))))
+    (evil-fill (first region) (second region))))
+
+(defun evil-indent-around-paragraph (beg end)
+  "Fills (reflows/linewraps) the current paragraph. Equivalent to gqap in vim."
+  (interactive "r")
+    (let ((region (evil-a-paragraph)))
+          (evil-indent-without-move (first region) (second region))))
 
 (defun eval-surrounding-sexp (levels)
   (interactive "p")
@@ -211,6 +221,13 @@
   "Delete backward (Ctrl-u) as in Bash."
   (interactive "p")
   (kill-line (- 1 arg)))
+
+(evil-define-operator evil-indent-without-move (beg end)
+  "Indent text."
+  :move-point nil
+  :type line
+  (save-excursion
+    (evil-indent beg end)))
 
 ;; Enable Emacs/Bash insert-mode keybindings.
 (define-key evil-insert-state-map (kbd "C-k") 'kill-line)
