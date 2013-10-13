@@ -534,12 +534,33 @@
 ;; (setq real-auto-save-interval 10) ;; in seconds
 
 ;;
-;; Snippets
+;; Snippets - yassnippet
 ;;
 ;; Ignore the default snippets that come with yasnippet. I only need my own, and don't want any conflicts.
 (setq yas-snippet-dirs '("~/.emacs.d/snippets"))
 (require 'yasnippet)
 (yas-global-mode 1)
+(define-key yas-keymap (kbd "ESC") 'yas-abort-snippet)
+;; By default, you can't delete selected text using backspace when tabbing through a snippet.
+;; Filed as a bug here: https://github.com/capitaomorte/yasnippet/issues/408
+(define-key yas-keymap (kbd "C-h") 'yas-skip-and-clear-or-delete-backward-char)
+(define-key yas-keymap (kbd "backspace") 'yas-skip-and-clear-or-delete-backward-char)
+
+;; This function is based on yas-skip-and-clear-or-delete-char from yassnippet.el.
+(defun yas-skip-and-clear-or-delete-backward-char (&optional field)
+  "Clears unmodified field if at field start, skips to next tab. Otherwise deletes backward."
+  (interactive)
+  (let ((field (or field
+                   (and yas--active-field-overlay
+                        (overlay-buffer yas--active-field-overlay)
+                        (overlay-get yas--active-field-overlay 'yas--field)))))
+    (cond ((and field
+                (not (yas--field-modified-p field))
+                (eq (point) (marker-position (yas--field-start field))))
+           (yas--skip-and-clear field)
+           (yas-next-field 1))
+          (t
+           (call-interactively 'delete-backward-char)))))
 
 ;;
 ;; Fill column indicator. Show a vertical bar at the fill column (for me, that's 110 chars).
