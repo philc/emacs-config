@@ -209,8 +209,22 @@
 (defun evil-indent-around-paragraph (beg end)
   "Fills (reflows/linewraps) the current paragraph. Equivalent to gqap in vim."
   (interactive "r")
-    (let ((region (evil-a-paragraph)))
-          (evil-indent-without-move (first region) (second region))))
+  (let ((region (evil-a-paragraph)))
+    (evil-indent-without-move (first region) (second region))))
+
+(defun evil-shift-paragraph-left (beg end)
+  "Shifts a paragraph left."
+  (interactive "r")
+  (let ((region (evil-a-paragraph)))
+    (save-excursion
+      (evil-shift-left (first region) (second region)))))
+
+(defun evil-shift-paragraph-right (beg end)
+  "Shifts a paragraph right."
+  (interactive "r")
+  (let ((region (evil-a-paragraph)))
+    (save-excursion
+      (evil-shift-right (first region) (second region)))))
 
 (defun eval-surrounding-sexp (levels)
   (interactive "p")
@@ -518,14 +532,20 @@
 (add-to-list 'auto-mode-alist '("\\.md$" . gfm-mode))
 
 (eval-after-load 'markdown-mode
- '(progn
-    (evil-define-key 'insert markdown-mode-map
-      (kbd "<C-return>") 'markdown-insert-list-item-below)
-    (evil-define-key 'normal markdown-mode-map
-      ; Autocomplete setext headers by typing "==" or "--" on the header's line in normal mode.
-      (kbd "==") '(lambda () (interactive) (insert-markdown-header "=="))
-      (kbd "--") '(lambda () (interactive) (insert-markdown-header "--"))
-      (kbd "<C-return>") 'markdown-insert-list-item-below)))
+  '(progn
+     (evil-define-key 'normal markdown-mode-map
+       ;; Autocomplete setext headers by typing "==" or "--" on the header's line in normal mode.
+       (kbd "==") '(lambda () (interactive) (insert-markdown-header "=="))
+       (kbd "--") '(lambda () (interactive) (insert-markdown-header "--")))
+     (mapc (lambda (state)
+             (evil-define-key state markdown-mode-map
+               (kbd "C-S-H") 'evil-shift-paragraph-left
+               (kbd "C-S-L") 'evil-shift-paragraph-right
+               (kbd "C-S-K") 'markdown-move-up
+               (kbd "C-S-J") 'markdown-move-down
+               ;; M-return creates a new todo item and enters insert mode.
+               (kbd "<C-return>") 'markdown-insert-list-item-below))
+           '(normal insert))))
 
 ;;
 ;; Auto save every few seconds.
