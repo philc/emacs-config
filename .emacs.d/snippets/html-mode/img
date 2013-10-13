@@ -1,5 +1,4 @@
-# contributor: Jimmy Wu <frozenthrone88@gmail.com>
-# name: <img src="..." class="..." alt="..." />
+# name: img
 # key: img
 # --
-<img src="$1" class="$2" alt="$3" />
+<img src="$1" ${2: id="${3:some_id}"}${4: class="${5:some_class}"} />
