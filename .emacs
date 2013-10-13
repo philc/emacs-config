@@ -26,6 +26,7 @@
                       projectile ; Find file in project (ala CTRL-P).
                       rainbow-delimiters ; Highlight parentheses in rainbow colors.
                       ruby-electric ; Insert matching delimiters; unindent end blocks after you type them.
+                      scss-mode
                       yasnippet))
 
 (dolist (p my-packages)
@@ -775,6 +776,12 @@ but doesn't treat single semicolons as right-hand-side comments."
 ;; HTML mode
 ;;
 (add-to-list 'auto-mode-alist '("\\.erb$" . html-mode))
+
+;;
+;; SCSS mode, for editing SCSS files.
+;;
+(setq scss-compile-at-save nil)
+(add-to-list 'auto-mode-alist '("\\.scss\\'" . scss-mode))
 
 ;;
 ;; mu4e - email & gmail in Emacs.
