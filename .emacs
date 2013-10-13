@@ -368,6 +368,11 @@
   (windmove-right)
   (windmove-down))
 
+(defadvice windmove-do-window-select (after windowmove-change-to-normal-mode)
+  "Ensure we reset to Evil's normal mode when switching windows."
+  (evil-change-to-initial-state))
+(ad-activate 'windmove-do-window-select)
+
 (defun split-window-sensibly-reverse (&optional window)
   "Identical to the built-in function split-window-sensibly, but prefers horizontal splits over vertical."
   (let ((window (or window (selected-window))))
