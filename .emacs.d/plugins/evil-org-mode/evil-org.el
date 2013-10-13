@@ -70,7 +70,11 @@
   "^" 'org-beginning-of-line
   "<" 'org-metaleft
   ">" 'org-metaright
-  ";a" 'org-archive-subtree
+  ";a" '(lambda () (interactive)
+          (org-archive-subtree)
+          ;; For some reason org-archive-subtree aggressively scrolls the window down. Re-center the window on
+          ;; the cursor.
+          (call-interactively 'evil-scroll-line-to-center))
   ";g" 'org-set-tags-command
   ";va" 'org-agenda
   "-" 'org-cycle-list-bullet
