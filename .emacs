@@ -710,10 +710,6 @@
   (nrepl-quit)
   (nrepl-jack-in nil))
 
-;; Enable eldoc integration in buffers
-(add-hook 'nrepl-interaction-mode-hook
-  'nrepl-turn-on-eldoc-mode)
-
 (defun nrepl-eval-current-sexp ()
   "Eval the sexp the current is currently in. In Emacs' syntax table, this is called a list of expressions."
   (interactive)
