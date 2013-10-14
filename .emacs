@@ -12,10 +12,11 @@
                       clojure-mode
                       clojure-test-mode
                       coffee-mode ; For syntax highlighting coffeescript.
+                      dired-details+ ; Hides all of the unnecessary file details in dired mode.
                       evil
                       evil-leader
                       evil-nerd-commenter
-                      flx ; Fuzzy matching for ido, which improves the UX of Projectile.
+                      flx-ido ; Fuzzy matching for ido, which improves the UX of Projectile.
                       less-css-mode ; Syntax highlighting for LESS CSS files.
                       ido-ubiquitous ; Make ido completions work everywhere.
                       ido-vertical-mode ; Show ido results vertically.
@@ -450,6 +451,56 @@
      (setq ido-enable-flex-matching t)
      (setq ido-use-virtual-buffers t)
      (setq ido-everywhere t)))
+
+;;
+;; Dired mode - using the Emacs file browser.
+;;
+(require 'dired-details+)
+(setq dired-recursive-copies (quote always))
+(setq dired-recursive-deletes (quote top))
+
+;; "go to dired, then call split-window-vertically, then go to another dired dir. Now, when you press C to
+;; copy, the other dir in the split pane will be default destination. Same for R (rename; move)."
+(setq dired-dwim-target t)
+
+;; Use the same buffer for going into and up directories.
+(evil-define-key 'normal dired-mode-map (kbd "gu") (lambda () (interactive) (find-alternate-file "..")))
+(evil-define-key 'normal dired-mode-map "H" (lambda () (interactive) (find-alternate-file "..")))
+(evil-define-key 'normal dired-mode-map (kbd "<return>")
+  'dired-find-alternate-file) ; was dired-advertised-find-file
+
+;; dired overrides my global "next window" shorcut.
+(evil-define-key 'normal dired-mode-map (kbd "M-C-n") 'other-window)
+(evil-define-key 'normal dired-mode-map (kbd "cd") 'dired-create-directory)
+(evil-define-key 'normal dired-mode-map (kbd "cf") 'dired-create-file)
+(evil-define-key 'normal dired-mode-map (kbd "x") 'dired-mark)
+(evil-define-key 'normal dired-mode-map "v" 'dired-details-toggle)
+;; The "e" prefix is for execute.
+(evil-define-key 'normal dired-mode-map (kbd "ed") 'dired-do-flagged-delete)
+(evil-define-key 'normal dired-mode-map (kbd "em") 'dired-do-rename)
+
+;; Taken from http://stackoverflow.com/a/18885461/46237.
+(defun dired-create-file (file)
+  "Create a file called FILE, and recursively create any parent directories.
+  If FILE already exists, signal an error."
+  (interactive
+   (list (read-file-name "Create file: " (dired-current-directory))))
+  (let* ((expanded (expand-file-name file))
+         (try expanded)
+         (dir (directory-file-name (file-name-directory expanded)))
+         new)
+    (if (file-exists-p expanded)
+        (error "Cannot create file %s: file exists" expanded))
+    ;; Find the topmost nonexistent parent dir (variable `new')
+    (while (and try (not (file-exists-p try)) (not (equal new try)))
+      (setq new try
+            try (directory-file-name (file-name-directory try))))
+    (when (not (file-exists-p dir))
+      (make-directory dir t))
+    (write-region "" nil expanded t)
+    (when new
+      (dired-add-file new)
+      (dired-move-to-filename))))
 
 ;;
 ;; Org mode, for TODOs and note taking.
@@ -955,3 +1006,4 @@ but doesn't treat single semicolons as right-hand-side comments."
 (setq smtpmail-stream-type 'ssl)
 (setq smtpmail-smtp-server "smtp.gmail.com")
 (setq smtpmail-smtp-service 465)
+(put 'dired-find-alternate-file 'disabled nil)
