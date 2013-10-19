@@ -727,7 +727,7 @@
 ;;
 ;; Emacs Lisp (elisp)
 ;;
-(add-hook 'emacs-lisp-mode-hook (lambda () (modify-syntax-entry ?- "w")))
+(add-hook 'emacs-lisp-mode-hook (lambda () (modify-syntax-entry ?- "w" emacs-lisp-mode-syntax-table)))
 (evil-define-key 'normal emacs-lisp-mode-map "K" '(lambda ()
                                                     (interactive)
                                                     ;; Run `describe-function` and show its output in a help
@@ -757,7 +757,7 @@
 ;; http://clojure-doc.org/articles/tutorials/emacs.html
 
 ;; Count hyphens, etc. as word characters in lisps
-(add-hook 'clojure-mode-hook (lambda () (modify-syntax-entry ?- "w")))
+(add-hook 'clojure-mode-hook (lambda () (modify-syntax-entry ?- "w" clojure-mode-syntax-table)))
 (add-hook 'clojure-mode-hook (lambda ()
                                (setq indent-line-function 'lisp-indent-line-single-semicolon-fix)
                                ;; Comment lines using only one semi-colon instead of two.
