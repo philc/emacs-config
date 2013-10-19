@@ -28,6 +28,7 @@
                       rainbow-delimiters ; Highlight parentheses in rainbow colors.
                       ruby-electric ; Insert matching delimiters; unindent end blocks after you type them.
                       scss-mode
+                      yaml-mode
                       yasnippet))
 
 (dolist (p my-packages)
@@ -1010,3 +1011,9 @@ but doesn't treat single semicolons as right-hand-side comments."
 (setq smtpmail-stream-type 'ssl)
 (setq smtpmail-smtp-server "smtp.gmail.com")
 (setq smtpmail-smtp-service 465)
+
+;;
+;; YAML mode
+;;
+(require 'yaml-mode)
+(add-to-list 'auto-mode-alist '("\\.yml$" . yaml-mode))
