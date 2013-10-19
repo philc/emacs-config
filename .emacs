@@ -57,7 +57,7 @@
 
 (when window-system (set-exec-path-from-shell-PATH))
 
-(global-auto-revert-mode t) ; Reload an open file from disk if it is changed outside of Emacs.
+(global-auto-revert-mode 1) ; Reload an open file from disk if it is changed outside of Emacs.
 
 (setq inhibit-startup-message t)
 (setq inhibit-startup-echo-area-message t)
@@ -459,6 +459,8 @@
 (setq dired-recursive-copies (quote always))
 (setq dired-recursive-deletes (quote top))
 
+(put 'dired-find-alternate-file 'disabled nil) ; By default, the dired-find-alternative-file fn is disabled.
+
 ;; "go to dired, then call split-window-vertically, then go to another dired dir. Now, when you press C to
 ;; copy, the other dir in the split pane will be default destination. Same for R (rename; move)."
 (setq dired-dwim-target t)
@@ -469,15 +471,17 @@
 (evil-define-key 'normal dired-mode-map (kbd "<return>")
   'dired-find-alternate-file) ; was dired-advertised-find-file
 
-;; dired overrides my global "next window" shorcut.
+;; dired overrides my global "other window" shorcut.
 (evil-define-key 'normal dired-mode-map (kbd "M-C-n") 'other-window)
-(evil-define-key 'normal dired-mode-map (kbd "cd") 'dired-create-directory)
-(evil-define-key 'normal dired-mode-map (kbd "cf") 'dired-create-file)
-(evil-define-key 'normal dired-mode-map (kbd "x") 'dired-mark)
+(define-key dired-mode-map ";" nil) ; TODO(philc): Dired mode is eating my leader key.
+(evil-define-key 'normal dired-mode-map (kbd "M-C-n") 'other-window)
+(evil-define-key 'normal dired-mode-map "cd" 'dired-create-directory)
+(evil-define-key 'normal dired-mode-map "cf" 'dired-create-file)
+(evil-define-key 'normal dired-mode-map "x" 'dired-mark)
 (evil-define-key 'normal dired-mode-map "v" 'dired-details-toggle)
 ;; The "e" prefix is for execute.
-(evil-define-key 'normal dired-mode-map (kbd "ed") 'dired-do-flagged-delete)
-(evil-define-key 'normal dired-mode-map (kbd "em") 'dired-do-rename)
+(evil-define-key 'normal dired-mode-map "ed" 'dired-do-flagged-delete)
+(evil-define-key 'normal dired-mode-map "em" 'dired-do-rename)
 
 ;; Taken from http://stackoverflow.com/a/18885461/46237.
 (defun dired-create-file (file)
@@ -1006,4 +1010,3 @@ but doesn't treat single semicolons as right-hand-side comments."
 (setq smtpmail-stream-type 'ssl)
 (setq smtpmail-smtp-server "smtp.gmail.com")
 (setq smtpmail-smtp-service 465)
-(put 'dired-find-alternate-file 'disabled nil)
