@@ -746,7 +746,7 @@
   (print (eval (read (current-sexp)))))
 
 (evil-leader/set-key-for-mode 'emacs-lisp-mode
-  "eb" 'eval-buffer
+  "eb" (lambda() (interactive) (save-buffer) (eval-buffer))
   "es" 'elisp-eval-current-sexp
   "ex" 'eval-defun)
 
@@ -826,7 +826,7 @@
 ;; The all-important nREPL eval shortcuts.
 (evil-leader/set-key-for-mode 'clojure-mode
   "eap" 'nrepl-eval-paragraph
-  "eb" 'nrepl-load-current-buffer
+  "eb" (lambda() (interactive) (save-buffer) (nrepl-load-current-buffer))
   "ee" 'nrepl-show-nrepl-buffer
   "ek" 'nrepl-clear-buffer-inside-nrepl-buffer
   ; nrepl-restart is more handy than nrepl-jack-in, because it doesn't leave existing repls running.
