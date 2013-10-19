@@ -814,7 +814,8 @@
 (defun nrepl-restart ()
   "Restarts or starts afresh the nrepl."
   (interactive)
-  (nrepl-quit)
+  (flet ((y-or-n-p (&rest args) t)) ; Skip the confirmation prompt.
+    (nrepl-quit))
   (nrepl-jack-in nil))
 
 (defun nrepl-eval-current-sexp ()
