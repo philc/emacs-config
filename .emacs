@@ -261,9 +261,10 @@
 ;; Evil's window map is the set of keys which control window functions. All of its keys are prefixed with
 ;; <C-w>.
 (define-key evil-window-map (kbd "x") 'delete-window)
+(define-key evil-window-map (kbd "n") 'create-window-in-next-logical-spot)
 (define-key evil-window-map (kbd "v") 'split-window-horizontally-and-focus)
 (define-key evil-window-map (kbd "s") 'split-window-vertically-and-focus)
-(define-key evil-window-map (kbd "m") 'delete-other-windows) ; Delete other splits (maximize).
+(define-key evil-window-map (kbd "m") 'delete-other-windows) ; Delete other splits ("maximize").
 ;; Undo the last change you made to your window configuration. Very handy as a method for temporarily
 ;; maximizing a window: first invoke delete-other-windows, and then invoke winner-undo..
 (define-key evil-window-map (kbd "b") 'winner-undo)
@@ -271,6 +272,84 @@
 ;; Commenting via NERD commentor.
 (define-key evil-normal-state-map "," 'evilnc-comment-operator)
 (define-key evil-visual-state-map "," 'evilnc-comment-operator)
+
+(defun split-window-vertically-and-focus ()
+  (interactive)
+  (split-window-vertically)
+  (other-window 1))
+
+(defun split-window-horizontally-and-focus ()
+  (interactive)
+  (split-window-horizontally)
+  (other-window 1))
+
+;; These switch-to-window functions jump to a numbered window on-screen. They assume my convential window
+;; layout, which is either a single window on the left and 2 splits on the right, or 4 splits in a 2x2 grid.
+(defun switch-to-window-1 ()
+  (interactive)
+  (select-window (frame-first-window)))
+
+(defun switch-to-window-2 ()
+  (interactive)
+  (call-interactively 'switch-to-window-1)
+  (condition-case nil (windmove-down) (error (windmove-right 1))))
+
+(defun switch-to-window-3 ()
+  (interactive)
+  (call-interactively 'switch-to-window-1)
+  (condition-case nil
+      (progn
+        (windmove-down)
+        (windmove-up)
+        (windmove-right 1))
+    (error (progn (windmove-right 1)
+                  (windmove-down)))))
+
+(defun switch-to-window-4 ()
+  (interactive)
+  (call-interactively 'switch-to-window-1)
+  (windmove-right)
+  (windmove-down))
+
+(defun create-window-in-next-logical-spot ()
+  "Creates a window in the next slot in my standard 2x2 configuration. So for instance, if I have only 1
+   window open, it will split the screen into two vertical windows."
+  (interactive)
+  (let ((window-count (length (window-list))))
+    (case window-count
+      (1 (split-window-horizontally-and-focus))
+      (2 (progn
+           (switch-to-window-2)
+           (split-window-vertically-and-focus)))
+      (3 (progn
+           (switch-to-window-1)
+           (split-window-vertically-and-focus))))))
+
+(defadvice windmove-do-window-select (after windowmove-change-to-normal-mode)
+  "Ensure we reset to Evil's normal mode when switching windows."
+  (evil-change-to-initial-state))
+(ad-activate 'windmove-do-window-select)
+
+(defun split-window-sensibly-reverse (&optional window)
+  "Identical to the built-in function split-window-sensibly, but prefers horizontal splits over vertical."
+  (let ((window (or window (selected-window))))
+    (or (and (window-splittable-p window t)
+       ;; Split window horizontally.
+       (with-selected-window window
+         (split-window-right)))
+  (and (window-splittable-p window)
+       ;; Split window vertically.(column-marker-1 80)
+       (with-selected-window window
+         (split-window-below)))
+  (and (eq window (frame-root-window (window-frame window)))
+       (not (window-minibuffer-p window))
+       ;; If WINDOW is the only window on its frame and is not the
+       ;; minibuffer window, try to split it vertically disregarding
+       ;; the value of `split-height-threshold'.
+       (let ((split-height-threshold 0))
+         (when (window-splittable-p window)
+     (with-selected-window window
+       (split-window-below))))))))
 
 ;; Make it so Esc means quit, no matter the context.
 ;; http://stackoverflow.com/a/10166400/46237
@@ -349,71 +428,6 @@
         (assq-delete-all 'osx-keys-minor-mode minor-mode-map-alist)
         (add-to-list 'minor-mode-map-alist osx-keys))))
 (ad-activate 'load)
-
-(defun split-window-vertically-and-focus ()
-  (interactive)
-  (split-window-vertically)
-  (other-window 1))
-
-(defun split-window-horizontally-and-focus ()
-  (interactive)
-  (split-window-horizontally)
-  (other-window 1))
-
-;; These switch-to-window functions jump to a numbered window on-screen. They assume my convential window
-;; layout, which is either a single window on the left and 2 splits on the right, or 4 splits in a 2x2 grid.
-(defun switch-to-window-1 ()
-  (interactive)
-  (condition-case nil (windmove-up) (error nil))
-  (condition-case nil (windmove-left) (error nil)))
-
-(defun switch-to-window-2 ()
-  (interactive)
-  (call-interactively 'switch-to-window-1)
-  (condition-case nil (windmove-down) (error (windmove-right 1))))
-
-(defun switch-to-window-3 ()
-  (interactive)
-  (call-interactively 'switch-to-window-1)
-  (condition-case nil
-      (progn
-        (windmove-down)
-        (windmove-up)
-        (windmove-right 1))
-    (error (progn (windmove-right 1)
-                  (windmove-down)))))
-
-(defun switch-to-window-4 ()
-  (interactive)
-  (call-interactively 'switch-to-window-1)
-  (windmove-right)
-  (windmove-down))
-
-(defadvice windmove-do-window-select (after windowmove-change-to-normal-mode)
-  "Ensure we reset to Evil's normal mode when switching windows."
-  (evil-change-to-initial-state))
-(ad-activate 'windmove-do-window-select)
-
-(defun split-window-sensibly-reverse (&optional window)
-  "Identical to the built-in function split-window-sensibly, but prefers horizontal splits over vertical."
-  (let ((window (or window (selected-window))))
-    (or (and (window-splittable-p window t)
-       ;; Split window horizontally.
-       (with-selected-window window
-         (split-window-right)))
-  (and (window-splittable-p window)
-       ;; Split window vertically.(column-marker-1 80)
-       (with-selected-window window
-         (split-window-below)))
-  (and (eq window (frame-root-window (window-frame window)))
-       (not (window-minibuffer-p window))
-       ;; If WINDOW is the only window on its frame and is not the
-       ;; minibuffer window, try to split it vertically disregarding
-       ;; the value of `split-height-threshold'.
-       (let ((split-height-threshold 0))
-         (when (window-splittable-p window)
-     (with-selected-window window
-       (split-window-below))))))))
 
 ; Closes the current elscreen, or if there's only one screen, use the ":q" Evil
 ; command. This simulates the ":q" behavior of Vim when used with tabs.
