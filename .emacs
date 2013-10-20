@@ -264,6 +264,7 @@
 (define-key evil-window-map (kbd "n") 'create-window-in-next-logical-spot)
 (define-key evil-window-map (kbd "v") 'split-window-horizontally-and-focus)
 (define-key evil-window-map (kbd "s") 'split-window-vertically-and-focus)
+(define-key evil-window-map (kbd "k") (lambda () (interactive) (kill-buffer (current-buffer))))
 (define-key evil-window-map (kbd "m") 'delete-other-windows) ; Delete other splits ("maximize").
 ;; Undo the last change you made to your window configuration. Very handy as a method for temporarily
 ;; maximizing a window: first invoke delete-other-windows, and then invoke winner-undo..
