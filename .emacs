@@ -947,6 +947,13 @@ but doesn't treat single semicolons as right-hand-side comments."
 (setq mu4e-view-show-images t
       mu4e-view-image-max-width 800)
 
+;; https://groups.google.com/forum/#!searchin/mu-discuss/html/mu-discuss/7WwtyrCBeDg/nr0vK9fT7BEJ
+(setq mu4e-html2text-command "w3m -dump -cols 110 -T text/html")
+;; (setq mu4e-html2text-command "html2text | grep -v '&nbsp_place_holder;'")
+
+(add-to-list 'mu4e-view-actions
+  '("ViewInBrowser" . mu4e-action-view-in-browser) t)
+
 ;; TODO(philc): what does this do?
 (setq mu4e-compose-dont-reply-to-self t)
 
@@ -994,6 +1001,8 @@ but doesn't treat single semicolons as right-hand-side comments."
 
      (evil-make-overriding-map mu4e-view-mode-map 'normal t)
      (evil-define-key 'normal mu4e-view-mode-map
+       "j" 'evil-next-line
+       "k" 'evil-previous-line
        "n" 'mu4e-view-headers-next
        "p" 'mu4e-view-headers-prev
        "#" 'mu4e-view-mark-for-trash
@@ -1002,6 +1011,10 @@ but doesn't treat single semicolons as right-hand-side comments."
        "x" 'mu4e-view-mark-for-something
        "z" 'mu4e-view-mark-for-unmark
        "q" 'vimlike-quit
+       ;; This prompts you for which link (starting with 1) you want to visit.
+       ;; Note that you can just move your cursor to a URL and hit M-ret to open it.
+       "go" 'mu4e-view-go-to-url
+       (kbd "<enter>") 'mu4e-view-go-to-url
        "gl" (lambda ()
               (interactive)
               (switch-to-buffer-other-window "*mu4e-headers*")
@@ -1013,16 +1026,18 @@ but doesn't treat single semicolons as right-hand-side comments."
        ;; How to get reply-all without confirmation?
        "r" 'mu4e-compose-reply
        "f" 'mu4e-compose-forward
-       (kbd "M-r") 'mu4e-update-mail-and-index
+       (kbd "M-r") '(lambda () (interactive) (mu4e-update-mail-and-index t))
        "c" 'mu4e-compose-new)
 
 
      (evil-make-overriding-map mu4e-compose-mode-map 'normal t)
      (evil-define-key 'normal mu4e-compose-mode-map
-       "c" nil)))
+       "c" nil)
+     (evil-leader/set-key-for-mode 'mu4e-compose-mode
+       "s" 'message-send-and-exit)))
 
+;; Settings for sending mail.
 (require 'smtpmail)
-
 (setq message-send-mail-function 'smtpmail-send-it)
 (setq smtpmail-stream-type 'ssl)
 (setq smtpmail-smtp-server "smtp.gmail.com")
