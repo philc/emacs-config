@@ -389,6 +389,8 @@
 (define-key isearch-mode-map (kbd "<escape>") 'isearch-abort)
 ;; Make C-h act the same as backspace.
 (define-key isearch-mode-map (kbd "C-h") 'isearch-delete-char)
+;; Make M-v paste the clipboard's text into the search ring.
+(define-key isearch-mode-map (kbd "M-v") 'yank-kill)
 
 ;;
 ;; Mac OS X keybindings minor mode.
