@@ -257,22 +257,28 @@
 (define-key evil-insert-state-map (kbd "C-d") 'delete-char)
 (global-set-key (kbd "C-h") 'backward-delete-char) ; Here we clobber C-h, which accesses Emacs's help.
 
-;; Window switching & manipulation.
-;; Evil's window map is the set of keys which control window functions. All of its keys are prefixed with
-;; <C-w>.
-(define-key evil-window-map (kbd "x") 'delete-window)
-(define-key evil-window-map (kbd "n") 'create-window-in-next-logical-spot)
-(define-key evil-window-map (kbd "v") 'split-window-horizontally-and-focus)
-(define-key evil-window-map (kbd "s") 'split-window-vertically-and-focus)
-(define-key evil-window-map (kbd "k") (lambda () (interactive) (kill-buffer (current-buffer))))
-(define-key evil-window-map (kbd "m") 'delete-other-windows) ; Delete other splits ("maximize").
-;; Undo the last change you made to your window configuration. Very handy as a method for temporarily
-;; maximizing a window: first invoke delete-other-windows, and then invoke winner-undo..
-(define-key evil-window-map (kbd "b") 'winner-undo)
-
 ;; Commenting via NERD commentor.
 (define-key evil-normal-state-map "," 'evilnc-comment-operator)
 (define-key evil-visual-state-map "," 'evilnc-comment-operator)
+
+;; Window switching & manipulation.
+;; Evil's window map is the set of keys which control window functions. All of its keys are prefixed with
+;; <C-w>.
+(evil-leader/set-key "wn" 'create-window-in-next-logical-spot)
+(evil-leader/set-key "wv" 'split-window-horizontally-and-focus)
+(evil-leader/set-key "ws" 'split-window-vertically-and-focus)
+(evil-leader/set-key "wk" (lambda () (interactive) (kill-buffer (current-buffer))))
+(evil-leader/set-key "wm" 'toggle-window-maximize)
+;; Undo the last change you made to your window configuration.
+(evil-leader/set-key "wb" 'winner-undo)
+
+(defun toggle-window-maximize ()
+  (interactive)
+  (if (= 1 (length (window-list)))
+      ;; winner-undo undoes the last change you made to the state of your widnows.
+      ;; This isn't an exact inverse of "delete-other-windows", but it works OK for me in practice.
+      (winner-undo)
+      (delete-other-windows)))
 
 (defun split-window-vertically-and-focus ()
   (interactive)
