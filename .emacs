@@ -866,13 +866,14 @@
 ;; Clojure indentation rules
 (eval-after-load 'clojure-mode
   '(define-clojure-indent
-     (send-off 1)                                              ; Core
-     (GET 2) (POST 2) (PUT 2) (PATCH 2) (DELETE 2) (context 2) ; Compojure
-     (select 1) (insert 1) (update 1) (where 1) (set-fields 1) ; Korma
+     (send-off 1)                                                      ; Core
+     (ANY 2) (GET 2) (POST 2) (PUT 2) (PATCH 2) (DELETE 2) (context 2) ; Compojure
+     (select 1) (insert 1) (update 1) (where 1) (set-fields 1)         ; Korma
      (values 1) (delete 1) (upsert 1)
-     (clone-for 1)                                             ; Enlive
-     (up 1) (down 1) (alter 1) (table 1) (create 1)            ; Lobos
-     (with-eligible-values 1) (when-eligible 1)                ; Personal
+     (clone-for 1)                                                     ; Enlive
+     (up 1) (down 1) (alter 1) (table 1) (create 1)                    ; Lobos
+     (with-eligible-values 1) (when-eligible 1) (check 4)              ; Personal
+     (url-of-form 1)                                                   ; Personal
      ))
 
 (defun lisp-indent-line-single-semicolon-fix (&optional whole-exp)
