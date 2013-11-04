@@ -536,37 +536,10 @@
 ;;
 ;; Org mode, for TODOs and note taking.
 ;;
-(require 'org)
-; NOTE(philc): I've modified this evil-org-mode file to provide my desired shortcuts.
-(add-to-list 'load-path "~/.emacs.d/plugins/evil-org-mode")
-(require 'evil-org)
-(eval-after-load 'org
-  '(progn
-     ; This enables "clean mode", such that sublists use whitespace for indentation (ala markdown) instead of
-     ; many stars.
-     (setq org-startup-indented t)))
-
-;; Moves the current heading (and all of its children) into the matching parent note in the archive file.
-;; I think this is the most sensible way to archive TODOs in org mode files.
-;; http://orgmode.org/worg/org-hacks.html
-(defadvice org-archive-subtree (around my-org-archive-subtree activate)
-  (let ((org-archive-location
-         (if (save-excursion (org-back-to-heading)
-                             (> (org-outline-level) 1))
-             (concat (car (split-string org-archive-location "::"))
-                     "::* "
-                     (car (org-get-outline-path)))
-           org-archive-location)))
-    ad-do-it))
-
-(defun org-show-todo-and-done-tree ()
-  "Shows only subtrees which are TODOs or DONE items. Similar to org-show-todo-tree, but it matches DONE items
-   as well."
-  (interactive)
-  ;; Note that these tags are case insensitive.
-  (org-occur "\\(TODO\\|DONE\\|INPROGRESS\\|WAITING\\)")
-  ;; org-occur highlights every TODO and DONE string match in the doc, which is distracting. Remove it.
-  (org-remove-occur-highlights))
+;; Org mode, for TODOs and note taking.
+;;
+(add-to-list 'load-path "~/.emacs.d/")
+(require 'org-mode-personal)
 
 ;;
 ;; Projectile (find file from the root of the current project).
