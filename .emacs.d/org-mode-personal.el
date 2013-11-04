@@ -28,8 +28,7 @@
 
 ;; normal state shortcuts
 (evil-define-key 'normal evil-org-mode-map
-  "gh" 'outline-up-heading
-  "gl" 'outline-next-visible-heading
+  "gu" 'outline-up-heading
   "t" 'org-todo
   "T" '(lambda () (interactive) (evil-org-eol-call '(org-insert-todo-heading nil)))
   "H" 'org-beginning-of-line
@@ -49,7 +48,7 @@
   ";g" 'org-set-tags-command
   ";va" 'org-agenda
   "-" 'org-cycle-list-bullet
-  (kbd "C-TAB") 'org-expand-top-level-parent
+  (kbd "<C-tab>") 'org-expand-top-level-parent
   (kbd "TAB") 'org-cycle)
 
 ;; normal & insert state shortcuts.
@@ -92,7 +91,17 @@
   "Shows only subtrees which are TODOs or DONE items. Similar to org-show-todo-tree, but it matches DONE items
    as well."
   (interactive)
-  ;; Note that these tags are case insensitive.
-  (org-occur "\\(TODO\\|DONE\\|INPROGRESS\\|WAITING\\)")
-  ;; org-occur highlights every TODO and DONE string match in the doc, which is distracting. Remove it.
-  (org-remove-occur-highlights))
+  (save-excursion
+    ;; Note that these tags are case insensitive.
+    (org-occur "\\(TODO\\|DONE\\|INPROGRESS\\|WAITING\\)")
+    ;; org-occur highlights every TODO and DONE string match in the doc, which is distracting. Remove it.
+    (org-remove-occur-highlights)))
+
+;; When I've narrowed a subtree (e.g. via org-show-todo-and-done-tree), this allows me to quickly expand the
+;; tree around the cursor to show all items again, not just TODO and DONE.
+(defun org-expand-top-level-parent ()
+  "Shows the children of the top-level parent for the tree under the cursor."
+  (interactive)
+  (save-excursion
+    (outline-up-heading 4)
+    (show-children)))
