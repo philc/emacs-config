@@ -182,8 +182,9 @@
 
 ;; By default, Emacs will not indent when you hit enter/return within a comment.
 (define-key evil-insert-state-map (kbd "RET") 'newline-and-indent)
+; Some help keybindings which conflict with nothing else, so you can pull up help in any context.
 (global-set-key (kbd "C-A-M-h") 'help) ; Here we clobber C-h, which accesses Emacs's help.
-(global-set-key (kbd "C-A-M-b") 'describe-bindings) ; Here we clobber C-h, which accesses Emacs's help.
+(global-set-key (kbd "C-A-M-b") 'describe-bindings)
 
 ;; gq is normally bound to evil-fill-and-move, but when I reflow a paragraph, I like the cursor to remain
 ;; where it was.
