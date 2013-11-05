@@ -200,6 +200,7 @@
   "a" 'projectile-ack
   "d" 'projectile-dired
   ; "v" is a mnemonic prefix for "view X".
+  "vp" 'open-root-of-project-in-dired
   "vg" 'mu4e
   "vo" (lambda () (interactive) (find-file "~/Dropbox/tasks.org"))
   "ve" (lambda () (interactive) (find-file "~/.emacs")))
@@ -1033,3 +1034,25 @@ but doesn't treat single semicolons as right-hand-side comments."
 ;;
 (require 'yaml-mode)
 (add-to-list 'auto-mode-alist '("\\.yml$" . yaml-mode))
+
+;;
+;; Project navigation (my own functions on top of dired-mdoe and projectile)
+;;
+(setq project-folders '("~/p"
+                        "~/liftoff"))
+
+(defun open-root-of-project-in-dired ()
+  "Prompts for the name of a project, completes it using your common project folders, and opens a dired window
+   in the root of the project folder. This is a fast way to open a new project and be able to run
+  project-file-file."
+  (interactive)
+  (let ((project-name (read-from-minibuffer "Project folder: "))
+        (project-exists nil))
+    (dolist (folder project-folders)
+      (let ((project-path (concat folder "/" project-name)))
+        (if (file-exists-p project-path)
+            (progn
+              (setq project-exists t)
+              (dired project-path)))))
+      (if (not project-exists)
+          (message "Couldn't find %s in any of your project folders." project-name))))
