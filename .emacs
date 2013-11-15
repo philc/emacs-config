@@ -195,8 +195,8 @@
   "h" 'help
   "b" 'ido-switch-buffer
   "t" 'projectile-find-file
-  "q" 'evil-fill-around-paragraph ; Shortcut for Vim's gqap
-  "i" 'evil-indent-around-paragraph ; Shortcut to Vim's =ap
+  "q" 'evil-fill-inside-paragraph ; Shortcut for Vim's gqip
+  "i" 'evil-indent-inside-paragraph ; Shortcut to Vim's =ip
   "a" 'projectile-ack
   "d" 'projectile-dired
   ; "v" is a mnemonic prefix for "view X".
@@ -205,32 +205,39 @@
   "vo" (lambda () (interactive) (find-file "~/Dropbox/tasks.org"))
   "ve" (lambda () (interactive) (find-file "~/.emacs")))
 
+(defun prompt-to-open-info-page ()
+  "Prompts you for the name of an info page to view. It's the same as calling info with a prefix argument
+   ala C-u C-h i using the regular Emacs key bindings."
+  (interactive)
+  (setq current-prefix-arg '(4)) ; C-u
+  (call-interactively 'info))
+
 (eval-after-load 'evil
   '(progn (setq evil-leader/leader ";")))
 
-(defun evil-fill-around-paragraph (beg end)
+(defun evil-fill-inside-paragraph (beg end)
   "Fills (reflows/linewraps) the current paragraph. Equivalent to gqap in vim."
   (interactive "r")
-  (let ((region (evil-a-paragraph)))
+  (let ((region (evil-inner-paragraph)))
     (evil-fill (first region) (second region))))
 
-(defun evil-indent-around-paragraph (beg end)
+(defun evil-indent-inside-paragraph (beg end)
   "Fills (reflows/linewraps) the current paragraph. Equivalent to gqap in vim."
   (interactive "r")
-  (let ((region (evil-a-paragraph)))
+  (let ((region (evil-inner-paragraph)))
     (evil-indent-without-move (first region) (second region))))
 
 (defun evil-shift-paragraph-left (beg end)
   "Shifts a paragraph left."
   (interactive "r")
-  (let ((region (evil-a-paragraph)))
+  (let ((region (evil-inner-paragraph)))
     (save-excursion
       (evil-shift-left (first region) (second region)))))
 
 (defun evil-shift-paragraph-right (beg end)
   "Shifts a paragraph right."
   (interactive "r")
-  (let ((region (evil-a-paragraph)))
+  (let ((region (evil-inner-paragraph)))
     (save-excursion
       (evil-shift-right (first region) (second region)))))
 
