@@ -3,3 +3,4 @@
 .emacs.d/elpa
 .emacs.d/history
 .emacs.d/projectile-bookmarks.eld
+projectile.cache
