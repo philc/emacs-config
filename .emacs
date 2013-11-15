@@ -39,6 +39,8 @@
 ;; General
 ;;
 (require 'cl)
+(add-to-list 'load-path "~/.emacs.d/")
+(require 'lisp-helpers-personal)
 
 ;; Anecdotally, this reduces the amount of display flicker on some Emacs startup.
 (setq redisplay-dont-pause t)
@@ -1064,17 +1066,24 @@ but doesn't treat single semicolons as right-hand-side comments."
                         "~/liftoff"))
 
 (defun open-root-of-project-in-dired ()
-  "Prompts for the name of a project, completes it using your common project folders, and opens a dired window
-   in the root of the project folder. This is a fast way to open a new project and be able to run
-  project-file-file."
+  "Prompts for the name of a project which exists in your common project folders and opens a dired window in
+   the root of the project folder. This is a fast way to open a new project and be able to run
+   projectile-file-file.
+   Once a project is chosen, the current elscreen-tab is set to be the name of that project."
   (interactive)
-  (let ((project-name (read-from-minibuffer "Project folder: "))
-        (project-exists nil))
-    (dolist (folder project-folders)
-      (let ((project-path (concat folder "/" project-name)))
-        (if (file-exists-p project-path)
+  (let ((all-project-folders (->> project-folders
+                                  (mapcar (lambda (file) (directory-files file t)))
+                                  flatten
+                                  (remove-if-not 'file-directory-p)
+                                  (mapcar 'file-name-base)
+                                  (remove-if (lambda (path)
+                                               (or (string= path ".")
+                                                   (string= path "..")
+                                                   (string= path ".git")))))))
+    (let ((project-name (ido-completing-read "Project folder: " all-project-folders nil t)))
+      (dolist (folder project-folders)
+        (let ((project-path (concat folder "/" project-name)))
+          (when (file-exists-p project-path)
             (progn
-              (setq project-exists t)
-              (dired project-path)))))
-      (if (not project-exists)
-          (message "Couldn't find %s in any of your project folders." project-name))))
+              (dired project-path)
+              (elscreen-screen-nickname project-name))))))))
