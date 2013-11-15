@@ -604,11 +604,24 @@
      (evil-define-key 'normal markdown-mode-map
        ;; Autocomplete setext headers by typing "==" or "--" on the header's line in normal mode.
        (kbd "==") '(lambda () (interactive) (insert-markdown-header "=="))
-       (kbd "--") '(lambda () (interactive) (insert-markdown-header "--")))
+       (kbd "--") '(lambda () (interactive) (insert-markdown-header "--"))
+       (kbd "C-S-L") 'evil-shift-paragraph-right
+       (kbd "C-S-H") 'evil-shift-paragraph-left)
+     ;; Note that while in insert mode, using "evil-shift-paragraph-right" while the cursor is at the end of a
+     ;; line will shift the paragraph incorrectly. That's why we jump to normal mode first, as a workaround.
+     (evil-define-key 'insert markdown-mode-map
+       (kbd "C-S-H") '(lambda ()
+                        (interactive)
+                        (evil-change-to-initial-state)
+                        (call-interactively 'evil-shift-paragraph-left)
+                        (evil-append nil))
+       (kbd "C-S-L") '(lambda ()
+                        (interactive)
+                        (evil-change-to-initial-state)
+                        (call-interactively 'evil-shift-paragraph-right)
+                        (evil-append nil)))
      (mapc (lambda (state)
              (evil-define-key state markdown-mode-map
-               (kbd "C-S-H") 'evil-shift-paragraph-left
-               (kbd "C-S-L") 'evil-shift-paragraph-right
                (kbd "C-S-K") 'markdown-move-up
                (kbd "C-S-J") 'markdown-move-down
                ;; M-return creates a new todo item and enters insert mode.
