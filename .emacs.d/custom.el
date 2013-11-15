@@ -8,7 +8,7 @@
  ;; If there is more than one, they won't work right.
  '(elscreen-buffer-to-nickname-alist (quote (("[Ss]hell" . "shell") ("compilation" . "compile") ("-telnet" . "telnet") ("*WL:Message*" . "Wanderlust"))))
  '(elscreen-display-screen-number nil)
- '(elscreen-display-tab 20)
+ '(elscreen-display-tab 12)
  '(elscreen-tab-display-kill-screen nil)
  '(org-agenda-files (quote ("~/test.org"))))
 
