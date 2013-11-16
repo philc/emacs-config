@@ -28,3 +28,16 @@
         (t (if (sequencep form)
                `(,(first form) ,@(rest form) ,x)
              (list form x)))))
+
+(defun string/ends-with (s ending)
+  "return non-nil if string S ends with ENDING."
+  (let ((elength (length ending)))
+    (if (> elength (length s))
+      nil
+      (string= (substring s (- 0 elength)) ending))))
+
+(defun string/starts-with (s start)
+  "returns non-nil if string S starts with ARG.  Else nil."
+  (if (> (length start) (length s))
+      nil
+    (string-equal (substring s 0 (length start)) start)))

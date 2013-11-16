@@ -201,6 +201,8 @@
   "i" 'evil-indent-inside-paragraph ; Shortcut to Vim's =ip
   "a" 'projectile-ack
   "d" 'projectile-dired
+  "vn" 'open-markdown-file-from-notes-folder
+  "vn" 'open-markdown-file-from-notes-folder
   ; "v" is a mnemonic prefix for "view X".
   "vp" 'open-root-of-project-in-dired
   "vg" 'mu4e
@@ -1058,16 +1060,41 @@ but doesn't treat single semicolons as right-hand-side comments."
 (setq smtpmail-smtp-service 465)
 
 ;;
-;; YAML mode
+;; YAML mode, for editing YAML files
 ;;
 (require 'yaml-mode)
 (add-to-list 'auto-mode-alist '("\\.yml$" . yaml-mode))
 
 ;;
-;; Project navigation (my own functions on top of dired-mdoe and projectile)
+;; Project navigation (my own functions on top of dired-mode and projectile)
 ;;
-(setq project-folders '("~/p"
-                        "~/liftoff"))
+(setq project-folders '("~/p" "~/liftoff"))
+(setq notes-folder "~/personal/notes")
+
+(defun filter-files-in-directory (directory filter-fn include-subdirectories)
+  "Filters the files in the given directory and subdirectories using filter-fn. Excludes .git subdirectories."
+  (->> (directory-files directory t)
+       (remove-if (lambda (path)
+                    (or (string/ends-with path ".")
+                        (string/ends-with path "..")
+                        (string/ends-with path ".git"))))
+       (mapcar (lambda (file)
+                 (if (and include-subdirectories (file-directory-p file))
+                     (filter-files-in-directory file filter-fn include-subdirectories)
+                   file)))
+       flatten
+       (remove-if-not filter-fn)))
+
+(defun open-markdown-file-from-notes-folder ()
+  "Prompts for the name of a .md notes file to open."
+  (interactive)
+  (let ((file-list (filter-files-in-directory notes-folder
+                                              (lambda (file) (string/ends-with file ".md")) t)))
+    (let ((file-to-open (ido-completing-read "Notes file: " (mapcar 'file-name-nondirectory file-list))))
+      (->> file-list
+           (remove-if-not (lambda (file) (string/ends-with file (concat "/" file-to-open))))
+           first
+           find-file))))
 
 (defun open-root-of-project-in-dired ()
   "Prompts for the name of a project which exists in your common project folders and opens a dired window in
@@ -1076,18 +1103,15 @@ but doesn't treat single semicolons as right-hand-side comments."
    Once a project is chosen, the current elscreen-tab is set to be the name of that project."
   (interactive)
   (let ((all-project-folders (->> project-folders
-                                  (mapcar (lambda (file) (directory-files file t)))
-                                  flatten
-                                  (remove-if-not 'file-directory-p)
-                                  (mapcar 'file-name-base)
-                                  (remove-if (lambda (path)
-                                               (or (string= path ".")
-                                                   (string= path "..")
-                                                   (string= path ".git")))))))
-    (let ((project-name (ido-completing-read "Project folder: " all-project-folders nil t)))
-      (dolist (folder project-folders)
-        (let ((project-path (concat folder "/" project-name)))
-          (when (file-exists-p project-path)
-            (progn
-              (dired project-path)
-              (elscreen-screen-nickname project-name))))))))
+                                  (mapcar (lambda (file)
+                                            (filter-files-in-directory file 'file-directory-p nil)))
+                                  flatten)))
+    (let ((project-to-open (ido-completing-read "Project folder: "
+                                                (mapcar 'file-name-nondirectory all-project-folders)
+                                                nil t)))
+      (->> all-project-folders
+           (remove-if-not (lambda (project) (string/ends-with project (concat "/" project-to-open))))
+           first
+           ((lambda (project)
+              (dired project)
+              (elscreen-screen-nickname (file-name-nondirectory project))))))))
