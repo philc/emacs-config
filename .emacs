@@ -774,6 +774,10 @@
   "es" 'elisp-eval-current-sexp
   "ex" 'eval-defun)
 
+;; Indentation rules.
+(put '-> 'lisp-indent-function nil)
+(put '->> 'lisp-indent-function nil)
+
 ;;
 ;; Clojure
 ;;
