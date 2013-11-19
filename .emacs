@@ -603,9 +603,9 @@
 (add-to-list 'auto-mode-alist '("\\.md$" . gfm-mode))
 
 (eval-after-load 'markdown-mode
-  (evil-leader/set-key-for-mode 'markdown-mode
-    "r" 'markdown-cleanup-list-numbers))
   '(progn
+     (evil-leader/set-key-for-mode 'markdown-mode
+        "r" 'markdown-cleanup-list-numbers)
      (evil-define-key 'normal markdown-mode-map
        ;; Autocomplete setext headers by typing "==" or "--" on the header's line in normal mode.
        (kbd "==") '(lambda () (interactive) (insert-markdown-header "=="))
