@@ -200,7 +200,7 @@
   "h" 'help
   "b" 'ido-switch-buffer
   "t" 'projectile-find-file
-  "q" 'evil-fill-around-paragraph ; Shortcut for Vim's gqip
+  "q" 'evil-fill-inside-paragraph ; Shortcut for Vim's gqip
   "i" 'evil-indent-inside-paragraph ; Shortcut to Vim's =ip
   "a" 'projectile-ack
   "d" 'projectile-dired
@@ -222,16 +222,21 @@
 
 (setq evil-leader/leader ";")
 
-(defun evil-fill-inside-paragraph (beg end)
+
+(defun evil-fill-inside-paragraph ()
   "Fills (reflows/linewraps) the current paragraph. Equivalent to gqap in vim."
-  (interactive "r")
-  (let ((region (evil-inner-paragraph)))
+  (interactive)
+  (let ((region (if (use-region-p)
+                  (list (region-beginning) (region-end))
+                  (evil-inner-paragraph))))
     (evil-fill (first region) (second region))))
 
-(defun evil-indent-inside-paragraph (beg end)
+(defun evil-indent-inside-paragraph ()
   "Fills (reflows/linewraps) the current paragraph. Equivalent to gqap in vim."
-  (interactive "r")
-  (let ((region (evil-inner-paragraph)))
+  (interactive)
+  (let ((region (if (use-region-p)
+                  (list (region-beginning) (region-end))
+                  (evil-inner-paragraph))))
     (evil-indent-without-move (first region) (second region))))
 
 (defun evil-shift-paragraph-left (beg end)
