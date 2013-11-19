@@ -17,6 +17,7 @@
                       evil-leader
                       evil-nerd-commenter
                       flx-ido ; Fuzzy matching for ido, which improves the UX of Projectile.
+                      go-mode ; For editing Go files.
                       less-css-mode ; Syntax highlighting for LESS CSS files.
                       ido-ubiquitous ; Make ido completions work everywhere.
                       ido-vertical-mode ; Show ido results vertically.
@@ -197,15 +198,16 @@
   "h" 'help
   "b" 'ido-switch-buffer
   "t" 'projectile-find-file
-  "q" 'evil-fill-inside-paragraph ; Shortcut for Vim's gqip
+  "q" 'evil-fill-around-paragraph ; Shortcut for Vim's gqip
   "i" 'evil-indent-inside-paragraph ; Shortcut to Vim's =ip
   "a" 'projectile-ack
   "d" 'projectile-dired
-  "vn" 'open-markdown-file-from-notes-folder
-  "vn" 'open-markdown-file-from-notes-folder
-  ; "v" is a mnemonic prefix for "view X".
+  "vt" 'multi-term
+  ;; "v" is a mnemonic prefix for "view X".
+  "vg" 'magit-status
+  "vu" 'mu4e
   "vp" 'open-root-of-project-in-dired
-  "vg" 'mu4e
+  "vn" 'open-markdown-file-from-notes-folder
   "vo" (lambda () (interactive) (find-file "~/Dropbox/tasks.org"))
   "ve" (lambda () (interactive) (find-file "~/.emacs")))
 
@@ -549,7 +551,6 @@
 ;;
 ;; Org mode, for TODOs and note taking.
 ;;
-(add-to-list 'load-path "~/.emacs.d/")
 (require 'org-mode-personal)
 
 ;;
@@ -1063,6 +1064,32 @@ but doesn't treat single semicolons as right-hand-side comments."
 ;;
 (require 'yaml-mode)
 (add-to-list 'auto-mode-alist '("\\.yml$" . yaml-mode))
+
+;;
+;; Go mode, for writing Go code
+;;
+(evil-leader/set-key-for-mode 'go-mode
+  ;; "r" is a nemsapce for run-related commands.
+  "rr" (lambda ()
+         (interactive)
+         (compile "make run"))
+  "rb" (lambda ()
+         (interactive)
+         (compile "make benchmark"))
+  ;; "c" is a namespace for compile-related commands.
+  "cn" 'next-error
+  "cp" 'previous-error
+  "cc" (lambda ()
+         (interactive)
+         (compile "make build")))
+
+(defun go-package-of-current-buffer ()
+  "Returns the go package name defined in the current buffer. Returns nil if no package has been defined."
+  (let ((file-contents (buffer-string)))
+    (let ((match-exists (string-match "^package \\(.+\\)\w*" file-contents)))
+      (when match-exists
+        (buffer-substring-no-properties (+ 1 (match-beginning 1))
+                                        (+ 1 (match-end 1)))))))
 
 ;;
 ;; Project navigation (my own functions on top of dired-mode and projectile)
