@@ -216,8 +216,7 @@
   (setq current-prefix-arg '(4)) ; C-u
   (call-interactively 'info))
 
-(eval-after-load 'evil
-  '(progn (setq evil-leader/leader ";")))
+(setq evil-leader/leader ";")
 
 (defun evil-fill-inside-paragraph (beg end)
   "Fills (reflows/linewraps) the current paragraph. Equivalent to gqap in vim."
@@ -512,7 +511,7 @@
 
 ;; dired overrides my global "other window" shorcut.
 (evil-define-key 'normal dired-mode-map (kbd "M-C-n") 'other-window)
-(define-key dired-mode-map ";" nil) ; TODO(philc): Dired mode is eating my leader key.
+(evil-define-key 'normal dired-mode-map ";" nil) ; Ensure my evil-leader key works unhindered.
 (evil-define-key 'normal dired-mode-map (kbd "M-C-n") 'other-window)
 (evil-define-key 'normal dired-mode-map "cd" 'dired-create-directory)
 (evil-define-key 'normal dired-mode-map "cf" 'dired-create-file)
