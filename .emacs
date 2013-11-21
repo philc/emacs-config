@@ -1151,7 +1151,12 @@ but doesn't treat single semicolons as right-hand-side comments."
 ;; Project navigation (my own functions on top of dired-mode and projectile)
 ;;
 (setq project-folders '("~/p" "~/liftoff"))
-(setq notes-folder "~/personal/notes")
+(setq notes-directories '("~/personal/notes" "~/Desktop"))
+(setq notes-file-extensions '(".md" ".sql" ".txt"))
+
+;; This is set to 600 by default. It shouldn't be the case, but for some reason, the filter-files-in-directory
+;; function hits this limit.
+(setq max-lisp-eval-depth 1000)
 
 (defun filter-files-in-directory (directory filter-fn include-subdirectories)
   "Filters the files in the given directory and subdirectories using filter-fn. Excludes .git subdirectories."
@@ -1170,8 +1175,12 @@ but doesn't treat single semicolons as right-hand-side comments."
 (defun open-markdown-file-from-notes-folder ()
   "Prompts for the name of a .md notes file to open."
   (interactive)
-  (let ((file-list (filter-files-in-directory notes-folder
-                                              (lambda (file) (string/ends-with file ".md")) t)))
+  (let* ((file-matches-pattern? (lambda (file)
+                                  (some (lambda (ext) (string/ends-with file ext)) notes-file-extensions)))
+         (file-list (->> notes-directories
+                         (mapcar (lambda (directory)
+                                   (filter-files-in-directory directory file-matches-pattern? t)))
+                         flatten)))
     (let ((file-to-open (ido-completing-read "Notes file: " (mapcar 'file-name-nondirectory file-list))))
       (->> file-list
            (remove-if-not (lambda (file) (string/ends-with file (concat "/" file-to-open))))
