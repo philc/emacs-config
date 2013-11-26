@@ -8,7 +8,8 @@
 (when (not package-archive-contents)
   (package-refresh-contents))
 
-(defvar my-packages '(autopair ; Insert matching delimiters, e.g. insert closing braces.
+(defvar my-packages '(ace-jump-mode ; Jump to any text on screen in a few keystrokes. Like Vim's EasyMotion.
+                      autopair ; Insert matching delimiters, e.g. insert closing braces.
                       clojure-mode
                       clojure-test-mode
                       coffee-mode ; For syntax highlighting coffeescript.
@@ -400,6 +401,15 @@
 (define-key minibuffer-local-completion-map [escape] 'minibuffer-keyboard-quit)
 (define-key minibuffer-local-must-match-map [escape] 'minibuffer-keyboard-quit)
 (global-set-key [escape] 'evil-exit-emacs-state)
+
+;;
+;; Ace jump - for quickly jumping to a precise character in view. Similar to Vim's EasyMotion.
+;;
+(require 'ace-jump-mode)
+(define-key evil-normal-state-map (kbd "SPC") 'ace-jump-word-mode)
+;; Note that Evil mode's ace-jump integration is supposed to add this motion keybinding automatically for you,
+;; but it doesn't work. So I've defined it here explicitly.
+(define-key evil-motion-state-map (kbd "SPC") 'evil-ace-jump-word-mode)
 
 ;;
 ;; Incremental search (isearch)
