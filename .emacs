@@ -14,6 +14,7 @@
                       clojure-test-mode
                       coffee-mode ; For syntax highlighting coffeescript.
                       dired-details+ ; Hides all of the unnecessary file details in dired mode.
+                      diminish ; For hiding and shortening minor modes in the modeline
                       evil
                       evil-leader
                       evil-nerd-commenter
@@ -767,6 +768,19 @@
 (add-hook 'text-mode-hook 'speck-mode)
  ;; Triggers a spell-correction menu. I use this to add words to my dictionary (hit "i").
 (define-key evil-normal-state-map (kbd "zg") 'speck-popup-menu-at-point)
+
+;;
+;; Diminish - hide or shorten the names of minor modes in your modeline.
+;; To see which minor modes you have loaded and what their modeline strings are: (message minor-mode-alist)
+(require 'diminish)
+(diminish 'visual-line-mode "")
+(diminish 'global-whitespace-mode "")
+(diminish 'global-visual-line-mode "")
+(diminish 'auto-fill-function "")
+(diminish 'projectile-mode " p")
+(diminish 'yas-minor-mode "yas")
+(diminish 'osx-keys-minor-mode "")
+(diminish 'undo-tree-mode "")
 
 ;;
 ;; Powerline: improve the appearance & density of the Emacs status bar.
