@@ -783,10 +783,58 @@
 (diminish 'undo-tree-mode "")
 
 ;;
-;; Powerline: improve the appearance & density of the Emacs status bar.
+;; Powerline: improve the appearance & density of the Emacs status bar (mode line).
 ;;
 (require 'powerline)
-(powerline-default-theme)
+
+(defface powerline-white-face
+  '((t (:background "#e0e0e0" :foreground "black" :inherit mode-line)))
+    "Face for powerline")
+(defface powerline-black-face
+  '((t (:background "#191919" :inherit mode-line)))
+  "Face for powerline")
+
+(defun powerline-personal-theme ()
+  "My customized powerline, copied and slightly modified from the default theme."
+  (interactive)
+  (setq-default mode-line-format
+                '("%e"
+                  (:eval
+                   (let* ((active (powerline-selected-window-active))
+                          (mode-line (if active 'mode-line 'mode-line-inactive))
+                          (face1 (if active 'powerline-active1 'powerline-inactive1))
+                          (face2 (if active 'powerline-active2 'powerline-inactive2))
+                          (separator-left (intern (format "powerline-%s-%s"
+                                                          powerline-default-separator
+                                                          (car powerline-default-separator-dir))))
+                          (separator-right (intern (format "powerline-%s-%s"
+                                                           powerline-default-separator
+                                                           (cdr powerline-default-separator-dir))))
+                          (lhs (list (powerline-raw "%*" 'powerline-black-face 'l)
+                                     (powerline-buffer-id 'powerline-black-face 'l)
+                                     (powerline-raw " " 'powerline-black-face)
+                                     (funcall separator-left mode-line face1)
+                                     (powerline-major-mode face1 'l)
+                                     (powerline-process face1)
+                                     (powerline-minor-modes face1 'l)
+                                     (powerline-narrow face1 'l)
+                                     (powerline-raw " " face1)
+                                     (funcall separator-left face1 'powerline-black-face)))
+                          (rhs (list (powerline-raw global-mode-string face2 'r)
+                                     (funcall separator-right 'powerline-black-face face1)
+                                     ;; "Version control" - show the modeline of any active VC mode.
+                                     (powerline-vc face1 'r)
+                                     (powerline-raw "%4l" face1 'l) ; Current line number
+                                     (powerline-raw ":" face1 'l)
+                                     (powerline-raw "%3c" face1 'r) ; Current column number
+                                     (powerline-raw " " face1)
+                                     ;; A visual scrollbar shown inside 1x1 char
+                                     (powerline-hud 'powerline-white-face face1))))
+                     (concat (powerline-render lhs)
+                             (powerline-fill 'powerline-black-face (powerline-width rhs))
+                             (powerline-render rhs)))))))
+
+(powerline-personal-theme)
 
 ;;
 ;; CSS
