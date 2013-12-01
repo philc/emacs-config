@@ -825,10 +825,8 @@
                                      (powerline-process face1)
                                      (powerline-minor-modes face1 'l)
                                      (powerline-narrow face1 'l)
-                                     (powerline-raw " " face1)
-                                     (funcall separator-left face1 'powerline-black-face)))
+                                     (powerline-raw " " face1)))
                           (rhs (list (powerline-raw global-mode-string face2 'r)
-                                     (funcall separator-right 'powerline-black-face face1)
                                      ;; "Version control" - show the modeline of any active VC mode.
                                      (powerline-vc face1 'r)
                                      (powerline-raw "%4l" face1 'l) ; Current line number
@@ -838,7 +836,7 @@
                                      ;; A visual scrollbar shown inside 1x1 char
                                      (powerline-hud 'powerline-white-face face1))))
                      (concat (powerline-render lhs)
-                             (powerline-fill 'powerline-black-face (powerline-width rhs))
+                             (powerline-fill face1 (powerline-width rhs))
                              (powerline-render rhs)))))))
 
 (powerline-personal-theme)
