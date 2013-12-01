@@ -794,6 +794,11 @@
   '((t (:background "#191919" :inherit mode-line)))
   "Face for powerline")
 
+(defun powerline-projectile-project-name (&optional face padding)
+  "Returns a string describing the projectile project for the current buffer. Takes the same arguments as
+   powerline-raw."
+  (powerline-raw (concat "(" (projectile-project-name) ")") face padding))
+
 (defun powerline-personal-theme ()
   "My customized powerline, copied and slightly modified from the default theme."
   (interactive)
@@ -812,6 +817,8 @@
                                                            (cdr powerline-default-separator-dir))))
                           (lhs (list (powerline-raw "%*" 'powerline-black-face 'l)
                                      (powerline-buffer-id 'powerline-black-face 'l)
+                                     (powerline-raw " " 'powerline-black-face)
+                                     (powerline-projectile-project-name 'powerline-black-face 'l)
                                      (powerline-raw " " 'powerline-black-face)
                                      (funcall separator-left mode-line face1)
                                      (powerline-major-mode face1 'l)
