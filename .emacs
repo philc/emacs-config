@@ -438,6 +438,9 @@
 (defadvice evil-search-next (after isearch-recenter activate)
   (recenter-no-redraw))
 
+(defadvice evil-search-previous (after isearch-recenter activate)
+  (recenter-no-redraw))
+
 (defadvice isearch-exit (before isearch-recenter activate)
   (recenter-no-redraw))
 
