@@ -430,6 +430,22 @@
 ;; Make M-v paste the clipboard's text into the search ring.
 (define-key isearch-mode-map (kbd "M-v") 'isearch-yank-kill)
 
+;; When pressing enter to confirm a search, or jumping to the next result, scroll the result to the center of
+;; the window. This solves the UX problem of the result appearing at the bottom of the screen, with little
+;; context.
+(defadvice evil-search-next (after isearch-recenter activate)
+  (recenter-no-redraw))
+
+(defadvice isearch-exit (before isearch-recenter activate)
+  (recenter-no-redraw))
+
+;; Centers the screen around the cursor.
+;; Taken from https://groups.google.com/forum/#!topic/gnu.emacs.help/vASrP0P-tXM
+(defun recenter-no-redraw (&optional arg)
+  (interactive "P")
+  (let ((recenter-redisplay nil))
+    (recenter arg)))
+
 ;;
 ;; Mac OS X keybindings minor mode.
 ;; Make it so the OSX keybindings you're used to always work.
