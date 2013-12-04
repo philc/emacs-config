@@ -28,6 +28,7 @@
                       midje-mode
                       multi-term ; Display many termianls inside emacs, not just one.
                       nrepl
+                      org ; For outlining. This is bundled with Emacs, but I'm using the latest version.
                       powerline ; Improve the appearance & density of the Emacs status bar.
                       projectile ; Find file in project (ala CTRL-P).
                       rainbow-delimiters ; Highlight parentheses in rainbow colors.
