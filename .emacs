@@ -431,6 +431,34 @@
 (define-key isearch-mode-map (kbd "C-h") 'isearch-delete-char)
 ;; Make M-v paste the clipboard's text into the search ring.
 (define-key isearch-mode-map (kbd "M-v") 'isearch-yank-kill)
+(define-key isearch-mode-map (kbd "C-w") 'isearch-del-word)
+
+(defun trim-last-word-of-string (string)
+  "Removes the last word from the given string. Word separators are -, _ and spaces. This is designed to
+  perform the same function as kill-word, but on a string argument."
+  (lexical-let ((i 0))
+    (while (and (< i (length string))
+                (string-match "[-_ ]+" string i))
+      (setq i (second (match-data))))
+    (if (= i 0)
+      ""
+      (substring string 0 (dec i)))))
+
+(defun isearch-del-word (&optional arg)
+  "Delete word from end of search string and search again. If search string is empty, just beep.
+  This function definition is based on isearch-del-char, from isearch.el."
+  (interactive "p")
+  (if (= 0 (length isearch-string))
+    (ding)
+    (setq isearch-string (trim-last-word-of-string isearch-string)
+          isearch-message (mapconcat 'isearch-text-char-description
+                                     isearch-string "")))
+  ;; Use the isearch-other-end as new starting point to be able
+  ;; to find the remaining part of the search string again.
+  (when isearch-other-end (goto-char isearch-other-end))
+  (isearch-search)
+  (isearch-push-state)
+  (isearch-update))
 
 ;; When pressing enter to confirm a search, or jumping to the next result, scroll the result to the center of
 ;; the window. This solves the UX problem of the result appearing at the bottom of the screen, with little
