@@ -100,7 +100,9 @@
   scroll-margin 7
   scroll-step 1
   scroll-conservatively 10000
-  scroll-preserve-screen-position 1)
+  scroll-preserve-screen-position 1
+  ; Make touchpad scrolling on OSX less jerky
+  mouse-wheel-scroll-amount '(0.01))
 
 ;; The preference file for Emac's "Customize" system. `M-x customize` to access it.
 (setq custom-file (expand-file-name "~/.emacs.d/custom.el"))
