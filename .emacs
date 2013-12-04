@@ -85,7 +85,8 @@
 
 (setq vc-follow-symlinks t) ; Don't ask confirmation to follow symlinks to edit files.
 
-(savehist-mode t) ; Save your minibuffer history across Emacs sessions. UX win!
+;; NOTE(philc): Disabling savehist-mode in an attempt to isolate a periodic Emacs segfault.
+;; (savehist-mode t) ; Save your minibuffer history across Emacs sessions. UX win!
 
 (setq text-scale-mode-step 1.1) ;; When changing font size, change in small increments.
 
