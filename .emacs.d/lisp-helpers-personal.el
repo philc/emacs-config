@@ -10,6 +10,12 @@
    (t
     (append (flatten (car mylist)) (flatten (cdr mylist))))))
 
+(defun inc (i)
+  (+ i 1))
+
+(defun dec (i)
+  (- i 1))
+
 ;;
 ;; Threading (thrush) macros, ported from Clojure.
 ;; Taken from https://github.com/sroccaserra/emacs/blob/master/tools.el
