@@ -8,8 +8,6 @@
 
 (provide 'org-mode-personal)
 
-(print "hey")
-
 (define-minor-mode evil-org-mode
   "Buffer local minor mode for evil-org"
   :init-value nil
