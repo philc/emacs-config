@@ -668,8 +668,11 @@
 (evil-define-key 'emacs term-raw-map (kbd "C-p") '(lambda () (interactive) (term-send-raw-string "\C-p")))
 (evil-define-key 'emacs term-raw-map (kbd "C-n") '(lambda () (interactive) (term-send-raw-string "\C-n")))
 
-;; (add-hook 'comint-mode-hook 'ansi-color-for-comint-mode-on)
-  ;; (ansi-color-for-comint-mode-off)
+;; Define the blue used by the emacs term to be readable for dark backgrounds.
+(defface term-color-blue
+  '((t :foreground "#1F93F3" :background "#1F93F3"))
+  "Face used to render blue color code."
+  :group 'term)
 
 ;;
 ;; Org mode, for TODOs and note taking.
