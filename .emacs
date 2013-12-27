@@ -1259,23 +1259,30 @@ but doesn't treat single semicolons as right-hand-side comments."
 (require 'yaml-mode)
 (add-to-list 'auto-mode-alist '("\\.yml$" . yaml-mode))
 
+(defun go-save-and-compile-fn (command-name)
+  "Returns a function for the purpose of binding to a key which saves the current buffer and then
+   runs the given command in the root of the go project."
+  (lexical-let ((command-name command-name))
+    #'(lambda ()
+        (interactive)
+        (save-buffer)
+        (message command-name)
+        (compile (concat "cd " (projectile-project-root) " && " command-name)))))
+
 ;;
 ;; Go mode, for writing Go code
 ;;
 (evil-leader/set-key-for-mode 'go-mode
   ;; "r" is a nemsapce for run-related commands.
-  "rr" (lambda ()
-         (interactive)
-         (compile "make run"))
-  "rb" (lambda ()
-         (interactive)
-         (compile "make benchmark"))
+  "rr" (go-save-and-compile-fn "make run")
+  "rb" (go-save-and-compile-fn "make benchmark")
+  "rt" (go-save-and-compile-fn "make test")
+  "rw" (go-save-and-compile-fn "make run_web")
   ;; "c" is a namespace for compile-related commands.
   "cn" 'next-error
   "cp" 'previous-error
-  "cc" (lambda ()
-         (interactive)
-         (compile "make build")))
+  "cw" (go-save-and-compile-fn "make build_web")
+  "cc" (go-save-and-compile-fn "make build"))
 
 (defun go-package-of-current-buffer ()
   "Returns the go package name defined in the current buffer. Returns nil if no package has been defined."
