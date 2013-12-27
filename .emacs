@@ -627,7 +627,8 @@
 ;;
 (require 'multi-term)
 (setq multi-term-buffer-name "term"
-      multi-term-program "/bin/zsh")
+      multi-term-program "/bin/zsh"
+      multi-term-program-switches "--login")
 (defun init-term-settings ()
   ;; Normally we maintain a margin of N lines between the cursor and the edge of the window, but in term mode,
   ;; the cursor should always be at the bottom of the window.
