@@ -47,3 +47,11 @@
   (if (> (length start) (length s))
       nil
     (string-equal (substring s 0 (length start)) start)))
+
+;; Taken from http://www.emacswiki.org/emacs/ElispCookbook
+(defun chomp (str)
+  "Chomp leading and tailing whitespace from str."
+  (while (string-match "\\`\n+\\|^\\s-+\\|\\s-+$\\|\n+\\'"
+                       str)
+    (setq str (replace-match "" t t str)))
+  str)
