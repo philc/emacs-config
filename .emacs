@@ -1343,4 +1343,6 @@ but doesn't treat single semicolons as right-hand-side comments."
            first
            ((lambda (project)
               (dired project)
-              (elscreen-screen-nickname (file-name-nondirectory project))))))))
+              ;; If we invoke this inside of a split, don't set the tab's title.
+              (when (= 1 (length (window-list)))
+                (elscreen-screen-nickname (file-name-nondirectory project)))))))))
