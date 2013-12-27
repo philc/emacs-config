@@ -783,7 +783,7 @@
 ;; By default, you can't delete selected text using backspace when tabbing through a snippet.
 ;; Filed as a bug here: https://github.com/capitaomorte/yasnippet/issues/408
 (define-key yas-keymap (kbd "C-h") 'yas-skip-and-clear-or-delete-backward-char)
-(define-key yas-keymap (kbd "backspace") 'yas-skip-and-clear-or-delete-backward-char)
+;; (define-key yas-keymap (kbd "backspace") 'yas-skip-and-clear-or-delete-backward-char)
 
 ;; This function is based on yas-skip-and-clear-or-delete-char from yassnippet.el.
 (defun yas-skip-and-clear-or-delete-backward-char (&optional field)
