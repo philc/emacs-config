@@ -45,6 +45,7 @@
   ";g" 'org-set-tags-command
   ";va" 'org-agenda
   "-" 'org-cycle-list-bullet
+  "gh" 'org-goto-top-level-heading
   "gu" 'outline-up-heading
   ; Normally these go backwards-and-forward by paragraphs but skipping between headings is more useful.
   "{" 'org-backward-heading-same-level
@@ -162,3 +163,13 @@
           (goto-char 0)
           (org-move-to-heading subheading)
           (org-insert-subheading-as-first-child new-todo))))))
+
+(defun org-goto-top-level-heading ()
+  (interactive)
+  "Prompts for the name of a top-level heading and jumps to there."
+  ;; TODO(philc): Populate these completions with the top-level headers from the doc.
+  (let* ((headings '("Liftoff" "Errands" "Study" "Entertainment" "Emacs" "Gumshoe" "Side projects"))
+         (heading (ido-completing-read "Heading: " headings)))
+    (goto-char 0)
+    (org-move-to-heading heading)
+    (recenter-no-redraw)))
