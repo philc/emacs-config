@@ -223,15 +223,14 @@
   "vo" (lambda () (interactive) (find-file "~/Dropbox/tasks.org"))
   "ve" (lambda () (interactive) (find-file "~/.emacs")))
 
+(setq evil-leader/leader ";")
+
 (defun prompt-to-open-info-page ()
   "Prompts you for the name of an info page to view. It's the same as calling info with a prefix argument
    ala C-u C-h i using the regular Emacs key bindings."
   (interactive)
   (setq current-prefix-arg '(4)) ; C-u
   (call-interactively 'info))
-
-(setq evil-leader/leader ";")
-
 
 (defun evil-fill-inside-paragraph ()
   "Fills (reflows/linewraps) the current paragraph. Equivalent to gqap in vim."
@@ -403,6 +402,7 @@
       (setq deactivate-mark  t)
     (when (get-buffer "*Completions*") (delete-windows-on "*Completions*"))
     (abort-recursive-edit)))
+
 (define-key evil-normal-state-map [escape] 'keyboard-quit)
 (define-key evil-visual-state-map [escape] 'keyboard-quit)
 (define-key minibuffer-local-map [escape] 'minibuffer-keyboard-quit)
@@ -474,9 +474,9 @@
 (defadvice isearch-exit (before isearch-recenter activate)
   (recenter-no-redraw))
 
-;; Centers the screen around the cursor.
 ;; Taken from https://groups.google.com/forum/#!topic/gnu.emacs.help/vASrP0P-tXM
 (defun recenter-no-redraw (&optional arg)
+  "Centers the viewport around the cursor."
   (interactive "P")
   (let ((recenter-redisplay nil))
     (recenter arg)))

@@ -135,6 +135,7 @@
         (setq heading-has-changed (string= current-heading (org-get-current-heading)))))))
 
 (defun org-insert-subheading-as-first-child (subheading-text)
+  "Inserts the given text as the first child of the heading which is currently under the cursor."
   (org-insert-heading-after-current)
   (insert subheading-text)
   (org-demote)
