@@ -32,7 +32,7 @@
   "L" 'org-end-of-line
   ";vt" 'org-show-todo-and-done-tree
   "o" '(lambda () (interactive) (evil-org-eol-call 'always-insert-item))
-  ; "O" '(lambda () (interactive) (evil-org-eol-call 'org-insert-heading))
+  ;; "O" '(lambda () (interactive) (evil-org-eol-call 'org-insert-heading))
   "$" 'org-end-of-line
   "^" 'org-beginning-of-line
   "<" 'org-metaleft
@@ -52,6 +52,9 @@
   (kbd "<C-tab>") 'org-expand-top-level-parent
   (kbd "TAB") 'org-cycle)
 
+(evil-leader/set-key-for-mode 'org-mode
+  "c" 'org-capture-item-and-prepend-to-subtree)
+
 ;; normal & insert state shortcuts.
 (mapc (lambda (state)
         (evil-define-key state evil-org-mode-map
@@ -63,6 +66,10 @@
           (kbd "<C-return>") '(lambda () (interactive)
                                 (org-insert-heading-after-current)
                                 (evil-append nil))))
+      ;; TODO(philc): Make S-C-enter insert a heading above
+          ;; (kbd "<C-S-return>") '(lambda () (interactive)
+          ;;                       (org-insert-subheading-as-first-child)
+          ;;                       (evil-append nil))))
       '(normal insert))
 
 (defun always-insert-item ()
@@ -106,3 +113,51 @@
   (save-excursion
     (outline-up-heading 4)
     (show-children)))
+
+(defun text-of-current-line ()
+  (buffer-substring-no-properties (line-beginning-position)
+                                  (line-beginning-position 2)))
+
+(defun org-get-current-heading ()
+  "Assumes the cursor is currently on a heading. TODO: return nil if the cursor isn't on a heading."
+  (-> (text-of-current-line) chomp (split-string "* ") second))
+
+(defun org-move-to-heading (heading-name)
+  (lexical-let ((heading-has-changed nil)
+                (heading-has-been-found nil)
+                (current-heading nil))
+    (while (not (or (eq heading-has-changed 't)
+                    (eq heading-has-been-found 't)))
+      (setq current-heading (org-get-current-heading))
+      (setq heading-has-been-found (string= current-heading heading-name))
+      (when (not heading-has-been-found)
+        (org-forward-heading-same-level nil)
+        (setq heading-has-changed (string= current-heading (org-get-current-heading)))))))
+
+(defun org-insert-subheading-as-first-child (subheading-text)
+  (org-insert-heading-after-current)
+  (insert subheading-text)
+  (org-demote)
+  ;; TODO(philc): This works because org-move-subtree-up throws an error (using user-error) when it can no
+  ;; longer move up. Change this so we only invoke org-move-subtree-up "current-depth" times.
+  (while t
+    ;; This will throw an exception once we can no longer move the subtree up.
+    (org-move-subtree-up)))
+
+(defun org-capture-item-and-prepend-to-subtree ()
+  "Prompts for a TODO and the name of a top-level heading, and adds the TODO as a child to the heading."
+  (interactive)
+  ;; NOTE(philc): These are personalized to the way I organize my org mode TODO file.
+  (message "[L] Liftoff  [E] Errands  [S] Study  [N] Entertainment  [M] Emacs")
+  (lexical-let ((subheading (pcase (read-char)
+                              (?l "Liftoff")
+                              (?e "Errands")
+                              (?s "Study")
+                              (?n "Entertainment")
+                              (?m "Emacs"))))
+    (when subheading
+      (lexical-let ((new-todo (read-from-minibuffer (concat subheading " TODO: "))))
+        (save-excursion
+          (goto-char 0)
+          (org-move-to-heading subheading)
+          (org-insert-subheading-as-first-child new-todo))))))
