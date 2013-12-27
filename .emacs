@@ -35,7 +35,8 @@
                       ruby-electric ; Insert matching delimiters; unindent end blocks after you type them.
                       scss-mode
                       yaml-mode
-                      yasnippet))
+                      yasnippet
+                      zoom-frm))
 
 (dolist (p my-packages)
   (when (not (package-installed-p p))
@@ -499,9 +500,10 @@
 (define-key osx-keys-minor-mode-map (kbd "M-c") 'clipboard-kill-ring-save)
 (define-key osx-keys-minor-mode-map (kbd "M-m") 'iconify-or-deiconify-frame)
 (define-key osx-keys-minor-mode-map (kbd "M-W") 'evil-quit) ; Close all tabs in the current frame..
-(define-key osx-keys-minor-mode-map (kbd "M--") 'text-scale-decrease)
-(define-key osx-keys-minor-mode-map (kbd "M-=") 'text-scale-increase)
-(define-key osx-keys-minor-mode-map (kbd "M-0") (lambda () (interactive) (text-scale-increase 0)))
+(require 'zoom-frm)
+(define-key osx-keys-minor-mode-map (kbd "M--") 'zoom-out)
+(define-key osx-keys-minor-mode-map (kbd "M-=") 'zoom-in)
+(define-key osx-keys-minor-mode-map (kbd "M-0") 'zoom-frm-unzoom)
 
 ;; These aren't specifically replicating OSX shortcuts, but they manipulate the window, so I want them to take
 ;; precedence over everything else.
