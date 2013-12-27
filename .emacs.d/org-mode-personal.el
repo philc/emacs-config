@@ -26,7 +26,6 @@
 
 ;; normal state shortcuts
 (evil-define-key 'normal evil-org-mode-map
-  "gu" 'outline-up-heading
   "t" 'org-todo
   "T" '(lambda () (interactive) (evil-org-eol-call '(org-insert-todo-heading nil)))
   "H" 'org-beginning-of-line
@@ -46,6 +45,10 @@
   ";g" 'org-set-tags-command
   ";va" 'org-agenda
   "-" 'org-cycle-list-bullet
+  "gu" 'outline-up-heading
+  ; Normally these go backwards-and-forward by paragraphs but skipping between headings is more useful.
+  "{" 'org-backward-heading-same-level
+  "}" 'org-forward-heading-same-level
   (kbd "<C-tab>") 'org-expand-top-level-parent
   (kbd "TAB") 'org-cycle)
 
