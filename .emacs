@@ -175,11 +175,14 @@
 ;; Evil mode -- Vim keybindings for Emacs.
 ;;
 (setq evil-want-C-u-scroll t)
-(require 'evil)
 (require 'evil-leader) ; Provide configuration functions for assigning actions to a Vim leader key.
+(require 'evil)
 (require 'evil-nerd-commenter)
+(global-evil-leader-mode t)
 (evil-mode t)
-(global-evil-leader-mode)
+;; Note that there is a bug where Evil-leader isn't properly bound to the initial buffers Emacs opens
+;; with. We work around this by killing them. See https://github.com/cofi/evil-leader/issues/10.
+(kill-buffer "*Messages*")
 
 ;; When opening new lines, indent according to the previous line.
 (setq evil-auto-indent t)
