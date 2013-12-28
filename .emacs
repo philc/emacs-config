@@ -228,6 +228,9 @@
 
 (setq evil-leader/leader ";")
 
+;; Ensure we evil-leader works in non-editing modes like magit. This is referenced from evil-leader's README.
+(setq evil-leader/no-prefix-mode-rx '("magit-.*-mode"))
+
 (defun prompt-to-open-info-page ()
   "Prompts you for the name of an info page to view. It's the same as calling info with a prefix argument
    ala C-u C-h i using the regular Emacs key bindings."
@@ -392,6 +395,21 @@
          (when (window-splittable-p window)
      (with-selected-window window
        (split-window-below))))))))
+
+;; Taken from http://www.emacswiki.org/emacs/misc-cmds.el.
+(defun kill-buffer-and-its-windows (buffer)
+  "Kill BUFFER and delete its windows. Default is `current-buffer'. BUFFER may be either a buffer or its name"
+  (interactive (list (read-buffer "Kill buffer: " (current-buffer) 'existing)))
+  (setq buffer (get-buffer buffer))
+  (if (buffer-live-p buffer)
+      (let ((windows (get-buffer-window-list buffer nil t)))
+        (when (kill-buffer buffer)
+          (dolist (window windows)
+            (when (window-live-p window)
+              ;; Ignore error, in particular,;; "Attempt to delete the sole visible or iconified frame".
+              (condition-case nil (delete-window window) (error nil))))))
+    (when (interactive-p)
+      (error "Cannot kill buffer.  Not a live buffer: `%s'" buffer))))
 
 ;; Make it so Esc means quit, no matter the context.
 ;; http://stackoverflow.com/a/10166400/46237
@@ -1037,10 +1055,8 @@
   (nrepl-clear-buffer)
   (command-execute 'nrepl-switch-to-last-clojure-buffer))
 
-;; Disable prompt on killing buffer with a process
-(setq kill-buffer-query-functions
-      (remq 'process-kill-buffer-query-function
-            kill-buffer-query-functions))
+;; Disable the prompt we get when killing a buffer with a process.
+(setq kill-buffer-query-functions (remq 'process-kill-buffer-query-function kill-buffer-query-functions))
 
 (defun nrepl-restart ()
   "Restarts or starts afresh the nrepl."
@@ -1298,6 +1314,62 @@ but doesn't treat single semicolons as right-hand-side comments."
       (when match-exists
         (buffer-substring-no-properties (+ 1 (match-beginning 1))
                                         (+ 1 (match-end 1)))))))
+
+;;
+;; Magit - for staging hunks and making commits to git
+;;
+(eval-after-load 'magit
+  '(progn
+     ;; I determined the appropriate mode-maps to customize by looking through the magit source.
+     (define-key magit-mode-map (kbd "j") 'magit-goto-next-section)
+     (define-key magit-mode-map (kbd "k") 'magit-goto-previous-section)
+     ;; These scroll the diff window. Normally these are mapped to space and shift-space in magit.
+     ;; TODO(philc): Uncomment these once the latest magit lands in melpa.
+     ;; (define-key magit-mode-map (kbd "C-d") '(lambda () (interactive)
+     ;;                                           (magit-show-item-or-scroll 'View-scroll-half-page-forward)))
+     ;; (define-key magit-mode-map (kbd "C-u") '(lambda () (interactive)
+     ;;                                           (magit-show-item-or-scroll 'View-scroll-half-page-backward)))
+     (define-key magit-mode-map (kbd "C-d") 'magit-show-item-or-scroll-up)
+     (define-key magit-mode-map (kbd "C-u") 'magit-show-item-or-scroll-down)
+
+     ;; Kill the ephemeral diff popup which appears when you type space.
+     (define-key magit-mode-map (kbd "S-SPC") (lambda () (interactive)
+                                                (kill-buffer-and-its-windows "*magit-commit*")))
+
+     (define-key magit-status-mode-map (kbd "j") 'magit-goto-next-section)
+     (define-key magit-status-mode-map (kbd "k") 'magit-goto-previous-section)
+     (define-key magit-status-mode-map (kbd "zz") 'recenter-no-redraw)
+     (define-key magit-status-mode-map (kbd "c") 'magit-commit)
+     (define-key magit-status-mode-map (kbd "e") 'magit-show-level-4) ; e for "expand"
+     (define-key magit-status-mode-map (kbd "d") 'magit-discard-item)
+     (define-key magit-status-mode-map (kbd "r") 'magit-refresh)
+
+     ;; Open magit in the current window, not a new split.
+     (setq magit-status-buffer-switch-function 'switch-to-buffer)
+
+     ;; Customize the order of the sections which are shown in the status view. You can find the full list in
+     ;; the magit source code.
+     (setq magit-status-sections-hook
+           '(magit-insert-status-local-line
+             magit-insert-status-head-line
+             magit-insert-status-merge-line
+             magit-insert-status-rebase-lines
+             magit-insert-empty-line
+             magit-insert-pending-changes
+             magit-insert-pending-commits
+             magit-insert-unstaged-changes
+             magit-insert-staged-changes
+             magit-insert-untracked-files
+             magit-insert-stashes
+             magit-insert-unpulled-commits
+             magit-insert-unpushed-commits))))
+
+(evil-leader/set-key-for-mode 'git-commit-mode
+  "c" 'git-commit-commit)
+
+;; Disalbe the `highlight` face that Magit uses to highlight diffs. It's unreadable with my color scheme.
+(defun disable-magit-highlight-in-buffer () (face-remap-add-relative 'magit-item-highlight '()))
+(add-hook 'magit-status-mode-hook 'disable-magit-highlight-in-buffer)
 
 ;;
 ;; Project navigation (my own functions on top of dired-mode and projectile)
