@@ -35,6 +35,22 @@
                `(,(first form) ,@(rest form) ,x)
              (list form x)))))
 
+(defmacro -?> (x form &rest more)
+  (cond ((not (null more)) `(-?> (-?> ,x ,form) ,@more))
+        (t (if (sequencep form)
+               `(if (null ,x) nil
+                  (,(first form) ,x ,@(rest form)))
+             `(if (null ,x) nil
+                ,(list form x))))))
+
+(defmacro -?>> (x form &rest more)
+  (cond ((not (null more)) `(-?>> (-?>> ,x ,form) ,@more))
+        (t (if (sequencep form)
+               `(if (null ,x) nil
+                  (,(first form) ,@(rest form) ,x))
+             `(if (null ,x) nil
+                ,(list form x))))))
+
 (defun string/ends-with (s ending)
   "return non-nil if string S ends with ENDING."
   (let ((elength (length ending)))
