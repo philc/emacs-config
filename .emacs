@@ -1321,6 +1321,7 @@ but doesn't treat single semicolons as right-hand-side comments."
   "cn" 'next-error
   "cp" 'previous-error
   "cw" (go-save-and-compile-fn "make build_web")
+  "cb" (go-save-and-compile-fn "make build_benchmark")
   "cc" (go-save-and-compile-fn "make build"))
 
 (defun go-package-of-current-buffer ()
