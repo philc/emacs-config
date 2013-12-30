@@ -411,6 +411,22 @@
     (when (interactive-p)
       (error "Cannot kill buffer.  Not a live buffer: `%s'" buffer))))
 
+;; Save buffers whenever they lose focus.
+;; This obviates the need to hit the Save key thousands of times a day. Inspired by http://goo.gl/2z0g5O.
+(defun save-buffer-if-dirty ()
+  (when (and buffer-file-name (buffer-modified-p))
+    (save-buffer)))
+
+(defadvice switch-to-buffer (before save-buffer-now activate) (save-buffer-if-dirty))
+(defadvice other-window (before other-window-now activate) (save-buffer-if-dirty))
+(defadvice windmove-up (before other-window-now activate) (save-buffer-if-dirty))
+(defadvice windmove-down (before other-window-now activate) (save-buffer-if-dirty))
+(defadvice windmove-left (before other-window-now activate) (save-buffer-if-dirty))
+(defadvice windmove-right (before other-window-now activate) (save-buffer-if-dirty))
+;; This hasn't been a problem yet, but advising "select-window" may cause problems. For instance, it's called
+;; every time a character is typed in isearch mode.
+(defadvice select-window (before select-window activate) (save-buffer-if-dirty))
+
 ;; Make it so Esc means quit, no matter the context.
 ;; http://stackoverflow.com/a/10166400/46237
 ;; Note that when Emacs becomes unresponsive (e.g. because I accidentally grepped my home directory), I might
