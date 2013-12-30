@@ -1360,6 +1360,10 @@ but doesn't treat single semicolons as right-hand-side comments."
      (define-key magit-status-mode-map (kbd "d") 'magit-discard-item)
      (define-key magit-status-mode-map (kbd "r") 'magit-refresh)
 
+
+     (evil-define-key 'normal git-commit-mode-map
+       "ZZ" 'git-commit-commit)
+
      ;; Open magit in the current window, not a new split.
      (setq magit-status-buffer-switch-function 'switch-to-buffer)
 
