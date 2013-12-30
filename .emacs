@@ -328,33 +328,18 @@
   (split-window-horizontally)
   (other-window 1))
 
-;; These switch-to-window functions jump to a numbered window on-screen. They assume my convential window
-;; layout, which is either a single window on the left and 2 splits on the right, or 4 splits in a 2x2 grid.
-(defun switch-to-window-1 ()
-  (interactive)
-  (select-window (frame-first-window)))
+(defun switch-to-upper-left () (interactive) (select-window (frame-first-window)))
+(defun switch-to-lower-left () (interactive) (switch-to-upper-left) (ignore-errors (windmove-down)))
+(defun switch-to-upper-right () (interactive) (switch-to-upper-left) (ignore-errors (windmove-right 1)))
+(defun switch-to-lower-right () (interactive) (switch-to-upper-right) (ignore-errors (windmove-down)))
 
-(defun switch-to-window-2 ()
-  (interactive)
-  (call-interactively 'switch-to-window-1)
-  (condition-case nil (windmove-down) (error (windmove-right 1))))
-
-(defun switch-to-window-3 ()
-  (interactive)
-  (call-interactively 'switch-to-window-1)
-  (condition-case nil
-      (progn
-        (windmove-down)
-        (windmove-up)
-        (windmove-right 1))
-    (error (progn (windmove-right 1)
-                  (windmove-down)))))
-
-(defun switch-to-window-4 ()
-  (interactive)
-  (call-interactively 'switch-to-window-1)
-  (windmove-right)
-  (windmove-down))
+(defun switch-to-nth-window (n)
+  (lexical-let ((window (frame-first-window)))
+    (dotimes (i n nil)
+      (when window
+        (setq window (next-window window))))
+    (when window
+      (select-window window))))
 
 (defun create-window-in-next-logical-spot ()
   "Creates a window in the next slot in my standard 2x2 configuration. So for instance, if I have only 1
@@ -364,10 +349,10 @@
     (case window-count
       (1 (split-window-horizontally-and-focus))
       (2 (progn
-           (switch-to-window-2)
+           (switch-to-nth-window 1)
            (split-window-vertically-and-focus)))
       (3 (progn
-           (switch-to-window-1)
+           (switch-to-nth-window 0)
            (split-window-vertically-and-focus))))))
 
 (defadvice windmove-do-window-select (after windowmove-change-to-normal-mode)
@@ -544,12 +529,16 @@
 
 ;; These aren't specifically replicating OSX shortcuts, but they manipulate the window, so I want them to take
 ;; precedence over everything else.
-;; Moving between Emacs windows (splits).
 (define-key osx-keys-minor-mode-map (kbd "M-C-n") 'other-window)
-(define-key osx-keys-minor-mode-map (kbd "M-1") 'switch-to-window-1)
-(define-key osx-keys-minor-mode-map (kbd "M-2") 'switch-to-window-2)
-(define-key osx-keys-minor-mode-map (kbd "M-3") 'switch-to-window-3)
-(define-key osx-keys-minor-mode-map (kbd "M-4") 'switch-to-window-4)
+;; Note that I have Ctrl-Space mapped to Alt, which makes these shortcuts easy to hit.
+(define-key osx-keys-minor-mode-map (kbd "A-i") 'switch-to-upper-left)
+(define-key osx-keys-minor-mode-map (kbd "A-k") 'switch-to-lower-left)
+(define-key osx-keys-minor-mode-map (kbd "A-o") 'switch-to-upper-right)
+(define-key osx-keys-minor-mode-map (kbd "A-l") 'switch-to-lower-right)
+(define-key osx-keys-minor-mode-map (kbd "M-1") (lambda () (interactive) (switch-to-nth-window 0)))
+(define-key osx-keys-minor-mode-map (kbd "M-2") (lambda () (interactive) (switch-to-nth-window 1)))
+(define-key osx-keys-minor-mode-map (kbd "M-3") (lambda () (interactive) (switch-to-nth-window 2)))
+(define-key osx-keys-minor-mode-map (kbd "M-4") (lambda () (interactive) (switch-to-nth-window 3)))
 
 (define-minor-mode osx-keys-minor-mode
   "A minor-mode for emulating osx keyboard shortcuts."
