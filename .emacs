@@ -1327,35 +1327,35 @@ but doesn't treat single semicolons as right-hand-side comments."
 ;;
 (eval-after-load 'magit
   '(progn
-     ;; I determined the appropriate mode-maps to customize by looking through the magit source.
-     (define-key magit-mode-map (kbd "j") 'magit-goto-next-section)
-     (define-key magit-mode-map (kbd "k") 'magit-goto-previous-section)
-     ;; These scroll the diff window. Normally these are mapped to space and shift-space in magit.
-     ;; TODO(philc): Uncomment these once the latest magit lands in melpa.
-     ;; (define-key magit-mode-map (kbd "C-d") '(lambda () (interactive)
-     ;;                                           (magit-show-item-or-scroll 'View-scroll-half-page-forward)))
-     ;; (define-key magit-mode-map (kbd "C-u") '(lambda () (interactive)
-     ;;                                           (magit-show-item-or-scroll 'View-scroll-half-page-backward)))
-     (define-key magit-mode-map (kbd "C-d") 'magit-show-item-or-scroll-up)
-     (define-key magit-mode-map (kbd "C-u") 'magit-show-item-or-scroll-down)
+     ;; Magit mode feels twitchy because every key has a binding, and some are very destructive or
+     ;; disorienting. I'm defining a whitelist of keys that I actually use, so this mode feels less
+     ;; erorr-prone.
+     (evil-define-key 'normal magit-mode-map
+       "n" 'magit-goto-next-section
+       "p" 'magit-goto-previous-section
+       "L" 'magit-key-mode-popup-logging
+       ;; These scroll the diff window. Normally these are mapped to space and shift-space in magit.
+       ;; TODO(philc): Uncomment these once the latest magit lands in melpa.
+       ;; (define-key magit-mode-map (kbd "C-d") '(lambda () (interactive)
+       ;;                                           (magit-show-item-or-scroll 'View-scroll-half-page-forward)))
+       ;; (define-key magit-mode-map (kbd "C-u") '(lambda () (interactive)
+       ;;                                           (magit-show-item-or-scroll 'View-scroll-half-page-backward)))
+       ;; (define-key magit-mode-map (kbd "C-d") 'magit-show-item-or-scroll-up)
+       ;; (define-key magit-mode-map (kbd "C-u") 'magit-show-item-or-scroll-down)
 
      ;; Kill the ephemeral diff popup which appears when you type space.
-     (define-key magit-mode-map (kbd "S-SPC") (lambda () (interactive)
-                                                (kill-buffer-and-its-windows "*magit-commit*")))
+     (kbd "S-SPC") (lambda () (interactive) (kill-buffer-and-its-windows "*magit-commit*")))
 
-     (define-key magit-status-mode-map (kbd "j") 'magit-goto-next-section)
-     (define-key magit-status-mode-map (kbd "k") 'magit-goto-previous-section)
-     (define-key magit-status-mode-map (kbd "zz") 'recenter-no-redraw)
-     (define-key magit-status-mode-map (kbd "c") 'magit-commit)
-     (define-key magit-status-mode-map (kbd "e") 'magit-show-level-4) ; e for "expand"
-     (define-key magit-status-mode-map (kbd "d") 'magit-discard-item)
-     (define-key magit-status-mode-map (kbd "r") 'magit-refresh)
-
+     (evil-define-key magit-status-mdoe 'normal
+       "c" 'magit-commit
+       "e" 'magit-show-level-4-all ; e for exapnd
+       "d" 'magit-discard-item
+       "r" -magit-refresh)
 
      (evil-define-key 'normal git-commit-mode-map
        "ZZ" 'git-commit-commit)
 
-     ;; Open magit in the current window, not a new split.
+     ;; Have Magit open in the current window, not a new split.
      (setq magit-status-buffer-switch-function 'switch-to-buffer)
 
      ;; Customize the order of the sections which are shown in the status view. You can find the full list in
