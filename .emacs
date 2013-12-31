@@ -1101,6 +1101,7 @@
      (values 1) (delete 1) (upsert 1) (subselect 1)
      (clone-for 1)                                                     ; Enlive
      (up 1) (down 1) (alter 1) (table 1) (create 1)                    ; Lobos
+     (checker 1)                                                         ; Midje
      (with-eligible-values 1) (when-eligible 1) (check 4)              ; Personal
      (url-of-form 1)                                                   ; Personal
      ))
