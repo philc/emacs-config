@@ -1364,14 +1364,31 @@ but doesn't treat single semicolons as right-hand-side comments."
      ;; Kill the ephemeral diff popup which appears when you type space.
      (kbd "S-SPC") (lambda () (interactive) (kill-buffer-and-its-windows "*magit-commit*")))
 
-     (evil-define-key magit-status-mdoe 'normal
+     (evil-define-key 'normal magit-status-mode-map
        "c" 'magit-commit
        "e" 'magit-show-level-4-all ; e for exapnd
        "d" 'magit-discard-item
-       "r" -magit-refresh)
+       "s" 'magit-stage-item
+       "S" 'magit-stage-all
+       "d" 'magit-discard-item
+       "u" 'magit-unstage-item
+       "U" 'magit-unstage-all
+       "gu" 'magit-jump-to-unstaged
+       (kbd "TAB") 'magit-toggle-section
+       "r" 'magit-refresh)
+
+     (evil-define-key 'normal magit-log-mode-map
+       ";gca" 'magit-commit-amend
+       ";gri" 'magit-interactive-rebase
+       "j" 'magit-goto-next-section
+       "k" 'magit-goto-previous-section)
 
      (evil-define-key 'normal git-commit-mode-map
+       ";wk" 'git-commit-abort
        "ZZ" 'git-commit-commit)
+
+     (evil-leader/set-key-for-mode 'git-commit-mode
+       "c" 'git-commit-commit)
 
      ;; Have Magit open in the current window, not a new split.
      (setq magit-status-buffer-switch-function 'switch-to-buffer)
@@ -1393,10 +1410,12 @@ but doesn't treat single semicolons as right-hand-side comments."
              magit-insert-unpulled-commits
              magit-insert-unpushed-commits))))
 
-(evil-leader/set-key-for-mode 'git-commit-mode
-  "c" 'git-commit-commit)
+(evil-set-initial-state 'magit-mode 'normal)
+(evil-set-initial-state 'magit-status-mode 'normal)
+(evil-set-initial-state 'magit-log-mode 'normal)
+(evil-set-initial-state 'git-commit-mode 'insert)
 
-;; Disalbe the `highlight` face that Magit uses to highlight diffs. It's unreadable with my color scheme.
+;; Disable the `highlight` face that Magit uses to highlight diffs. It's unreadable with my color scheme.
 (defun disable-magit-highlight-in-buffer () (face-remap-add-relative 'magit-item-highlight '()))
 (add-hook 'magit-status-mode-hook 'disable-magit-highlight-in-buffer)
 
