@@ -167,6 +167,24 @@
 (setq split-width-threshold 200)
 (setq split-window-preferred-function 'split-window-sensibly-reverse)
 
+;; I manage my windows in a 4x4 grid. I want ephemeral or status-based buffers to always show in the
+;; lower-right or right window, in that order of preference.
+(setq special-display-buffer-names '("*Help*" "*compilation*" "COMMIT_EDITMSG"))
+(setq special-display-regexps '("*nrepl .*"))
+(setq special-display-function 'show-ephemeral-window-in-sensible-split)
+
+;; References, for context:
+;; http://snarfed.org/emacs_special-display-function_prefer-other-visible-frame
+;; http://stackoverflow.com/questions/1002091/how-to-force-emacs-not-to-display-buffer-in-a-specific-window
+(defun show-ephemeral-window-in-sensible-split (buffer &optional buffer-data)
+  "Given a buffer, shows the window in a right-side split."
+  (let ((window
+         (if (one-window-p)
+             (progn (split-window-horizontally-and-focus) (selected-window))
+           (save-excursion (switch-to-lower-right) (selected-window)))))
+    (set-window-buffer window buffer)
+    window))
+
 ;; The poorly-named winner mode saves the history of your window splits, so you can undo and redo changes to
 ;; your window configuration.
 (winner-mode t)
