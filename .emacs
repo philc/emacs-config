@@ -549,10 +549,10 @@
 ;; precedence over everything else.
 (define-key osx-keys-minor-mode-map (kbd "M-C-n") 'other-window)
 ;; Note that I have Ctrl-Space mapped to Alt, which makes these shortcuts easy to hit.
-(define-key osx-keys-minor-mode-map (kbd "A-i") 'switch-to-upper-left)
-(define-key osx-keys-minor-mode-map (kbd "A-k") 'switch-to-lower-left)
-(define-key osx-keys-minor-mode-map (kbd "A-o") 'switch-to-upper-right)
-(define-key osx-keys-minor-mode-map (kbd "A-l") 'switch-to-lower-right)
+(define-key osx-keys-minor-mode-map (kbd "A-e") 'switch-to-upper-left)
+(define-key osx-keys-minor-mode-map (kbd "A-d") 'switch-to-lower-left)
+(define-key osx-keys-minor-mode-map (kbd "A-r") 'switch-to-upper-right)
+(define-key osx-keys-minor-mode-map (kbd "A-f") 'switch-to-lower-right)
 (define-key osx-keys-minor-mode-map (kbd "M-1") (lambda () (interactive) (switch-to-nth-window 0)))
 (define-key osx-keys-minor-mode-map (kbd "M-2") (lambda () (interactive) (switch-to-nth-window 1)))
 (define-key osx-keys-minor-mode-map (kbd "M-3") (lambda () (interactive) (switch-to-nth-window 2)))
