@@ -315,7 +315,7 @@
 (define-key evil-normal-state-map "," 'evilnc-comment-operator)
 (define-key evil-visual-state-map "," 'evilnc-comment-operator)
 
-;; Window switching & manipulation.
+;; Window manipulation, switching, & management.
 ;; Evil's window map is the set of keys which control window functions. All of its keys are prefixed with
 ;; <C-w>.
 (evil-leader/set-key "wn" 'create-window-in-next-logical-spot)
@@ -363,7 +363,8 @@
   "Creates a window in the next slot in my standard 2x2 configuration. So for instance, if I have only 1
    window open, it will split the screen into two vertical windows."
   (interactive)
-  (let ((window-count (length (window-list))))
+  (let ((window-count (length (window-list)))
+        (buffer (current-buffer)))
     (case window-count
       (1 (split-window-horizontally-and-focus))
       (2 (progn
@@ -371,7 +372,11 @@
            (split-window-vertically-and-focus)))
       (3 (progn
            (switch-to-nth-window 0)
-           (split-window-vertically-and-focus))))))
+           (split-window-vertically-and-focus))))
+    ;; Ensure that no matter where the window is created, it's has the same buffer as the window prior to
+    ;; creating the new one. Otherwise, the new window could have some random buffer in it, making it
+    ;; difficult to use commands like open-in-project, for instance.
+    (set-window-buffer (selected-window) buffer)))
 
 (defadvice windmove-do-window-select (after windowmove-change-to-normal-mode)
   "Ensure we reset to Evil's normal mode when switching windows."
