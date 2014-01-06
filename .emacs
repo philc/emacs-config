@@ -1140,7 +1140,7 @@
 ;; Clojure indentation rules
 (eval-after-load 'clojure-mode
   '(define-clojure-indent
-     (send-off 1)                                                      ; Core
+     (send-off 1) (cli 1)                                              ; Core
      (ANY 2) (GET 2) (POST 2) (PUT 2) (PATCH 2) (DELETE 2) (context 2) ; Compojure
      (select 1) (insert 1) (update 1) (where 1) (set-fields 1)         ; Korma
      (values 1) (delete 1) (upsert 1) (subselect 1)
