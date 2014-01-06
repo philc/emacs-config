@@ -1379,6 +1379,7 @@ but doesn't treat single semicolons as right-hand-side comments."
        "n" 'magit-goto-next-section
        "p" 'magit-goto-previous-section
        "L" 'magit-key-mode-popup-logging
+       (kbd "RET") 'magit-visit-item
        ;; These scroll the diff window. Normally these are mapped to space and shift-space in magit.
        ;; TODO(philc): Uncomment these once the latest magit lands in melpa.
        ;; (define-key magit-mode-map (kbd "C-d") '(lambda () (interactive)
@@ -1400,7 +1401,12 @@ but doesn't treat single semicolons as right-hand-side comments."
        "d" 'magit-discard-item
        "u" 'magit-unstage-item
        "U" 'magit-unstage-all
+       "-" 'magit-diff-smaller-hunks
+       "+" 'magit-diff-larger-hunks
        "gu" 'magit-jump-to-unstaged
+       ;; NOTE(philc): I'm not sure why I need to define shortcuts for j and k explicitly.
+       "j" 'evil-next-line
+       "k" 'evil-previous-line
        (kbd "TAB") 'magit-toggle-section
        "r" 'magit-refresh)
 
