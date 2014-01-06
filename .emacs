@@ -10,6 +10,7 @@
 
 (defvar my-packages '(ace-jump-mode ; Jump to any text on screen in a few keystrokes. Like Vim's EasyMotion.
                       autopair ; Insert matching delimiters, e.g. insert closing braces.
+                      cider ; repl for Clojure code evaluation.
                       clojure-mode
                       clojure-test-mode
                       coffee-mode ; For syntax highlighting coffeescript.
@@ -25,9 +26,8 @@
                       ido-vertical-mode ; Show ido results vertically.
                       magit
                       markdown-mode
-                      midje-mode
+                      midje-mode ; For editing clojure tests
                       multi-term ; Display many termianls inside emacs, not just one.
-                      nrepl
                       org ; For outlining. This is bundled with Emacs, but I'm using the latest version.
                       powerline ; Improve the appearance & density of the Emacs status bar.
                       projectile ; Find file in project (ala CTRL-P).
@@ -170,12 +170,12 @@
 ;; I manage my windows in a 4x4 grid. I want ephemeral or status-based buffers to always show in the
 ;; lower-right or right window, in that order of preference.
 (setq special-display-buffer-names '("*Help*" "*compilation*" "COMMIT_EDITMSG" "*Messages*"))
-(setq special-display-regexps '("*nrepl.*"))
+(setq special-display-regexps '("*cider.*"))
 (setq special-display-function 'show-ephemeral-buffer-in-a-sensible-window)
 
 ;; A list of "special" (ephemeral) buffer names which should be focused after they are shown. Used by
 ;; show-ephemeral-buffer-in-a-sensible-window
-;; (setq special-display-auto-focused-buffers '("*Help*"))
+(setq special-display-auto-focused-buffers '())
 
 ;; References, for context:
 ;; http://snarfed.org/emacs_special-display-function_prefer-other-visible-frame
@@ -1053,7 +1053,7 @@
 ;; Clojure
 ;;
 ;; Docs:
-;; https://github.com/clojure-emacs/nrepl.el
+;; https://github.com/clojure-emacs/cider
 ;; http://clojure-doc.org/articles/tutorials/emacs.html
 
 ;; Count hyphens, etc. as word characters in lisps
@@ -1063,18 +1063,20 @@
                                ;; Comment lines using only one semi-colon instead of two.
                                (setq comment-add 0)))
 
-(evil-define-key 'normal clojure-mode-map "K" 'nrepl-doc)
-(evil-define-key 'normal clojure-mode-map "gf" 'nrepl-jump)
+(evil-define-key 'normal clojure-mode-map "K" 'cider-doc)
+(evil-define-key 'normal clojure-mode-map "gf" 'cider-jump)
 
 ;; Hide the uninteresting nrepl-connection and nrepl-server buffers from the buffer list.
 (setq nrepl-hide-special-buffers t)
 
 ;; Prevent the auto-display of the REPL buffer in a separate window after connection is established.
-(setq nrepl-pop-to-repl-buffer-on-connect nil)
+(setq cider-repl-pop-to-buffer-on-connect nil)
 
 ;; Auto-focus the error buffer when it's displayed after evaluating some clojure code. This makes it easy
 ;; to type "q" to dismiss the window, assuming you don't want this backtrace window hanging around.
-(setq nrepl-auto-select-error-buffer t)
+(setq cider-auto-select-error-buffer t)
+
+;; TODO(philc): Try (cider-toggle-pretty-printing)
 
 ;; Don't ask confirmation for closing any open nrepl connections when exiting Emacs.
 ;; http://stackoverflow.com/q/2706527/46237
@@ -1082,60 +1084,90 @@
   "Prevent annoying \"Active processes exist\" query when you quit Emacs."
   (flet ((process-list ())) ad-do-it))
 
-(evil-define-operator evil-nrepl-eval (beg end)
+(evil-define-operator evil-cider-eval (beg end)
   "Evaluate the text region moved over by an evil motion."
-  (nrepl-eval-region beg end))
+  (cider-eval-region beg end))
 
 ;; Eval a paragraph. This is different from eval-surrounding-sexp in that it will eval multiple adjacent
 ;; s-expressions which are not separated by a new line. It's equivalent to wrapping the expressions in a do.
-(defun nrepl-eval-paragraph (beg end)
+(defun cider-eval-paragraph (beg end)
   (interactive "r")
   (let ((region (evil-a-paragraph)))
-    (evil-nrepl-eval (first region) (second region))))
+    (evil-cider-eval (first region) (second region))))
 
-(defun nrepl-show-nrepl-buffer ()
+(defun cider-show-cider-buffer ()
   (interactive)
   "Shows the nrepl buffer, but does not focus it."
-  (command-execute 'nrepl-switch-to-repl-buffer)
-  (command-execute 'nrepl-switch-to-last-clojure-buffer))
+  (command-execute 'cider-switch-to-repl-buffer)
+  (command-execute 'cider-switch-to-last-clojure-buffer))
 
-(defun nrepl-clear-buffer-inside-nrepl-buffer ()
+(defun cider-clear-buffer-inside-cider-buffer ()
   (interactive)
-  (command-execute 'nrepl-switch-to-repl-buffer)
-  (nrepl-clear-buffer)
-  (command-execute 'nrepl-switch-to-last-clojure-buffer))
+  (command-execute 'cider-switch-to-repl-buffer)
+  (cider-clear-buffer)
+  (command-execute 'cider-switch-to-last-clojure-buffer))
 
 ;; Disable the prompt we get when killing a buffer with a process.
 (setq kill-buffer-query-functions (remq 'process-kill-buffer-query-function kill-buffer-query-functions))
 
-(defun nrepl-restart ()
+(defun cider-restart-nrepl ()
   "Restarts or starts afresh the nrepl."
   (interactive)
-  (flet ((y-or-n-p (&rest args) t)) ; Skip the confirmation prompt.
-    (nrepl-quit))
-  (nrepl-jack-in nil))
+  (let ((repl-buffer (nrepl-connection-for-buffer (current-buffer))))
+    (when (not (stringp repl-buffer))
+      (flet ((y-or-n-p (&rest args) t)) ; Skip the confirmation prompt.
+        (nrepl-close repl-buffer)))
+    (cider-jack-in nil)))
 
-(defun nrepl-eval-current-sexp ()
+(defun with-nrepl-connection-of-current-buffer (f)
+  (let ((result (nrepl-connection-for-buffer (current-buffer))))
+    (if (stringp result)
+        (message result)
+      (progn
+        (setq nrepl-connection-list result)
+        (funcall f)))))
+
+;; Based on `cider-switch-to-relevant-repl-buffer` in cider.el.
+(defun nrepl-connection-for-buffer (buffer)
+  "Returns either the corresponding nrepl buffer for the given buffer, or a string error message."
+  (if (not (cider-connected-p))
+      "No active nREPL connection."
+    (let ((project-directory (nrepl-project-directory-for (nrepl-current-dir))))
+      (if project-directory
+          (let ((buf (car (-filter
+                           (lambda (conn)
+                             (let ((conn-proj-dir (with-current-buffer (get-buffer conn)
+                                                    nrepl-project-dir)))
+                               (when conn-proj-dir
+                                 (equal (file-truename project-directory)
+                                        (file-truename conn-proj-dir)))))
+                           nrepl-connection-list))))
+            (if buf
+                (cons buf (delq buf nrepl-connection-list))
+              "No relevant nREPL connection found."))
+        "No project directory found."))))
+
+(defun cider-eval-current-sexp ()
   "Eval the sexp the current is currently in. In Emacs' syntax table, this is called a list of expressions."
   (interactive)
-  (nrepl-interactive-eval (current-sexp)))
+  (cider-interactive-eval (current-sexp)))
 
-;; The all-important nREPL eval shortcuts.
 (evil-leader/set-key-for-mode 'clojure-mode
-  "eap" 'nrepl-eval-paragraph
-  "eb" (lambda() (interactive) (save-buffer) (nrepl-load-current-buffer))
-  "ee" 'nrepl-show-nrepl-buffer
-  "ek" 'nrepl-clear-buffer-inside-nrepl-buffer
-  ; nrepl-restart is more handy than nrepl-jack-in, because it doesn't leave existing repls running.
-  "en" 'nrepl-restart
-  "es" 'nrepl-eval-current-sexp
-  "ex" 'nrepl-eval-expression-at-point
-  "er" 'nrepl-eval-region)
+  "eap" (lambda () (interactive) (with-nrepl-connection-of-current-buffer 'cider-eval-paragraph))
+  "ee" (lambda () (interactive) (with-nrepl-connection-of-current-buffer 'cider-show-cider-buffer))
+  "ek" (lambda () (interactive) (with-nrepl-connection-of-current-buffer 'cider-find-and-clear-repl-buffer))
+  ; cider-restart-nrepl is more handy than cider-jack-in, because it doesn't leave existing repls running.
+  "en" 'cider-restart-nrepl
+  "es" (lambda () (interactive) (with-nrepl-connection-of-current-buffer 'cider-eval-current-sexp))
+  "ex" (lambda () (interactive) (with-nrepl-connection-of-current-buffer 'cide-eval-expression-at-point))
+  "er" (lambda () (interactive) (with-nrepl-connection-of-current-buffer 'cider-eval-region)))
 
 ;; Highlight parentheses in rainbow colors.
 (require 'rainbow-delimiters)
 (add-hook 'prog-mode-hook 'rainbow-delimiters-mode)
-(add-hook 'nrepl-mode-hook 'rainbow-delimiters-mode)
+;; NOTE(philc): rainbow delimiters mode seems to be broken in the latest cider. Perhaps upgrade
+;; rainbow-delimieters.
+;; (add-hook 'cider-mode-hook 'rainbow-delimiters-mode)
 
 ;; Clojure indentation rules
 (eval-after-load 'clojure-mode
