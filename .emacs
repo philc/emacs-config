@@ -169,21 +169,42 @@
 
 ;; I manage my windows in a 4x4 grid. I want ephemeral or status-based buffers to always show in the
 ;; lower-right or right window, in that order of preference.
-(setq special-display-buffer-names '("*Help*" "*compilation*" "COMMIT_EDITMSG"))
-(setq special-display-regexps '("*nrepl .*"))
-(setq special-display-function 'show-ephemeral-window-in-sensible-split)
+(setq special-display-buffer-names '("*Help*" "*compilation*" "COMMIT_EDITMSG" "*Messages*"))
+(setq special-display-regexps '("*nrepl.*"))
+(setq special-display-function 'show-ephemeral-buffer-in-a-sensible-window)
+
+;; A list of "special" (ephemeral) buffer names which should be focused after they are shown. Used by
+;; show-ephemeral-buffer-in-a-sensible-window
+;; (setq special-display-auto-focused-buffers '("*Help*"))
 
 ;; References, for context:
 ;; http://snarfed.org/emacs_special-display-function_prefer-other-visible-frame
 ;; http://stackoverflow.com/questions/1002091/how-to-force-emacs-not-to-display-buffer-in-a-specific-window
-(defun show-ephemeral-window-in-sensible-split (buffer &optional buffer-data)
+;; The implementation of this function is based on `special-display-popup-frame` in window.el.
+(defun show-ephemeral-buffer-in-a-sensible-window (buffer &optional buffer-data)
   "Given a buffer, shows the window in a right-side split."
-  (let ((window
-         (if (one-window-p)
-             (progn (split-window-horizontally-and-focus) (selected-window))
-           (save-excursion (switch-to-lower-right) (selected-window)))))
+  (let* ((create-new-window (one-window-p))
+         (window (if create-new-window
+                     (split-window-sensibly-reverse)
+                   (save-excursion (switch-to-lower-right) (selected-window)))))
+    (display-buffer-record-window (if create-new-window 'window 'reuse) window buffer)
     (set-window-buffer window buffer)
+    (when create-new-window (set-window-prev-buffers window nil))
+    (when (member (buffer-name buffer) special-display-buffer-names)
+      (select-window window))
     window))
+
+(defun dismiss-ephemeral-windows ()
+  "Dismisses any visible windows in the current frame identifiedy by `special-display-buffer-names` and
+   `special-display-regexps`. I use this to quickly dismiss help windows, compile output, etc."
+  (interactive)
+  (save-excursion
+    (let ((original-window (selected-window)))
+      (dolist (window (window-list))
+        (let ((buffer (window-buffer window)))
+          (when (special-display-p (buffer-name buffer))
+            (quit-window nil window))))
+      (select-window original-window))))
 
 ;; The poorly-named winner mode saves the history of your window splits, so you can undo and redo changes to
 ;; your window configuration.
@@ -327,6 +348,7 @@
 (evil-leader/set-key "wR" 'evil-window-rotate-upwards)
 ;; Undo the last change you made to your window configuration.
 (evil-leader/set-key "wb" 'winner-undo)
+(evil-leader/set-key "w SPC" 'dismiss-ephemeral-windows)
 
 (defun toggle-window-maximize ()
   (interactive)
