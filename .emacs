@@ -1159,7 +1159,7 @@
   ; cider-restart-nrepl is more handy than cider-jack-in, because it doesn't leave existing repls running.
   "en" 'cider-restart-nrepl
   "es" (lambda () (interactive) (with-nrepl-connection-of-current-buffer 'cider-eval-current-sexp))
-  "ex" (lambda () (interactive) (with-nrepl-connection-of-current-buffer 'cide-eval-expression-at-point))
+  "ex" (lambda () (interactive) (with-nrepl-connection-of-current-buffer 'cider-eval-expression-at-point))
   "er" (lambda () (interactive) (with-nrepl-connection-of-current-buffer 'cider-eval-region)))
 
 ;; Highlight parentheses in rainbow colors.
