@@ -183,14 +183,16 @@
 ;; The implementation of this function is based on `special-display-popup-frame` in window.el.
 (defun show-ephemeral-buffer-in-a-sensible-window (buffer &optional buffer-data)
   "Given a buffer, shows the window in a right-side split."
-  (let* ((create-new-window (one-window-p))
+  (let* ((original-window (selected-window))
+         (create-new-window (one-window-p))
          (window (if create-new-window
                      (split-window-sensibly-reverse)
                    (save-excursion (switch-to-lower-right) (selected-window)))))
     (display-buffer-record-window (if create-new-window 'window 'reuse) window buffer)
     (set-window-buffer window buffer)
     (when create-new-window (set-window-prev-buffers window nil))
-    (when (member (buffer-name buffer) special-display-buffer-names)
+    (select-window original-window)
+    (when (member (buffer-name buffer) special-display-auto-focused-buffers)
       (select-window window))
     window))
 
