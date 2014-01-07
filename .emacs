@@ -1118,10 +1118,10 @@
   "Restarts or starts afresh the nrepl."
   (interactive)
   (let ((repl-buffer (nrepl-connection-for-buffer (current-buffer))))
-    (when (not (stringp repl-buffer))
-      (flet ((y-or-n-p (&rest args) t)) ; Skip the confirmation prompt.
-        (nrepl-close repl-buffer)))
-    (cider-jack-in nil)))
+    (flet ((y-or-n-p (&rest args) t)) ; Skip the confirmation prompts.
+      (when (not (stringp repl-buffer))
+        (nrepl-close repl-buffer))
+      (cider-jack-in nil))))
 
 (defun with-nrepl-connection-of-current-buffer (f)
   (let ((result (nrepl-connection-for-buffer (current-buffer))))
@@ -1147,7 +1147,7 @@
                                         (file-truename conn-proj-dir)))))
                            nrepl-connection-list))))
             (if buf
-                (cons buf (delq buf nrepl-connection-list))
+                buf
               "No relevant nREPL connection found."))
         "No project directory found."))))
 
