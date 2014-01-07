@@ -1026,12 +1026,13 @@
 ;; Emacs Lisp (elisp)
 ;;
 (add-hook 'emacs-lisp-mode-hook (lambda () (modify-syntax-entry ?- "w" emacs-lisp-mode-syntax-table)))
-(evil-define-key 'normal emacs-lisp-mode-map "K" '(lambda ()
-                                                    (interactive)
-                                                    ;; Run `describe-function` and show its output in a help
-                                                    ;; window. Inspired from help-fns.el.
-                                                    (with-help-window "*Help*"
-                                                      (describe-function (intern (current-word))))))
+(evil-define-key 'normal emacs-lisp-mode-map
+  "K"'(lambda ()
+        (interactive)
+        ;; Run `describe-function` and show its output in a help
+        ;; window. Inspired from help-fns.el.
+        (with-help-window "*Help*"
+          (describe-function (intern (current-word))))))
 
 (defun current-sexp ()
   "Returns the text content of the sexp list around the cursor."
@@ -1045,7 +1046,8 @@
 (evil-leader/set-key-for-mode 'emacs-lisp-mode
   "eb" (lambda() (interactive) (save-buffer) (eval-buffer))
   "es" 'elisp-eval-current-sexp
-  "ex" 'eval-defun)
+  "ex" 'eval-defun
+  "ee" 'view-echo-area-messages)
 
 ;; Indentation rules.
 (put '-> 'lisp-indent-function nil)
