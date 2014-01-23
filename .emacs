@@ -238,6 +238,9 @@
 
 ;; Unbind "q" so it doesn't record macros. I activate this mistakenly all the time and wreak havoc.
 (define-key evil-normal-state-map (kbd "q") nil)
+(define-key evil-normal-state-map (kbd "M-s") 'save-buffer)
+(define-key evil-insert-state-map (kbd "M-s") 'save-buffer)
+
 
 ;; Move up and down through long, wrapped lines one visual line at a time.
 (define-key evil-normal-state-map (kbd "j") 'evil-next-visual-line)
@@ -578,7 +581,6 @@
 (define-key osx-keys-minor-mode-map (kbd "M-w") 'vimlike-quit)
 (define-key osx-keys-minor-mode-map (kbd "M-q") 'save-buffers-kill-terminal)
 (define-key osx-keys-minor-mode-map (kbd "M-n") 'new-frame)
-(define-key osx-keys-minor-mode-map (kbd "M-s") 'save-buffer)
 (define-key osx-keys-minor-mode-map (kbd "M-a") 'mark-whole-buffer)
 (define-key osx-keys-minor-mode-map (kbd "M-h") 'ns-do-hide-emacs)
 (define-key osx-keys-minor-mode-map (kbd "M-v") 'clipboard-yank)
@@ -1477,7 +1479,11 @@ but doesn't treat single semicolons as right-hand-side comments."
 
      (evil-define-key 'normal git-commit-mode-map
        ";wk" 'git-commit-abort
+       (kbd "M-s") 'git-commit-commit
        "ZZ" 'git-commit-commit)
+
+     (evil-define-key 'insert git-commit-mode-map
+       (kbd "M-s") 'git-commit-commit)
 
      (evil-leader/set-key-for-mode 'git-commit-mode
        "c" 'git-commit-commit)
