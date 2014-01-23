@@ -1500,7 +1500,6 @@ but doesn't treat single semicolons as right-hand-side comments."
        (kbd "M-s") 'git-commit-commit)
 
      (evil-define-key 'normal git-rebase-mode-map
-     (evil-define-key 'normal git-rebase-mode-map
        ";gra" 'git-rebase-abort
        (kbd "S-C-k") 'git-rebase-move-line-up
        (kbd "S-C-j") 'git-rebase-move-line-down
