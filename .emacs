@@ -212,9 +212,10 @@
 (defun preserve-selected-window (f)
   "Runs the given function and then restores focus to the original window. Useful when you want to invoke
    a function (like showing documentation) but don't want to keep editing your current buffer."
-  (let ((original-window (selected-window)))
-    (funcall f)
-    (select-window original-window)))
+  (lexical-let ((f f))
+    (let ((original-window (selected-window)))
+      (funcall f)
+      (select-window original-window))))
 
 ;; The poorly-named winner mode saves the history of your window splits, so you can undo and redo changes to
 ;; your window configuration.
@@ -1532,6 +1533,21 @@ but doesn't treat single semicolons as right-hand-side comments."
              magit-insert-stashes
              magit-insert-unpulled-commits
              magit-insert-unpushed-commits))))
+
+(defun with-magit-output-buffer (f)
+  (lexical-let ((f f))
+    (preserve-selected-window
+     (lambda ()
+       (magit-display-process)
+       (funcall f)))))
+
+(defun git-pull ()
+  (interactive)
+  (with-magit-output-buffer 'magit-pull))
+
+(defun git-push ()
+  (interactive)
+  (with-magit-output-buffer 'magit-push))
 
 (evil-set-initial-state 'magit-mode 'normal)
 (evil-set-initial-state 'magit-status-mode 'normal)
