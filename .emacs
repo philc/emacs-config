@@ -1094,10 +1094,6 @@
 ;; Prevent the auto-display of the REPL buffer in a separate window after connection is established.
 (setq cider-repl-pop-to-buffer-on-connect nil)
 
-;; Auto-focus the error buffer when it's displayed after evaluating some clojure code. This makes it easy
-;; to type "q" to dismiss the window, assuming you don't want this backtrace window hanging around.
-(setq cider-auto-select-error-buffer t)
-
 ;; TODO(philc): Try (cider-toggle-pretty-printing)
 
 ;; Don't ask confirmation for closing any open nrepl connections when exiting Emacs.
@@ -1181,9 +1177,15 @@
   "eap" (lambda () (interactive) (with-nrepl-connection-of-current-buffer 'cider-eval-paragraph))
   "ee" (lambda () (interactive) (with-nrepl-connection-of-current-buffer 'cider-show-cider-buffer))
   "ek" (lambda () (interactive) (with-nrepl-connection-of-current-buffer 'cider-find-and-clear-repl-buffer))
+  ; Note that I actually use cider-load-file here, not cider-eval-buffer, because it gives useful line numbers
+  ; on exceptions.
+  "eb" (lambda ()
+         (interactive)
+         (save-buffer)
+         (with-nrepl-connection-of-current-buffer 'cider-load-current-buffer))
   ; cider-restart-nrepl is more handy than cider-jack-in, because it doesn't leave existing repls running.
   "en" 'cider-restart-nrepl
-  "es" (lambda () (interactive) (with-nrepl-connection-of-current-buffer 'cider-eval-current-sexp))
+  "es" 'cider-eval-current-sexp
   "ex" (lambda () (interactive) (with-nrepl-connection-of-current-buffer 'cider-eval-expression-at-point))
   "er" (lambda () (interactive) (with-nrepl-connection-of-current-buffer 'cider-eval-region)))
 
