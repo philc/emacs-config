@@ -1394,6 +1394,9 @@ but doesn't treat single semicolons as right-hand-side comments."
 (require 'yaml-mode)
 (add-to-list 'auto-mode-alist '("\\.yml$" . yaml-mode))
 
+;;
+;; Go mode, for writing Go code
+;;
 (defun go-save-and-compile-fn (command-name)
   "Returns a function for the purpose of binding to a key which saves the current buffer and then
    runs the given command in the root of the go project."
@@ -1404,21 +1407,26 @@ but doesn't treat single semicolons as right-hand-side comments."
         (message command-name)
         (compile (concat "cd " (projectile-project-root) " && " command-name)))))
 
-;;
-;; Go mode, for writing Go code
-;;
 (evil-leader/set-key-for-mode 'go-mode
   ;; "r" is a nemsapce for run-related commands.
   "rr" (go-save-and-compile-fn "make run")
-  "rb" (go-save-and-compile-fn "make benchmark")
-  "rt" (go-save-and-compile-fn "make test")
+  "rb" (go-save-and-compile-fn "make run-benchmark")
+  "rt" (go-save-and-compile-fn "make run-test")
   "rw" (go-save-and-compile-fn "make run_web")
   ;; "c" is a namespace for compile-related commands.
   "cn" 'next-error
   "cp" 'previous-error
-  "cw" (go-save-and-compile-fn "make build_web")
-  "cb" (go-save-and-compile-fn "make build_benchmark")
+  "cw" (go-save-and-compile-fn "make web")
+  "cb" (go-save-and-compile-fn "make benchmark")
   "cc" (go-save-and-compile-fn "make build"))
+
+(defun init-go-buffer-settings ()
+  (add-hook 'before-save-hook 'gofmt-before-save)
+  ;; Make it so comments are line-wrapped properly when filling. It's an oversight that this is missing from
+  ;; go-mode.
+  (setq-local fill-prefix "// "))
+
+(add-hook 'go-mode-hook 'init-go-buffer-settings)
 
 (defun go-package-of-current-buffer ()
   "Returns the go package name defined in the current buffer. Returns nil if no package has been defined."
