@@ -1141,12 +1141,15 @@
         (nrepl-close repl-buffer))
       (cider-jack-in nil))))
 
+(defun cider-make-connection-buffer-the-current-connection (connection-buffer)
+  (cons connection-buffer (delq connection-buffer nrepl-connection-list)))
+
 (defun with-nrepl-connection-of-current-buffer (f)
   (let ((result (nrepl-connection-for-buffer (current-buffer))))
     (if (stringp result)
         (message result)
       (progn
-        (setq nrepl-connection-list result)
+        (cider-make-connection-buffer-the-current-connection result)
         (funcall f)))))
 
 ;; Based on `cider-switch-to-relevant-repl-buffer` in cider.el.
@@ -1165,7 +1168,7 @@
                                         (file-truename conn-proj-dir)))))
                            nrepl-connection-list))))
             (if buf
-                buf
+                (get-buffer buf)
               "No relevant nREPL connection found."))
         "No project directory found."))))
 
