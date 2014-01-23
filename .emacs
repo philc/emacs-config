@@ -209,6 +209,13 @@
             (quit-window nil window))))
       (select-window original-window))))
 
+(defun preserve-selected-window (f)
+  "Runs the given function and then restores focus to the original window. Useful when you want to invoke
+   a function (like showing documentation) but don't want to keep editing your current buffer."
+  (let ((original-window (selected-window)))
+    (funcall f)
+    (select-window original-window)))
+
 ;; The poorly-named winner mode saves the history of your window splits, so you can undo and redo changes to
 ;; your window configuration.
 (winner-mode t)
@@ -1076,7 +1083,9 @@
                                ;; Comment lines using only one semi-colon instead of two.
                                (setq comment-add 0)))
 
-(evil-define-key 'normal clojure-mode-map "K" 'cider-doc)
+(evil-define-key 'normal clojure-mode-map "K"
+  (lambda () (interactive) (preserve-selected-window (lambda () (call-interactively 'cider-doc)))))
+
 (evil-define-key 'normal clojure-mode-map "gf" 'cider-jump)
 
 ;; Hide the uninteresting nrepl-connection and nrepl-server buffers from the buffer list.
