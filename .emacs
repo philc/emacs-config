@@ -241,6 +241,14 @@
 
 ;; By default, Emacs will not indent when you hit enter/return within a comment.
 (define-key evil-insert-state-map (kbd "RET") 'newline-and-indent)
+
+;; When jumping back and forth between marks, recenter the screen on the cursor.
+(define-key evil-normal-state-map (kbd "C-o")
+  (lambda () (interactive) (evil-jump-backward) (recenter-no-redraw)))
+(define-key evil-normal-state-map (kbd "C-i")
+  (lambda () (interactive) (evil-jump-forward) (recenter-no-redraw)))
+
+
 ; Some help keybindings which conflict with nothing else, so you can pull up help in any context.
 (global-set-key (kbd "C-A-M-h") 'help) ; Here we clobber C-h, which accesses Emacs's help.
 (global-set-key (kbd "C-A-M-b") 'describe-bindings)
