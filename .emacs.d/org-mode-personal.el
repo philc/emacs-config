@@ -45,7 +45,8 @@
   ";g" 'org-set-tags-command
   ";va" 'org-agenda
   "-" 'org-cycle-list-bullet
-  "gh" 'org-goto-top-level-heading
+  ; I use "gl" for this because it behaves similarly to "goto label" in gmail and elsewhere
+  "gl" 'org-goto-top-level-heading
   "gu" 'outline-up-heading
   ; Normally these go backwards-and-forward by paragraphs but skipping between headings is more useful.
   "{" 'org-backward-heading-same-level
