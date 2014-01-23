@@ -1445,6 +1445,7 @@ but doesn't treat single semicolons as right-hand-side comments."
      ;; disorienting. I'm defining a whitelist of keys that I actually use, so this mode feels less
      ;; erorr-prone.
      (evil-define-key 'normal magit-mode-map
+       ";gg" 'magit-display-process
        "n" 'magit-goto-next-section
        "p" 'magit-goto-previous-section
        "L" 'magit-key-mode-popup-logging
@@ -1458,8 +1459,18 @@ but doesn't treat single semicolons as right-hand-side comments."
        ;; (define-key magit-mode-map (kbd "C-d") 'magit-show-item-or-scroll-up)
        ;; (define-key magit-mode-map (kbd "C-u") 'magit-show-item-or-scroll-down)
 
-     ;; Kill the ephemeral diff popup which appears when you type space.
-     (kbd "S-SPC") (lambda () (interactive) (kill-buffer-and-its-windows "*magit-commit*")))
+       ;; Kill the ephemeral diff popup which appears when you type space.
+       (kbd "S-SPC") (lambda () (interactive) (kill-buffer-and-its-windows "*magit-commit*")))
+
+     (evil-define-key 'normal magit-log-mode-map
+       ";gca" 'magit-commit-amend
+       ";gri" 'magit-interactive-rebase
+       ";gri" 'magit-interactive-rebase
+       ;; I use C-d and C-u for scrolling the log view, and d and u for scrolling the diff view showing the
+       ;; diff for the focused commit. TODO(philc): Change this to scorll half page down/up
+       ;; "u" 'magit-show-item-or-scroll-up
+       ;; "d" 'magit-show-item-or-scroll-down
+       )
 
      (evil-define-key 'normal magit-status-mode-map
        "c" 'magit-commit
@@ -1473,17 +1484,11 @@ but doesn't treat single semicolons as right-hand-side comments."
        "-" 'magit-diff-smaller-hunks
        "+" 'magit-diff-larger-hunks
        "gu" 'magit-jump-to-unstaged
-       ;; NOTE(philc): I'm not sure why I need to define shortcuts for j and k explicitly.
-       "j" 'evil-next-line
-       "k" 'evil-previous-line
+       ;; ;; NOTE(philc): I'm not sure why I need to define shortcuts for j and k explicitly.
+       ;; "j" 'evil-next-line
+       ;; "k" 'evil-previous-line
        (kbd "TAB") 'magit-toggle-section
        "r" 'magit-refresh)
-
-     (evil-define-key 'normal magit-log-mode-map
-       ";gca" 'magit-commit-amend
-       ";gri" 'magit-interactive-rebase
-       "j" 'magit-goto-next-section
-       "k" 'magit-goto-previous-section)
 
      (evil-define-key 'normal git-commit-mode-map
        ";wk" 'git-commit-abort
@@ -1492,6 +1497,18 @@ but doesn't treat single semicolons as right-hand-side comments."
 
      (evil-define-key 'insert git-commit-mode-map
        (kbd "M-s") 'git-commit-commit)
+
+     (evil-define-key 'normal git-rebase-mode-map
+     (evil-define-key 'normal git-rebase-mode-map
+       ";gra" 'git-rebase-abort
+       (kbd "S-C-k") 'git-rebase-move-line-up
+       (kbd "S-C-j") 'git-rebase-move-line-down
+       "r" 'git-rebase-reword
+       "p" 'git-rebase-pick
+       "dd" 'git-rebase-kill-line
+       "f" 'git-rebase-fixup
+       "s" 'git-rebase-squash
+       "ZZ" 'git-rebase-server-edit)
 
      (evil-leader/set-key-for-mode 'git-commit-mode
        "c" 'git-commit-commit)
