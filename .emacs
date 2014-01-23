@@ -369,7 +369,7 @@
 (evil-leader/set-key "wR" 'evil-window-rotate-upwards)
 ;; Undo the last change you made to your window configuration.
 (evil-leader/set-key "wb" 'winner-undo)
-(evil-leader/set-key "w SPC" 'dismiss-ephemeral-windows)
+(evil-leader/set-key "SPC" 'dismiss-ephemeral-windows)
 
 (defun toggle-window-maximize ()
   (interactive)
