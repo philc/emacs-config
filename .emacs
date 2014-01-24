@@ -1421,8 +1421,16 @@ but doesn't treat single semicolons as right-hand-side comments."
   "cb" (go-save-and-compile-fn "make benchmark")
   "cc" (go-save-and-compile-fn "make build"))
 
+(defun gofmt-before-save-ignoring-errors ()
+  "Don't pop up syntax errors in a new window when running gofmt-before-save."
+  (interactive)
+  (flet ((gofmt--process-errors (&rest args) t)) ; Don't show any syntax error output
+    (gofmt-before-save)))
+
 (defun init-go-buffer-settings ()
-  (add-hook 'before-save-hook 'gofmt-before-save)
+  ;; I have Emacs configured to save when switching buffers, so popping up errors when I switch buffers is
+  ;; really jarring.
+  (add-hook 'before-save-hook 'gofmt-before-save-ignoring-errors)
   ;; Make it so comments are line-wrapped properly when filling. It's an oversight that this is missing from
   ;; go-mode.
   (setq-local fill-prefix "// "))
