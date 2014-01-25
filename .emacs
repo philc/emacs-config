@@ -1413,9 +1413,9 @@ but doesn't treat single semicolons as right-hand-side comments."
 (evil-leader/set-key-for-mode 'go-mode
   ;; "r" is a nemsapce for run-related commands.
   "rr" (go-save-and-compile-fn "make run")
-  "rb" (go-save-and-compile-fn "make run-benchmark")
-  "rt" (go-save-and-compile-fn "make run-test")
-  "rw" (go-save-and-compile-fn "make run_web")
+  "rb" (go-save-and-compile-fn "make synthetic-benchmark")
+  "rt" (go-save-and-compile-fn "make test")
+  "rw" (go-save-and-compile-fn "make run-web")
   ;; "c" is a namespace for compile-related commands.
   "cn" 'next-error
   "cp" 'previous-error
