@@ -1590,7 +1590,7 @@ but doesn't treat single semicolons as right-hand-side comments."
 ;; Project navigation (my own functions on top of dired-mode and projectile)
 ;;
 (setq project-folders '("~/p" "~/liftoff"))
-(setq notes-directories '("~/personal/notes" "~/Desktop"))
+(setq notes-directories '("~/personal/notes" "~/Desktop" "~/Dropbox/scratch"))
 (setq notes-file-extensions '(".md" ".sql" ".txt"))
 
 ;; This is set to 600 by default. It shouldn't be the case, but for some reason, the filter-files-in-directory
