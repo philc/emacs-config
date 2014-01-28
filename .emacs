@@ -1462,7 +1462,7 @@ but doesn't treat single semicolons as right-hand-side comments."
        "p" 'magit-goto-previous-section
        "L" 'magit-key-mode-popup-logging
        "yy" 'magit-copy-item-as-kill ; Copies the commit ID of the commit under the cursor.
-       (kbd "RET") 'magit-visit-item
+       (kbd "RET") 'magit-visit-item)
        ;; These scroll the diff window. Normally these are mapped to space and shift-space in magit.
        ;; TODO(philc): Uncomment these once the latest magit lands in melpa.
        ;; (define-key magit-mode-map (kbd "C-d") '(lambda () (interactive)
@@ -1471,37 +1471,6 @@ but doesn't treat single semicolons as right-hand-side comments."
        ;;                                           (magit-show-item-or-scroll 'View-scroll-half-page-backward)))
        ;; (define-key magit-mode-map (kbd "C-d") 'magit-show-item-or-scroll-up)
        ;; (define-key magit-mode-map (kbd "C-u") 'magit-show-item-or-scroll-down)
-
-       ;; Kill the ephemeral diff popup which appears when you type space.
-       (kbd "S-SPC") (lambda () (interactive) (kill-buffer-and-its-windows "*magit-commit*")))
-
-     (evil-define-key 'normal magit-log-mode-map
-       ";gca" 'magit-commit-amend
-       ";gri" 'magit-interactive-rebase
-       ";gri" 'magit-interactive-rebase
-       ;; I use C-d and C-u for scrolling the log view, and d and u for scrolling the diff view showing the
-       ;; diff for the focused commit. TODO(philc): Change this to scorll half page down/up
-       ;; "u" 'magit-show-item-or-scroll-up
-       ;; "d" 'magit-show-item-or-scroll-down
-       )
-
-     (evil-define-key 'normal magit-status-mode-map
-       "c" 'magit-commit
-       "e" 'magit-show-level-4-all ; e for exapnd
-       "d" 'magit-discard-item
-       "s" 'magit-stage-item
-       "S" 'magit-stage-all
-       "d" 'magit-discard-item
-       "u" 'magit-unstage-item
-       "U" 'magit-unstage-all
-       "-" 'magit-diff-smaller-hunks
-       "+" 'magit-diff-larger-hunks
-       "gu" 'magit-jump-to-unstaged
-       ;; ;; NOTE(philc): I'm not sure why I need to define shortcuts for j and k explicitly.
-       ;; "j" 'evil-next-line
-       ;; "k" 'evil-previous-line
-       (kbd "TAB") 'magit-toggle-section
-       "r" 'magit-refresh)
 
      (evil-define-key 'normal git-commit-mode-map
        ";wk" 'git-commit-abort
@@ -1556,6 +1525,39 @@ but doesn't treat single semicolons as right-hand-side comments."
 ;; Cache the buffer which was showing before we invoked magit.
 ;; In some cases magit doesn't properly restore the buffer when you type "q", so we do it here ourselves.
 (setq previous-buffer-under-magit nil)
+
+;; NOTE(philc): I'm setting the key bindings for these two magit modes when their buffers load, because for
+;; some reason, the evil bindings on the magit-log-mode and magit-status-mode keymaps collide.
+
+(add-hook 'magit-log-mode-hook 'init-magit-log-mode-keybindings)
+(defun init-magit-log-mode-keybindings ()
+  (evil-define-key 'normal magit-log-mode-map
+    ";gca" 'magit-commit-amend
+    ";gri" 'magit-interactive-rebase
+    ";gri" 'magit-interactive-rebase
+    (kbd "SPC") 'magit-goto-next-section
+    ;; I use C-d and C-u for scrolling the log view, and d and u for scrolling the diff view showing the
+    ;; diff for the focused commit.
+    "u" 'magit-show-item-or-scroll-up
+    "d" 'magit-show-item-or-scroll-down))
+
+(add-hook 'magit-status-mode-hook 'init-magit-status-mode-keybindings)
+(defun init-magit-status-mode-keybindings ()
+  (evil-define-key 'normal magit-status-mode-map
+    "c" 'magit-commit
+    "e" 'magit-show-level-4-all ; e for exapnd
+    "d" 'magit-discard-item
+    "s" 'magit-stage-item
+    "S" 'magit-stage-all
+    "d" 'magit-discard-item
+    "u" 'magit-unstage-item
+    "U" 'magit-unstage-all
+    (kbd "SPC") 'magit-goto-previous-section
+    "-" 'magit-diff-smaller-hunks
+    "+" 'magit-diff-larger-hunks
+    "gu" 'magit-jump-to-unstaged
+    (kbd "TAB") 'magit-toggle-section
+    "r" 'magit-refresh))
 
 (defadvice magit-mode-display-buffer (before cache-buffer-behind-magit activate)
   (setq previous-buffer-under-magit (current-buffer)))
