@@ -1584,6 +1584,7 @@ but doesn't treat single semicolons as right-hand-side comments."
 ;; Disable the `highlight` face that Magit uses to highlight diffs. It's unreadable with my color scheme.
 (defun disable-magit-highlight-in-buffer () (face-remap-add-relative 'magit-item-highlight '()))
 (add-hook 'magit-status-mode-hook 'disable-magit-highlight-in-buffer)
+(add-hook 'magit-commit-mode-hook 'disable-magit-highlight-in-buffer)
 
 ;;
 ;; Project navigation (my own functions on top of dired-mode and projectile)
