@@ -279,10 +279,11 @@
   "i" 'evil-indent-inside-paragraph ; Shortcut to Vim's =ip
   "a" 'projectile-ack
   "d" 'projectile-dired
-  "D" '(lambda () (interactive) (-> (buffer-file-name) file-name-directory dired))
+  "D" (lambda () (interactive) (-> (buffer-file-name) file-name-directory dired))
   "vt" 'multi-term
   ;; "v" is a mnemonic prefix for "view X".
-  "vg" 'magit-status
+  "gs" 'magit-status
+  "gl" 'magit-log
   "vu" 'mu4e
   "vp" 'open-root-of-project-in-dired
   "vn" 'open-markdown-file-from-notes-folder
