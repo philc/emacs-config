@@ -1461,6 +1461,7 @@ but doesn't treat single semicolons as right-hand-side comments."
        "n" 'magit-goto-next-section
        "p" 'magit-goto-previous-section
        "L" 'magit-key-mode-popup-logging
+       "yy" 'magit-copy-item-as-kill ; Copies the commit ID of the commit under the cursor.
        (kbd "RET") 'magit-visit-item
        ;; These scroll the diff window. Normally these are mapped to space and shift-space in magit.
        ;; TODO(philc): Uncomment these once the latest magit lands in melpa.
@@ -1514,18 +1515,17 @@ but doesn't treat single semicolons as right-hand-side comments."
        ";gra" 'git-rebase-abort
        (kbd "S-C-k") 'git-rebase-move-line-up
        (kbd "S-C-j") 'git-rebase-move-line-down
+       "e" 'git-rebase-edit
        "r" 'git-rebase-reword
        "p" 'git-rebase-pick
        "dd" 'git-rebase-kill-line
        "f" 'git-rebase-fixup
        "s" 'git-rebase-squash
+       (kbd "M-s") 'git-rebase-server-edit
        "ZZ" 'git-rebase-server-edit)
 
      (evil-leader/set-key-for-mode 'git-commit-mode
        "c" 'git-commit-commit)
-
-     ;; Have Magit open in the current window, not a new split.
-     (setq magit-status-buffer-switch-function 'switch-to-buffer)
 
      ;; Customize the order of the sections which are shown in the status view. You can find the full list in
      ;; the magit source code.
@@ -1544,6 +1544,15 @@ but doesn't treat single semicolons as right-hand-side comments."
              magit-insert-unpulled-commits
              magit-insert-unpushed-commits))))
 
+(evil-set-initial-state 'magit-mode 'normal)
+(evil-set-initial-state 'magit-status-mode 'normal)
+(evil-set-initial-state 'magit-log-mode 'normal)
+(evil-set-initial-state 'magit-commit-mode 'normal)
+(evil-set-initial-state 'git-commit-mode 'insert)
+
+;; Have Magit open in the current window, not a new split.
+(setq magit-status-buffer-switch-function 'switch-to-buffer)
+
 (defun with-magit-output-buffer (f)
   (lexical-let ((f f))
     (preserve-selected-window
@@ -1558,11 +1567,6 @@ but doesn't treat single semicolons as right-hand-side comments."
 (defun git-push ()
   (interactive)
   (with-magit-output-buffer 'magit-push))
-
-(evil-set-initial-state 'magit-mode 'normal)
-(evil-set-initial-state 'magit-status-mode 'normal)
-(evil-set-initial-state 'magit-log-mode 'normal)
-(evil-set-initial-state 'git-commit-mode 'insert)
 
 ;; Disable the `highlight` face that Magit uses to highlight diffs. It's unreadable with my color scheme.
 (defun disable-magit-highlight-in-buffer () (face-remap-add-relative 'magit-item-highlight '()))
