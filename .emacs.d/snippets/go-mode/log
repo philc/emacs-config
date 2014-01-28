@@ -1,0 +1,4 @@
+# name: log
+# key: log
+# --
+log.Println(">>>> $1", $1)
