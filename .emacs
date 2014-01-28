@@ -1553,7 +1553,20 @@ but doesn't treat single semicolons as right-hand-side comments."
 ;; Have Magit open in the current window, not a new split.
 (setq magit-status-buffer-switch-function 'switch-to-buffer)
 
+;; Cache the buffer which was showing before we invoked magit.
+;; In some cases magit doesn't properly restore the buffer when you type "q", so we do it here ourselves.
+(setq previous-buffer-under-magit nil)
+
+(defadvice magit-mode-display-buffer (before cache-buffer-behind-magit activate)
+  (setq previous-buffer-under-magit (current-buffer)))
+
+(defadvice magit-mode-quit-window (after restore-buffer-behind-magit activate)
+  (when previous-buffer-under-magit
+    (switch-to-buffer previous-buffer-under-magit)
+    (setq previous-buffer-under-magit nil)))
+
 (defun with-magit-output-buffer (f)
+  "Displays the magit output buffer before invoking the given function"
   (lexical-let ((f f))
     (preserve-selected-window
      (lambda ()
