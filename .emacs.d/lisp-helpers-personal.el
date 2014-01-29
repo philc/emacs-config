@@ -16,6 +16,15 @@
 (defun dec (i)
   (- i 1))
 
+(defun with-env-var (name value fn)
+  "Temporarily sets an env var to the given value and excutes fn."
+  (let ((original-value (getenv name)))
+    (unwind-protect
+        (progn
+          (setenv name value)
+          (funcall fn))
+      (setenv name original-value))))
+
 ;;
 ;; Threading (thrush) macros, ported from Clojure.
 ;; Taken from https://github.com/sroccaserra/emacs/blob/master/tools.el
