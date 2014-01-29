@@ -158,3 +158,10 @@
   (-> (substring-no-properties (car kill-ring))
       git-full-commit-id
       (kill-new t))) ; Replace the existing entry in the kill ring
+
+(defun magit-status-and-focus-unstaged ()
+  "Opens the magit-status view and focuses the cursor on the first unstaged file."
+  (interactive)
+  (call-interactively 'magit-status)
+  (magit-jump-to-unstaged)
+  (magit-goto-next-section))
