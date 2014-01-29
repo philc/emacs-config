@@ -857,17 +857,6 @@
            '(normal insert))))
 
 ;;
-;; Auto save every few seconds.
-;;
-;; http://www.litchie.net/programs/real-auto-save.html
-;; NOTE(philc): I'm turning this off for now because the truncation of whitespace throws me off while
-;; typing and messed up markdown syntax highlighting & indentation.
-;; (add-to-list 'load-path "~/.emacs.d/plugins/real-auto-save")
-;; (require 'real-auto-save)
-;; (add-hook 'text-mode-hook 'turn-on-real-auto-save)
-;; (setq real-auto-save-interval 10) ;; in seconds
-
-;;
 ;; Snippets - yassnippet
 ;;
 ;; Ignore the default snippets that come with yasnippet. I only need my own, and don't want any conflicts.
@@ -895,16 +884,6 @@
            (yas-next-field 1))
           (t
            (call-interactively 'delete-backward-char)))))
-
-;;
-;; Fill column indicator. Show a vertical bar at the fill column (for me, that's 110 chars).
-;;
-;; This is pretty broken for me because it does not handle text scaling due to this bug:
-;; https://github.com/alpaker/Fill-Column-Indicator/issues/15
-;; Even more importantly, activating this mode also disables line wrapping, which I don't want.
-;;
-;; (add-to-list 'load-path "~/.emacs.d/plugins/fill-column-indicator")
-;; (require 'fill-column-indicator)
 
 ;;
 ;; Spell checking
