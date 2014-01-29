@@ -1461,7 +1461,7 @@ but doesn't treat single semicolons as right-hand-side comments."
        "n" 'magit-goto-next-section
        "p" 'magit-goto-previous-section
        "L" 'magit-key-mode-popup-logging
-       "yy" 'magit-copy-item-as-kill ; Copies the commit ID of the commit under the cursor.
+       "yy" 'magit-copy-full-commit-id ; Copies the commit ID of the commit under the cursor.
        (kbd "RET") 'magit-visit-item)
        ;; These scroll the diff window. Normally these are mapped to space and shift-space in magit.
        ;; TODO(philc): Uncomment these once the latest magit lands in melpa.
@@ -1528,6 +1528,22 @@ but doesn't treat single semicolons as right-hand-side comments."
 
 ;; NOTE(philc): I'm setting the key bindings for these two magit modes when their buffers load, because for
 ;; some reason, the evil bindings on the magit-log-mode and magit-status-mode keymaps collide.
+
+(defun git-full-commit-id (commit-id)
+  "Asks magit for the git directory of the current buffer and translates the abbreviated git commit ID to a
+  full one."
+  (let ((git-dir (magit-git-dir)))
+    (-> (concat "cd " git-dir "; git log --oneline --no-abbrev-commit -n1 " commit-id)
+        shell-command-to-string
+        split-string
+        first)))
+
+(defun magit-copy-full-commit-id ()
+  (interactive)
+  (magit-copy-item-as-kill) ; Copies the commit ID of the commit under the cursor.
+  (-> (substring-no-properties (car kill-ring))
+      git-full-commit-id
+      (kill-new t))) ; Replace the existing entry in the kill ring
 
 (add-hook 'magit-log-mode-hook 'init-magit-log-mode-keybindings)
 (defun init-magit-log-mode-keybindings ()
