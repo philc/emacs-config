@@ -1540,6 +1540,8 @@ but doesn't treat single semicolons as right-hand-side comments."
 (defun init-magit-status-mode-keybindings ()
   (evil-define-key 'normal magit-status-mode-map
     "c" 'magit-commit
+    ;; I have a git precommit hook which does style checks. Sometimes I want to disable it when committing.
+    "C" (lambda() (interactive) (with-env-var "SKIP_GIT_STYLE_CHECK" "true" 'magit-commit))
     "e" 'magit-show-level-4-all ; e for exapnd
     "d" 'magit-discard-item
     "s" 'magit-stage-item
