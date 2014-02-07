@@ -659,7 +659,9 @@
   '(progn
      (setq ido-enable-flex-matching t)
      (setq ido-use-virtual-buffers t)
-     (setq ido-everywhere t)))
+     (setq ido-everywhere t)
+     ;; kill the highlighted buffer in the matches list.
+     (define-key ido-buffer-completion-map (kbd "M-d") 'ido-kill-buffer-at-head)))
 
 ;;
 ;; Dired mode - using the Emacs file browser.
