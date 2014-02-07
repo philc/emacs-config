@@ -132,8 +132,8 @@
   (lexical-let ((f f))
     (preserve-selected-window
      (lambda ()
-       (magit-display-process)
-       (funcall f)))))
+       (funcall f)
+       (magit-display-process)))))
 
 (defun git-pull ()
   (interactive)
