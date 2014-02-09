@@ -1074,6 +1074,7 @@
   (lambda () (interactive) (preserve-selected-window (lambda () (call-interactively 'cider-doc)))))
 
 (evil-define-key 'normal clojure-mode-map "gf" 'cider-jump)
+(evil-define-key 'normal clojure-mode-map "gb" 'cider-jump-back)
 
 ;; Hide the uninteresting nrepl-connection and nrepl-server buffers from the buffer list.
 (setq nrepl-hide-special-buffers t)
