@@ -275,7 +275,7 @@
   "h" 'help
   "b" 'ido-switch-buffer
   "t" 'projectile-find-file
-  "q" 'evil-fill-inside-paragraph ; Shortcut for Vim's gqip
+  "SPC" 'evil-fill-inside-paragraph ; Shortcut for Vim's gqip
   "i" 'evil-indent-inside-paragraph ; Shortcut to Vim's =ip
   "a" 'projectile-ack
   "d" 'projectile-dired
@@ -373,7 +373,7 @@
 (evil-leader/set-key "wR" 'evil-window-rotate-upwards)
 ;; Undo the last change you made to your window configuration.
 (evil-leader/set-key "wb" 'winner-undo)
-(evil-leader/set-key "SPC" 'dismiss-ephemeral-windows)
+(evil-leader/set-key "q" 'dismiss-ephemeral-windows)
 
 (defun toggle-window-maximize ()
   (interactive)
