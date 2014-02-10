@@ -120,7 +120,8 @@
 (setq previous-buffer-under-magit nil)
 
 (defadvice magit-mode-display-buffer (before cache-buffer-behind-magit activate)
-  (setq previous-buffer-under-magit (current-buffer)))
+  (when (not (string/starts-with (buffer-name) "*magit"))
+    (setq previous-buffer-under-magit (current-buffer))))
 
 (defadvice magit-mode-quit-window (after restore-buffer-behind-magit activate)
   (when previous-buffer-under-magit
