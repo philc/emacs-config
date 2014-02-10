@@ -172,7 +172,12 @@
 ;; I manage my windows in a 4x4 grid. I want ephemeral or status-based buffers to always show in the
 ;; lower-right or right window, in that order of preference.
 (setq special-display-buffer-names '("*Help*" "*compilation*" "COMMIT_EDITMSG" "*Messages*"
-                                     "*magit-process*" "*magit-commit*" "*Compile-Log*" "*Gofmt Errors*"))
+                                     ;; Magit
+                                     "*magit-process*" "*magit-commit*"
+                                     ;; Emacs lisp
+                                     "*Backtrace*"
+                                     ;; Go
+                                     "*Compile-Log*" "*Gofmt Errors*"))
 (setq special-display-regexps '("*cider.*"))
 (setq special-display-function 'show-ephemeral-buffer-in-a-sensible-window)
 
