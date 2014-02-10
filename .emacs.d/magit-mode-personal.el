@@ -104,10 +104,10 @@
     "e" 'magit-show-level-4-all ; e for exapnd
     "d" 'magit-discard-item
     "s" 'magit-stage-item
-    "S" 'magit-stage-all
+    "S" (lambda () (interactive) (without-confirmation 'magit-stage-all))
     "d" 'magit-discard-item
     "u" 'magit-unstage-item
-    "U" 'magit-unstage-all
+    "U" (lambda () (interactive (without-confirmation 'magit-unstage-all)))
     (kbd "SPC") 'magit-goto-previous-section
     "-" 'magit-diff-smaller-hunks
     "+" 'magit-diff-larger-hunks
