@@ -244,7 +244,6 @@
 (define-key evil-normal-state-map (kbd "M-s") 'save-buffer)
 (define-key evil-insert-state-map (kbd "M-s") 'save-buffer)
 
-
 ;; Move up and down through long, wrapped lines one visual line at a time.
 (define-key evil-normal-state-map (kbd "j") 'evil-next-visual-line)
 (define-key evil-normal-state-map (kbd "k") 'evil-previous-visual-line)
@@ -261,9 +260,8 @@
 (define-key evil-normal-state-map (kbd "C-i")
   (lambda () (interactive) (evil-jump-forward) (recenter-no-redraw)))
 
-
 ; Some help keybindings which conflict with nothing else, so you can pull up help in any context.
-(global-set-key (kbd "C-A-M-h") 'help) ; Here we clobber C-h, which accesses Emacs's help.
+(global-set-key (kbd "C-A-M-h") 'help)
 (global-set-key (kbd "C-A-M-b") 'describe-bindings)
 
 ;; gq is normally bound to evil-fill-and-move, but when I reflow a paragraph, I like the cursor to remain
@@ -361,6 +359,7 @@
 (define-key evil-normal-state-map "," 'evilnc-comment-operator)
 (define-key evil-visual-state-map "," 'evilnc-comment-operator)
 
+;;
 ;; Window manipulation, switching, & management.
 ;; Evil's window map is the set of keys which control window functions. All of its keys are prefixed with
 ;; <C-w>.
@@ -1120,10 +1119,10 @@
   "Restarts or starts afresh the nrepl."
   (interactive)
   (let ((repl-buffer (nrepl-connection-for-buffer (current-buffer))))
-    (flet ((y-or-n-p (&rest args) t)) ; Skip the confirmation prompts.
-      (when (not (stringp repl-buffer))
-        (nrepl-close repl-buffer))
-      (cider-jack-in nil))))
+    (without-confirmation (lambda ()
+                            (when (not (stringp repl-buffer))
+                              (nrepl-close repl-buffer))
+                            (cider-jack-in nil)))))
 
 (defun cider-make-connection-buffer-the-current-connection (connection-buffer)
   (cons connection-buffer (delq connection-buffer nrepl-connection-list)))
