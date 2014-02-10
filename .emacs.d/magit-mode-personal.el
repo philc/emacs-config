@@ -62,7 +62,12 @@
              magit-insert-untracked-files
              magit-insert-stashes
              magit-insert-unpulled-commits
-             magit-insert-unpushed-commits))))
+             magit-insert-unpushed-commits))
+
+     ;; Don't use a unicode ellipsis character when truncating author names in the git log view. It screws up
+     ;; the line height with my current font (Inconsolata).
+     (setq magit-ellipsis (get-byte 0 "."))
+     (identity magit-ellipsis)))
 
 (evil-set-initial-state 'magit-mode 'normal)
 (evil-set-initial-state 'magit-status-mode 'normal)
