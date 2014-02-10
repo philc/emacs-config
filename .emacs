@@ -1390,7 +1390,8 @@ but doesn't treat single semicolons as right-hand-side comments."
         (interactive)
         (save-buffer)
         (message command-name)
-        (compile (concat "cd " (projectile-project-root) " && " command-name)))))
+        (without-confirmation
+         (lambda () (compile (concat "cd " (projectile-project-root) " && " command-name)))))))
 
 (evil-leader/set-key-for-mode 'go-mode
   ;; "r" is a nemsapce for run-related commands.
