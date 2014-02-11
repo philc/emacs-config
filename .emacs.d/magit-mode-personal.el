@@ -66,8 +66,7 @@
 
      ;; Don't use a unicode ellipsis character when truncating author names in the git log view. It screws up
      ;; the line height with my current font (Inconsolata).
-     (setq magit-ellipsis (get-byte 0 "."))
-     (identity magit-ellipsis)))
+     (setq magit-ellipsis (get-byte 0 "."))))
 
 (evil-set-initial-state 'magit-mode 'normal)
 (evil-set-initial-state 'magit-status-mode 'normal)
