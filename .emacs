@@ -1247,7 +1247,7 @@ but doesn't treat single semicolons as right-hand-side comments."
 (require 'mu4e)
 
 (setq mu4e-mu-binary "/usr/local/Cellar/mu/0.9.9.5/bin/mu")
-(setq mu4e-maildir "~/.Maildir")
+(setq mu4e-maildir "~/.mail/personal")
 (setq mu4e-drafts-folder "/[Gmail].Drafts")
 (setq mu4e-sent-folder   "/[Gmail].Sent Mail")
 (setq mu4e-trash-folder  "/[Gmail].Trash")
@@ -1272,9 +1272,6 @@ but doesn't treat single semicolons as right-hand-side comments."
 
 ;; Don't keep message buffers around.
 (setq message-kill-buffer-on-exit t)
-
-;; Use 'fancy' non-ascii characters in various places in mu4e
-(setq mu4e-use-fancy-chars t)
 
 (setq mu4e-attachment-dir "~/Downloads")
 
@@ -1306,6 +1303,7 @@ but doesn't treat single semicolons as right-hand-side comments."
      (evil-make-overriding-map mu4e-main-mode-map 'normal t)
      (evil-define-key 'normal mu4e-main-mode-map
        "q" 'vimlike-quit
+       ";" nil ; Ensure my evil-leader key works unhindered.
        "j" nil ; originally "jump to maildir".
        "gl" 'mu4e~headers-jump-to-maildir)
 
@@ -1364,12 +1362,17 @@ but doesn't treat single semicolons as right-hand-side comments."
        (kbd "M-r") '(lambda () (interactive) (mu4e-update-mail-and-index t))
        "c" 'mu4e-compose-new)
 
-
      (evil-make-overriding-map mu4e-compose-mode-map 'normal t)
      (evil-define-key 'normal mu4e-compose-mode-map
        "c" nil)
      (evil-leader/set-key-for-mode 'mu4e-compose-mode
        "s" 'message-send-and-exit)))
+
+(evil-set-initial-state 'mu4e-mode 'normal)
+(evil-set-initial-state 'mu4e-main-mode 'normal)
+(evil-set-initial-state 'mu4e-headers-mode 'normal)
+(evil-set-initial-state 'mu4e-view-mode 'normal)
+(evil-set-initial-state 'mu4e-compose-mode 'normal)
 
 ;; Settings for sending mail.
 (require 'smtpmail)
