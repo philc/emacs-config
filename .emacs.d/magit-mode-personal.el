@@ -72,6 +72,7 @@
 (evil-set-initial-state 'magit-status-mode 'normal)
 (evil-set-initial-state 'magit-log-mode 'normal)
 (evil-set-initial-state 'magit-commit-mode 'normal)
+(evil-set-initial-state 'magit-diff-mode 'normal)
 (evil-set-initial-state 'git-commit-mode 'insert)
 
 ;; Have Magit open in the current window, not a new split.
@@ -82,6 +83,7 @@
 (defun disable-magit-highlight-in-buffer () (face-remap-add-relative 'magit-item-highlight '()))
 (add-hook 'magit-status-mode-hook 'disable-magit-highlight-in-buffer)
 (add-hook 'magit-commit-mode-hook 'disable-magit-highlight-in-buffer)
+(add-hook 'magit-diff-mode-hook 'disable-magit-highlight-in-buffer)
 
 ;; NOTE(philc): I'm setting the key bindings for these two magit modes when their buffers load, because for
 ;; some reason, the evil bindings on the magit-log-mode and magit-status-mode keymaps collide.
