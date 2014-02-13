@@ -1504,3 +1504,12 @@ but doesn't treat single semicolons as right-hand-side comments."
               ;; If we invoke this inside of a split, don't set the tab's title.
               (when (= 1 (length (window-list)))
                 (elscreen-screen-nickname (file-name-nondirectory project)))))))))
+
+;;
+;; JSON
+;;
+(defun json-format ()
+  "Pipe the current buffer into `jq .`, and replace the current buffer's contents."
+  (interactive)
+  (save-excursion
+    (call-process-region (point-min) (point-max) "jq" t (buffer-name) t ".")))
