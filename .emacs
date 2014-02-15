@@ -610,10 +610,6 @@
 (define-key osx-keys-minor-mode-map (kbd "A-d") 'switch-to-lower-left)
 (define-key osx-keys-minor-mode-map (kbd "A-r") 'switch-to-upper-right)
 (define-key osx-keys-minor-mode-map (kbd "A-f") 'switch-to-lower-right)
-(define-key osx-keys-minor-mode-map (kbd "M-1") (lambda () (interactive) (switch-to-nth-window 0)))
-(define-key osx-keys-minor-mode-map (kbd "M-2") (lambda () (interactive) (switch-to-nth-window 1)))
-(define-key osx-keys-minor-mode-map (kbd "M-3") (lambda () (interactive) (switch-to-nth-window 2)))
-(define-key osx-keys-minor-mode-map (kbd "M-4") (lambda () (interactive) (switch-to-nth-window 3)))
 
 (define-minor-mode osx-keys-minor-mode
   "A minor-mode for emulating osx keyboard shortcuts."
