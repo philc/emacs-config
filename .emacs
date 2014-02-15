@@ -177,7 +177,9 @@
                                      ;; Emacs lisp
                                      "*Backtrace*"
                                      ;; Go
-                                     "*Compile-Log*" "*Gofmt Errors*"))
+                                     "*Compile-Log*" "*Gofmt Errors*"
+                                     ;; Mu4e (email)
+                                     "*mu4e-update*"))
 (setq special-display-regexps '("*cider.*"))
 (setq special-display-function 'show-ephemeral-buffer-in-a-sensible-window)
 
