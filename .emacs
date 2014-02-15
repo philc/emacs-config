@@ -404,14 +404,6 @@
 (defun switch-to-upper-right () (interactive) (switch-to-upper-left) (ignore-errors (windmove-right 1)))
 (defun switch-to-lower-right () (interactive) (switch-to-upper-right) (ignore-errors (windmove-down)))
 
-(defun switch-to-nth-window (n)
-  (lexical-let ((window (frame-first-window)))
-    (dotimes (i n nil)
-      (when window
-        (setq window (next-window window))))
-    (when window
-      (select-window window))))
-
 (defun create-window-in-next-logical-spot ()
   "Creates a window in the next slot in my standard 2x2 configuration. So for instance, if I have only 1
    window open, it will split the screen into two vertical windows."
@@ -421,11 +413,15 @@
     (case window-count
       (1 (split-window-horizontally-and-focus))
       (2 (progn
-           (switch-to-nth-window 1)
+           (switch-to-upper-right)
            (split-window-vertically-and-focus)))
       (3 (progn
-           (switch-to-nth-window 0)
-           (split-window-vertically-and-focus))))
+           (switch-to-upper-left)
+           (if (window-in-direction 'below)
+               (progn
+                (switch-to-upper-right)
+                (split-window-vertically-and-focus))
+           (split-window-vertically-and-focus)))))
     ;; Ensure that no matter where the window is created, it's has the same buffer as the window prior to
     ;; creating the new one. Otherwise, the new window could have some random buffer in it, making it
     ;; difficult to use commands like open-in-project, for instance.
