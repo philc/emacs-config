@@ -414,7 +414,9 @@
 (defun switch-to-upper-left () (interactive) (select-window (frame-first-window)))
 (defun switch-to-lower-left () (interactive) (switch-to-upper-left) (ignore-errors (windmove-down)))
 (defun switch-to-upper-right () (interactive) (switch-to-upper-left) (ignore-errors (windmove-right 1)))
-(defun switch-to-lower-right () (interactive) (switch-to-upper-right) (ignore-errors (windmove-down)))
+(defun switch-to-lower-right () (interactive) (switch-to-upper-right) (ignore-errors
+                                                                        (windmove-down)
+                                                                        (windmove-right)))
 
 (defun create-window-in-next-logical-spot ()
   "Creates a window in the next slot in my standard 2x2 configuration. So for instance, if I have only 1
