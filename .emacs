@@ -1389,7 +1389,10 @@ but doesn't treat single semicolons as right-hand-side comments."
      (evil-define-key 'normal mu4e-compose-mode-map
        "c" nil)
      (evil-leader/set-key-for-mode 'mu4e-compose-mode
-       "s" 'message-send-and-exit)))
+       ;; Emacs always prompts me "Fix continuation lines?" when sending an email. I don't know what this prompt
+       ;; means. It's in message-send-mail in message.el. Answer "y" automatically.
+       "s" (lambda () (interactive) (without-confirmation 'message-send-and-exit)))))
+
 
 (evil-set-initial-state 'mu4e-mode 'normal)
 (evil-set-initial-state 'mu4e-main-mode 'normal)
