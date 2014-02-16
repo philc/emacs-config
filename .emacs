@@ -178,7 +178,7 @@
                                      "*Backtrace*"
                                      ;; Go
                                      "*Compile-Log*" "*Gofmt Errors*"
-                                     ;; Mu4e (email)
+                                     ;; Mu4e (email). NOTE that this doesn't work; it shows wherever it wants.
                                      "*mu4e-update*"))
 (setq special-display-regexps '("*cider.*"))
 (setq special-display-function 'show-ephemeral-buffer-in-a-sensible-window)
