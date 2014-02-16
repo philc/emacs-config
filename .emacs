@@ -1287,6 +1287,10 @@ but doesn't treat single semicolons as right-hand-side comments."
 (setq mu4e-view-show-images t
       mu4e-view-image-max-width 700)
 
+;; Only complete the email addresses of people who directly sent me an email.
+(setq mu4e-my-email-addresses user-mail-address)
+(setq mu4e-compose-complete-only-personal t)
+
 ;; https://groups.google.com/forum/#!searchin/mu-discuss/html/mu-discuss/7WwtyrCBeDg/nr0vK9fT7BEJ
 (setq mu4e-html2text-command "w3m -dump -cols 110 -T text/html")
 ;; (setq mu4e-html2text-command "html2text | grep -v '&nbsp_place_holder;'")
