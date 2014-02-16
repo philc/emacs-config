@@ -9,7 +9,9 @@
   (package-refresh-contents))
 
 (defvar my-packages '(ace-jump-mode ; Jump to any text on screen in a few keystrokes. Like Vim's EasyMotion.
+                      ac-nrepl
                       autopair ; Insert matching delimiters, e.g. insert closing braces.
+                      auto-complete
                       cider ; repl for Clojure code evaluation.
                       clojure-mode
                       clojure-test-mode
@@ -229,6 +231,16 @@
 ;; The poorly-named winner mode saves the history of your window splits, so you can undo and redo changes to
 ;; your window configuration.
 (winner-mode t)
+
+;; Emacs general autocompletion
+(add-hook 'prog-mode-hook 'auto-complete-mode)
+(eval-after-load 'auto-complete
+  '(progn
+     (define-key ac-complete-mode-map "\C-n" 'ac-next)
+     (define-key ac-complete-mode-map "\C-p" 'ac-previous)
+     (setq ac-auto-start nil)
+     (ac-set-trigger-key "TAB")
+     (ac-linum-workaround)))
 
 ;;
 ;; Evil mode -- Vim keybindings for Emacs.
