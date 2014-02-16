@@ -1285,7 +1285,7 @@ but doesn't treat single semicolons as right-hand-side comments."
 
 ;; Attempt to show images when viewing messages
 (setq mu4e-view-show-images t
-      mu4e-view-image-max-width 800)
+      mu4e-view-image-max-width 700)
 
 ;; https://groups.google.com/forum/#!searchin/mu-discuss/html/mu-discuss/7WwtyrCBeDg/nr0vK9fT7BEJ
 (setq mu4e-html2text-command "w3m -dump -cols 110 -T text/html")
