@@ -1328,6 +1328,7 @@ but doesn't treat single semicolons as right-hand-side comments."
        "n" (lambda () (interactive) (if (mu4e-view-is-below?) (mu4e-headers-next) (mu4e-headers-view-message)))
        "p" (lambda () (interactive) (if (mu4e-view-is-below?) (mu4e-headers-prev) (mu4e-headers-view-message)))
        "#" 'mu4e-headers-mark-for-trash
+       "d" 'mu4e-view-mark-for-trash
        "y" 'mu4e-headers-mark-for-refile
        "/" 'mu4e-headers-search-edit
        "z" 'mu4e-headers-mark-for-unmark
@@ -1353,6 +1354,7 @@ but doesn't treat single semicolons as right-hand-side comments."
        "n" 'mu4e-view-headers-next
        "p" 'mu4e-view-headers-prev
        "#" 'mu4e-view-mark-for-trash
+       "d" 'mu4e-view-mark-for-trash
        "y" 'mu4e-view-mark-for-refile
        "/" 'mu4e-view-search-edit
        "x" 'mu4e-view-mark-for-something
@@ -1375,6 +1377,9 @@ but doesn't treat single semicolons as right-hand-side comments."
        "f" 'mu4e-compose-forward
        (kbd "M-r") '(lambda () (interactive) (mu4e-update-mail-and-index t))
        "c" 'mu4e-compose-new)
+
+     (evil-leader/set-key-for-mode 'mu4e-view-mode
+       "vr" 'mu4e-view-raw-message)
 
      (evil-make-overriding-map mu4e-compose-mode-map 'normal t)
      (evil-define-key 'normal mu4e-compose-mode-map
