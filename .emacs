@@ -1306,6 +1306,12 @@ but doesn't treat single semicolons as right-hand-side comments."
                             (:from-or-to . 22)
                             (:subject . 74)))
 
+(defun mu4e-view-is-below? ()
+  "True if mu4e-view is displayed below the current buffer."
+  (let ((window-below (window-in-direction 'below)))
+    (and window-below
+         (string= (buffer-name (window-buffer window-below)) "*mu4e-view*"))))
+
 (eval-after-load 'mu4e
   '(progn
      (evil-make-overriding-map mu4e-main-mode-map 'normal t)
@@ -1319,8 +1325,8 @@ but doesn't treat single semicolons as right-hand-side comments."
      (evil-define-key 'normal mu4e-headers-mode-map
        "j" 'evil-next-line
        "k" 'evil-previous-line
-       "n" 'mu4e-headers-next
-       "p" 'mu4e-headers-prev
+       "n" (lambda () (interactive) (if (mu4e-view-is-below?) (mu4e-headers-next) (mu4e-headers-view-message)))
+       "p" (lambda () (interactive) (if (mu4e-view-is-below?) (mu4e-headers-prev) (mu4e-headers-view-message)))
        "#" 'mu4e-headers-mark-for-trash
        "y" 'mu4e-headers-mark-for-refile
        "/" 'mu4e-headers-search-edit
