@@ -484,6 +484,7 @@
 
 ;; Save buffers whenever they lose focus.
 ;; This obviates the need to hit the Save key thousands of times a day. Inspired by http://goo.gl/2z0g5O.
+;; TODO(philc): Don't save if we're switching to the minibuffer.
 (defun save-buffer-if-dirty ()
   (when (and buffer-file-name (buffer-modified-p))
     (save-buffer)))
@@ -839,10 +840,17 @@
 (add-to-list 'auto-mode-alist '("\\.markdown$" . gfm-mode))
 (add-to-list 'auto-mode-alist '("\\.md$" . gfm-mode))
 
+(defun preview-markdown ()
+  "Pipes the buffer's contents into a script which renders the markdown as HTML and opens in a browser."
+  (interactive)
+  (call-process-region (point-min) (point-max) "/bin/bash" nil nil nil "-c" "markdown_page.rb | bcat"))
+
 (eval-after-load 'markdown-mode
   '(progn
-     (evil-leader/set-key-for-mode 'markdown-mode
-        "r" 'markdown-cleanup-list-numbers)
+     ; NOTE(philc): For some reason I can't get evil-leaer/set-leader-for-key to work with gfm-mode.
+     (evil-define-key 'normal markdown-mode-map
+       ";l" 'markdown-cleanup-list-numbers
+       ";vv" 'preview-markdown)
      (evil-define-key 'normal markdown-mode-map
        ;; Autocomplete setext headers by typing "==" or "--" on the header's line in normal mode.
        (kbd "==") '(lambda () (interactive) (insert-markdown-header "=="))
