@@ -1351,12 +1351,13 @@ but doesn't treat single semicolons as right-hand-side comments."
        "q" 'vimlike-quit
        (kbd "RET") 'mu4e-headers-view-message
        "ESC" nil
-       ;; TODO(philc): How can I reply-all without confirmation?
-       ;; TODO(philc): mu4e-headers-toggle-full-search - show all results or just up until the cap.
+       "a" 'mu4e-compose-reply ; TODO(philc): Make this a real reply-all.
        "r" 'mu4e-compose-reply
+       ;; TODO(philc): mu4e-headers-toggle-full-search - show all results or just up until the cap.
        ;; TODO(philc): mu4e-view-action opens URL
        "f" 'mu4e-compose-forward
-       (kbd "M-r") 'mu4e-update-mail-and-index
+       ;; By default, run this in the background. Hit ";vv to show the buffer with the fetch status.
+       (kbd "M-r") (lambda () (interactive) (mu4e-update-mail-and-index t))
        "c" 'mu4e-compose-new)
 
      (evil-make-overriding-map mu4e-view-mode-map 'normal t)
@@ -1372,6 +1373,7 @@ but doesn't treat single semicolons as right-hand-side comments."
        "x" 'mu4e-view-mark-for-something
        "z" 'mu4e-view-mark-for-unmark
        "q" 'vimlike-quit
+       "a" 'mu4e-compose-reply ; TODO(philc): Make this a real reply-all.
        ;; This prompts you for which link (starting with 1) you want to visit.
        ;; Note that you can just move your cursor to a URL and hit M-ret to open it.
        "go" 'mu4e-view-go-to-url
@@ -1390,7 +1392,10 @@ but doesn't treat single semicolons as right-hand-side comments."
        (kbd "M-r") '(lambda () (interactive) (mu4e-update-mail-and-index t))
        "c" 'mu4e-compose-new)
 
+     (evil-leader/set-key-for-mode 'mu4e-headers-mode
+       "vv" 'mu4e-show-fetch-progress)
      (evil-leader/set-key-for-mode 'mu4e-view-mode
+       "vv" 'mu4e-show-fetch-progress
        "vr" 'mu4e-view-raw-message)
 
      (evil-make-overriding-map mu4e-compose-mode-map 'normal t)
@@ -1400,6 +1405,14 @@ but doesn't treat single semicolons as right-hand-side comments."
        ;; Emacs always prompts me "Fix continuation lines?" when sending an email. I don't know what this prompt
        ;; means. It's in message-send-mail in message.el. Answer "y" automatically.
        "s" (lambda () (interactive) (without-confirmation 'message-send-and-exit)))))
+
+(defun mu4e-show-fetch-progress ()
+  (interactive)
+  (mu4e-update-mail-and-index nil)
+  (let ((buffer "*mu4e-update*"))
+    ;; This update window shows up in a random place. Kill it.
+    (delete-window (get-buffer-window buffer))
+    (show-ephemeral-buffer-in-a-sensible-window (get-buffer buffer))))
 
 
 (evil-set-initial-state 'mu4e-mode 'normal)
