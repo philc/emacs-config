@@ -1414,7 +1414,6 @@ but doesn't treat single semicolons as right-hand-side comments."
     (delete-window (get-buffer-window buffer))
     (show-ephemeral-buffer-in-a-sensible-window (get-buffer buffer))))
 
-
 (evil-set-initial-state 'mu4e-mode 'normal)
 (evil-set-initial-state 'mu4e-main-mode 'normal)
 (evil-set-initial-state 'mu4e-headers-mode 'normal)
