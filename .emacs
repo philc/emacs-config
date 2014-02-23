@@ -1013,7 +1013,7 @@
 (setq coffee-tab-width 2)
 (evil-leader/set-key-for-mode 'coffee-mode
   "c" nil ; Establishes "c" as a "prefix key". I found this trick here: http://www.emacswiki.org/emacs/Evil
-  "cf" (lambda ()
+  "cc" (lambda ()
          (interactive)
          (save-buffer)
          (coffee-compile-file))
@@ -1438,6 +1438,12 @@ but doesn't treat single semicolons as right-hand-side comments."
 ;;
 ;; Go mode, for writing Go code
 ;;
+(eval-after-load 'go-mode
+  '(progn
+     (evil-define-key 'normal go-mode-map
+       "gf" 'godef-jump
+       "K" 'godef-describe)))
+
 (defun go-save-and-compile-fn (command-name)
   "Returns a function for the purpose of binding to a key which saves the current buffer and then
    runs the given command in the root of the go project."
@@ -1450,7 +1456,7 @@ but doesn't treat single semicolons as right-hand-side comments."
          (lambda () (compile (concat "cd " (projectile-project-root) " && " command-name)))))))
 
 (evil-leader/set-key-for-mode 'go-mode
-  ;; "r" is a nemsapce for run-related commands.
+  ;; "r" is a namespace for run-related commands.
   "rr" (go-save-and-compile-fn "make run")
   "rb" (go-save-and-compile-fn "make synthetic-benchmark")
   "rt" (go-save-and-compile-fn "make test")
@@ -1460,7 +1466,9 @@ but doesn't treat single semicolons as right-hand-side comments."
   "cp" 'previous-error
   "cw" (go-save-and-compile-fn "make web")
   "cb" (go-save-and-compile-fn "make benchmark")
-  "cc" (go-save-and-compile-fn "make build"))
+  "cc" (go-save-and-compile-fn "make build")
+
+  "ai" 'go-import-add)
 
 (defun gofmt-before-save-ignoring-errors ()
   "Don't pop up syntax errors in a new window when running gofmt-before-save."
