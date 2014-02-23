@@ -178,6 +178,8 @@
                                      "*magit-process*" "*magit-commit*"
                                      ;; Emacs lisp
                                      "*Backtrace*"
+                                     ;; Coffeescript
+                                     "*coffee-compiled*"
                                      ;; Go
                                      "*Compile-Log*" "*Gofmt Errors*"
                                      ;; Mu4e (email). NOTE that this doesn't work; it shows wherever it wants.
