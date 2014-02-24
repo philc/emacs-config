@@ -12,7 +12,6 @@
        "n" 'magit-goto-next-section
        "p" 'magit-goto-previous-section
        "L" 'magit-key-mode-popup-logging
-       "yy" 'magit-copy-full-commit-id ; Copies the commit ID of the commit under the cursor.
        (kbd "RET") 'magit-visit-item)
        ;; These scroll the diff window. Normally these are mapped to space and shift-space in magit.
        ;; TODO(philc): Uncomment these once the latest magit lands in melpa.
@@ -120,6 +119,16 @@
     "gu" 'magit-jump-to-unstaged
     (kbd "TAB") 'magit-toggle-section
     "r" 'magit-refresh))
+
+(add-hook 'magit-commit-mode-hook 'init-magit-commit-mode-keybindings)
+(defun init-magit-commit-mode-keybindings ()
+  (setq magit-commit-mode-map (make-sparse-keymap))
+  ;; I'm specifying these keys here, becuase for some reason they get overridden by the yy shortcut I've
+  ;; defined for magit-log-mode.
+  (evil-define-key 'normal magit-commit-mode-map
+    "yy" 'evil-yank-line)
+  (evil-define-key 'visual magit-commit-mode-map
+    "y" 'evil-yank))
 
 ;; Cache the buffer which was showing before we invoked magit.  In some cases magit doesn't properly restore
 ;; the buffer when you type "q", so we forcefully do it here ourselves.

@@ -1138,7 +1138,7 @@
 ;; Disable the prompt we get when killing a buffer with a process.
 (setq kill-buffer-query-functions (remq 'process-kill-buffer-query-function kill-buffer-query-functions))
 
-(defun cider-restart-nrepl ()
+(defun my-cider-restart-nrepl ()
   "Restarts or starts afresh the nrepl."
   (interactive)
   (let ((repl-buffer (nrepl-connection-for-buffer (current-buffer))))
@@ -1147,7 +1147,7 @@
                               (nrepl-close repl-buffer))
                             (cider-jack-in nil)))))
 
-(defun cider-make-connection-buffer-the-current-connection (connection-buffer)
+(defun my-cider-make-connection-buffer-the-current-connection (connection-buffer)
   (cons connection-buffer (delq connection-buffer nrepl-connection-list)))
 
 (defun with-nrepl-connection-of-current-buffer (f)
@@ -1155,7 +1155,7 @@
     (if (stringp result)
         (message result)
       (progn
-        (cider-make-connection-buffer-the-current-connection result)
+        (my-cider-make-connection-buffer-the-current-connection result)
         (funcall f)))))
 
 ;; Based on `cider-switch-to-relevant-repl-buffer` in cider.el.
@@ -1178,26 +1178,50 @@
               "No relevant nREPL connection found."))
         "No project directory found."))))
 
-(defun cider-eval-current-sexp ()
+(defun my-cider-eval-and-print-to-repl (form)
+  "Wraps the form in 'print' and evaluates the expression."
+  ;; Cider has cider-interactive-eval-to-repl, but it prints the results of expressions to random places in
+  ;; the repl buffer.
+  (let* (
+         ;; NOTE(philc): I have pprint aliased into clojure.core as >pprint for all of my lein projects. I've
+         ;; done this through ~/.lein/profiles.clj. Assuming you don't, you can just use println as the print-fn.
+         (print-fn ">pprint")
+         (form (concat "(" print-fn form ")")))
+    (cider-interactive-eval form)))
+
+(defun my-cider-eval-and-print-defun-at-point ()
+  ;; Based on cider-eval-defun-at-point.
+  (my-cider-eval-and-print-to-repl (cider-defun-at-point)))
+
+(defun my-cider-eval-current-sexp (&optional print-result)
   "Eval the sexp the current is currently in. In Emacs' syntax table, this is called a list of expressions."
   (interactive)
-  (cider-interactive-eval (current-sexp)))
+  (let ((form (current-sexp)))
+    (if print-result
+        (my-cider-eval-and-print-to-repl form)
+      (cider-interactive-eval form))))
 
 (evil-leader/set-key-for-mode 'clojure-mode
   "eap" (lambda () (interactive) (with-nrepl-connection-of-current-buffer 'cider-eval-paragraph))
   "ee" (lambda () (interactive) (with-nrepl-connection-of-current-buffer 'cider-show-cider-buffer))
   "ek" (lambda () (interactive) (with-nrepl-connection-of-current-buffer 'cider-find-and-clear-repl-buffer))
-  ; Note that I actually use cider-load-file here, not cider-eval-buffer, because it gives useful line numbers
-  ; on exceptions.
+  ;; Note that I actually use cider-load-file here, not cider-eval-buffer, because it gives useful line numbers
+  ;; on exceptions.
   "eb" (lambda ()
          (interactive)
          (save-buffer)
          (with-nrepl-connection-of-current-buffer 'cider-load-current-buffer))
-  ; cider-restart-nrepl is more handy than cider-jack-in, because it doesn't leave existing repls running.
-  "en" 'cider-restart-nrepl
-  "es" 'cider-eval-current-sexp
-  "ex" (lambda () (interactive) (with-nrepl-connection-of-current-buffer 'cider-eval-expression-at-point))
-  "er" (lambda () (interactive) (with-nrepl-connection-of-current-buffer 'cider-eval-region)))
+  ;; cider-restart-nrepl is more handy than cider-jack-in, because it doesn't leave existing repls running.
+  "en" 'my-cider-restart-nrepl
+  "es" 'my-cider-eval-current-sexp
+  "ex" (lambda () (interactive) (with-nrepl-connection-of-current-buffer 'cider-eval-defun-at-point))
+  "er" (lambda () (interactive) (with-nrepl-connection-of-current-buffer 'cider-eval-region))
+  ;; Shortcuts for printing the results of expressions. These eval functions take a second param which prints
+  ;; result of the expression.
+  "eps" (lambda () (interactive) (with-nrepl-connection-of-current-buffer
+                                  (lambda () (my-cider-eval-current-sexp t))))
+  "epx" (lambda () (interactive) (with-nrepl-connection-of-current-buffer
+                                  'my-cider-eval-and-print-defun-at-point)))
 
 ;; Highlight parentheses in rainbow colors.
 (require 'rainbow-delimiters)
@@ -1466,7 +1490,7 @@ but doesn't treat single semicolons as right-hand-side comments."
   "cp" 'previous-error
   "cw" (go-save-and-compile-fn "make web")
   "cb" (go-save-and-compile-fn "make benchmark")
-  "cc" (go-save-and-compile-fn "make build")
+  "cc" (go-save-and-compile-fn "make")
 
   "ai" 'go-import-add)
 
