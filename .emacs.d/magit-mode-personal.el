@@ -84,16 +84,19 @@
 (add-hook 'magit-commit-mode-hook 'disable-magit-highlight-in-buffer)
 (add-hook 'magit-diff-mode-hook 'disable-magit-highlight-in-buffer)
 
-;; NOTE(philc): I'm setting the key bindings for these two magit modes when their buffers load, because for
-;; some reason, the evil bindings on the magit-log-mode and magit-status-mode keymaps collide.
+;; NOTE(philc): I'm setting the key bindings for these magit modes when their buffers load, because for
+;; some reason, the evil bindings on these modes conflict (i.e. when a new mode loads, it redefines the key
+;; for the other modes.
 (add-hook 'magit-log-mode-hook 'init-magit-log-mode-keybindings)
 (defun init-magit-log-mode-keybindings ()
+  (setq magit-log-mode-map (make-sparse-keymap))
   (evil-define-key 'normal magit-log-mode-map
     ";gca" 'magit-commit-amend
     ";gri" 'magit-interactive-rebase
     ";gri" 'magit-interactive-rebase
     ";gpush" 'git-push
     ";gpull" 'git-pull
+    "yy" 'magit-copy-full-commit-id ; Copies the commit ID of the commit under the cursor.
     (kbd "SPC") 'magit-goto-next-section
     ;; I use C-d and C-u for scrolling the log view, and d and u for scrolling the diff view showing the
     ;; diff for the focused commit.
@@ -102,6 +105,7 @@
 
 (add-hook 'magit-status-mode-hook 'init-magit-status-mode-keybindings)
 (defun init-magit-status-mode-keybindings ()
+  (setq magit-status-mode-map (make-sparse-keymap))
   (evil-define-key 'normal magit-status-mode-map
     "c" 'magit-commit
     ;; I have a git precommit hook which does style checks. Sometimes I want to disable it when committing.
