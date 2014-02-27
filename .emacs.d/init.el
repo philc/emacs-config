@@ -167,6 +167,8 @@
 (setq split-height-threshold 40)
 (setq split-width-threshold 200)
 (setq split-window-preferred-function 'split-window-sensibly-reverse)
+;; Don't auto-focus the help window. I have my own shortcuts for switching to it and closing it.
+(setq help-window-select "never")
 ;; Ensure these open in the selected window, not a new popup.
 (setq same-window-buffer-names '("*magit-log*"))
 
