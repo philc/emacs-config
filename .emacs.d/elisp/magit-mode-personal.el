@@ -96,6 +96,7 @@
     ";gpush" 'git-push
     ";gpull" 'git-pull
     "yy" 'magit-copy-full-commit-id ; Copies the commit ID of the commit under the cursor.
+    "r" 'magit-refresh
     (kbd "SPC") 'magit-goto-next-section
     ;; I use C-d and C-u for scrolling the log view, and d and u for scrolling the diff view showing the
     ;; diff for the focused commit.
