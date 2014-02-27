@@ -510,6 +510,9 @@
   (when (and buffer-file-name (buffer-modified-p))
     (save-buffer)))
 
+;; This hook is Emacs 24.4+.
+(add-hook 'focus-out-hook 'save-buffer-if-dirty)
+
 (defadvice switch-to-buffer (before save-buffer-now activate) (save-buffer-if-dirty))
 (defadvice other-window (before other-window-now activate) (save-buffer-if-dirty))
 (defadvice windmove-up (before other-window-now activate) (save-buffer-if-dirty))
