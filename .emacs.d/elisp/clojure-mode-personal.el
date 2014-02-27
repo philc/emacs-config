@@ -86,27 +86,33 @@
   (if (not (cider-connected-p))
       "No active nREPL connection."
     (let ((project-directory (nrepl-project-directory-for (nrepl-current-dir))))
-      (if project-directory
-          (let ((buf (car (-filter
+      (if (not project-directory)
+          "No project directory found."
+        (let ((buf (cond
+                    ;; I'm special casing shared_lib so that I can eval files from that project against the
+                    ;; most recent repl.
+                    ((search "shared_lib" project-directory)
+                     (car nrepl-connection-list))
+                    (project-directory
+                     (car (-filter
                            (lambda (conn)
                              (let ((conn-proj-dir (with-current-buffer (get-buffer conn)
                                                     nrepl-project-dir)))
                                (when conn-proj-dir
                                  (equal (file-truename project-directory)
                                         (file-truename conn-proj-dir)))))
-                           nrepl-connection-list))))
-            (if buf
-                (get-buffer buf)
-              "No relevant nREPL connection found."))
-        "No project directory found."))))
+                           nrepl-connection-list))))))
+          (if buf
+              (get-buffer buf)
+            "No relevant nREPL connection found."))))))
 
 (defun my-cider-eval-and-print-to-repl (form)
   "Wraps the form in 'print' and evaluates the expression."
   ;; Cider has cider-interactive-eval-to-repl, but it prints the results of expressions to random places in
   ;; the repl buffer.
-  (let* (
-         ;; NOTE(philc): I have pprint aliased into clojure.core as >pprint for all of my lein projects. I've
-         ;; done this through ~/.lein/profiles.clj. Assuming you don't, you can just use println as the print-fn.
+  (let* (;; NOTE(philc): I have pprint aliased into clojure.core as >pprint for all of my lein projects. I've
+         ;; done this through ~/.lein/profiles.clj. Assuming you don't, you can just use println as the
+         ;; print-fn.
          (print-fn ">pprint")
          (form (concat "(" print-fn form ")")))
     (cider-interactive-eval form)))
