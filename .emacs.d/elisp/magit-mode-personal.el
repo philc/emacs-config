@@ -89,8 +89,7 @@
 ;; for the other modes.
 (add-hook 'magit-log-mode-hook 'init-magit-log-mode-keybindings)
 (defun init-magit-log-mode-keybindings ()
-  (setq magit-log-mode-map (make-sparse-keymap))
-  (evil-define-key 'normal magit-log-mode-map
+  (define-keys evil-normal-state-local-map
     ";gca" 'magit-commit-amend
     ";gri" 'magit-interactive-rebase
     ";gri" 'magit-interactive-rebase
@@ -105,8 +104,8 @@
 
 (add-hook 'magit-status-mode-hook 'init-magit-status-mode-keybindings)
 (defun init-magit-status-mode-keybindings ()
-  (setq magit-status-mode-map (make-sparse-keymap))
-  (evil-define-key 'normal magit-status-mode-map
+  ;; NOTE(philc): using `evil-define-key` for these keymaps stopped working upon upgrading to Emacs 24.4.
+  (define-keys evil-normal-state-local-map
     "c" 'magit-commit
     ;; I have a git precommit hook which does style checks. Sometimes I want to disable it when committing.
     "C" (lambda() (interactive) (with-env-var "SKIP_GIT_STYLE_CHECK" "true" 'magit-commit))
@@ -126,12 +125,11 @@
 
 (add-hook 'magit-commit-mode-hook 'init-magit-commit-mode-keybindings)
 (defun init-magit-commit-mode-keybindings ()
-  (setq magit-commit-mode-map (make-sparse-keymap))
   ;; I'm specifying these keys here, becuase for some reason they get overridden by the yy shortcut I've
   ;; defined for magit-log-mode.
-  (evil-define-key 'normal magit-commit-mode-map
+  (define-keys evil-normal-state-local-map
     "yy" 'evil-yank-line)
-  (evil-define-key 'visual magit-commit-mode-map
+  (define-keys evil-visual-state-local-map
     "y" 'evil-yank))
 
 ;; Cache the buffer which was showing before we invoked magit.  In some cases magit doesn't properly restore
