@@ -29,7 +29,7 @@
                       magit
                       markdown-mode
                       midje-mode ; For editing clojure tests
-                      multi-term ; Display many termianls inside emacs, not just one.
+                      ;; multi-term ; Display many termianls inside emacs, not just one.
                       org ; For outlining. This is bundled with Emacs, but I'm using the latest version.
                       powerline ; Improve the appearance & density of the Emacs status bar.
                       projectile ; Find file in project (ala CTRL-P).
@@ -48,7 +48,7 @@
 ;; General
 ;;
 (require 'cl)
-(add-to-list 'load-path "~/.emacs.d/")
+(add-to-list 'load-path "~/.emacs.d/elisp")
 (require 'lisp-helpers-personal)
 
 ;; Anecdotally, this reduces the amount of display flicker on some Emacs startup.
@@ -299,7 +299,7 @@
   "a" 'projectile-ack
   "d" 'projectile-dired
   "D" (lambda () (interactive) (-> (buffer-file-name) file-name-directory dired))
-  "vt" 'multi-term
+  ;; "vt" 'multi-term
   ;; "v" is a mnemonic prefix for "view X".
   "gs" 'magit-status-and-focus-unstaged
   "gl" 'magit-log
@@ -307,7 +307,7 @@
   "vp" 'open-root-of-project-in-dired
   "vn" 'open-markdown-file-from-notes-folder
   "vo" (lambda () (interactive) (find-file "~/Dropbox/tasks.org"))
-  "ve" (lambda () (interactive) (find-file "~/.emacs")))
+  "ve" (lambda () (interactive) (find-file "~/.emacs.d/init.el")))
 
 (setq evil-leader/leader ";")
 
@@ -380,20 +380,40 @@
 (define-key evil-normal-state-map "," 'evilnc-comment-operator)
 (define-key evil-visual-state-map "," 'evilnc-comment-operator)
 
+(read-kbd-macro "w C-a")
 ;;
 ;; Window manipulation, switching, & management.
 ;; Evil's window map is the set of keys which control window functions. All of its keys are prefixed with
 ;; <C-w>.
 (evil-leader/set-key "wn" 'create-window-in-next-logical-spot)
 (evil-leader/set-key "wv" 'split-window-horizontally-and-focus)
-(evil-leader/set-key "ws" 'split-window-vertically-and-focus)
+(evil-leader/set-key "wh" 'split-window-vertically-and-focus)
+(evil-leader/set-key "wS A-e" 'swap-window-with-upper-left)
+(evil-leader/set-key "wS A-d" 'swap-window-with-lower-left)
+(evil-leader/set-key "wS A-r" 'swap-window-with-upper-right)
+(evil-leader/set-key "wS A-f" 'swap-window-with-lower-right)
+;; (evil-leader/set-key "ws A-e" 'swap-window-with-upper-right)
 (evil-leader/set-key "wk" (lambda () (interactive) (kill-buffer (current-buffer))))
 (evil-leader/set-key "wm" 'toggle-window-maximize)
 (evil-leader/set-key "wr" 'evil-window-rotate-downwards)
 (evil-leader/set-key "wR" 'evil-window-rotate-upwards)
+(evil-leader/set-key "wR" 'evil-window-rotate-upwards)
 ;; Undo the last change you made to your window configuration.
 (evil-leader/set-key "wb" 'winner-undo)
 (evil-leader/set-key "q" 'dismiss-ephemeral-windows)
+
+(defun swap-window-buffers (window-move-fn)
+  "Swaps the current buffer with the buffer in the window active after invoking window-move-fn."
+  (let ((src-window (get-buffer-window))
+        (src-buffer (window-buffer)))
+    (funcall window-move-fn)
+    (set-window-buffer src-window (current-buffer))
+    (set-window-buffer (get-buffer-window) src-buffer)))
+
+(defun swap-window-with-upper-left () (interactive) (swap-window-buffers 'switch-to-upper-left))
+(defun swap-window-with-lower-left () (interactive) (swap-window-buffers 'switch-to-lower-left))
+(defun swap-window-with-upper-right () (interactive) (swap-window-buffers 'switch-to-upper-right))
+(defun swap-window-with-lower-right () (interactive) (swap-window-buffers 'switch-to-lower-right))
 
 (defun toggle-window-maximize ()
   (interactive)
@@ -867,7 +887,6 @@
 ;; You may need to install aspell (e.g. `brew install aspell`).
 
 (add-to-list 'load-path "~/.emacs.d/plugins/speck-mode")
-
 (require 'speck)
 ;; This apparently needs to be a fully-qualified path.
 (setq speck-personal-dictionary-file "/Users/reformist/.personal_dict.txt")
@@ -882,7 +901,7 @@
 (require 'diminish)
 (diminish 'visual-line-mode "")
 (diminish 'global-whitespace-mode "")
-(diminish 'global-visual-line-mode "")
+;; (diminish 'global-visual-line-mode "")
 (diminish 'auto-fill-function "")
 (diminish 'projectile-mode " p")
 (diminish 'yas-minor-mode "yas")
