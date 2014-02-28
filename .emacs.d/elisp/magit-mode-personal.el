@@ -124,6 +124,12 @@
     (kbd "TAB") 'magit-toggle-section
     "r" 'magit-refresh))
 
+(add-hook 'git-commit-mode-hook 'init-git-commit-mode)
+(defun init-git-commit-mode ()
+  ;; Sometimes I have a git hook which prepopulates a commit message prefix for me. Move to the end of the
+  ;; line so I can begin typing after the prefix.
+  (end-of-line))
+
 (add-hook 'magit-commit-mode-hook 'init-magit-commit-mode-keybindings)
 (defun init-magit-commit-mode-keybindings ()
   ;; I'm specifying these keys here, becuase for some reason they get overridden by the yy shortcut I've
