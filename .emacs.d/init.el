@@ -985,12 +985,21 @@
 (setq coffee-tab-width 2)
 (evil-leader/set-key-for-mode 'coffee-mode
   "c" nil ; Establishes "c" as a "prefix key". I found this trick here: http://www.emacswiki.org/emacs/Evil
+  ;; This compiles the file and jumps to the first error, if there is one.
   "cc" (lambda ()
          (interactive)
          (save-buffer)
-         (coffee-compile-file))
-  ;; The mnemonic for this is "compile & preview".
+         (coffee-compile-without-side-effect))
+  ;; The mnemonic for this is "compile & preview". It shows the javascript output in a new buffer.
   "cp" 'coffee-compile-buffer)
+
+(defun coffee-compile-without-side-effect ()
+  ;; coffee-compile-file annoyingly creates a file on disk.
+  (let* ((js-file (concat (file-name-sans-extension (buffer-file-name)) ".js"))
+         (js-file-existed (file-exists-p js-file)))
+    (coffee-compile-file)
+    (when (and (not js-file-existed) (file-exists-p js-file))
+      (delete-file js-file))))
 
 ;; Make return and open-line indent the cursor properly.
 (evil-define-key 'insert coffee-mode-map (kbd "RET") 'coffee-newline-and-indent)
