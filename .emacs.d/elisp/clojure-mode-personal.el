@@ -26,8 +26,6 @@
 ;; Prevent the auto-display of the REPL buffer in a separate window after connection is established.
 (setq cider-repl-pop-to-buffer-on-connect nil)
 
-;; TODO(philc): Try (cider-toggle-pretty-printing)
-
 ;; Don't ask confirmation for closing any open nrepl connections when exiting Emacs.
 ;; http://stackoverflow.com/q/2706527/46237
 (defadvice save-buffers-kill-emacs (around no-query-kill-emacs activate)
