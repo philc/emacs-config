@@ -1380,3 +1380,8 @@
   (interactive)
   (save-excursion
     (call-process-region (point-min) (point-max) "jq" t (buffer-name) t ".")))
+
+;;
+;; Java
+;;
+(add-hook 'java-mode-hook (lambda () (setq c-basic-offset 2)))
