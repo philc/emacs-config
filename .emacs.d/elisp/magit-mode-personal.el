@@ -92,7 +92,6 @@
   (define-keys evil-normal-state-local-map
     ";gca" 'magit-commit-amend
     ";gri" 'magit-interactive-rebase
-    ";gri" 'magit-interactive-rebase
     ";gpush" 'git-push
     ";gpull" 'git-pull
     "yy" 'magit-copy-full-commit-id ; Copies the commit ID of the commit under the cursor.
@@ -107,6 +106,9 @@
 (defun init-magit-status-mode-keybindings ()
   ;; NOTE(philc): using `evil-define-key` for these keymaps stopped working upon upgrading to Emacs 24.4.
   (define-keys evil-normal-state-local-map
+    ";gca" 'magit-commit-amend
+    ";gpush" 'git-push
+    ";gpull" 'git-pull
     "c" 'magit-commit
     ;; I have a git precommit hook which does style checks. Sometimes I want to disable it when committing.
     "C" (lambda() (interactive) (with-env-var "SKIP_GIT_STYLE_CHECK" "true" 'magit-commit))
