@@ -1290,6 +1290,10 @@
 
   "ai" 'go-import-add)
 
+;; goimports formats your code and also adds or removes imports as needed.
+;; goimports needs to be on your path. See https://godoc.org/code.google.com/p/go.tools/cmd/goimports
+(setq gofmt-command "goimports")
+
 (defun gofmt-before-save-ignoring-errors ()
   "Don't pop up syntax errors in a new window when running gofmt-before-save."
   (interactive)
