@@ -1053,12 +1053,15 @@
 
 (defun elisp-eval-current-sexp ()
   (interactive)
-  (print (eval (read (current-sexp)))))
+  (message "%s" (eval (read (current-sexp)))))
 
 (evil-leader/set-key-for-mode 'emacs-lisp-mode
-  "eb" (lambda() (interactive) (save-buffer) (eval-buffer))
-  "es" 'elisp-eval-current-sexp
-  "ex" 'eval-defun
+  ; Note that I'm saving the buffer before each eval because otherwise, the buffer gets saved after the eval,
+  ; (due to save-when-switching-windows setup) and the output from the buffer save overwrites the eval results
+  ; in the minibuffer.
+  "eb" (lambda() (interactive) (save-buffer-if-dirty) (eval-buffer))
+  "es" (lambda () (interactive) (save-buffer-if-dirty) (elisp-eval-current-sexp))
+  "ex" (lambda () (interactive) (save-buffer-if-dirty) (call-interactively 'eval-defun))
   "ee" 'view-echo-area-messages)
 
 ;; Indentation rules.
