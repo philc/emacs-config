@@ -1033,6 +1033,7 @@
 ;;
 (add-hook 'emacs-lisp-mode-hook (lambda () (modify-syntax-entry ?- "w" emacs-lisp-mode-syntax-table)))
 (evil-define-key 'normal emacs-lisp-mode-map
+  "gf" 'find-function-at-point
   "K"'(lambda ()
         (interactive)
         ;; Run `describe-function` and show its output in a help
