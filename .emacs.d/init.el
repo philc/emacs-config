@@ -18,6 +18,7 @@
                       coffee-mode ; For syntax highlighting coffeescript.
                       dired-details+ ; Hides all of the unnecessary file details in dired mode.
                       diminish ; For hiding and shortening minor modes in the modeline
+                      escreen
                       evil
                       evil-leader
                       evil-nerd-commenter
@@ -669,7 +670,7 @@
   "Vimlike ':q' behavior: close current window if there are split windows;
    otherwise, close current tab (elscreen)."
   (interactive)
-  (let ((one-elscreen (elscreen-one-screen-p))
+  (let ((one-escreen (= 1 (length (escreen-get-active-screen-numbers))))
         (one-window (one-window-p)))
     (cond
      ; if current tab has split windows in it, close the current live window
@@ -677,14 +678,14 @@
       (delete-window) ; delete the current window
       (balance-windows) ; balance remaining windows
       nil)
-     ; if there are multiple elscreens (tabs), close the current elscreen
-     ((not one-elscreen)
-      (elscreen-kill)
+     ; if there are multiple escreens (tabs), close the current escreen
+     ((not one-escreen)
+      (escreen-kill-screen)
       nil)
      ; if there is only one elscreen, just try to quit (calling elscreen-kill
      ; will not work, because elscreen-kill fails if there is only one
      ; elscreen)
-     (one-elscreen
+     (one-escreen
       (evil-quit)
       nil))))
 
@@ -771,11 +772,14 @@
 (projectile-global-mode)
 
 ;;
-;; elscreen (tabs on the window).
-;;
-(elscreen-start)
-(global-set-key (kbd "<A-M-left>") 'elscreen-previous) ; KeyRemap4Macbook translates M-J to these keys.
-(global-set-key (kbd "<A-M-right>") 'elscreen-next) ; KeyRemap4Macbook translates M-J to these keys.
+;; escreen (workspace tabs)
+;; I was previously using elscreen, but it has two major bugs: tab bars would get duplicated on random
+;; windows, and Emacs's drawing would begin flashing if you changed monitors or font size.
+(require 'escreen)
+(escreen-install)
+;; KeyRemap4Macbook translates M-j and M-k to these keys.
+(global-set-key (kbd "<A-M-left>") 'escreen-goto-prev-screen)
+(global-set-key (kbd "<A-M-right>") 'escreen-goto-next-screen)
 
 (define-key evil-normal-state-map (kbd "M-t") 'open-current-buffer-in-new-tab)
 (define-key evil-insert-state-map (kbd "M-t") 'open-current-buffer-in-new-tab)
@@ -784,10 +788,11 @@
   (interactive)
   ;; Exit out of insert mode when opening a new tab.
   (evil-change-to-initial-state)
-  ;; I'm using elscreen-clone here instead of elscreen-create so that the new tab has the current directory set
-  ;; properly, so projectile can be used immediately.
-  (elscreen-clone)
-  (delete-other-windows))
+  ;; I'm using the current buffer in the new tab so that the current directory is set as it was previously,
+  ;; which lets me begin using projectile immediately.
+  (let ((buffer (current-buffer)))
+    (escreen-create-screen)
+    (set-window-buffer (get-buffer-window) buffer)))
 
 ;;
 ;; Markdown
