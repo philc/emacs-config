@@ -64,6 +64,9 @@
       nil
     (string-equal (substring s 0 (length start)) start)))
 
+(defun string/join (strings separator)
+  (mapconcat 'identity strings separator))
+
 ;; Taken from http://www.emacswiki.org/emacs/ElispCookbook
 (defun chomp (str)
   "Chomp leading and tailing whitespace from str."
