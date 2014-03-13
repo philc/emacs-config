@@ -1447,3 +1447,7 @@
   "cn" 'next-error
   "cp" 'previous-error)
 
+;;
+;; Javascript
+;;
+(setq js-indent-level 2)
