@@ -89,7 +89,8 @@
         (let ((buf (cond
                     ;; I'm special casing shared_lib so that I can eval files from that project against the
                     ;; most recent repl.
-                    ((search "shared_lib" project-directory)
+                    ((or (search "shared_lib" project-directory)
+                         (search "ml_lib" project-directory))
                      (car nrepl-connection-list))
                     (project-directory
                      (car (-filter
