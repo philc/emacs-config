@@ -1426,3 +1426,24 @@
 ;; Java
 ;;
 (add-hook 'java-mode-hook (lambda () (setq c-basic-offset 2)))
+
+;; TODO(philc): It would be nice to parameterize this further and combine it with go-save-and-compile-fn.
+(defun java-save-and-compile-fn (command-name)
+  "Returns a function for the purpose of binding to a key which saves the current buffer and then
+   runs the given command in the root of the go project."
+  (lexical-let ((command-name command-name))
+    #'(lambda ()
+        (interactive)
+        (save-buffer)
+        (message command-name)
+        (without-confirmation
+         (lambda ()
+           (compile (concat "cd " (locate-dominating-file (buffer-file-name) "build.xml")
+                            " && " command-name)))))))
+
+(evil-leader/set-key-for-mode 'java-mode
+  ;; ant -find searches up the directory tree and finds the closest build file.
+  "cc" (java-save-and-compile-fn "ant debug -silent")
+  "cn" 'next-error
+  "cp" 'previous-error)
+
