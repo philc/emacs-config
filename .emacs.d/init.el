@@ -296,6 +296,7 @@
   "h" 'help
   "b" 'ido-switch-buffer
   "t" 'projectile-find-file
+  "p" 'escreen-tab-switcher
   "SPC" 'evil-fill-inside-paragraph ; Shortcut for Vim's gqip
   "i" 'evil-indent-inside-paragraph ; Shortcut to Vim's =ip
   "a" 'projectile-ack
@@ -648,6 +649,8 @@
 (define-key osx-keys-minor-mode-map (kbd "A-d") 'switch-to-lower-left)
 (define-key osx-keys-minor-mode-map (kbd "A-r") 'switch-to-upper-right)
 (define-key osx-keys-minor-mode-map (kbd "A-f") 'switch-to-lower-right)
+(define-key osx-keys-minor-mode-map (kbd "M-i") 'escreen-set-tab-alias)
+(define-key osx-keys-minor-mode-map (kbd "M-t") 'open-current-buffer-in-new-tab)
 
 (define-minor-mode osx-keys-minor-mode
   "A minor-mode for emulating osx keyboard shortcuts."
@@ -777,12 +780,31 @@
 ;; windows, and Emacs's drawing would begin flashing if you changed monitors or font size.
 (require 'escreen)
 (escreen-install)
+
 ;; KeyRemap4Macbook translates M-j and M-k to these keys.
 (global-set-key (kbd "<A-M-left>") 'escreen-goto-prev-screen)
 (global-set-key (kbd "<A-M-right>") 'escreen-goto-next-screen)
 
-(define-key evil-normal-state-map (kbd "M-t") 'open-current-buffer-in-new-tab)
-(define-key evil-insert-state-map (kbd "M-t") 'open-current-buffer-in-new-tab)
+;; I alias (nickname) each of my tabs (escreen's numbered screens).
+(setq escreen-number->alias (make-hash-table))
+
+(defun escreen-set-tab-alias (alias)
+  "Give the current tab an alias. This alias is shown by escreen-tab-switcher."
+  (interactive "sTab alias: ")
+  (when (> (length alias) 0)
+    (puthash (escreen-get-current-screen-number) alias escreen-number->alias)))
+
+(defun escreen-tab-switcher ()
+  "Shows a menu with tab names and numbers. Type the tab number to switch to it."
+  (interactive)
+  (lexical-let* ((get-display-name (lambda (i) (->> (or (gethash i escreen-number->alias) "unnamed")
+                                                    (format "%d.%s" (+ i 1)))))
+                 (tab-names (mapcar get-display-name (escreen-get-active-screen-numbers))))
+    (message (string/join tab-names "  "))
+    (lexical-let* ((input (string (read-char)))
+                   (is-digit (and (string= (number-to-string (string-to-number input)) input))))
+      (when is-digit
+          (escreen-goto-screen (- (string-to-number input) 1))))))
 
 (defun open-current-buffer-in-new-tab ()
   (interactive)
@@ -1389,7 +1411,7 @@
               (dired project)
               ;; If we invoke this inside of a split, don't set the tab's title.
               (when (= 1 (length (window-list)))
-                (elscreen-screen-nickname (file-name-nondirectory project)))))))))
+                (escreen-set-tab-alias (file-name-nondirectory project)))))))))
 
 ;;
 ;; JSON
