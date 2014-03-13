@@ -1030,9 +1030,6 @@
      ;; Ruby mode defines this as "next block". I define it globally as "next window".
      (define-key ruby-mode-map (kbd "C-M-n") nil)))
 
-;; Insert matching delimiters; unindent end blocks after you type them.
-(add-hook 'ruby-mode-hook (lambda () (ruby-electric)))
-
 ;;
 ;; Emacs Lisp (elisp)
 ;;
