@@ -113,8 +113,8 @@
 
 ;; Colorscheme
 (load-theme 'tangotango t) ; A reasonable color scheme which lives in my .emacs.d.
-; A font face size of 160 can show 110 chars before wrapping on a 1920x1200 resolution.
-(set-face-attribute 'default nil :height 160)
+; A font face size of 140 can show 110 chars before wrapping on a 1920x1200 resolution.
+(set-face-attribute 'default nil :height 140)
 
 ;; Whitespace & line wrapping.
 (global-whitespace-mode t)
