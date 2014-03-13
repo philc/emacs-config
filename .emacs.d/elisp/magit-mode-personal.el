@@ -8,7 +8,7 @@
      ;; disorienting. I'm defining a whitelist of keys that I actually use, so this mode feels less
      ;; erorr-prone.
      (evil-define-key 'normal magit-mode-map
-       ";gg" 'magit-display-process
+       ";gg" 'magit-process
        "n" 'magit-goto-next-section
        "p" 'magit-goto-previous-section
        "L" 'magit-key-mode-popup-logging
@@ -152,7 +152,7 @@
     (preserve-selected-window
      (lambda ()
        (funcall f)
-       (magit-display-process)))))
+       (magit-process)))))
 
 (defun git-pull ()
   (interactive)
