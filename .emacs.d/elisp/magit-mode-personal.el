@@ -13,14 +13,6 @@
        "p" 'magit-goto-previous-section
        "L" 'magit-key-mode-popup-logging
        (kbd "RET") 'magit-visit-item)
-       ;; These scroll the diff window. Normally these are mapped to space and shift-space in magit.
-       ;; TODO(philc): Uncomment these once the latest magit lands in melpa.
-       ;; (define-key magit-mode-map (kbd "C-d") '(lambda () (interactive)
-       ;;                                           (magit-show-item-or-scroll 'View-scroll-half-page-forward)))
-       ;; (define-key magit-mode-map (kbd "C-u") '(lambda () (interactive)
-       ;;                                           (magit-show-item-or-scroll 'View-scroll-half-page-backward)))
-       ;; (define-key magit-mode-map (kbd "C-d") 'magit-show-item-or-scroll-up)
-       ;; (define-key magit-mode-map (kbd "C-u") 'magit-show-item-or-scroll-down)
 
      (evil-define-key 'normal git-commit-mode-map
        ";wk" 'git-commit-abort
@@ -99,8 +91,8 @@
     (kbd "SPC") 'magit-goto-next-section
     ;; I use C-d and C-u for scrolling the log view, and d and u for scrolling the diff view showing the
     ;; diff for the focused commit.
-    "u" 'magit-show-item-or-scroll-up
-    "d" 'magit-show-item-or-scroll-down))
+    "u" (lambda () (interactive) (magit-show-item-or-scroll 'View-scroll-half-page-backward))
+    "d" (lambda () (interactive) (magit-show-item-or-scroll 'View-scroll-half-page-forward))))
 
 (add-hook 'magit-status-mode-hook 'init-magit-status-mode-keybindings)
 (defun init-magit-status-mode-keybindings ()
