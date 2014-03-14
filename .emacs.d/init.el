@@ -292,6 +292,23 @@
 (define-key evil-normal-state-map "gq" 'evil-fill)
 (define-key evil-normal-state-map "-" 'evil-indent-without-move)
 
+;; Evil uses the current file's mode's definition of a paragraph, which is often surprising, e.g. a single
+;; item in a bulleted list in Markdown mode. Instead, I've defined a paragraph to be hunks of text separated
+;; by newlines. That's typically what I would expect of a paragraph. You can still use Evil's paragraph
+;; definition using P.
+(define-key evil-outer-text-objects-map "p" 'evil-paragraph-from-newlines)
+(define-key evil-outer-text-objects-map "P" 'evil-a-pagraph)
+
+(evil-define-text-object evil-paragraph-from-newlines (count &optional beg end type)
+  "Select a paragraph separated by newlines."
+  :type line
+  ;; These two vars are set by the current programming mode. Set them to their default text mode values
+  ;; temporarily while we select the paragraph. The implementation of evil-move-paragraph invokes
+  ;; `forward-paragraph`, which uses these variables.
+  (let ((paragraph-start "\f\\|[     ]*$")
+        (paragraph-separate "[  ]*$"))
+    (evil-an-object-range count beg end type #'evil-move-paragraph nil nil t)))
+
 (evil-leader/set-key
   "h" 'help
   "b" 'ido-switch-buffer
