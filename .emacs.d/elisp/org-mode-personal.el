@@ -17,12 +17,18 @@
 
 (add-hook 'org-mode-hook 'evil-org-mode) ;; only load with org-mode
 
-(defun init-org-mode-buffer ()
+(defun init-org-mode-personal ()
   ;; This enables "clean mode", such that sublists use whitespace for indentation (ala markdown) instead of
   ;; many stars.
   (setq org-startup-indented t))
 
-(eval-after-load 'org '(init-org-mode-buffer))
+(eval-after-load 'org '(init-org-mode-personal))
+
+(defun init-org-mode-buffer ()
+  ;; Since I don't use fill mode on Org Mode headers, don't highlight long lines.
+  (setq-local whitespace-style '(face trailing)))
+
+(add-hook 'org-mode-hook 'init-org-mode-buffer)
 
 ;; normal state shortcuts
 (evil-define-key 'normal evil-org-mode-map
