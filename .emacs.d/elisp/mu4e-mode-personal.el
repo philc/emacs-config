@@ -101,6 +101,7 @@
        "e" 'mu4e-mark-execute-all
        "q" 'vimlike-quit
        (kbd "RET") 'mu4e-headers-view-message
+       "o" 'mu4e-headers-view-message
        "ESC" nil
        "a" 'mu4e-reply-all
        "r" 'mu4e-compose-reply
@@ -127,8 +128,9 @@
        "a" 'mu4e-compose-reply
        ;; Opens the URL under the cursor.
        (kbd "RET") (lambda () (interactive) (execute-kbd-macro (kbd "M-RET")))
-       "go1" (lambda () (interacitve) (mu4e-view-go-to-url 1))
-       "go2" (lambda () (interacitve) (mu4e-view-go-to-url 2))
+       "go" nil
+       "go1" (lambda () (interacitve) (call-interactively 'mu4e-view-go-to-url 1))
+       "go2" (lambda () (interacitve) (call-interactively 'mu4e-view-go-to-url 2))
        "go3" (lambda () (interacitve) (mu4e-view-go-to-url 3))
        "gl" (lambda ()
               (interactive)
