@@ -11,13 +11,13 @@
 (require 'mu4e)
 
 (setq mu4e-mu-binary "/usr/local/Cellar/mu/0.9.9.5/bin/mu")
-(setq mu4e-maildir "~/.mail/personal")
-;; (setq mu4e-maildir "~/.mail/work")
-(setq mu4e-drafts-folder "/[Gmail].Drafts")
+(setq mu4e-maildir "~/.mail/work")
 (setq mu4e-sent-folder   "/[Gmail].Sent Mail")
-(setq mu4e-trash-folder  "/[Gmail].Trash")
 (setq mu4e-refile-folder  "/[Gmail].All Mail")
-
+;; Note that I'm not using the Gmail Drafts and Trash folders. Sometimes offlineimap tries to create these
+;; directories for some reason, which fails, since it already exists in Gmail.
+;; (setq mu4e-trash-folder  "/[Gmail].Trash")
+;; (setq mu4e-drafts-folder "/Drafts")
 
 ;; Use offline imap when fetching and reindexing mail.
 (setq mu4e-get-mail-command "offlineimap")
@@ -31,7 +31,7 @@
       ("/2hold"               . ?2)
       ("/[Gmail].All Mail"    . ?a)))
 
-(setq user-mail-address "phil.crosby@gmail.com"
+(setq user-mail-address "phil@liftoff.io"
       user-full-name  "Phil Crosby")
 
 ;; Don't save messages to Sent Messages, Gmail/IMAP takes care of this.
