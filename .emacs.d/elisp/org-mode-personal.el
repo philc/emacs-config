@@ -60,8 +60,16 @@
   (kbd "<C-tab>") 'org-expand-top-level-parent
   (kbd "TAB") 'org-cycle)
 
+(defun preview-org ()
+  "Pipes the buffer's contents into a script which renders the markdown as HTML and opens in a browser."
+  (interactive)
+  ;; This convert_org_to_markdown.rb is a primitive script I've written which fits my needs.
+  (call-process-region (point-min) (point-max) "/bin/bash" nil nil nil "-c"
+                       "convert_org_to_markdown.rb | markdown_page.rb | bcat"))
+
 (evil-leader/set-key-for-mode 'org-mode
-  "c" 'org-capture-item-and-prepend-to-subtree)
+  "c" 'org-capture-item-and-prepend-to-subtree
+  "vv" 'preview-org)
 
 ;; normal & insert state shortcuts.
 (mapc (lambda (state)
