@@ -11,7 +11,7 @@
 (require 'mu4e)
 
 (setq mu4e-mu-binary "/usr/local/Cellar/mu/0.9.9.5/bin/mu")
-(setq mu4e-maildir "~/.mail/work")
+(setq mu4e-maildir "~/.mail/work") ; Note to self: update your ~/.authinfo when changing accounts.
 (setq mu4e-sent-folder   "/[Gmail].Sent Mail")
 (setq mu4e-refile-folder  "/[Gmail].All Mail")
 ;; Note that I'm not using the Gmail Drafts and Trash folders. Sometimes offlineimap tries to create these
@@ -129,9 +129,9 @@
        ;; Opens the URL under the cursor.
        (kbd "RET") (lambda () (interactive) (execute-kbd-macro (kbd "M-RET")))
        "go" nil
-       "go1" (lambda () (interacitve) (call-interactively 'mu4e-view-go-to-url 1))
-       "go2" (lambda () (interacitve) (call-interactively 'mu4e-view-go-to-url 2))
-       "go3" (lambda () (interacitve) (mu4e-view-go-to-url 3))
+       "go1" (lambda () (interactive) (mu4e-view-go-to-url 1))
+       "go2" (lambda () (interactive) (mu4e-view-go-to-url 2))
+       "go3" (lambda () (interactive) (mu4e-view-go-to-url 3))
        "gl" (lambda ()
               (interactive)
               (switch-to-buffer-other-window "*mu4e-headers*")
