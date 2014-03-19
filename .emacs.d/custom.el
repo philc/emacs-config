@@ -6,10 +6,6 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(elscreen-buffer-to-nickname-alist (quote (("[Ss]hell" . "shell") ("compilation" . "compile") ("-telnet" . "telnet") ("*WL:Message*" . "Wanderlust"))))
- '(elscreen-display-screen-number nil)
- '(elscreen-display-tab 12)
- '(elscreen-tab-display-kill-screen nil)
  '(org-agenda-files (quote ("~/test.org"))))
 
 (custom-set-faces
@@ -17,9 +13,6 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(elscreen-tab-control-face ((t (:background "#202424" :foreground "white" :underline t))) t)
- '(elscreen-tab-current-screen-face ((t (:background "#505454" :foreground "white"))) t)
- '(elscreen-tab-other-screen-face ((t (:background "black" :foreground "#bbbbbb" :underline t))) t)
  '(mu4e-cited-1-face ((t (:inherit font-lock-builtin-face :weight normal))))
  '(mu4e-cited-2-face ((t (:inherit font-lock-type-face :weight normal))))
  '(mu4e-cited-3-face ((t (:inherit font-lock-variable-name-face :weight normal))))
