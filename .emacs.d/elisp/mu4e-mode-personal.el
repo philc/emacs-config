@@ -160,11 +160,14 @@
        ;; means. It's in message-send-mail in message.el. Answer "y" automatically.
        "s" (lambda () (interactive) (without-confirmation 'message-send-and-exit)))))
 
+;; Trim the number of fields shown in the email view. This is customizable. See mu4e-view.el for a full list.
+(setq mu4e-view-fields '(:from :to  :cc :subject :date :tags :attachments))
+
 ;; NOTE(philc): This doesn't work. Tracking at
 ;; https://github.com/djcb/mu/issues/373
 (defun mu4e-reply-all ()
+  (interactive)
   (mu4e-compose-reply))
-  ;; (interactive)
   ;; (flet ((mu4e~draft-user-wants-reply-all (&rest args) t))
     ;; (mu4e-compose-reply)))
 
