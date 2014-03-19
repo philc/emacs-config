@@ -1115,6 +1115,14 @@
 ;;
 (add-to-list 'auto-mode-alist '("\\.erb$" . html-mode))
 
+(defun preview-html ()
+  "Pipes the buffer's contents into a script which renders the markdown as HTML and opens in a browser."
+  (interactive)
+  (call-process-region (point-min) (point-max) "/bin/bash" nil nil nil "-c" "bcat"))
+
+(evil-leader/set-key-for-mode 'html-mode
+  "vv" 'preview-html)
+
 ;;
 ;; SCSS mode, for editing SCSS files.
 ;;
