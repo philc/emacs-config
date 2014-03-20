@@ -323,7 +323,9 @@
   "D" (lambda () (interactive) (-> (buffer-file-name) file-name-directory dired))
   ;; "vt" 'multi-term
   ;; "v" is a mnemonic prefix for "view X".
-  "gs" 'magit-status-and-focus-unstaged
+  "gs" '(lambda() (interactive)
+          (save-buffer-if-dirty)
+          (magit-status-and-focus-unstaged))
   "gl" 'magit-log
   "vu" 'mu4e
   "vp" 'open-root-of-project-in-dired
