@@ -527,11 +527,6 @@
 
 ;; Save buffers whenever they lose focus.
 ;; This obviates the need to hit the Save key thousands of times a day. Inspired by http://goo.gl/2z0g5O.
-;; TODO(philc): Don't save if we're switching to the minibuffer.
-(defun save-buffer-if-dirty ()
-  (when (and buffer-file-name (buffer-modified-p))
-    (save-buffer)))
-
 ;; This hook is Emacs 24.4+.
 (add-hook 'focus-out-hook 'save-buffer-if-dirty)
 

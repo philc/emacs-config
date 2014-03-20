@@ -98,3 +98,7 @@
   "Like define-key, but takes a variable number of arguments -- two per key binding pair."
   (dolist (pair (partition key-and-fn-pairs 2))
     (define-key keymap (first pair) (second pair))))
+
+(defun save-buffer-if-dirty ()
+  (when (and buffer-file-name (buffer-modified-p))
+    (save-buffer)))
