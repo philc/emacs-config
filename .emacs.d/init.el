@@ -10,6 +10,7 @@
 
 (defvar my-packages '(ace-jump-mode ; Jump to any text on screen in a few keystrokes. Like Vim's EasyMotion.
                       ac-nrepl
+                      ag ; Silver searcher integration for Emacs
                       autopair ; Insert matching delimiters, e.g. insert closing braces.
                       auto-complete
                       cider ; repl for Clojure code evaluation.
