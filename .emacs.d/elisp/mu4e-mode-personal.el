@@ -34,6 +34,9 @@
 (setq user-mail-address "phil@liftoff.io"
       user-full-name  "Phil Crosby")
 
+;; This shouldn't be necessary, but see https://github.com/djcb/mu/issues/399.
+(setq mu4e-user-mail-address-list '(user-mail-address))
+
 ;; Don't save messages to Sent Messages, Gmail/IMAP takes care of this.
 (setq mu4e-sent-messages-behavior 'delete)
 
@@ -132,6 +135,7 @@
        "go1" (lambda () (interactive) (mu4e-view-go-to-url 1))
        "go2" (lambda () (interactive) (mu4e-view-go-to-url 2))
        "go3" (lambda () (interactive) (mu4e-view-go-to-url 3))
+       "go4" (lambda () (interactive) (mu4e-view-go-to-url 4))
        "gl" (lambda ()
               (interactive)
               (switch-to-buffer-other-window "*mu4e-headers*")
