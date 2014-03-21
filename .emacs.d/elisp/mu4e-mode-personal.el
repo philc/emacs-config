@@ -20,7 +20,7 @@
 ;; (setq mu4e-drafts-folder "/Drafts")
 
 ;; Use offline imap when fetching and reindexing mail.
-(setq mu4e-get-mail-command "offlineimap")
+(setq mu4e-get-mail-command "offlineimap -a work")
 (setq mu4e-update-interval 60) ; Fetch and index new maile very 60s.
 
 ;; Folder shortcuts for the "jump-to-maildir" command.
@@ -35,7 +35,7 @@
       user-full-name  "Phil Crosby")
 
 ;; This shouldn't be necessary, but see https://github.com/djcb/mu/issues/399.
-(setq mu4e-user-mail-address-list '(user-mail-address))
+(setq mu4e-user-mail-address-list (list user-mail-address))
 
 ;; Don't save messages to Sent Messages, Gmail/IMAP takes care of this.
 (setq mu4e-sent-messages-behavior 'delete)
