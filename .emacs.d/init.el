@@ -944,6 +944,9 @@
   (evil-define-key 'normal markdown-mode-map
     ";l" 'markdown-cleanup-list-numbers
     ";vv" 'preview-markdown)
+
+  (define-key markdown-mode-map (kbd "<tab>") nil) ; Normally bound to markdown-cycle.
+
   (evil-define-key 'normal markdown-mode-map
     ;; Autocomplete setext headers by typing "==" or "--" on the header's line in normal mode.
     (kbd "==") '(lambda () (interactive) (insert-markdown-header "=="))
