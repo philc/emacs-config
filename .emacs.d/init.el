@@ -33,6 +33,7 @@
                       midje-mode ; For editing clojure tests
                       ;; multi-term ; Display many termianls inside emacs, not just one.
                       org ; For outlining. This is bundled with Emacs, but I'm using the latest version.
+                      outline-magic ; Extensions to ouline mode, which I use heavily in markdown mode.
                       powerline ; Improve the appearance & density of the Emacs status bar.
                       projectile ; Find file in project (ala CTRL-P).
                       rainbow-delimiters ; Highlight parentheses in rainbow colors.
@@ -863,7 +864,82 @@
   (interactive)
   (call-process-region (point-min) (point-max) "/bin/bash" nil nil nil "-c" "markdown_page.rb | bcat"))
 
+(defun setup-markdown-buffer ()
+  (interactive)
+  ;; markdown-mode has support for outline mode, but the implementations is that headings are folded. For my
+  ;; purposes, I like instead to fold subtrees of lists.
+  (setq-local outline-regexp "[ ]*\\*") ; matches a leading bullet point
+  ;; markdown-mode sets this to its own function, but this lisp-outline-level is more correct with our regexp.
+  (setq-local outline-level 'lisp-outline-level))
+
+;; TODO(philc): Move these util functions into an emacs utils file.
+(defun util/line-indentation-level (line)
+  "The number of space characters prefixing a line."
+  (string-match "\\([ ]*\\)" line)
+  (length (match-string 1 line)))
+
+(defun util/replace-current-line (new-line)
+  "Replaces hte current line with the new one."
+  (save-excursion
+   (delete-region (line-beginning-position) (line-end-position))
+   (insert new-line)))
+
+(defun util/get-current-line ()
+  "Returns the text (without string properties) of the current line."
+  (buffer-substring-no-properties (line-beginning-position) (line-end-position)))
+
+(defun markdown-get-list-item-region ()
+  "Returns '(start, end) for the markdown list item under the cursor, excluding subtrees."
+  (interactive)
+  (save-excursion
+    (let ((start (line-beginning-position))
+          (end (line-end-position)))
+      (next-line)
+      ;; Stop the search at left-aligned text (which is an approximation for detecting headings).
+      (while (not (or (string/blank? (util/get-current-line))
+                      (string-match "^[ ]*\\*" (util/get-current-line))
+                      (string-match "^[^ *]" (util/get-current-line))))
+        (setq end (line-end-position))
+        (next-line))
+      (list start end))))
+
+(defun markdown-perform-promote (should-promote)
+  "Promotes the list item under the cursor, excluding subtrees"
+  (let* ((region (markdown-get-list-item-region))
+         (indent-amount (if should-promote -2 2)))
+    (indent-rigidly (first region) (second region) indent-amount)))
+
+(defun markdown-perform-promote-subtree (should-promote)
+  "Promotes hte list under under the cursor, and also promotes all subtrees."
+  ;; This show-subtree call is important because this indentation code does not work with collapsed subtrees.
+  ;; They are converted into raw ellipses characters, and so their contents would otherwise b elost.
+  (show-subtree)
+  (let* ((line (util/get-current-line))
+         (start-level (util/line-indentation-level line))
+         (indent-amount (if should-promote -2 2))
+         (indent-fn (lambda ()
+                      (indent-rigidly (line-beginning-position) (line-end-position) indent-amount))))
+    (save-excursion
+      (funcall indent-fn)
+      (next-line)
+      (while (and (setq line (util/get-current-line))
+                  (or (string/blank? line)
+                      (> (util/line-indentation-level line) start-level)))
+        (when (not (string/blank? line))
+          (funcall indent-fn))
+        (next-line)))))
+
+(defun markdown-promote () (interactive) (markdown-perform-promote t))
+(defun markdown-demote () (interactive) (markdown-perform-promote nil))
+(defun markdown-promote-subtree () (interactive) (markdown-perform-promote-subtree t))
+(defun markdown-demote-subtree () (interactive) (markdown-perform-promote-subtree nil))
+
+(add-hook 'markdown-mode-hook 'setup-markdown-buffer)
+
 (defun setup-markdown-mode ()
+  ;; I use markdown heavily for outlining. outline-magic provides handy functions for cycling the visibility
+  ;; of subtrees, the same way org mode doe sit.
+  (require 'outline-magic)
   ;; NOTE(philc): For some reason I can't get evil-leaer/set-leader-for-key to work with gfm-mode.
   (evil-define-key 'normal markdown-mode-map
     ";l" 'markdown-cleanup-list-numbers
@@ -872,21 +948,12 @@
     ;; Autocomplete setext headers by typing "==" or "--" on the header's line in normal mode.
     (kbd "==") '(lambda () (interactive) (insert-markdown-header "=="))
     (kbd "--") '(lambda () (interactive) (insert-markdown-header "--"))
-    (kbd "C-S-L") 'evil-shift-paragraph-right
-    (kbd "C-S-H") 'evil-shift-paragraph-left)
-  ;; Note that while in insert mode, using "evil-shift-paragraph-right" while the cursor is at the end of a
-  ;; line will shift the paragraph incorrectly. That's why we jump to normal mode first, as a workaround.
+    (kbd "TAB") '(lambda () (interactive) (save-excursion (outline-cycle)))
+    (kbd "C-S-L") 'markdown-demote
+    (kbd "C-S-H") 'markdown-promote)
   (evil-define-key 'insert markdown-mode-map
-    (kbd "C-S-H") '(lambda ()
-                     (interactive)
-                     (evil-change-to-initial-state)
-                     (call-interactively 'evil-shift-paragraph-left)
-                     (evil-append nil))
-    (kbd "C-S-L") '(lambda ()
-                     (interactive)
-                     (evil-change-to-initial-state)
-                     (call-interactively 'evil-shift-paragraph-right)
-                     (evil-append nil)))
+    (kbd "C-S-H") 'markdown-promote
+    (kbd "C-S-L") 'markdown-demote)
   (mapc (lambda (state)
           (evil-define-key state markdown-mode-map
             (kbd "C-S-K") 'markdown-move-up
