@@ -16,6 +16,10 @@
 (defun dec (i)
   (- i 1))
 
+(defun constantly (x)
+  (lexical-let ((x x))
+    (lambda (&rest args) x)))
+
 ;;
 ;; Threading (thrush) macros, ported from Clojure.
 ;; Taken from https://github.com/sroccaserra/emacs/blob/master/tools.el
@@ -67,11 +71,14 @@
 (defun string/join (strings separator)
   (mapconcat 'identity strings separator))
 
+(defun string/blank? (s)
+  (string= (chomp s) ""))
+
 ;; Taken from http://www.emacswiki.org/emacs/ElispCookbook
+;; Also called "strip" or "trim".
 (defun chomp (str)
   "Chomp leading and tailing whitespace from str."
-  (while (string-match "\\`\n+\\|^\\s-+\\|\\s-+$\\|\n+\\'"
-                       str)
+  (while (string-match "\\`\n+\\|^\\s-+\\|\\s-+$\\|\n+\\'" str)
     (setq str (replace-match "" t t str)))
   str)
 
