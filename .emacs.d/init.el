@@ -53,6 +53,7 @@
 (require 'cl)
 (add-to-list 'load-path "~/.emacs.d/elisp")
 (require 'lisp-helpers-personal)
+(require 'emacs-utils)
 
 ;; Anecdotally, this reduces the amount of display flicker on some Emacs startup.
 (setq redisplay-dont-pause t)
@@ -872,21 +873,6 @@
   ;; markdown-mode sets this to its own function, but this lisp-outline-level is more correct with our regexp.
   (setq-local outline-level 'lisp-outline-level))
 
-;; TODO(philc): Move these util functions into an emacs utils file.
-(defun util/line-indentation-level (line)
-  "The number of space characters prefixing a line."
-  (string-match "\\([ ]*\\)" line)
-  (length (match-string 1 line)))
-
-(defun util/replace-current-line (new-line)
-  "Replaces hte current line with the new one."
-  (save-excursion
-   (delete-region (line-beginning-position) (line-end-position))
-   (insert new-line)))
-
-(defun util/get-current-line ()
-  "Returns the text (without string properties) of the current line."
-  (buffer-substring-no-properties (line-beginning-position) (line-end-position)))
 
 (defun markdown-get-list-item-region ()
   "Returns '(start, end) for the markdown list item under the cursor, excluding subtrees."

@@ -82,30 +82,8 @@
     (setq str (replace-match "" t t str)))
   str)
 
-(defun with-env-var (name value fn)
-  "Temporarily sets an env var to the given value and excutes fn."
-  (let ((original-value (getenv name)))
-    (unwind-protect
-        (progn
-          (setenv name value)
-          (funcall fn))
-      (setenv name original-value))))
-
-(defun without-confirmation (fn)
-  (flet ((y-or-n-p (&rest args) t)) ; Skip the confirmation prompts.
-    (funcall fn)))
-
 ;; Taken from https://groups.google.com/forum/#!topic/gnu.emacs.help/_p2-GXAANgw. Requires CL.
 (defun partition (l n)
   "Return a list of L's consecutive sublists of length N."
   (assert (zerop (mod (length l) n)))
   (loop for l on l by #'(lambda (l) (nthcdr n l)) collect (subseq l 0 n)))
-
-(defun define-keys (keymap &rest key-and-fn-pairs)
-  "Like define-key, but takes a variable number of arguments -- two per key binding pair."
-  (dolist (pair (partition key-and-fn-pairs 2))
-    (define-key keymap (first pair) (second pair))))
-
-(defun save-buffer-if-dirty ()
-  (when (and buffer-file-name (buffer-modified-p))
-    (save-buffer)))
