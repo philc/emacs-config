@@ -44,12 +44,13 @@
     (evil-cider-eval (first region) (second region))))
 
 (defun cider-show-cider-buffer ()
-  (interactive)
   "Shows the nrepl buffer, but does not focus it."
+  (interactive)
   (command-execute 'cider-switch-to-repl-buffer)
   (command-execute 'cider-switch-to-last-clojure-buffer))
 
 (defun cider-clear-buffer-inside-cider-buffer ()
+  "Switches to the cider buffer, clears it, and refocused to the original buffer."
   (interactive)
   (command-execute 'cider-switch-to-repl-buffer)
   (cider-clear-buffer)
@@ -121,7 +122,7 @@
   (my-cider-eval-and-print-to-repl (cider-defun-at-point)))
 
 (defun my-cider-eval-current-sexp (&optional print-result)
-  "Eval the sexp the current is currently in. In Emacs' syntax table, this is called a list of expressions."
+  "Eval the sexp the cursor is currently in. In Emacs' syntax table, this is called a list of expressions."
   (interactive)
   (let ((form (current-sexp)))
     (if print-result
@@ -153,9 +154,6 @@
 ;; Highlight parentheses in rainbow colors.
 (require 'rainbow-delimiters)
 (add-hook 'prog-mode-hook 'rainbow-delimiters-mode)
-;; NOTE(philc): rainbow delimiters mode seems to be broken in the latest cider. Perhaps upgrade
-;; rainbow-delimieters.
-;; (add-hook 'cider-mode-hook 'rainbow-delimiters-mode)
 
 ;; Clojure indentation rules
 (eval-after-load 'clojure-mode
