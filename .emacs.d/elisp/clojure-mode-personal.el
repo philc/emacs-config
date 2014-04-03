@@ -56,8 +56,6 @@
   (cider-clear-buffer)
   (command-execute 'cider-switch-to-last-clojure-buffer))
 
-;; Disable the prompt we get when killing a buffer with a process.
-(setq kill-buffer-query-functions (remq 'process-kill-buffer-query-function kill-buffer-query-functions))
 
 (defun my-cider-restart-nrepl ()
   "Restarts or starts afresh the nrepl."

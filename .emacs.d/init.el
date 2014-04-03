@@ -162,6 +162,10 @@
 (define-key minibuffer-local-map (kbd "C-w") 'backward-kill-word)
 (define-key minibuffer-local-map (kbd "C-h") 'backward-delete-char)
 
+;; Disable the prompt we get when killing a buffer with a process. This affects clojure mode in particular,
+;; when we want to restart the nrepl process.
+(setq kill-buffer-query-functions (remq 'process-kill-buffer-query-function kill-buffer-query-functions))
+
 ;; RecentF mode is the Emacs minor mode used when opening files via C-x C-f.
 (require 'recentf)
 (define-key recentf-mode-map (kbd "C-w") 'backward-kill-word)
