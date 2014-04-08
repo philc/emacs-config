@@ -56,6 +56,49 @@
   (cider-clear-buffer)
   (command-execute 'cider-switch-to-last-clojure-buffer))
 
+(defun my-cider-defun-name-at-point ()
+  "Returns the name of the function at point, and nil if it can't be parsed."
+  ;; This should work with both defn and deftest.
+  (let* ((form (cider-defun-at-point))
+         (result (string-match "(def[^ ]* \\([^ ]*\\)" form)))
+    (when result
+      (match-string 1 form))))
+
+(defun my-cider-run-test-at-point ()
+  "Runs the clojure.test under the cursor by invoking the function defined by the test in the cider repl."
+  (interactive)
+  ;; Note that prior to running the test, we must eval its code in case its definition has been changed
+  ;; recently. We use cider-load-current-buffer instead of cider-eval-defun-at-point because
+  ;; load-current-buffer properly sets the file metadata for the function definition, so that test failure
+  ;; output has the source file and line number of the failing test, as expected.
+  (save-buffer)
+  (cider-load-current-buffer)
+  (sleep-for 0.1) ; cider-load-current-buffer is asynchronous unfortunately.
+  ;; If there was a compile error, halt. Otherwise we'll mask the compile error which was printed to the
+  ;; minibuffer.
+  (if (my-cider-buffer-has-compile-errors)
+      nil
+    (let ((fn-name (my-cider-defun-name-at-point)))
+      ;; TODO(philc): It would be nice if we showed whether the test passed or failed in the minibuffer.
+      ;; Currently we just show "nil", and one must look to the repl to see the test output.
+      (when fn-name
+        (cider-interactive-eval (concat "(" fn-name ")"))))))
+
+(defun my-cider-buffer-has-compile-errors ()
+  "Returns true if the current buffer has been evaled previously and has a compile error."
+  (interactive)
+  ;; cider doesn't expose this information directly. cider-highlight-compilation-errors will set an overlay on
+  ;; the buffer if there is a compile error. This fn checks for that font face.
+  (let ((overlays ))
+    (->> (overlays-in (point-min) (point-max))
+         (remove-if-not (lambda (o) (overlay-get o 'cider-note-p)))
+         length
+         (< 0))))
+
+(defun my-cider-run-tests-in-ns ()
+  "Runs any clojure.test tests defined in the current namespace."
+  (interactive)
+  (cider-interactive-eval "(clojure.test/run-tests)"))
 
 (defun my-cider-restart-nrepl ()
   "Restarts or starts afresh the nrepl."
@@ -78,6 +121,7 @@
         (funcall f)))))
 
 ;; Based on `cider-switch-to-relevant-repl-buffer` in cider.el.
+;; NOTE(philc): I think this needs further tuning. It doesn't work in all circumstances.
 (defun nrepl-connection-for-buffer (buffer)
   "Returns either the corresponding nrepl buffer for the given buffer, or a string error message."
   (if (not (cider-connected-p))
@@ -147,7 +191,15 @@
   "eps" (lambda () (interactive) (with-nrepl-connection-of-current-buffer
                                   (lambda () (my-cider-eval-current-sexp t))))
   "epx" (lambda () (interactive) (with-nrepl-connection-of-current-buffer
-                                  'my-cider-eval-and-print-defun-at-point)))
+                                  'my-cider-eval-and-print-defun-at-point))
+  "rt" (lambda ()
+         (interactive)
+         (with-nrepl-connection-of-current-buffer 'my-cider-run-test-at-point))
+  "rT" (lambda ()
+         (interactive)
+         (save-buffer)
+         (with-nrepl-connection-of-current-buffer 'cider-load-current-buffer)
+         (with-nrepl-connection-of-current-buffer 'my-cider-run-tests-in-ns)))
 
 ;; Highlight parentheses in rainbow colors.
 (require 'rainbow-delimiters)
