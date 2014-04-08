@@ -6,6 +6,7 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
+ '(cider-repl-pop-to-buffer-on-connect nil)
  '(org-agenda-files (quote ("~/test.org"))))
 
 (custom-set-faces
@@ -13,6 +14,7 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
+ '(cider-error-highlight-face ((t (:inherit nil :underline "brown4"))))
  '(mu4e-cited-1-face ((t (:inherit font-lock-builtin-face :weight normal))))
  '(mu4e-cited-2-face ((t (:inherit font-lock-type-face :weight normal))))
  '(mu4e-cited-3-face ((t (:inherit font-lock-variable-name-face :weight normal))))
