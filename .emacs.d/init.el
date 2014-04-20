@@ -797,9 +797,10 @@
 (projectile-global-mode)
 
 ;;
-;; escreen (workspace tabs)
-;; I was previously using elscreen, but it has two major bugs: tab bars would get duplicated on random
-;; windows, and Emacs's drawing would begin flashing if you changed monitors or font size.
+;; escreen (tabs, one per "workspace")
+;;
+;; I was previously using elscreen, but it has two major bugs: tab bars would get rendered on random
+;; windows, and Emacs's redraws would begin flashing if you changed monitors or font size.
 (require 'escreen)
 (escreen-install)
 
@@ -817,16 +818,20 @@
     (puthash (escreen-get-current-screen-number) alias escreen-number->alias)))
 
 (defun escreen-tab-switcher ()
-  "Shows a menu with tab names and numbers. Type the tab number to switch to it."
+  "Shows a menu in the minibuffer of tab names and numbers. Type the tab number to switch to it."
   (interactive)
-  (lexical-let* ((get-display-name (lambda (i) (->> (or (gethash i escreen-number->alias) "unnamed")
-                                                    (format "%d.%s" (+ i 1)))))
+  (lexical-let* ((get-display-name (lambda (i)
+                                     (let ((template (if (= i (escreen-get-current-screen-number))
+                                                         "*%d.%s*"
+                                                       "%d.%s")))
+                                       (->> (or (gethash i escreen-number->alias) "unnamed")
+                                            (format template (+ i 1))))))
                  (tab-names (mapcar get-display-name (escreen-get-active-screen-numbers))))
     (message (string/join tab-names "  "))
     (lexical-let* ((input (string (read-char)))
                    (is-digit (and (string= (number-to-string (string-to-number input)) input))))
       (when is-digit
-          (escreen-goto-screen (- (string-to-number input) 1))))))
+        (escreen-goto-screen (- (string-to-number input) 1))))))
 
 (defun open-current-buffer-in-new-tab ()
   (interactive)
