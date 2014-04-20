@@ -232,6 +232,26 @@
             (quit-window nil window))))
       (select-window original-window))))
 
+(setq buffer-underneath-maximized-ephemeral-window nil)
+
+(defun toggle-maximize-lower-right-window ()
+  "Toggles the maximization of an ephemeral window showing in the lower right quadrant."
+  ;; I usually have a REPL or diff view showing in the lower right. Often I want to "maximize it" vertically,
+  ;; to view a long stacktrace etc., without having to switch to the upper right and close that window.
+  (interactive)
+  (preserve-selected-window
+   (lambda ()
+     (switch-to-lower-right)
+     (lexical-let ((w (window-in-direction 'above)))
+       (if w
+           (progn
+             (setq buffer-underneath-maximized-ephemeral-window (window-buffer w))
+             (delete-window w))
+         (progn
+           (when buffer-underneath-maximized-ephemeral-window
+             (split-window-vertically)
+             (set-window-buffer (selected-window) buffer-underneath-maximized-ephemeral-window))))))))
+
 (defun preserve-selected-window (f)
   "Runs the given function and then restores focus to the original window. Useful when you want to invoke
    a function (like showing documentation) but don't want to keep editing your current buffer."
@@ -430,6 +450,7 @@
 (evil-leader/set-key "wR" 'evil-window-rotate-upwards)
 ;; Undo the last change you made to your window configuration.
 (evil-leader/set-key "wb" 'winner-undo)
+(evil-leader/set-key "we" 'toggle-maximize-lower-right-window)
 (evil-leader/set-key "q" 'dismiss-ephemeral-windows)
 
 (defun swap-window-buffers (window-move-fn)
@@ -488,7 +509,7 @@
                 (switch-to-upper-right)
                 (split-window-vertically-and-focus))
            (split-window-vertically-and-focus)))))
-    ;; Ensure that no matter where the window is created, it's has the same buffer as the window prior to
+    ;; Ensure that no matter where the window is created, it has the same buffer as the window prior to
     ;; creating the new one. Otherwise, the new window could have some random buffer in it, making it
     ;; difficult to use commands like open-in-project, for instance.
     (set-window-buffer (selected-window) buffer)))
