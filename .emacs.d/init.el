@@ -708,6 +708,11 @@
         (add-to-list 'minor-mode-map-alist osx-keys))))
 (ad-activate 'load)
 
+(defun open-folder-in-finder ()
+  "Opens the folder of the current file in OSX's Finder."
+  (interactive)
+  (call-process-region nil nil "/usr/bin/open" nil nil nil "."))
+
 ; Closes the current elscreen, or if there's only one screen, use the ":q" Evil
 ; command. This simulates the ":q" behavior of Vim when used with tabs.
 ; http://zuttobenkyou.wordpress.com/2012/06/15/emacs-vimlike-tabwindow-navigation/
