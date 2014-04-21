@@ -430,7 +430,6 @@
 (define-key evil-normal-state-map "," 'evilnc-comment-operator)
 (define-key evil-visual-state-map "," 'evilnc-comment-operator)
 
-(read-kbd-macro "w C-a")
 ;;
 ;; Window manipulation, switching, & management.
 ;; Evil's window map is the set of keys which control window functions. All of its keys are prefixed with
