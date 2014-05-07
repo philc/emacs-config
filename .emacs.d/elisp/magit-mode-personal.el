@@ -81,7 +81,7 @@
 ;; for the other modes.
 (add-hook 'magit-log-mode-hook 'init-magit-log-mode-keybindings)
 (defun init-magit-log-mode-keybindings ()
-  (define-keys evil-normal-state-local-map
+  (util/define-keys evil-normal-state-local-map
     ";gca" 'magit-commit-amend
     ";gri" 'magit-interactive-rebase
     ";gpush" 'git-push
@@ -97,20 +97,20 @@
 (add-hook 'magit-status-mode-hook 'init-magit-status-mode-keybindings)
 (defun init-magit-status-mode-keybindings ()
   ;; NOTE(philc): using `evil-define-key` for these keymaps stopped working upon upgrading to Emacs 24.4.
-  (define-keys evil-normal-state-local-map
+  (util/define-keys evil-normal-state-local-map
     ";gca" 'magit-commit-amend
     ";gpush" 'git-push
     ";gpull" 'git-pull
     "c" 'magit-commit
     ;; I have a git precommit hook which does style checks. Sometimes I want to disable it when committing.
-    "C" (lambda() (interactive) (with-env-var "SKIP_GIT_STYLE_CHECK" "true" 'magit-commit))
+    "C" (lambda() (interactive) (util/with-env-var "SKIP_GIT_STYLE_CHECK" "true" 'magit-commit))
     "e" 'magit-show-level-4-all ; e for exapnd
     "d" 'magit-discard-item
     "s" 'magit-stage-item
-    "S" (lambda () (interactive) (without-confirmation 'magit-stage-all))
+    "S" (lambda () (interactive) (util/without-confirmation 'magit-stage-all))
     "d" 'magit-discard-item
     "u" 'magit-unstage-item
-    "U" (lambda () (interactive (without-confirmation 'magit-unstage-all)))
+    "U" (lambda () (interactive (util/without-confirmation 'magit-unstage-all)))
     (kbd "SPC") 'magit-goto-previous-section
     "-" 'magit-diff-smaller-hunks
     "+" 'magit-diff-larger-hunks
@@ -128,9 +128,9 @@
 (defun init-magit-commit-mode-keybindings ()
   ;; I'm specifying these keys here, becuase for some reason they get overridden by the yy shortcut I've
   ;; defined for magit-log-mode.
-  (define-keys evil-normal-state-local-map
+  (util/define-keys evil-normal-state-local-map
     "yy" 'evil-yank-line)
-  (define-keys evil-visual-state-local-map
+  (util/define-keys evil-visual-state-local-map
     "y" 'evil-yank))
 
 ;; Cache the buffer which was showing before we invoked magit.  In some cases magit doesn't properly restore
@@ -149,7 +149,7 @@
 (defun with-magit-output-buffer (f)
   "Displays the magit output buffer before invoking the given function"
   (lexical-let ((f f))
-    (preserve-selected-window
+    (util/preserve-selected-window
      (lambda ()
        (funcall f)
        (magit-process)))))

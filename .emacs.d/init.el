@@ -194,18 +194,18 @@
 
 ;; Save buffers whenever they lose focus.
 ;; This obviates the need to hit the Save key thousands of times a day. Inspired by http://goo.gl/2z0g5O.
-(add-hook 'focus-out-hook 'save-buffer-if-dirty) ; This hook is only available in Emacs 24.4+.
+(add-hook 'focus-out-hook 'util/save-buffer-if-dirty) ; This hook is only available in Emacs 24.4+.
 
-(defadvice switch-to-buffer (before save-buffer-now activate) (save-buffer-if-dirty))
-(defadvice other-window (before other-window-now activate) (save-buffer-if-dirty))
-(defadvice windmove-up (before other-window-now activate) (save-buffer-if-dirty))
-(defadvice windmove-down (before other-window-now activate) (save-buffer-if-dirty))
-(defadvice windmove-left (before other-window-now activate) (save-buffer-if-dirty))
-(defadvice windmove-right (before other-window-now activate) (save-buffer-if-dirty))
+(defadvice switch-to-buffer (before save-buffer-now activate) (util/save-buffer-if-dirty))
+(defadvice other-window (before other-window-now activate) (util/save-buffer-if-dirty))
+(defadvice windmove-up (before other-window-now activate) (util/save-buffer-if-dirty))
+(defadvice windmove-down (before other-window-now activate) (util/save-buffer-if-dirty))
+(defadvice windmove-left (before other-window-now activate) (util/save-buffer-if-dirty))
+(defadvice windmove-right (before other-window-now activate) (util/save-buffer-if-dirty))
 
 ;; This hasn't been a problem for me yet, but advising "select-window" may cause problems. For instance, it's
 ;; called every time a character is typed in isearch mode.
-(defadvice select-window (before select-window activate) (save-buffer-if-dirty))
+(defadvice select-window (before select-window activate) (util/save-buffer-if-dirty))
 
 ;;
 ;; Evil mode -- Vim keybindings for Emacs.
@@ -283,7 +283,7 @@
   ;; "vt" 'multi-term
   ;; "v" is a mnemonic prefix for "view X".
   "gs" '(lambda() (interactive)
-          (save-buffer-if-dirty)
+          (util/save-buffer-if-dirty)
           (magit-status-and-focus-unstaged))
   "gl" 'magit-log
   "vu" 'mu4e
@@ -644,9 +644,9 @@
   ; Note that I'm saving the buffer before each eval because otherwise, the buffer gets saved after the eval,
   ; (due to save-when-switching-windows setup) and the output from the buffer save overwrites the eval results
   ; in the minibuffer.
-  "eb" (lambda() (interactive) (save-buffer-if-dirty) (eval-buffer))
-  "es" (lambda () (interactive) (save-buffer-if-dirty) (elisp-eval-current-sexp))
-  "ex" (lambda () (interactive) (save-buffer-if-dirty) (call-interactively 'eval-defun))
+  "eb" (lambda() (interactive) (util/save-buffer-if-dirty) (eval-buffer))
+  "es" (lambda () (interactive) (util/save-buffer-if-dirty) (elisp-eval-current-sexp))
+  "ex" (lambda () (interactive) (util/save-buffer-if-dirty) (call-interactively 'eval-defun))
   "ee" 'view-echo-area-messages)
 
 ;; Indentation rules.

@@ -71,7 +71,7 @@
   ;; I usually have a REPL or diff view showing in the lower right. Often I want to "maximize it" vertically,
   ;; to view a long stacktrace etc., without having to switch to the upper right and close that window.
   (interactive)
-  (preserve-selected-window
+  (util/preserve-selected-window
    (lambda ()
      (switch-to-lower-right)
      (lexical-let ((w (window-in-direction 'above)))

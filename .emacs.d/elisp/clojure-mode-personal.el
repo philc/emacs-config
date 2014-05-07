@@ -15,7 +15,7 @@
                                (setq comment-add 0)))
 
 (evil-define-key 'normal clojure-mode-map "K"
-  (lambda () (interactive) (preserve-selected-window (lambda () (call-interactively 'cider-doc)))))
+  (lambda () (interactive) (util/preserve-selected-window (lambda () (call-interactively 'cider-doc)))))
 
 (evil-define-key 'normal clojure-mode-map "gf" 'cider-jump)
 (evil-define-key 'normal clojure-mode-map "gb" 'cider-jump-back)
@@ -104,7 +104,7 @@
   "Restarts or starts afresh the nrepl."
   (interactive)
   (let ((repl-buffer (nrepl-connection-for-buffer (current-buffer))))
-    (without-confirmation (lambda ()
+    (util/without-confirmation (lambda ()
                             (when (not (stringp repl-buffer))
                               (nrepl-close repl-buffer))
                             (cider-jack-in nil)))))

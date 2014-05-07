@@ -162,7 +162,7 @@
      (evil-leader/set-key-for-mode 'mu4e-compose-mode
        ;; Emacs always prompts me "Fix continuation lines?" when sending an email. I don't know what this prompt
        ;; means. It's in message-send-mail in message.el. Answer "y" automatically.
-       "s" (lambda () (interactive) (without-confirmation 'message-send-and-exit)))))
+       "s" (lambda () (interactive) (util/without-confirmation 'message-send-and-exit)))))
 
 ;; Trim the number of fields shown in the email view. This is customizable. See mu4e-view.el for a full list.
 (setq mu4e-view-fields '(:from :to  :cc :subject :date :tags :attachments))

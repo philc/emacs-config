@@ -20,16 +20,16 @@
   "Returns the text (without string properties) of the current line."
   (buffer-substring-no-properties (line-beginning-position) (line-end-position)))
 
-(defun define-keys (keymap &rest key-and-fn-pairs)
+(defun util/define-keys (keymap &rest key-and-fn-pairs)
   "Like define-key, but takes a variable number of arguments -- two per key binding pair."
   (dolist (pair (partition key-and-fn-pairs 2))
     (define-key keymap (first pair) (second pair))))
 
-(defun save-buffer-if-dirty ()
+(defun util/save-buffer-if-dirty ()
   (when (and buffer-file-name (buffer-modified-p))
     (save-buffer)))
 
-(defun with-env-var (name value fn)
+(defun util/with-env-var (name value fn)
   "Temporarily sets an env var to the given value and excutes fn."
   (let ((original-value (getenv name)))
     (unwind-protect
@@ -38,11 +38,11 @@
           (funcall fn))
       (setenv name original-value))))
 
-(defun without-confirmation (fn)
+(defun util/without-confirmation (fn)
   (flet ((y-or-n-p (&rest args) t)) ; Skip the confirmation prompts.
     (funcall fn)))
 
-(defun preserve-selected-window (f)
+(defun util/preserve-selected-window (f)
   "Runs the given function and then restores focus to the original window. Useful when you want to invoke
    a function (like showing documentation) but don't want to keep editing your current buffer."
   (lexical-let ((f f))
