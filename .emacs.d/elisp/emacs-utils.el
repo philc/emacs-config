@@ -41,3 +41,11 @@
 (defun without-confirmation (fn)
   (flet ((y-or-n-p (&rest args) t)) ; Skip the confirmation prompts.
     (funcall fn)))
+
+(defun preserve-selected-window (f)
+  "Runs the given function and then restores focus to the original window. Useful when you want to invoke
+   a function (like showing documentation) but don't want to keep editing your current buffer."
+  (lexical-let ((f f))
+    (let ((original-window (selected-window)))
+      (funcall f)
+      (select-window original-window))))
