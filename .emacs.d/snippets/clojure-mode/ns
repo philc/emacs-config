@@ -1,0 +1,4 @@
+# name: ns
+# --
+(ns $1
+  (:require [${2:chesire.core :as json}]))
