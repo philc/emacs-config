@@ -619,9 +619,39 @@
       (dired-move-to-filename))))
 
 ;;
-;; Terminal (multi-term mode)
+;; Emacs Lisp (elisp)
 ;;
-;; (require 'multi-term-personal) ; Currently disabled; this doesn't work well.
+(add-hook 'emacs-lisp-mode-hook (lambda () (modify-syntax-entry ?- "w" emacs-lisp-mode-syntax-table)))
+(evil-define-key 'normal emacs-lisp-mode-map
+  "gf" 'find-function-at-point
+  "K"'(lambda ()
+        (interactive)
+        ;; Run `describe-function` and show its output in a help
+        ;; window. Inspired from help-fns.el.
+        (with-help-window "*Help*"
+          (describe-function (intern (current-word))))))
+
+(defun current-sexp ()
+  "Returns the text content of the sexp list around the cursor."
+  (let ((position (bounds-of-thing-at-point 'list)))
+    (buffer-substring-no-properties (car position) (cdr position))))
+
+(defun elisp-eval-current-sexp ()
+  (interactive)
+  (message "%s" (eval (read (current-sexp)))))
+
+(evil-leader/set-key-for-mode 'emacs-lisp-mode
+  ; Note that I'm saving the buffer before each eval because otherwise, the buffer gets saved after the eval,
+  ; (due to save-when-switching-windows setup) and the output from the buffer save overwrites the eval results
+  ; in the minibuffer.
+  "eb" (lambda() (interactive) (save-buffer-if-dirty) (eval-buffer))
+  "es" (lambda () (interactive) (save-buffer-if-dirty) (elisp-eval-current-sexp))
+  "ex" (lambda () (interactive) (save-buffer-if-dirty) (call-interactively 'eval-defun))
+  "ee" 'view-echo-area-messages)
+
+;; Indentation rules.
+(put '-> 'lisp-indent-function nil)
+(put '->> 'lisp-indent-function nil)
 
 ;;
 ;; Org mode, for TODOs and note taking.
@@ -680,11 +710,6 @@
   (let ((buffer (current-buffer)))
     (escreen-create-screen)
     (set-window-buffer (get-buffer-window) buffer)))
-
-;;
-;; Markdown
-;;
-(require 'markdown-mode-personal)
 
 ;;
 ;; Snippets - yassnippet
@@ -806,6 +831,11 @@
 (powerline-personal-theme)
 
 ;;
+;; Markdown
+;;
+(require 'markdown-mode-personal)
+
+;;
 ;; CSS
 ;;
 (add-hook 'css-mode-hook (lambda ()
@@ -860,41 +890,6 @@
      (define-key ruby-mode-map (kbd "C-M-n") nil)))
 
 ;;
-;; Emacs Lisp (elisp)
-;;
-(add-hook 'emacs-lisp-mode-hook (lambda () (modify-syntax-entry ?- "w" emacs-lisp-mode-syntax-table)))
-(evil-define-key 'normal emacs-lisp-mode-map
-  "gf" 'find-function-at-point
-  "K"'(lambda ()
-        (interactive)
-        ;; Run `describe-function` and show its output in a help
-        ;; window. Inspired from help-fns.el.
-        (with-help-window "*Help*"
-          (describe-function (intern (current-word))))))
-
-(defun current-sexp ()
-  "Returns the text content of the sexp list around the cursor."
-  (let ((position (bounds-of-thing-at-point 'list)))
-    (buffer-substring-no-properties (car position) (cdr position))))
-
-(defun elisp-eval-current-sexp ()
-  (interactive)
-  (message "%s" (eval (read (current-sexp)))))
-
-(evil-leader/set-key-for-mode 'emacs-lisp-mode
-  ; Note that I'm saving the buffer before each eval because otherwise, the buffer gets saved after the eval,
-  ; (due to save-when-switching-windows setup) and the output from the buffer save overwrites the eval results
-  ; in the minibuffer.
-  "eb" (lambda() (interactive) (save-buffer-if-dirty) (eval-buffer))
-  "es" (lambda () (interactive) (save-buffer-if-dirty) (elisp-eval-current-sexp))
-  "ex" (lambda () (interactive) (save-buffer-if-dirty) (call-interactively 'eval-defun))
-  "ee" 'view-echo-area-messages)
-
-;; Indentation rules.
-(put '-> 'lisp-indent-function nil)
-(put '->> 'lisp-indent-function nil)
-
-;;
 ;; Clojure
 ;;
 (require 'clojure-mode-personal)
@@ -920,8 +915,9 @@
 
 ;;
 ;; mu4e - email & gmail in Emacs.
+;; NOTE(philc): This mu4e just doesn't work well; I don't actively use it.
 ;;
-(require 'mu4e-mode-personal)
+;; (require 'mu4e-mode-personal)
 
 ;;
 ;; YAML mode, for editing YAML files
@@ -1097,6 +1093,11 @@
 ;; Javascript
 ;;
 (setq js-indent-level 2)
+
+;;
+;; Terminal (multi-term mode)
+;;
+;; (require 'multi-term-personal) ; Currently disabled; this doesn't work well.
 
 ;;
 ;; Misc
