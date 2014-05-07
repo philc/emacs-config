@@ -56,7 +56,7 @@
     (package-install p)))
 
 ;;
-;; General
+;; General settings
 ;;
 (require 'cl)
 (add-to-list 'load-path "~/.emacs.d/elisp")
@@ -133,17 +133,17 @@
      (setq whitespace-line-column 110) ; When text flows past 110 chars, highlight it.
      ; whitespace-mode by default highlights all whitespace. Show only tabs and trailing spaces.
      (setq whitespace-style '(face trailing lines-tail))))
-;; NOTE(philc): Flip the following two settings for editing snippets
 (add-hook 'before-save-hook 'delete-trailing-whitespace)
-;; (setq-default mode-require-final-newline nil)
+
 (setq-default tab-width 2)
 (setq-default evil-shift-width 2)
-; Some modes have their own tab-width variables.
+;; Some modes have their own tab-width variables which need to be overridden.
 (setq-default css-indent-offset 2)
 
 (setq-default fill-column 110) ; When wrapping with the Emacs fill commands, wrap at 110 chars.
 (auto-fill-mode t) ; When typing across the fill-column, hard-wrap the line as you type.
 (add-hook 'text-mode-hook 'turn-on-auto-fill) ; Some modes, like markdown, turn off autofill. Force it!
+
 ;; Visually wrap long lines on word boundaries. By default, Emacs will wrap mid-word. Note that Evil doesn't
 ;; have good support for moving between visual lines versus logical lines. Here's the start of a solution:
 ;; https://lists.ourproject.org/pipermail/implementations-list/2011-December/001430.html
@@ -194,8 +194,7 @@
 
 ;; Save buffers whenever they lose focus.
 ;; This obviates the need to hit the Save key thousands of times a day. Inspired by http://goo.gl/2z0g5O.
-;; This hook is Emacs 24.4+.
-(add-hook 'focus-out-hook 'save-buffer-if-dirty)
+(add-hook 'focus-out-hook 'save-buffer-if-dirty) ; This hook is only available in Emacs 24.4+.
 
 (defadvice switch-to-buffer (before save-buffer-now activate) (save-buffer-if-dirty))
 (defadvice other-window (before other-window-now activate) (save-buffer-if-dirty))
@@ -254,13 +253,10 @@
 (define-key evil-normal-state-map "gq" 'evil-fill)
 (define-key evil-normal-state-map "-" 'evil-indent-without-move)
 
-;; Evil uses the current file's mode's definition of a paragraph, which is often surprising, e.g. a single
-;; item in a bulleted list in Markdown mode. Instead, I've defined a paragraph to be hunks of text separated
-;; by newlines. That's typically what I would expect of a paragraph. You can still use Evil's paragraph
-;; definition using P.
-(define-key evil-outer-text-objects-map "p" 'evil-paragraph-from-newlines)
-(define-key evil-outer-text-objects-map "P" 'evil-a-pagraph)
-
+;; Evil uses the current file's mode's definition of a paragraph, which is often surprising. For instance, in
+;; Markdown mode, a single item in a bullet list consistutes a paragraph. Instead, I've defined a paragraph to
+;; be hunks of text separated by newlines. That's typically what I would expect of a paragraph. You can still
+;; use Evil's paragraph definition using the text object "P" instead of "p".
 (evil-define-text-object evil-paragraph-from-newlines (count &optional beg end type)
   "Select a paragraph separated by newlines."
   :type line
@@ -270,6 +266,9 @@
   (let ((paragraph-start "\f\\|[     ]*$")
         (paragraph-separate "[  ]*$"))
     (evil-an-object-range count beg end type #'evil-move-paragraph nil nil t)))
+
+(define-key evil-outer-text-objects-map "p" 'evil-paragraph-from-newlines)
+(define-key evil-outer-text-objects-map "P" 'evil-a-pagraph)
 
 (evil-leader/set-key
   "h" 'help
@@ -297,13 +296,6 @@
 
 ;; Ensure we evil-leader works in non-editing modes like magit. This is referenced from evil-leader's README.
 (setq evil-leader/no-prefix-mode-rx '("magit-.*-mode"))
-
-(defun prompt-to-open-info-page ()
-  "Prompts you for the name of an info page to view. It's the same as calling info with a prefix argument
-   ala C-u C-h i using the regular Emacs key bindings."
-  (interactive)
-  (setq current-prefix-arg '(4)) ; C-u
-  (call-interactively 'info))
 
 (defun evil-fill-inside-paragraph ()
   "Fills (reflows/linewraps) the current paragraph. Equivalent to gqap in vim."
@@ -353,7 +345,7 @@
   (save-excursion
     (evil-indent beg end)))
 
-;; Enable Emacs/Bash insert-mode keybindings.
+;; Enable the typical Bash/readline keybindings when in insert mode.
 (define-key evil-insert-state-map (kbd "C-k") 'kill-line)
 (define-key evil-insert-state-map (kbd "C-e") 'end-of-line)
 (define-key evil-insert-state-map (kbd "C-u") 'backward-kill-line)
@@ -427,7 +419,7 @@
 (setq lazy-highlight-max-at-a-time nil)
 ;; Hitting esacpe aborts the search, restoring your cursor to the original position, as it does in Vim.
 (define-key isearch-mode-map (kbd "<escape>") 'isearch-abort)
-;; Make C-h act the same as backspace.
+;; Make C-h act the same as backspace, as it does in readline.
 (define-key isearch-mode-map (kbd "C-h") 'isearch-delete-char)
 ;; Make M-v paste the clipboard's text into the search ring.
 (define-key isearch-mode-map (kbd "M-v") 'isearch-yank-kill)
@@ -481,7 +473,7 @@
 
 ;;
 ;; Mac OS X keybindings minor mode.
-;; Make it so the OSX keybindings you're used to always work.
+;; Make it so the OSX keybindings you're used to always work in every mode in Emacs.
 ;; http://stackoverflow.com/questions/683425/globally-override-key-binding-in-emacs
 ;;
 (defvar osx-keys-minor-mode-map (make-keymap) "osx-keys-minor-mode-keymap")
@@ -532,9 +524,9 @@
   (interactive)
   (call-process-region nil nil "/usr/bin/open" nil nil nil "."))
 
-; Closes the current elscreen, or if there's only one screen, use the ":q" Evil
-; command. This simulates the ":q" behavior of Vim when used with tabs.
-; http://zuttobenkyou.wordpress.com/2012/06/15/emacs-vimlike-tabwindow-navigation/
+;; Closes the current escreen, or if there's only one screen, use the ":q" Evil
+;; command. This simulates the ":q" behavior of Vim when used with tabs.
+;; http://zuttobenkyou.wordpress.com/2012/06/15/emacs-vimlike-tabwindow-navigation/
 (defun vimlike-quit ()
   "Vimlike ':q' behavior: close current window if there are split windows;
    otherwise, close current tab (elscreen)."
@@ -559,7 +551,7 @@
       nil))))
 
 ;;
-;; Filename completions (CTRL-P / CMD+T)
+;; Filename completions (i.e. CTRL-P or CMD+T in other editors)
 ;;
 (ido-mode t)
 (ido-ubiquitous-mode t)
@@ -628,7 +620,8 @@
 
 ;;
 ;; Terminal (multi-term mode)
-;; (require 'multi-term-personal)
+;;
+;; (require 'multi-term-personal) ; Currently disabled; this doesn't work well.
 
 ;;
 ;; Org mode, for TODOs and note taking.
@@ -641,10 +634,11 @@
 (projectile-global-mode)
 
 ;;
-;; escreen (tabs, one per "workspace")
+;; escreen (tabs)
 ;;
-;; I was previously using elscreen, but it has two major bugs: tab bars would get rendered on random
-;; windows, and Emacs's redraws would begin flashing if you changed monitors or font size.
+;; I use one tab per "workspace" (i.e. open project). All of my tab-related config is geared towards that use
+;; case. I was previously using elscreen, but it has two major bugs: tab bars would get rendered on
+;; random windows, and Emacs's redraws would begin flashing if you changed monitors or font size.
 (require 'escreen)
 (escreen-install)
 
@@ -652,7 +646,7 @@
 (global-set-key (kbd "<A-M-left>") 'escreen-goto-prev-screen)
 (global-set-key (kbd "<A-M-right>") 'escreen-goto-next-screen)
 
-;; I alias (nickname) each of my tabs (escreen's numbered screens).
+;; I alias/nickname each of my tabs (escreen's numbered screens).
 (setq escreen-number->alias (make-hash-table))
 
 (defun escreen-set-tab-alias (alias)
@@ -724,6 +718,7 @@
 ;;
 ;; Spell checking
 ;; http://www.emacswiki.org/emacs/SpeckMode
+;;
 ;; FlySpell is the default choice for spellchecking, but I found it slow, even using every flyspell perf
 ;; improvement I could find. Speck doesn't slow down your typing.
 ;;
@@ -769,7 +764,7 @@
   (powerline-raw (concat "(" (projectile-project-name) ")") face padding))
 
 (defun powerline-personal-theme ()
-  "My customized powerline, copied and slightly modified from the default theme."
+  "My customized powerline, copied and slightly modified from the default theme in powerline.el."
   (interactive)
   (setq-default mode-line-format
                 '("%e"
@@ -998,7 +993,7 @@
                                         (+ 1 (match-end 1)))))))
 
 ;;
-;; Magit - for staging hunks and making commits to git
+;; Magit - for staging hunks and making commits to git from within Emacs.
 ;;
 (require 'magit-mode-personal)
 
@@ -1102,3 +1097,15 @@
 ;; Javascript
 ;;
 (setq js-indent-level 2)
+
+;;
+;; Misc
+;;
+
+;; I just invoke this by name using M-x.
+(defun prompt-to-open-info-page ()
+  "Prompts you for the name of an info page to view. It's the same as calling info with a prefix argument
+   ala C-u C-h i using the regular Emacs key bindings."
+  (interactive)
+  (setq current-prefix-arg '(4)) ; C-u
+  (call-interactively 'info))
