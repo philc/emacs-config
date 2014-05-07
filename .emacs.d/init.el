@@ -1,4 +1,12 @@
 ;;
+;; I try to keep this file well-documented so new and veteran users can easily understand the parts
+;; of my setup they may want to lift.
+;;
+;; While the function definitions for major pieces of functionality are kept in separate files, I try to
+;; centralize the configuration for everything here in this file.
+;;
+
+;;
 ;; Package management
 ;;
 (require 'package)
@@ -102,13 +110,12 @@
 
 ;; Start scrolling the window when the cursor reaches its edge.
 ;; http://stackoverflow.com/questions/3631220/fix-to-get-smooth-scrolling-in-emacs
-(setq
-  scroll-margin 7
-  scroll-step 1
-  scroll-conservatively 10000
-  scroll-preserve-screen-position 1
-  ; Make touchpad scrolling on OSX less jerky
-  mouse-wheel-scroll-amount '(0.01))
+(setq scroll-margin 7
+      scroll-step 1
+      scroll-conservatively 10000
+      scroll-preserve-screen-position 1
+      ;; Make touchpad scrolling on OSX less jerky
+      mouse-wheel-scroll-amount '(0.01))
 
 ;; The preference file for Emac's "Customize" system. `M-x customize` to access it.
 (setq custom-file (expand-file-name "~/.emacs.d/custom.el"))
