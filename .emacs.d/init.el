@@ -162,12 +162,13 @@
             nil))
 
 ;; Enable the common Bash text-editing shortcuts in the minibuffer.
-(define-key minibuffer-local-map (kbd "C-k") 'kill-line)
-(define-key minibuffer-local-map (kbd "C-e") 'end-of-line)
-(define-key minibuffer-local-map (kbd "C-u") 'backward-kill-line)
-(define-key minibuffer-local-map (kbd "C-d") 'delete-char)
-(define-key minibuffer-local-map (kbd "C-w") 'backward-kill-word)
-(define-key minibuffer-local-map (kbd "C-h") 'backward-delete-char)
+(util/define-keys minibuffer-local-map
+                  (kbd "C-k") 'kill-line
+                  (kbd "C-e") 'end-of-line
+                  (kbd "C-u") 'backward-kill-line
+                  (kbd "C-d") 'delete-char
+                  (kbd "C-w") 'backward-kill-word
+                  (kbd "C-h") 'backward-delete-char)
 
 ;; Disable the prompt we get when killing a buffer with a process. This affects clojure mode in particular,
 ;; when we want to restart the nrepl process.
@@ -346,10 +347,11 @@
     (evil-indent beg end)))
 
 ;; Enable the typical Bash/readline keybindings when in insert mode.
-(define-key evil-insert-state-map (kbd "C-k") 'kill-line)
-(define-key evil-insert-state-map (kbd "C-e") 'end-of-line)
-(define-key evil-insert-state-map (kbd "C-u") 'backward-kill-line)
-(define-key evil-insert-state-map (kbd "C-d") 'delete-char)
+(util/define-keys evil-insert-state-map
+                  (kbd "C-k") 'kill-line
+                  (kbd "C-e") 'end-of-line
+                  (kbd "C-u") 'backward-kill-line
+                  (kbd "C-d") 'delete-char)
 (global-set-key (kbd "C-h") 'backward-delete-char) ; Here we clobber C-h, which accesses Emacs's help.
 
 ;; Commenting via NERD commentor.
@@ -476,34 +478,34 @@
 ;; Make it so the OSX keybindings you're used to always work in every mode in Emacs.
 ;; http://stackoverflow.com/questions/683425/globally-override-key-binding-in-emacs
 ;;
+(require 'zoom-frm) ; For zooming (increasing font size of all windows) using M-- and M-+
 (defvar osx-keys-minor-mode-map (make-keymap) "osx-keys-minor-mode-keymap")
-(define-key osx-keys-minor-mode-map (kbd "M-`") 'other-frame)
-(define-key osx-keys-minor-mode-map (kbd "M-~")
-  '(lambda () (interactive) (other-frame -1)))
-(define-key osx-keys-minor-mode-map (kbd "M-w") 'vimlike-quit)
-(define-key osx-keys-minor-mode-map (kbd "M-q") 'save-buffers-kill-terminal)
-(define-key osx-keys-minor-mode-map (kbd "M-n") 'new-frame)
-(define-key osx-keys-minor-mode-map (kbd "M-a") 'mark-whole-buffer)
-(define-key osx-keys-minor-mode-map (kbd "M-h") 'ns-do-hide-emacs)
-(define-key osx-keys-minor-mode-map (kbd "M-v") 'clipboard-yank)
-(define-key osx-keys-minor-mode-map (kbd "M-c") 'clipboard-kill-ring-save)
-(define-key osx-keys-minor-mode-map (kbd "M-m") 'iconify-or-deiconify-frame)
-(define-key osx-keys-minor-mode-map (kbd "M-W") 'evil-quit) ; Close all tabs in the current frame..
-(require 'zoom-frm)
-(define-key osx-keys-minor-mode-map (kbd "M--") 'zoom-out)
-(define-key osx-keys-minor-mode-map (kbd "M-=") 'zoom-in)
-(define-key osx-keys-minor-mode-map (kbd "M-0") 'zoom-frm-unzoom)
-
-;; These aren't specifically replicating OSX shortcuts, but they manipulate the window, so I want them to take
-;; precedence over everything else.
-(define-key osx-keys-minor-mode-map (kbd "M-C-n") 'other-window)
-;; Note that I have Ctrl-Space mapped to Alt, which makes these shortcuts easy to hit.
-(define-key osx-keys-minor-mode-map (kbd "A-e") 'switch-to-upper-left)
-(define-key osx-keys-minor-mode-map (kbd "A-d") 'switch-to-lower-left)
-(define-key osx-keys-minor-mode-map (kbd "A-r") 'switch-to-upper-right)
-(define-key osx-keys-minor-mode-map (kbd "A-f") 'switch-to-lower-right)
-(define-key osx-keys-minor-mode-map (kbd "M-i") 'escreen-set-tab-alias)
-(define-key osx-keys-minor-mode-map (kbd "M-t") 'open-current-buffer-in-new-tab)
+(util/define-keys osx-keys-minor-mode-map
+                  (kbd "M-`") 'other-frame
+                  (kbd "M-~")
+                  '(lambda () (interactive) (other-frame -1))
+                  (kbd "M-w") 'vimlike-quit
+                  (kbd "M-q") 'save-buffers-kill-terminal
+                  (kbd "M-n") 'new-frame
+                  (kbd "M-a") 'mark-whole-buffer
+                  (kbd "M-h") 'ns-do-hide-emacs
+                  (kbd "M-v") 'clipboard-yank
+                  (kbd "M-c") 'clipboard-kill-ring-save
+                  (kbd "M-m") 'iconify-or-deiconify-frame
+                  (kbd "M-W") 'evil-quit ; Close all tabs in the current frame..
+                  (kbd "M--") 'zoom-out
+                  (kbd "M-=") 'zoom-in
+                  (kbd "M-0") 'zoom-frm-unzoom
+                  ;; These aren't specifically replicating OSX shortcuts, but they manipulate the window, so I
+                  ;; want them to take precedence over everything else.
+                  (kbd "M-C-n") 'other-window
+                  ;; Note that I have Ctrl-Space mapped to Alt, which makes these shortcuts easy to hit.
+                  (kbd "A-e") 'switch-to-upper-left
+                  (kbd "A-d") 'switch-to-lower-left
+                  (kbd "A-r") 'switch-to-upper-right
+                  (kbd "A-f") 'switch-to-lower-right
+                  (kbd "M-i") 'escreen-set-tab-alias
+                  (kbd "M-t") 'open-current-buffer-in-new-tab)
 
 (define-minor-mode osx-keys-minor-mode
   "A minor-mode for emulating osx keyboard shortcuts."
