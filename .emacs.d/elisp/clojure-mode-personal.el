@@ -56,7 +56,7 @@
   (cider-clear-buffer)
   (command-execute 'cider-switch-to-last-clojure-buffer))
 
-(defun my-cider-defun-name-at-point ()
+(defun cider-test/defun-name-at-point ()
   "Returns the name of the function at point, and nil if it can't be parsed."
   ;; This should work with both defn and deftest.
   (let* ((form (cider-defun-at-point))
@@ -64,27 +64,27 @@
     (when result
       (match-string 1 form))))
 
-(defun my-cider-run-test-at-point ()
+(defun cider-test/run-test-at-point ()
   "Runs the clojure.test under the cursor by invoking the function defined by the test in the cider repl."
   (interactive)
-  ;; Note that prior to running the test, we must eval its code in case its definition has been changed
-  ;; recently. We use cider-load-current-buffer instead of cider-eval-defun-at-point because
+  ;; Note that prior to running the test, we eval the test's definition in case we've changed it since our
+  ;; last eval. We use cider-load-current-buffer instead of cider-eval-defun-at-point because
   ;; load-current-buffer properly sets the file metadata for the function definition, so that test failure
-  ;; output has the source file and line number of the failing test, as expected.
+  ;; output has the correct source file and line number of the failing test.
   (save-buffer)
   (cider-load-current-buffer)
   (sleep-for 0.1) ; cider-load-current-buffer is asynchronous unfortunately.
   ;; If there was a compile error, halt. Otherwise we'll mask the compile error which was printed to the
   ;; minibuffer.
-  (if (my-cider-buffer-has-compile-errors)
+  (if (cider-tests/buffer-has-compile-errors)
       nil
-    (let ((fn-name (my-cider-defun-name-at-point)))
+    (let ((fn-name (cider-test/defun-name-at-point)))
       ;; TODO(philc): It would be nice if we showed whether the test passed or failed in the minibuffer.
       ;; Currently we just show "nil", and one must look to the repl to see the test output.
       (when fn-name
         (cider-interactive-eval (concat "(" fn-name ")"))))))
 
-(defun my-cider-buffer-has-compile-errors ()
+(defun cider-test/buffer-has-compile-errors ()
   "Returns true if the current buffer has been evaled previously and has a compile error."
   (interactive)
   ;; cider doesn't expose this information directly. cider-highlight-compilation-errors will set an overlay on
@@ -95,7 +95,7 @@
          length
          (< 0))))
 
-(defun my-cider-run-tests-in-ns ()
+(defun cider-test/run-tests-in-ns ()
   "Runs any clojure.test tests defined in the current namespace."
   (interactive)
   (cider-interactive-eval "(clojure.test/run-tests)"))
@@ -175,11 +175,11 @@
   "eap" (lambda () (interactive) (with-nrepl-connection-of-current-buffer 'cider-eval-paragraph))
   "ee" (lambda () (interactive) (with-nrepl-connection-of-current-buffer 'cider-show-cider-buffer))
   "ek" (lambda () (interactive) (with-nrepl-connection-of-current-buffer 'cider-find-and-clear-repl-buffer))
-  ;; Note that I actually use cider-load-file here, not cider-eval-buffer, because it gives useful line numbers
-  ;; on exceptions.
   "eb" (lambda ()
          (interactive)
          (save-buffer)
+         ;; Note that I actually use cider-load-file here, not cider-eval-buffer, because it gives useful line
+         ;; numbers on exceptions.
          (with-nrepl-connection-of-current-buffer 'cider-load-current-buffer))
   ;; cider-restart-nrepl is more handy than cider-jack-in, because it doesn't leave existing repls running.
   "en" 'my-cider-restart-nrepl
@@ -194,12 +194,12 @@
                                   'my-cider-eval-and-print-defun-at-point))
   "rt" (lambda ()
          (interactive)
-         (with-nrepl-connection-of-current-buffer 'my-cider-run-test-at-point))
+         (with-nrepl-connection-of-current-buffer 'cider-test/run-test-at-point))
   "rT" (lambda ()
          (interactive)
          (save-buffer)
          (with-nrepl-connection-of-current-buffer 'cider-load-current-buffer)
-         (with-nrepl-connection-of-current-buffer 'my-cider-run-tests-in-ns)))
+         (with-nrepl-connection-of-current-buffer 'cider-test/run-tests-in-ns)))
 
 ;; Highlight parentheses in rainbow colors.
 (require 'rainbow-delimiters)
