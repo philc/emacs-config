@@ -895,6 +895,7 @@
 ;; Clojure
 ;;
 (require 'clojure-mode-personal)
+(require 'cider-test)
 
 ;;
 ;; HTML mode
