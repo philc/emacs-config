@@ -909,8 +909,6 @@
          (with-nrepl-connection-of-current-buffer 'cider-test/run-test-at-point))
   "rT" (lambda ()
          (interactive)
-         (save-buffer)
-         (with-nrepl-connection-of-current-buffer 'cider-load-current-buffer)
          (with-nrepl-connection-of-current-buffer 'cider-test/run-tests-in-ns)))
 
 ;;

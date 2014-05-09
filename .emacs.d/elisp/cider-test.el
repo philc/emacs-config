@@ -9,9 +9,13 @@
 (require 'cider)
 
 (defun cider-test/run-tests-in-ns ()
-  "Runs any clojure.test tests defined in the current namespace."
+  "Saves and evals the buffer, and then runs any clojure.test tests defined in the current namespace."
   (interactive)
-  (cider-interactive-eval "(clojure.test/run-tests)"))
+  (save-buffer)
+  (cider-load-current-buffer)
+  (sleep-for 0.1) ; cider-load-current-buffer is asynchronous, unfortunately.
+  (when (not (cider-test/buffer-has-compile-errors?))
+    (cider-interactive-eval "(clojure.test/run-tests)")))
 
 (defun cider-test/defun-name-at-point ()
   "Returns the name of the function at point, and nil if it can't be found."
