@@ -892,10 +892,26 @@
      (define-key ruby-mode-map (kbd "C-M-n") nil)))
 
 ;;
+;; Rainbow-delimiters: highlight parentheses in rainbow colors.
+;;
+(require 'rainbow-delimiters)
+(add-hook 'prog-mode-hook 'rainbow-delimiters-mode)
+
+;;
 ;; Clojure
 ;;
 (require 'clojure-mode-personal)
 (require 'cider-test)
+
+(evil-leader/set-key-for-mode 'clojure-mode
+  "rt" (lambda ()
+         (interactive)
+         (with-nrepl-connection-of-current-buffer 'cider-test/run-test-at-point))
+  "rT" (lambda ()
+         (interactive)
+         (save-buffer)
+         (with-nrepl-connection-of-current-buffer 'cider-load-current-buffer)
+         (with-nrepl-connection-of-current-buffer 'cider-test/run-tests-in-ns)))
 
 ;;
 ;; HTML mode

@@ -86,8 +86,8 @@
       (if (not project-directory)
           "No project directory found."
         (let ((buf (cond
-                    ;; I'm special casing shared_lib so that I can eval files from that project against the
-                    ;; most recent repl.
+                    ;; I'm special casing shared_lib et al so that I can eval files from that project against
+                    ;; the most recent repl.
                     ((or (search "shared_lib" project-directory)
                          (search "ml_lib" project-directory))
                      (car nrepl-connection-list))
@@ -147,19 +147,7 @@
   "eps" (lambda () (interactive) (with-nrepl-connection-of-current-buffer
                                   (lambda () (my-cider-eval-current-sexp t))))
   "epx" (lambda () (interactive) (with-nrepl-connection-of-current-buffer
-                                  'my-cider-eval-and-print-defun-at-point))
-  "rt" (lambda ()
-         (interactive)
-         (with-nrepl-connection-of-current-buffer 'cider-test/run-test-at-point))
-  "rT" (lambda ()
-         (interactive)
-         (save-buffer)
-         (with-nrepl-connection-of-current-buffer 'cider-load-current-buffer)
-         (with-nrepl-connection-of-current-buffer 'cider-test/run-tests-in-ns)))
-
-;; Highlight parentheses in rainbow colors.
-(require 'rainbow-delimiters)
-(add-hook 'prog-mode-hook 'rainbow-delimiters-mode)
+                                  'my-cider-eval-and-print-defun-at-point)))
 
 ;; Clojure indentation rules
 (eval-after-load 'clojure-mode
