@@ -114,7 +114,9 @@
 (defun preview-markdown ()
   "Pipes the buffer's contents into a script which renders the markdown as HTML and opens in a browser."
   (interactive)
-  (call-process-region (point-min) (point-max) "/bin/bash" nil nil nil "-c" "markdown_page.rb | bcat"))
+  ;; NOTE(philc): line-number-at-pos is 1-indexed.
+  (let ((command (format "markdown_page.rb --scroll-to-line %s | browser" (- (line-number-at-pos) 1))))
+    (call-process-region (point-min) (point-max) "/bin/bash" nil nil nil "-c" command)))
 
 (defun markdown-get-list-item-region ()
   "Returns '(start, end) for the markdown list item under the cursor, excluding subtrees."
