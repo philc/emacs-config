@@ -103,18 +103,13 @@
   (call-interactively 'markdown-insert-list-item)
   (evil-append nil))
 
-(defun insert-markdown-header (header-line-text)
+(defun insert-markdown-setext-header (setext-type)
   "With the cursor focused on the header's text, insert a setext header line below that text.
-   header-line-text: either '===' or '---'"
-  (end-of-line)
-  (insert (concat "\n" header-line-text))
-  (markdown-complete-setext)
-  ;; markdown-complete inserts a newline after the header. Remove it and move the cursor to a logical place.
-  (next-line)
-  (next-line)
-  (delete-backward-char 1)
-  (next-line)
-  (beginning-of-line))
+   setet-string: either '==' or '--'"
+  (let* ((line-length (length (buffer-substring-no-properties (line-beginning-position) (line-end-position))))
+         (setext-str (make-string line-length (get-byte 0 setext-type))))
+    (end-of-line)
+    (insert (concat "\n" setext-str))))
 
 (defun preview-markdown ()
   "Pipes the buffer's contents into a script which renders the markdown as HTML and opens in a browser."
@@ -177,8 +172,8 @@
 
   (evil-define-key 'normal markdown-lite-mode-map
     ;; Autocomplete setext headers by typing "==" or "--" on the header's line in normal mode.
-    (kbd "==") '(lambda () (interactive) (insert-markdown-header "=="))
-    (kbd "--") '(lambda () (interactive) (insert-markdown-header "--"))
+    (kbd "==") '(lambda () (interactive) (insert-markdown-setext-header "=="))
+    (kbd "--") '(lambda () (interactive) (insert-markdown-setext-header "--"))
     (kbd "TAB") '(lambda () (interactive) (save-excursion (outline-cycle)))
     (kbd "C-S-L") 'markdown-demote
     (kbd "C-S-H") 'markdown-promote)
@@ -1086,34 +1081,3 @@ Return nil if the current line is not the beginning of a list item."
     ;;        markdown-mode-font-lock-keywords-core))
     (setq font-lock-defaults '(markdown-mode-font-lock-keywords-basic))
     (font-lock-refresh-defaults)))
-
-(defun markdown-complete-setext ()
-  "Complete and normalize setext headers.
-Add or remove underline characters to match length of header
-text.  Removes extraneous whitespace from header text.  Assumes
-match data is available for `markdown-regex-header-setext'.
-Return nil if markup was complete and non-nil if markup was completed."
-  (when (markdown-incomplete-setext-p)
-    (let* ((text (markdown-compress-whitespace-string (match-string 1)))
-           (char (char-after (match-beginning 2)))
-           (level (if (char-equal char ?-) 2 1)))
-      (goto-char (match-beginning 0))
-      (delete-region (match-beginning 0) (match-end 0))
-      ;; (markdown-insert-header level text t)
-      t)))
-
-(defun markdown-incomplete-setext-p ()
-  "Return t if setext header markup is incomplete and nil otherwise.
-Assumes match data is available for `markdown-regex-header-setext'.
-Checks that length of underline matches text and that there is no
-extraneous whitespace in the text."
-  (save-match-data
-    (or (not (= (length (match-string 1)) (length (match-string 2))))
-        (string-match "[ \t\n]\\{2\\}" (match-string 1)))))
-
-(defun markdown-compress-whitespace-string (str)
-  "Compress whitespace in STR and return result.
-Leading and trailing whitespace is removed.  Sequences of multiple
-spaces, tabs, and newlines are replaced with single spaces."
-  (replace-regexp-in-string "\\(^[ \t\n]+\\|[ \t\n]+$\\)" ""
-                            (replace-regexp-in-string "[ \t\n]+" " " str)))
