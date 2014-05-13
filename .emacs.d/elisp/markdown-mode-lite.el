@@ -121,14 +121,17 @@
   (interactive)
   (save-excursion
     (let ((start (line-beginning-position))
-          (end (line-end-position)))
-      (next-line)
+          (end (line-end-position))
+          (end-of-file nil))
+      ; NOTE(philc): (next-line) returns an error if we're at the end of the file.
+      (ignore-errors (next-line))
       ;; Stop the search at left-aligned text (which is an approximation for detecting headings).
-      (while (not (or (string/blank? (util/get-current-line))
-                      (string-match "^[ ]*\\*" (util/get-current-line))
-                      (string-match "^[^ *]" (util/get-current-line))))
+      (while (not (or ; (string/blank? (util/get-current-line)) ; TODO(philc): Remove this.
+                   end-of-file
+                   (string-match "^[ ]*\\*" (util/get-current-line))
+                   (string-match "^[^ *]" (util/get-current-line))))
         (setq end (line-end-position))
-        (next-line))
+        (condition-case nil (next-line) (error (setq end-of-file t))))
       (list start end))))
 
 (defun markdown-perform-promote (should-promote)
