@@ -193,6 +193,12 @@
      (ac-set-trigger-key "TAB")
      (ac-linum-workaround)))
 
+(defun create-scratch-buffer nil
+   "Create a scratch buffer. Helpful if you save your scratch buffer as a file, or accidentally kill it."
+   (interactive)
+   (switch-to-buffer (get-buffer-create "*scratch*"))
+   (lisp-interaction-mode))
+
 ;; Save buffers whenever they lose focus.
 ;; This obviates the need to hit the Save key thousands of times a day. Inspired by http://goo.gl/2z0g5O.
 (add-hook 'focus-out-hook 'util/save-buffer-if-dirty) ; This hook is only available in Emacs 24.4+.
