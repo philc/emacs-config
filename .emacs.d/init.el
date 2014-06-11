@@ -47,6 +47,7 @@
                       rainbow-delimiters ; Highlight parentheses in rainbow colors.
                       ruby-electric ; Insert matching delimiters; unindent end blocks after you type them.
                       scss-mode
+                      wcheck-mode ; Spell checking
                       yaml-mode
                       yasnippet
                       zoom-frm))
@@ -751,19 +752,49 @@
 ;; Spell checking
 ;; http://www.emacswiki.org/emacs/SpeckMode
 ;;
-;; FlySpell is the default choice for spellchecking, but I found it slow, even using every flyspell perf
-;; improvement I could find. Speck doesn't slow down your typing.
+;; * FlySpell is the default choice for spellchecking, but I found it slow, even using every flyspell perf
+;;   improvement I could find. Speck doesn't slow down your typing.
+;; * I suspect speck mode is the culrprit of periodic emacs crashes. It's also poorly documented and doesn't
+;;   support binding "add to personal dictionary" as a keybinding.
+;; * wcheck-mode is hard to configure because of its genericism, but at least it's documented and performs
+;;   well once configured.
 ;;
-;; You may need to install aspell (e.g. `brew install aspell`).
+;; You may need to install aspell and enchant (e.g. `brew install aspell enchant`).
 
-(add-to-list 'load-path "~/.emacs.d/plugins/speck-mode")
-(require 'speck)
-;; This apparently needs to be a fully-qualified path.
-(setq speck-personal-dictionary-file "/Users/reformist/.personal_dict.txt")
-(setq speck-engine (quote Aspell))
-(add-hook 'text-mode-hook 'speck-mode)
- ;; Triggers a spell-correction menu. I use this to add words to my dictionary (hit "i").
-(define-key evil-normal-state-map (kbd "zg") 'speck-popup-menu-at-point)
+(require 'wcheck-mode)
+(setq-default wcheck-language "English")
+(setq-default wcheck-language-data
+              '(("English"
+                 (program . "/usr/local/bin/enchant")
+                 (args "-l") ; -l: list only the mispellings.
+                 (face . hi-yellow)
+                 (connection . pty)
+                 (action-program . "/usr/local/bin/enchant")
+                 (action-args "-a") ; -a: lists alternatives.
+                 (action-parser . wcheck-parser-ispell-suggestions))))
+
+(add-hook 'text-mode-hook 'wcheck-mode)
+
+(define-key evil-normal-state-map (kbd "zg") 'wcheck-add-to-dictionary)
+
+(defvar enchant-custom-dictionary "~/.config/enchant/en.dic")
+
+(defun wcheck-add-to-dictionary ()
+  "Adds the word under the cursor to your personal dictionary. Also re-spellchecks the buffer to clear any
+   stale highlights."
+  (interactive)
+  (let ((word (thing-at-point 'word)))
+    (if (not (and enchant-custom-dictionary (file-writable-p enchant-custom-dictionary)))
+        (message "Couldn't locate your custom dictionary file '%s'" enchant-custom-dictionary)
+      (progn
+        (with-temp-buffer
+          (insert word) (newline)
+          (append-to-file (point-min) (point-max) enchant-custom-dictionary))
+        (message "Added word \"%s\" to %s" word enchant-custom-dictionary)
+        ; This is a hack to toggle the mode on and then off, to rescane the buffer and remove the mispelt
+        ; marker for the word that was just added to the dict.
+        (wcheck-mode)
+        (wcheck-mode)))))
 
 ;;
 ;; Diminish - hide or shorten the names of minor modes in your modeline.
