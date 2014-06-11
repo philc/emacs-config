@@ -1133,3 +1133,5 @@
   (interactive)
   (setq current-prefix-arg '(4)) ; C-u
   (call-interactively 'info))
+
+(add-to-list 'auto-mode-alist '("\\.mustache$" . mustache-mode))
