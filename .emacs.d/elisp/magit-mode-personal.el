@@ -1,5 +1,6 @@
 ;;; My configuration and customizations of magit mode, for interacting with Git.
 
+(require 'emacs-utils)
 (provide 'magit-mode-personal)
 
 (eval-after-load 'magit
@@ -12,7 +13,8 @@
        "n" 'magit-goto-next-section
        "p" 'magit-goto-previous-section
        "L" 'magit-key-mode-popup-logging
-       (kbd "RET") 'magit-visit-item)
+       "o" '(lambda () (interactive) (util/preserve-selected-window 'magit-visit-item))
+       (kbd "RET") '(lambda () (interactive) (util/preserve-selected-window 'magit-visit-item)))
 
      (evil-define-key 'normal git-commit-mode-map
        ";wk" 'git-commit-abort
@@ -81,42 +83,47 @@
 ;; for the other modes.
 (add-hook 'magit-log-mode-hook 'init-magit-log-mode-keybindings)
 (defun init-magit-log-mode-keybindings ()
-  (util/define-keys evil-normal-state-local-map
-    ";gca" 'magit-commit-amend
-    ";gri" 'magit-interactive-rebase
-    ";gpush" 'git-push
-    ";gpull" 'git-pull
-    "yy" 'magit-copy-full-commit-id ; Copies the commit ID of the commit under the cursor.
-    "r" 'magit-refresh
-    (kbd "SPC") 'magit-goto-next-section
-    ;; I use C-d and C-u for scrolling the log view, and d and u for scrolling the diff view showing the
-    ;; diff for the focused commit.
-    "u" (lambda () (interactive) (magit-show-item-or-scroll 'View-scroll-half-page-backward))
-    "d" (lambda () (interactive) (magit-show-item-or-scroll 'View-scroll-half-page-forward))))
+  (util/define-keys
+   evil-normal-state-local-map
+   ";gca" 'magit-commit-amend
+   ";gra" 'git-rebase-abort
+   ";grc" 'git-rebase-continue
+   ";gri" 'magit-interactive-rebase
+   ";gpush" 'git-push
+   ";gpull" 'git-pull
+   "yy" 'magit-copy-full-commit-id ; Copies the commit ID of the commit under the cursor.
+   "r" 'magit-refresh
+   (kbd "SPC") 'magit-goto-next-section
+   ;; I use C-d and C-u for scrolling the log view, and d and u for scrolling the diff view showing the
+   ;; diff for the focused commit.
+   "u" (lambda () (interactive) (magit-show-item-or-scroll 'View-scroll-half-page-backward))
+   "d" (lambda () (interactive) (magit-show-item-or-scroll 'View-scroll-half-page-forward))))
 
 (add-hook 'magit-status-mode-hook 'init-magit-status-mode-keybindings)
 (defun init-magit-status-mode-keybindings ()
   ;; NOTE(philc): using `evil-define-key` for these keymaps stopped working upon upgrading to Emacs 24.4.
-  (util/define-keys evil-normal-state-local-map
-    ";gca" 'magit-commit-amend
-    ";gpush" 'git-push
-    ";gpull" 'git-pull
-    "c" 'magit-commit
-    ;; I have a git precommit hook which does style checks. Sometimes I want to disable it when committing.
-    "C" (lambda() (interactive) (util/with-env-var "SKIP_GIT_STYLE_CHECK" "true" 'magit-commit))
-    "e" 'magit-show-level-4-all ; e for exapnd
-    "d" 'magit-discard-item
-    "s" 'magit-stage-item
-    "S" (lambda () (interactive) (util/without-confirmation 'magit-stage-all))
-    "d" 'magit-discard-item
-    "u" 'magit-unstage-item
-    "U" (lambda () (interactive (util/without-confirmation 'magit-unstage-all)))
-    (kbd "SPC") 'magit-goto-previous-section
-    "-" 'magit-diff-smaller-hunks
-    "+" 'magit-diff-larger-hunks
-    "gu" 'magit-jump-to-unstaged
-    (kbd "TAB") 'magit-toggle-section
-    "r" 'magit-refresh))
+  (util/define-keys
+   evil-normal-state-local-map
+   ";grc" 'git-rebase-continue
+   ";gca" 'magit-commit-amend
+   ";gpush" 'git-push
+   ";gpull" 'git-pull
+   "c" 'magit-commit
+   ;; I have a git precommit hook which does style checks. Sometimes I want to disable it when committing.
+   "C" (lambda() (interactive) (util/with-env-var "SKIP_GIT_STYLE_CHECK" "true" 'magit-commit))
+   "e" 'magit-show-level-4-all ; e for exapnd
+   "d" 'magit-discard-item
+   "s" 'magit-stage-item
+   "S" (lambda () (interactive) (util/without-confirmation 'magit-stage-all))
+   "d" 'magit-discard-item
+   "u" 'magit-unstage-item
+   "U" (lambda () (interactive (util/without-confirmation 'magit-unstage-all)))
+   (kbd "SPC") 'magit-goto-previous-section
+   "-" 'magit-diff-smaller-hunks
+   "+" 'magit-diff-larger-hunks
+   "gu" 'magit-jump-to-unstaged
+   (kbd "TAB") 'magit-toggle-section
+   "r" 'magit-refresh))
 
 (add-hook 'git-commit-mode-hook 'init-git-commit-mode)
 (defun init-git-commit-mode ()
