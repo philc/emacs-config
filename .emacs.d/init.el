@@ -203,16 +203,14 @@
 ;; This obviates the need to hit the Save key thousands of times a day. Inspired by http://goo.gl/2z0g5O.
 (add-hook 'focus-out-hook 'util/save-buffer-if-dirty) ; This hook is only available in Emacs 24.4+.
 
-(defadvice switch-to-buffer (before save-buffer-now activate) (util/save-buffer-if-dirty))
-(defadvice other-window (before other-window-now activate) (util/save-buffer-if-dirty))
 (defadvice windmove-up (before other-window-now activate) (util/save-buffer-if-dirty))
 (defadvice windmove-down (before other-window-now activate) (util/save-buffer-if-dirty))
 (defadvice windmove-left (before other-window-now activate) (util/save-buffer-if-dirty))
 (defadvice windmove-right (before other-window-now activate) (util/save-buffer-if-dirty))
 
-;; This hasn't been a problem for me yet, but advising "select-window" may cause problems. For instance, it's
-;; called every time a character is typed in isearch mode.
-(defadvice select-window (before select-window activate) (util/save-buffer-if-dirty))
+; This is fired whenever the buffer list is updated, which is a reasonably robust way to detect that the
+; window config has changed and the current buffer should be saved.
+(add-hook 'buffer-list-update-hook 'util/save-buffer-if-dirty)
 
 ;;
 ;; Evil mode -- Vim keybindings for Emacs.
