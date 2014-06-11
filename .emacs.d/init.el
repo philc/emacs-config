@@ -280,7 +280,7 @@
 (evil-leader/set-key
   "h" 'help
   "b" 'ido-switch-buffer
-  "t" 'projectile-find-file
+  "f" 'projectile-find-file
   "p" 'escreen-tab-switcher
   "SPC" 'evil-fill-inside-paragraph ; Shortcut for Vim's gqip
   "i" 'evil-indent-inside-paragraph ; Shortcut to Vim's =ip
@@ -559,7 +559,7 @@
       nil))))
 
 ;;
-;; Filename completions (i.e. CTRL-P or CMD+T in other editors)
+;; Filename completions (i.e. CTRL-P or CMD-T in other editors)
 ;;
 (ido-mode t)
 (ido-ubiquitous-mode t)
@@ -910,10 +910,14 @@
 (require 'cider-test)
 
 (evil-leader/set-key-for-mode 'clojure-mode
-  "rt" (lambda ()
+  ; t is a mnemonic for "test"
+  "ta" (lambda ()
+         (interactive)
+         (with-nrepl-connection-of-current-buffer 'cider-test/run-all-tests))
+  "tt" (lambda ()
          (interactive)
          (with-nrepl-connection-of-current-buffer 'cider-test/run-test-at-point))
-  "rT" (lambda ()
+  "tf" (lambda ()
          (interactive)
          (with-nrepl-connection-of-current-buffer 'cider-test/run-tests-in-ns)))
 
