@@ -590,6 +590,7 @@
 (evil-define-key 'normal dired-mode-map "H" (lambda () (interactive) (find-alternate-file "..")))
 (evil-define-key 'normal dired-mode-map (kbd "<return>")
   'dired-find-alternate-file) ; was dired-advertised-find-file
+(evil-define-key 'normal dired-mode-map "o" 'dired-find-alternate-file)
 
 ;; dired overrides my global "other window" shorcut.
 (evil-define-key 'normal dired-mode-map (kbd "M-C-n") 'other-window)
