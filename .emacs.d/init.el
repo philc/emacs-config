@@ -750,7 +750,7 @@
 
 ;;
 ;; Spell checking
-;; http://www.emacswiki.org/emacs/SpeckMode
+;; https://github.com/tlikonen/wcheck-mode
 ;;
 ;; * FlySpell is the default choice for spellchecking, but I found it slow, even using every flyspell perf
 ;;   improvement I could find. Speck doesn't slow down your typing.
