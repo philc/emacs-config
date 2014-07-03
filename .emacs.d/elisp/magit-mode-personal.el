@@ -48,7 +48,7 @@
              magit-insert-status-merge-line
              magit-insert-status-rebase-lines
              magit-insert-empty-line
-             magit-insert-pending-changes
+             ;; magit-rewrite-diff-pending
              magit-insert-pending-commits
              magit-insert-unstaged-changes
              magit-insert-staged-changes
