@@ -74,6 +74,9 @@
 
 (setq initial-scratch-message "") ; When opening a new buffer, don't show the scratch message.
 
+;; Make it so that the scratch buffer uses markdown. By default it uses Emacs Lisp mode.
+(setq initial-major-mode 'markdown-lite-mode)
+
 ;; Use the same PATH variable as your shell does. From http://clojure-doc.org/articles/tutorials/emacs.html
 (defun set-exec-path-from-shell-PATH ()
   (let ((path-from-shell (shell-command-to-string "$SHELL -i -c 'echo $PATH'")))
@@ -871,7 +874,7 @@
 ;;
 ;; Markdown
 ;;
-(require 'markdown-mode-personal)
+(require 'markdown-mode-lite)
 
 ;;
 ;; CSS
