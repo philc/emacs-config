@@ -111,12 +111,21 @@
     (end-of-line)
     (insert (concat "\n" setext-str))))
 
-(defun preview-markdown ()
-  "Pipes the buffer's contents into a script which renders the markdown as HTML and opens in a browser."
-  (interactive)
-  ;; NOTE(philc): line-number-at-pos is 1-indexed.
-  (let ((command (format "markdown_page.rb --scroll-to-line %s | browser" (- (line-number-at-pos) 1))))
-    (call-process-region (point-min) (point-max) "/bin/bash" nil nil nil "-c" command)))
+(defun preview-markdown (beg end)
+  "Pipes the buffer's contents into a script which renders the markdown as HTML and opens in a browser.
+   If the markdown-stylesheet var is bound, then that stylesheet will be used (i.e. passed as an argument into
+   markdown_page."
+  (interactive (if (use-region-p)
+                   (list (region-beginning) (region-end))
+                 (list nil nil)))
+  (let* ((beg (or beg (point-min)))
+         (end (or end (point-max)))
+         (stylesheet (if (boundp 'markdown-stylesheet) markdown-stylesheet "github"))
+         ;; NOTE(philc): line-number-at-pos is 1-indexed.
+         (command (format "markdown_page.rb --css %s --scroll-to-line %s | browser"
+                          stylesheet
+                          (- (line-number-at-pos) 1))))
+    (call-process-region beg end "/bin/bash" nil nil nil "-c" command)))
 
 (defun markdown-get-list-item-region ()
   "Returns '(start, end) for the markdown list item under the cursor, excluding subtrees."
@@ -169,9 +178,22 @@
 
 (defun setup-markdown-mode ()
   (interactive)
+
   (evil-define-key 'normal markdown-lite-mode-map
     ";l" 'markdown-cleanup-list-numbers
-    ";vv" 'preview-markdown)
+    ";re" (lambda ()
+            (interactive)
+            (let ((markdown-stylesheet "gmail"))
+              (call-interactively 'preview-markdown)))
+    ";rr" 'preview-markdown)
+
+  (evil-define-key 'visual markdown-lite-mode-map
+    ";l" 'markdown-cleanup-list-numbers
+    ";re" (lambda ()
+            (interactive)
+            (let ((markdown-stylesheet "gmail"))
+              (call-interactively 'preview-markdown)))
+    ";rr" 'preview-markdown)
 
   (define-key markdown-lite-mode-map (kbd "<tab>") nil) ; Normally bound to markdown-cycle.
 
