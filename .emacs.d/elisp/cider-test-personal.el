@@ -5,7 +5,7 @@
 ;; cider-test/run-tests-in-ns
 ;; cider-test/run-test-at-point
 ;;
-(provide 'cider-test)
+(provide 'cider-test-personal)
 (require 'cider)
 (require 'cl)
 

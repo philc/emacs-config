@@ -37,7 +37,6 @@
                       ido-ubiquitous ; Make ido completions work everywhere.
                       ido-vertical-mode ; Show ido results vertically.
                       magit
-                      markdown-mode
                       midje-mode ; For editing clojure tests
                       ;; multi-term ; Display many termianls inside emacs, not just one.
                       org ; For outlining. This is bundled with Emacs, but I'm using the latest version.
@@ -289,7 +288,7 @@
   "a" 'projectile-ack
   "d" 'projectile-dired
   "D" (lambda () (interactive) (-> (buffer-file-name) file-name-directory dired))
-  "gs" '(lambda() (interactive)
+  "gs" (lambda() (interactive)
           (util/save-buffer-if-dirty)
           (magit-status-and-focus-unstaged))
   "gl" 'magit-log
@@ -942,7 +941,7 @@
 ;; Clojure
 ;;
 (require 'clojure-mode-personal)
-(require 'cider-test)
+(require 'cider-test-personal)
 
 (evil-leader/set-key-for-mode 'clojure-mode
   ; t is a mnemonic for "test"
