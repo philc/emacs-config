@@ -19,6 +19,8 @@
 
 (evil-define-key 'normal clojure-mode-map "gf" 'cider-jump)
 (evil-define-key 'normal clojure-mode-map "gb" 'cider-jump-back)
+(evil-define-key 'normal clojure-mode-map (kbd "C-S-H") 'shift-sexp-backward)
+(evil-define-key 'normal clojure-mode-map (kbd "C-S-H") 'shift-sexp-forward)
 
 ;; Hide the uninteresting nrepl-connection and nrepl-server buffers from the buffer list.
 (setq nrepl-hide-special-buffers t)

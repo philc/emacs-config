@@ -46,6 +46,7 @@
                       rainbow-delimiters ; Highlight parentheses in rainbow colors.
                       ruby-electric ; Insert matching delimiters; unindent end blocks after you type them.
                       scss-mode
+                      smartparens
                       smex
                       wcheck-mode ; Spell checking
                       yaml-mode
@@ -181,7 +182,6 @@
 ;; Use smex to show the M-x command prompt. It has better completion support than the default M<x.
 (require 'smex)
 (global-set-key (kbd "M-x") 'smex)
-
 
 ;; RecentF mode is the Emacs minor mode used when opening files via C-x C-f.
 (require 'recentf)
@@ -640,6 +640,8 @@
 (add-hook 'emacs-lisp-mode-hook (lambda () (modify-syntax-entry ?- "w" emacs-lisp-mode-syntax-table)))
 (evil-define-key 'normal emacs-lisp-mode-map
   "gf" 'find-function-at-point
+  (kbd "C-S-H") 'shift-sexp-backward
+  (kbd "C-S-L") 'shift-sexp-forward
   "K"'(lambda ()
         (interactive)
         ;; Run `describe-function` and show its output in a help
@@ -942,6 +944,29 @@
 ;;
 (require 'rainbow-delimiters)
 (add-hook 'prog-mode-hook 'rainbow-delimiters-mode)
+
+;;
+;; Smartparens utility functions. Used by emacs lisp and clojure.
+;;
+(require 'smartparens)
+
+(defun shift-sexp-backward ()
+  (interactive)
+  (let* ((next (save-excursion (sp-forward-sexp)))
+         (prev (save-excursion (goto-char (sp-get next :beg-prf)) (sp-backward-sexp))))
+    (sp--transpose-objects prev next))
+  ;; Focus the cursor correctly.
+  (sp-backward-sexp)
+  (sp-backward-sexp))
+
+(defun shift-sexp-forward ()
+  (interactive)
+  (sp-forward-sexp)
+  (let* ((next (save-excursion (sp-forward-sexp)))
+         (prev (save-excursion (goto-char (sp-get next :beg-prf)) (sp-backward-sexp))))
+    (sp--transpose-objects prev next))
+  ;; Focus the cursor correctly.
+  (sp-backward-sexp))
 
 ;;
 ;; Clojure
