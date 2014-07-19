@@ -46,6 +46,7 @@
                       rainbow-delimiters ; Highlight parentheses in rainbow colors.
                       ruby-electric ; Insert matching delimiters; unindent end blocks after you type them.
                       scss-mode
+                      smex
                       wcheck-mode ; Spell checking
                       yaml-mode
                       yasnippet
@@ -176,6 +177,11 @@
 ;; Disable the prompt we get when killing a buffer with a process. This affects clojure mode in particular,
 ;; when we want to restart the nrepl process.
 (setq kill-buffer-query-functions (remq 'process-kill-buffer-query-function kill-buffer-query-functions))
+
+;; Use smex to show the M-x command prompt. It has better completion support than the default M<x.
+(require 'smex)
+(global-set-key (kbd "M-x") 'smex)
+
 
 ;; RecentF mode is the Emacs minor mode used when opening files via C-x C-f.
 (require 'recentf)
