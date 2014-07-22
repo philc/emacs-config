@@ -33,24 +33,11 @@
 ;; normal state shortcuts
 (evil-define-key 'normal evil-org-mode-map
   "t" 'org-todo
-  "T" '(lambda () (interactive) (evil-org-eol-call '(org-insert-todo-heading nil)))
-  "H" 'org-beginning-of-line
-  "L" 'org-end-of-line
   ";vt" 'org-show-todo-and-done-tree
   "o" '(lambda () (interactive) (evil-org-eol-call 'always-insert-item))
   ;; "O" '(lambda () (interactive) (evil-org-eol-call 'org-insert-heading))
-  "$" 'org-end-of-line
-  "^" 'org-beginning-of-line
   "<" 'org-metaleft
   ">" 'org-metaright
-  ";a" '(lambda () (interactive)
-          (org-archive-subtree)
-          ;; For some reason org-archive-subtree aggressively scrolls the window down. Re-center the window on
-          ;; the cursor.
-          (call-interactively 'evil-scroll-line-to-center))
-  ";g" 'org-set-tags-command
-  ";va" 'org-agenda
-  "-" 'org-cycle-list-bullet
   ; I use "gl" for this because it behaves similarly to "goto label" in gmail and elsewhere
   "gl" 'org-goto-top-level-heading
   "gu" 'outline-up-heading
@@ -68,6 +55,11 @@
                        "convert_org_to_markdown.rb | markdown_page.rb | bcat"))
 
 (evil-leader/set-key-for-mode 'org-mode
+  "a" '(lambda () (interactive)
+         (org-archive-subtree)
+         ;; For some reason org-archive-subtree aggressively scrolls the window down. Re-center the window on
+         ;; the cursor.
+         (call-interactively 'evil-scroll-line-to-center))
   "c" 'org-capture-item-and-prepend-to-subtree
   "vv" 'preview-org)
 
