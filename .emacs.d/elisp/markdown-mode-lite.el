@@ -1,5 +1,6 @@
 ;;
 ;; Markdown mode lite
+;; TODO(philc): Document what this mode does.
 ;;
 
 (provide 'markdown-mode-lite)
@@ -218,8 +219,26 @@
 (setup-markdown-mode)
 
 ;;
-;; Code taken from markdown-mode.el.
+;; Much of this code is taken from markdown-mode.el.
 ;;
+
+(defconst markdown-regex-list-item1
+  "^\\* .*$")
+
+(defconst markdown-regex-list-item2
+  "^\\(  \\|\t\\)\\* .*$")
+
+(defconst markdown-regex-list-item3
+  "^\\(  \\|\t\\)\\{2\\}\\* .*$")
+
+(defconst markdown-regex-list-item4
+  "^\\(  \\|\t\\)\\{3\\}\\* .*$")
+
+(defconst markdown-regex-list-item5
+  "^\\(  \\|\t\\)\\{4\\}\\* .*$")
+
+(defconst markdown-regex-list-item6
+  "^\\(  \\|\t\\)\\{5,\\}\\* .*$")
 
 (defconst markdown-regex-list
   "^\\([ \t]*\\)\\([0-9]+\\.\\|[\\*\\+-]\\)\\([ \t]+\\)"
@@ -862,6 +881,37 @@ If we are at the first line, then consider the previous line to be blank."
   "Face for metadata values."
   :group 'markdown-faces)
 
+;; TODO(philc):
+(defface markdown-list-item1-face
+  '((t (:inherit font-lock-builtin-face)))
+  "For first-level list items."
+  :group 'markdown-faces)
+
+(defface markdown-list-item2-face
+  '((t (:inherit font-lock-type-face)))
+  "For second-level list items."
+  :group 'markdown-faces)
+
+(defface markdown-list-item3-face
+  '((t (:inherit font-lock-builtin-face)))
+  "For second-level list items."
+  :group 'markdown-faces)
+
+(defface markdown-list-item4-face
+  '((t (:inherit font-lock-type-face)))
+  "For second-level list items."
+  :group 'markdown-faces)
+
+(defface markdown-list-item5-face
+  '((t (:inherit font-lock-builtin-face)))
+  "For second-level list items."
+  :group 'markdown-faces)
+
+(defface markdown-list-item6-face
+  '((t (:inherit font-lock-type-face)))
+  "For second-level list items."
+  :group 'markdown-faces)
+
 (defvar markdown-mode-font-lock-keywords-basic
   (list
    (cons 'markdown-match-pre-blocks '((0 markdown-pre-face)))
@@ -889,6 +939,12 @@ If we are at the first line, then consider the previous line to be blank."
    (cons markdown-regex-header-1-atx '((1 markdown-header-delimiter-face)
                                        (2 markdown-header-face-1)
                                        (3 markdown-header-delimiter-face)))
+   (cons markdown-regex-list-item1 '((0 'markdown-list-item1-face)))
+   (cons markdown-regex-list-item2 '((0 'markdown-list-item2-face)))
+   (cons markdown-regex-list-item3 '((0 'markdown-list-item3-face)))
+   (cons markdown-regex-list-item4 '((0 'markdown-list-item4-face)))
+   (cons markdown-regex-list-item5 '((0 'markdown-list-item5-face)))
+   (cons markdown-regex-list-item6 '((0 'markdown-list-item6-face)))
    ;; (cons 'markdown-match-multimarkdown-metadata '((1 markdown-metadata-key-face)
    ;;                                                (2 markdown-metadata-value-face)))
    ;; (cons 'markdown-match-pandoc-metadata '((1 markdown-comment-face)
