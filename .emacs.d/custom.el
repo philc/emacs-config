@@ -22,6 +22,12 @@
  '(mu4e-cited-5-face ((t (:inherit font-lock-comment-face :weight normal))))
  '(mu4e-cited-6-face ((t (:inherit font-lock-comment-delimiter-face :weight normal))))
  '(mu4e-cited-7-face ((t (:inherit font-lock-preprocessor-face :weight normal))))
+ '(markdown-list-item1-face ((t (:foreground "#ECE27C"))))
+ '(markdown-list-item2-face ((t (:foreground "#85C7FF"))))
+ '(markdown-list-item3-face ((t (:foreground "#E4BDA7"))))
+ '(markdown-list-item4-face ((t (:foreground "#87D952"))))
+ '(markdown-list-item5-face ((t (:foreground "#C3D9C9"))))
+
  '(rainbow-delimiters-depth-2-face ((t (:foreground "#3A8CD7"))))
  '(rainbow-delimiters-depth-3-face ((t (:foreground "#44D7BC"))))
  '(rainbow-delimiters-depth-4-face ((t (:foreground "#C9D736"))))
