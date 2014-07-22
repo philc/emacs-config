@@ -7,12 +7,15 @@
 
 (provide 'clojure-mode-personal)
 
-;; Count hyphens, etc. as word characters in lisps
-(add-hook 'clojure-mode-hook (lambda () (modify-syntax-entry ?- "w" clojure-mode-syntax-table)))
-(add-hook 'clojure-mode-hook (lambda ()
-                               (setq indent-line-function 'lisp-indent-line-single-semicolon-fix)
-                               ;; Comment lines using only one semi-colon instead of two.
-                               (setq comment-add 0)))
+(defun setup-clojure-buffer ()
+  ;; Count hyphens, etc. as word characters in lisps
+  (modify-syntax-entry ?- "w" clojure-mode-syntax-table)
+
+  ;; Comment lines using only one semi-colon instead of two.
+  (setq indent-line-function 'lisp-indent-line-single-semicolon-fix)
+  (setq comment-add 0))
+
+(add-hook 'clojure-mode-hook 'setup-clojure-buffer)
 
 (evil-define-key 'normal clojure-mode-map "K"
   (lambda () (interactive) (util/preserve-selected-window (lambda () (call-interactively 'cider-doc)))))
