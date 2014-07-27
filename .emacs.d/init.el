@@ -998,11 +998,28 @@
 (add-to-list 'auto-mode-alist '("\\.erb$" . html-mode))
 
 (defun preview-html ()
-  "Pipes the buffer's contents into a script which renders the markdown as HTML and opens in a browser."
+  "Pipes the buffer's contents into a script which opens the HTML in a browser."
   (interactive)
   (call-process-region (point-min) (point-max) "/bin/bash" nil nil nil "-c" "bcat"))
 
+(defun indent-html-buffer ()
+  "Pipe the current buffer into `jq .`, and replace the current buffer's contents."
+  (interactive)
+  ;; html-beautify is a program defined here: https://github.com/beautify-web/js-beautify
+  ;; To install: cd ~; npm install js-beautify; add ~/node_modules/.bin to your PATH.
+  ;; I don't know why, but save-excursion does not maintain the cursor position.
+  ;; (save-excursion
+  (let ((p (point))
+        (scroll-y (window-start)))
+    (call-process-region (point-min) (point-max) "html-beautify" t (buffer-name) t
+                         "--file" "-" ; STDIN
+                         "--indent-size" "2"
+                         "--wrap-line-length" "110")
+    (set-window-start (selected-window) scroll-y)
+    (goto-char p)))
+
 (evil-leader/set-key-for-mode 'html-mode
+  "i" 'indent-html-buffer
   "vv" 'preview-html)
 
 ;;
