@@ -194,7 +194,10 @@
     (kbd "--") '(lambda () (interactive) (insert-markdown-setext-header "--"))
     (kbd "TAB") '(lambda () (interactive) (save-excursion (outline-cycle)))
     (kbd "C-S-L") 'markdown-demote
-    (kbd "C-S-H") 'markdown-promote)
+    (kbd "C-S-H") 'markdown-promote
+    (kbd "C-S-A-L") 'markdown-demote-subtree
+    (kbd "C-S-A-H") 'markdown-promote-subtree)
+
   (evil-define-key 'insert markdown-lite-mode-map
     (kbd "C-S-H") 'markdown-promote
     (kbd "C-S-L") 'markdown-demote)
