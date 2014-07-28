@@ -23,7 +23,6 @@
   (make-local-variable 'comment-column)
   (setq comment-column 0)
   (set (make-local-variable 'comment-auto-fill-only-comments) nil)
-  ;; Font lock.
   (set (make-local-variable 'markdown-mode-font-lock-keywords) nil)
   (set (make-local-variable 'font-lock-defaults) nil)
   (set (make-local-variable 'font-lock-multiline) t)
@@ -33,15 +32,7 @@
   ;; Extensions
   (make-local-variable 'markdown-enable-math)
   (add-hook 'hack-local-variables-hook 'markdown-reload-extensions)
-  ;; For imenu support
-  ;; (setq imenu-create-index-function 'markdown-imenu-create-index)
-  ;; For menu support in XEmacs
-  ;; (easy-menu-add markdown-mode-menu markdown-mode-map)
-  ;; Defun movement
-  ;; (set (make-local-variable 'beginning-of-defun-function)
-  ;;      'markdown-beginning-of-defun)
-  ;; (set (make-local-variable 'end-of-defun-function)
-  ;;      'markdown-end-of-defun)
+
   ;; Paragraph filling
   (set (make-local-variable 'paragraph-start)
        "\f\\|[ \t]*$\\|[ \t]*[*+-] \\|[ \t]*[0-9]+\\.[ \t]\\|[ \t]*: ")
@@ -55,17 +46,16 @@
 
   ;; Outline mode
   (make-local-variable 'outline-regexp)
-  ;; (setq outline-regexp markdown-regex-header)
   ;; markdown-mode has support for outline mode, but the implementations is that headings are folded. For my
   ;; purposes, I like instead to fold subtrees of lists.
   (setq outline-regexp "[ ]*\\*") ; matches a leading bullet point
 
   (make-local-variable 'outline-level)
   (setq outline-level 'lisp-outline-level)
-  ;; (setq outline-level 'markdown-outline-level)
 
   ;; Cause use of ellipses for invisible text.
-  ;; (add-to-invisibility-spec '(outline . t))
+  (add-to-invisibility-spec '(outline . t))
+
   ;; Indentation and filling
   (make-local-variable 'fill-nobreak-predicate)
   (add-hook 'fill-nobreak-predicate 'markdown-nobreak-p)
