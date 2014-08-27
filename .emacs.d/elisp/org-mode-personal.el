@@ -70,6 +70,8 @@
           (kbd "C-S-H") 'org-metaleft
           (kbd "C-S-K") 'org-metaup
           (kbd "C-S-J") 'org-metadown
+          (kbd "C-S-A-H") 'org-promote-subtree
+          (kbd "C-S-A-L") 'org-demote-subtree
           ; M-return creates a new todo item and enters insert mode.
           (kbd "<C-return>") '(lambda () (interactive)
                                 (org-insert-heading-after-current)
