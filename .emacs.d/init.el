@@ -297,7 +297,6 @@
   "p" 'escreen-tab-switcher
   "SPC" 'evil-fill-inside-paragraph ; Shortcut for Vim's gqip
   "i" 'evil-indent-inside-paragraph ; Shortcut to Vim's =ip
-  "a" 'projectile-ack
   "d" 'projectile-dired
   "D" (lambda () (interactive) (-> (buffer-file-name) file-name-directory dired))
   "gs" (lambda() (interactive)
