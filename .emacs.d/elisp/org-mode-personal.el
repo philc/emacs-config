@@ -159,11 +159,12 @@
   "Prompts for a TODO and the name of a top-level heading, and adds the TODO as a child to the heading."
   (interactive)
   ;; NOTE(philc): These are personalized to the way I organize my org mode TODO file.
-  (message "[L] Liftoff  [E] Errands  [S] Study  [N] Entertainment  [M] Emacs")
+  (message "[L] Liftoff  [E] Errands  [S] Study  [N] Entertainment  [M] Emacs [J] Journal")
   (lexical-let ((subheading (pcase (read-char)
                               (?l "Liftoff")
                               (?e "Errands")
                               (?s "Study")
+                              (?j "Journal")
                               (?n "Entertainment")
                               (?m "Emacs")
                               (?p "Side projects")
@@ -179,7 +180,8 @@
   (interactive)
   "Prompts for the name of a top-level heading and jumps to there."
   ;; TODO(philc): Populate these completions with the top-level headers from the buffer.
-  (let* ((headings '("Liftoff" "Errands" "Study" "Entertainment" "Emacs" "Gumshoe" "Side projects" "Vimium"))
+  (let* ((headings '("Liftoff" "Errands" "Study" "Entertainment" "Emacs" "Journal" "Gumshoe" "Side projects"
+                     "Vimium"))
          (heading (ido-completing-read "Heading: " headings)))
     (goto-char 0)
     (org-move-to-heading heading)
