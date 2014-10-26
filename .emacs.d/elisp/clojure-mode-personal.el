@@ -6,6 +6,7 @@
 ;; http://clojure-doc.org/articles/tutorials/emacs.html
 
 (provide 'clojure-mode-personal)
+(require 'cider)
 
 (defun setup-clojure-buffer ()
   ;; Count hyphens, etc. as word characters in lisps
