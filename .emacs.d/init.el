@@ -647,7 +647,7 @@
   "gf" 'find-function-at-point
   (kbd "C-S-H") 'shift-sexp-backward
   (kbd "C-S-L") 'shift-sexp-forward
-  "K"'(lambda ()
+  "K" (lambda ()
         (interactive)
         ;; Run `describe-function` and show its output in a help
         ;; window. Inspired from help-fns.el.
