@@ -22,7 +22,7 @@
   ;; many stars.
   (setq org-startup-indented t))
 
-(eval-after-load 'org '(init-org-mode-personal))
+(with-eval-after-load "org" (init-org-mode-personal))
 
 (defun init-org-mode-buffer ()
   ;; Since I don't use fill mode on Org Mode headers, don't highlight long lines.

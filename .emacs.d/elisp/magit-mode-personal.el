@@ -3,63 +3,62 @@
 (require 'emacs-utils)
 (provide 'magit-mode-personal)
 
-(eval-after-load 'magit
-  '(progn
-     ;; Magit mode feels twitchy because every key has a binding, and some are very destructive or
-     ;; disorienting. I'm defining a whitelist of keys that I actually use, so this mode feels less
-     ;; erorr-prone.
-     (evil-define-key 'normal magit-mode-map
-       ";gg" 'magit-process
-       "n" 'magit-goto-next-section
-       "p" 'magit-goto-previous-section
-       "L" 'magit-key-mode-popup-logging
-       "o" '(lambda () (interactive) (util/preserve-selected-window 'magit-visit-item))
-       (kbd "RET") '(lambda () (interactive) (util/preserve-selected-window 'magit-visit-item)))
+(with-eval-after-load "magit"
+  ;; Magit mode feels twitchy because every key has a binding, and some are very destructive or
+  ;; disorienting. I'm defining a whitelist of keys that I actually use, so this mode feels less
+  ;; erorr-prone.
+  (evil-define-key 'normal magit-mode-map
+    ";gg" 'magit-process
+    "n" 'magit-goto-next-section
+    "p" 'magit-goto-previous-section
+    "L" 'magit-key-mode-popup-logging
+    "o" '(lambda () (interactive) (util/preserve-selected-window 'magit-visit-item))
+    (kbd "RET") '(lambda () (interactive) (util/preserve-selected-window 'magit-visit-item)))
 
-     (evil-define-key 'normal git-commit-mode-map
-       ";wk" 'git-commit-abort
-       (kbd "M-s") 'git-commit-commit
-       "ZZ" 'git-commit-commit)
+  (evil-define-key 'normal git-commit-mode-map
+    ";wk" 'git-commit-abort
+    (kbd "M-s") 'git-commit-commit
+    "ZZ" 'git-commit-commit)
 
-     (evil-define-key 'insert git-commit-mode-map
-       (kbd "M-s") 'git-commit-commit)
+  (evil-define-key 'insert git-commit-mode-map
+    (kbd "M-s") 'git-commit-commit)
 
-     (evil-define-key 'normal git-rebase-mode-map
-       ";gra" 'git-rebase-abort
-       (kbd "S-C-k") 'git-rebase-move-line-up
-       (kbd "S-C-j") 'git-rebase-move-line-down
-       "e" 'git-rebase-edit
-       "r" 'git-rebase-reword
-       "p" 'git-rebase-pick
-       "dd" 'git-rebase-kill-line
-       "f" 'git-rebase-fixup
-       "s" 'git-rebase-squash
-       (kbd "M-s") 'git-rebase-server-edit
-       "ZZ" 'git-rebase-server-edit)
+  (evil-define-key 'normal git-rebase-mode-map
+    ";gra" 'git-rebase-abort
+    (kbd "S-C-k") 'git-rebase-move-line-up
+    (kbd "S-C-j") 'git-rebase-move-line-down
+    "e" 'git-rebase-edit
+    "r" 'git-rebase-reword
+    "p" 'git-rebase-pick
+    "dd" 'git-rebase-kill-line
+    "f" 'git-rebase-fixup
+    "s" 'git-rebase-squash
+    (kbd "M-s") 'git-rebase-server-edit
+    "ZZ" 'git-rebase-server-edit)
 
-     (evil-leader/set-key-for-mode 'git-commit-mode
-       "c" 'git-commit-commit)
+  (evil-leader/set-key-for-mode 'git-commit-mode
+    "c" 'git-commit-commit)
 
-     ;; Customize the order of the sections which are shown in the status view. You can find the full list in
-     ;; the magit source code.
-     (setq magit-status-sections-hook
-           '(magit-insert-status-local-line
-             magit-insert-status-head-line
-             magit-insert-status-merge-line
-             magit-insert-status-rebase-lines
-             magit-insert-empty-line
-             ;; magit-rewrite-diff-pending
-             magit-insert-pending-commits
-             magit-insert-unstaged-changes
-             magit-insert-staged-changes
-             magit-insert-untracked-files
-             magit-insert-stashes
-             magit-insert-unpulled-commits
-             magit-insert-unpushed-commits))
+  ;; Customize the order of the sections which are shown in the status view. You can find the full list in
+  ;; the magit source code.
+  (setq magit-status-sections-hook
+        '(magit-insert-status-local-line
+          magit-insert-status-head-line
+          magit-insert-status-merge-line
+          magit-insert-status-rebase-lines
+          magit-insert-empty-line
+          ;; magit-rewrite-diff-pending
+          magit-insert-pending-commits
+          magit-insert-unstaged-changes
+          magit-insert-staged-changes
+          magit-insert-untracked-files
+          magit-insert-stashes
+          magit-insert-unpulled-commits
+          magit-insert-unpushed-commits))
 
-     ;; Don't use a unicode ellipsis character when truncating author names in the git log view. It screws up
-     ;; the line height with my current font (Inconsolata).
-     (setq magit-ellipsis (get-byte 0 "."))))
+  ;; Don't use a unicode ellipsis character when truncating author names in the git log view. It screws up
+  ;; the line height with my current font (Inconsolata).
+  (setq magit-ellipsis (get-byte 0 ".")))
 
 (evil-set-initial-state 'magit-mode 'normal)
 (evil-set-initial-state 'magit-status-mode 'normal)

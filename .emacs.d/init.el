@@ -133,11 +133,10 @@
 
 ;; Whitespace & line wrapping.
 (global-whitespace-mode t)
-(eval-after-load 'whitespace
-  '(progn
-     (setq whitespace-line-column 110) ; When text flows past 110 chars, highlight it.
-     ; whitespace-mode by default highlights all whitespace. Show only tabs and trailing spaces.
-     (setq whitespace-style '(face trailing lines-tail))))
+(with-eval-after-load "whitespace"
+  (setq whitespace-line-column 110) ; When text flows past 110 chars, highlight it.
+  ;; whitespace-mode by default highlights all whitespace. Show only tabs and trailing spaces.
+  (setq whitespace-style '(face trailing lines-tail)))
 (add-hook 'before-save-hook 'delete-trailing-whitespace)
 
 (setq-default tab-width 2)
@@ -199,13 +198,12 @@
 ;; unusable.
 (setq ac-auto-start nil)
 ;; (add-hook 'prog-mode-hook 'auto-complete-mode)
-;; (eval-after-load 'auto-complete
-;;   '(progn
+;; (with-eval-after-load "auto-complete"
 ;;      (define-key ac-complete-mode-map "\C-n" 'ac-next)
 ;;      (define-key ac-complete-mode-map "\C-p" 'ac-previous)
 ;;      (setq ac-auto-start nil)
 ;;      (ac-set-trigger-key "TAB")
-;;      (ac-linum-workaround)))
+;;      (ac-linum-workaround))
 
 (defun create-scratch-buffer nil
    "Create a scratch buffer. Helpful if you save your scratch buffer as a file, or accidentally kill it."
@@ -576,13 +574,12 @@
 (ido-mode t)
 (ido-ubiquitous-mode t)
 (ido-vertical-mode t)
-(eval-after-load 'ido
-  '(progn
-     (setq ido-enable-flex-matching t)
-     (setq ido-use-virtual-buffers t)
-     (setq ido-everywhere t)
-     ;; kill the highlighted buffer in the matches list.
-     (define-key ido-buffer-completion-map (kbd "M-d") 'ido-kill-buffer-at-head)))
+(with-eval-after-load "ido"
+  (setq ido-enable-flex-matching t)
+  (setq ido-use-virtual-buffers t)
+  (setq ido-everywhere t)
+  ;; kill the highlighted buffer in the matches list.
+  (define-key ido-buffer-completion-map (kbd "M-d") 'ido-kill-buffer-at-head))
 
 ;;
 ;; Dired mode - using the Emacs file browser.
@@ -939,10 +936,9 @@
 (add-to-list 'auto-mode-alist '("Capfile$" . ruby-mode))
 (add-to-list 'auto-mode-alist '("Vagrantfile$" . ruby-mode))
 
-(eval-after-load 'ruby-mode
-  '(progn
-     ;; Ruby mode defines this as "next block". I define it globally as "next window".
-     (define-key ruby-mode-map (kbd "C-M-n") nil)))
+(with-eval-after-load "ruby-mode"
+  ;; Ruby mode defines this as "next block". I define it globally as "next window".
+  (define-key ruby-mode-map (kbd "C-M-n") nil))
 
 ;;
 ;; Rainbow-delimiters: highlight parentheses in rainbow colors.
@@ -1056,11 +1052,10 @@
 ;;
 ;; Go mode, for writing Go code
 ;;
-(eval-after-load 'go-mode
-  '(progn
-     (evil-define-key 'normal go-mode-map
-       "gf" 'godef-jump
-       "K" 'godef-describe)))
+(with-eval-after-load "go-mode"
+  (evil-define-key 'normal go-mode-map
+    "gf" 'godef-jump
+    "K" 'godef-describe))
 
 (defun go-save-and-compile-fn (command-name)
   "Returns a function for the purpose of binding to a key which saves the current buffer and then

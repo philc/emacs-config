@@ -78,91 +78,90 @@
     (and window-below
          (string= (buffer-name (window-buffer window-below)) "*mu4e-view*"))))
 
-(eval-after-load 'mu4e
-  '(progn
-     (evil-make-overriding-map mu4e-main-mode-map 'normal t)
-     (evil-define-key 'normal mu4e-main-mode-map
-       "q" 'vimlike-quit
-       ";" nil ; Ensure my evil-leader key works unhindered.
-       "j" nil ; originally "jump to maildir".
-       "gl" 'mu4e~headers-jump-to-maildir)
+(with-eval-after-load "mu4e"
+  (evil-make-overriding-map mu4e-main-mode-map 'normal t)
+  (evil-define-key 'normal mu4e-main-mode-map
+    "q" 'vimlike-quit
+    ";" nil ; Ensure my evil-leader key works unhindered.
+    "j" nil ; originally "jump to maildir".
+    "gl" 'mu4e~headers-jump-to-maildir)
 
-     (evil-make-overriding-map mu4e-headers-mode-map 'normal t)
-     (evil-define-key 'normal mu4e-headers-mode-map
-       "j" 'evil-next-line
-       "k" 'evil-previous-line
-       "n" (lambda () (interactive) (if (mu4e-view-is-below?) (mu4e-headers-next) (mu4e-headers-view-message)))
-       "p" (lambda () (interactive) (if (mu4e-view-is-below?) (mu4e-headers-prev) (mu4e-headers-view-message)))
-       "#" 'mu4e-headers-mark-for-trash
-       "d" 'mu4e-view-mark-for-trash
-       "y" 'mu4e-headers-mark-for-refile
-       "/" 'mu4e-headers-search-edit
-       "z" 'mu4e-headers-mark-for-unmark
-       "x" 'mu4e-headers-mark-for-something
-       "gl" 'mu4e~headers-jump-to-maildir
-       ;; consider calling this with t, for "no confirmation".
-       "e" 'mu4e-mark-execute-all
-       "q" 'vimlike-quit
-       (kbd "RET") 'mu4e-headers-view-message
-       "o" 'mu4e-headers-view-message
-       "ESC" nil
-       "a" 'mu4e-reply-all
-       "r" 'mu4e-compose-reply
-       ;; TODO(philc): mu4e-headers-toggle-full-search - show all results or just up until the cap.
-       ;; TODO(philc): mu4e-view-action opens URL
-       "f" 'mu4e-compose-forward
-       ;; By default, run this in the background. Hit ";vv to show the buffer with the fetch status.
-       (kbd "M-r") (lambda () (interactive) (mu4e-update-mail-and-index t))
-       "c" 'mu4e-compose-new)
+  (evil-make-overriding-map mu4e-headers-mode-map 'normal t)
+  (evil-define-key 'normal mu4e-headers-mode-map
+    "j" 'evil-next-line
+    "k" 'evil-previous-line
+    "n" (lambda () (interactive) (if (mu4e-view-is-below?) (mu4e-headers-next) (mu4e-headers-view-message)))
+    "p" (lambda () (interactive) (if (mu4e-view-is-below?) (mu4e-headers-prev) (mu4e-headers-view-message)))
+    "#" 'mu4e-headers-mark-for-trash
+    "d" 'mu4e-view-mark-for-trash
+    "y" 'mu4e-headers-mark-for-refile
+    "/" 'mu4e-headers-search-edit
+    "z" 'mu4e-headers-mark-for-unmark
+    "x" 'mu4e-headers-mark-for-something
+    "gl" 'mu4e~headers-jump-to-maildir
+    ;; consider calling this with t, for "no confirmation".
+    "e" 'mu4e-mark-execute-all
+    "q" 'vimlike-quit
+    (kbd "RET") 'mu4e-headers-view-message
+    "o" 'mu4e-headers-view-message
+    "ESC" nil
+    "a" 'mu4e-reply-all
+    "r" 'mu4e-compose-reply
+    ;; TODO(philc): mu4e-headers-toggle-full-search - show all results or just up until the cap.
+    ;; TODO(philc): mu4e-view-action opens URL
+    "f" 'mu4e-compose-forward
+    ;; By default, run this in the background. Hit ";vv to show the buffer with the fetch status.
+    (kbd "M-r") (lambda () (interactive) (mu4e-update-mail-and-index t))
+    "c" 'mu4e-compose-new)
 
-     (evil-make-overriding-map mu4e-view-mode-map 'normal t)
-     (evil-define-key 'normal mu4e-view-mode-map
-       "j" 'evil-next-line
-       "k" 'evil-previous-line
-       "n" 'mu4e-view-headers-next
-       "p" 'mu4e-view-headers-prev
-       "#" 'mu4e-view-mark-for-trash
-       "d" 'mu4e-view-mark-for-trash
-       "y" 'mu4e-view-mark-for-refile
-       "/" 'mu4e-view-search-edit
-       "x" 'mu4e-view-mark-for-something
-       "z" 'mu4e-view-mark-for-unmark
-       "q" 'vimlike-quit
-       "a" 'mu4e-compose-reply
-       ;; Opens the URL under the cursor.
-       (kbd "RET") (lambda () (interactive) (execute-kbd-macro (kbd "M-RET")))
-       "go" nil
-       "go1" (lambda () (interactive) (mu4e-view-go-to-url 1))
-       "go2" (lambda () (interactive) (mu4e-view-go-to-url 2))
-       "go3" (lambda () (interactive) (mu4e-view-go-to-url 3))
-       "go4" (lambda () (interactive) (mu4e-view-go-to-url 4))
-       "gl" (lambda ()
-              (interactive)
-              (switch-to-buffer-other-window "*mu4e-headers*")
-              (call-interactively 'mu4e~headers-jump-to-maildir))
-       ;; consider calling this with t, for "no confirmation".
-       "e" 'mu4e-view-marked-execute
-       (kbd "SPC") 'evil-ace-jump-word-mode
-       "ESC" nil
-       "a" 'mu4e-reply-all
-       "r" 'mu4e-compose-reply
-       "f" 'mu4e-compose-forward
-       (kbd "M-r") '(lambda () (interactive) (mu4e-update-mail-and-index t))
-       "c" 'mu4e-compose-new)
+  (evil-make-overriding-map mu4e-view-mode-map 'normal t)
+  (evil-define-key 'normal mu4e-view-mode-map
+    "j" 'evil-next-line
+    "k" 'evil-previous-line
+    "n" 'mu4e-view-headers-next
+    "p" 'mu4e-view-headers-prev
+    "#" 'mu4e-view-mark-for-trash
+    "d" 'mu4e-view-mark-for-trash
+    "y" 'mu4e-view-mark-for-refile
+    "/" 'mu4e-view-search-edit
+    "x" 'mu4e-view-mark-for-something
+    "z" 'mu4e-view-mark-for-unmark
+    "q" 'vimlike-quit
+    "a" 'mu4e-compose-reply
+    ;; Opens the URL under the cursor.
+    (kbd "RET") (lambda () (interactive) (execute-kbd-macro (kbd "M-RET")))
+    "go" nil
+    "go1" (lambda () (interactive) (mu4e-view-go-to-url 1))
+    "go2" (lambda () (interactive) (mu4e-view-go-to-url 2))
+    "go3" (lambda () (interactive) (mu4e-view-go-to-url 3))
+    "go4" (lambda () (interactive) (mu4e-view-go-to-url 4))
+    "gl" (lambda ()
+           (interactive)
+           (switch-to-buffer-other-window "*mu4e-headers*")
+           (call-interactively 'mu4e~headers-jump-to-maildir))
+    ;; consider calling this with t, for "no confirmation".
+    "e" 'mu4e-view-marked-execute
+    (kbd "SPC") 'evil-ace-jump-word-mode
+    "ESC" nil
+    "a" 'mu4e-reply-all
+    "r" 'mu4e-compose-reply
+    "f" 'mu4e-compose-forward
+    (kbd "M-r") '(lambda () (interactive) (mu4e-update-mail-and-index t))
+    "c" 'mu4e-compose-new)
 
-     (evil-leader/set-key-for-mode 'mu4e-headers-mode
-       "vv" 'mu4e-show-fetch-progress)
-     (evil-leader/set-key-for-mode 'mu4e-view-mode
-       "vv" 'mu4e-show-fetch-progress
-       "vr" 'mu4e-view-raw-message)
+  (evil-leader/set-key-for-mode 'mu4e-headers-mode
+    "vv" 'mu4e-show-fetch-progress)
+  (evil-leader/set-key-for-mode 'mu4e-view-mode
+    "vv" 'mu4e-show-fetch-progress
+    "vr" 'mu4e-view-raw-message)
 
-     (evil-make-overriding-map mu4e-compose-mode-map 'normal t)
-     (evil-define-key 'normal mu4e-compose-mode-map
-       "c" nil)
-     (evil-leader/set-key-for-mode 'mu4e-compose-mode
-       ;; Emacs always prompts me "Fix continuation lines?" when sending an email. I don't know what this prompt
-       ;; means. It's in message-send-mail in message.el. Answer "y" automatically.
-       "s" (lambda () (interactive) (util/without-confirmation 'message-send-and-exit)))))
+  (evil-make-overriding-map mu4e-compose-mode-map 'normal t)
+  (evil-define-key 'normal mu4e-compose-mode-map
+    "c" nil)
+  (evil-leader/set-key-for-mode 'mu4e-compose-mode
+    ;; Emacs always prompts me "Fix continuation lines?" when sending an email. I don't know what this prompt
+    ;; means. It's in message-send-mail in message.el. Answer "y" automatically.
+    "s" (lambda () (interactive) (util/without-confirmation 'message-send-and-exit))))
 
 ;; Trim the number of fields shown in the email view. This is customizable. See mu4e-view.el for a full list.
 (setq mu4e-view-fields '(:from :to  :cc :subject :date :tags :attachments))
