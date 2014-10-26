@@ -9,7 +9,7 @@
 (setq split-window-preferred-function 'split-window-sensibly-reverse)
 ;; Don't auto-focus the help window. I have my own shortcuts for switching to it and closing it.
 (setq help-window-select "never")
-;; Ensure these open in the selected window, not a new popup.
+;; Ensure these open in the currently selected window, not a new popup.
 (setq same-window-buffer-names '("*magit-log*"))
 
 ;; I manage my windows in a 4x4 grid. I want ephemeral or status-based buffers to always show in the
@@ -38,15 +38,15 @@
 ;; http://stackoverflow.com/questions/1002091/how-to-force-emacs-not-to-display-buffer-in-a-specific-window
 ;; The implementation of this function is based on `special-display-popup-frame` in window.el.
 (defun show-ephemeral-buffer-in-a-sensible-window (buffer &optional buffer-data)
-  "Given a buffer, shows the window in a right-side split."
+  "Given a buffer, shows the window in a split on the right side of the frame."
   (let* ((original-window (selected-window))
-         (create-new-window (one-window-p))
-         (window (if create-new-window
+         (should-create-new-window (one-window-p))
+         (window (if should-create-new-window
                      (split-window-sensibly-reverse)
                    (save-excursion (switch-to-lower-right) (selected-window)))))
-    (display-buffer-record-window (if create-new-window 'window 'reuse) window buffer)
+    (display-buffer-record-window (if should-create-new-window 'window 'reuse) window buffer)
     (set-window-buffer window buffer)
-    (when create-new-window (set-window-prev-buffers window nil))
+    (when should-create-new-window (set-window-prev-buffers window nil))
     (select-window original-window)
     (when (member (buffer-name buffer) special-display-auto-focused-buffers)
       (select-window window))
