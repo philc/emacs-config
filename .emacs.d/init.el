@@ -128,8 +128,10 @@
 
 ;; Colorscheme
 (load-theme 'tangotango t) ; A reasonable color scheme which lives in my .emacs.d.
-; A font face size of 140 can show 110 chars before wrapping on a 1920x1200 resolution.
+;; A font face size of 140 can show 110 chars before wrapping on a 1920x1200 resolution.
 (set-face-attribute 'default nil :height 140)
+;; Make the dividing line between window splits not so bright. It's #EAEAEA in tangotango.
+(set-face-attribute 'vertical-border nil :foreground "#888888")
 
 ;; Whitespace & line wrapping.
 (global-whitespace-mode t)
