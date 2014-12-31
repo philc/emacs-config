@@ -380,6 +380,10 @@
 ;;
 (require 'window-management-personal)
 
+;; Don't use the native OSX full screen support, because it uses OSX Spaces which don't play well with
+;; CMD-tabbing to applications which are behind Emacs. Invoke fullscreen with `toggle-frame-fullscreen`.
+(setq ns-use-native-fullscreen nil)
+
 ;; Window-management keybindings. "w" is the namespace I use.
 (evil-leader/set-key "wn" 'create-window-in-next-logical-spot)
 (evil-leader/set-key "wv" 'split-window-horizontally-and-focus)
@@ -398,6 +402,7 @@
 (evil-leader/set-key "wb" 'winner-undo)
 (evil-leader/set-key "we" 'toggle-maximize-lower-right-window)
 (evil-leader/set-key "q" 'dismiss-ephemeral-windows)
+(evil-leader/set-key "wf" 'toggle-frame-fullscreen)
 
 ;; Make it so Esc means quit, no matter the context.
 ;; http://stackoverflow.com/a/10166400/46237
