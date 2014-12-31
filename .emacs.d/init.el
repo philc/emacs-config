@@ -1242,6 +1242,9 @@
 
 (add-to-list 'auto-mode-alist '("\\.mustache$" . mustache-mode))
 
+(defun open-in-chrome (url)
+  (call-process "open" nil nil nil url "-a" "Google Chrome"))
+
 (defun xah-open-file-at-cursor ()
   "Open the file path under cursor.
 If there is text selection, uses the text selection for path.
@@ -1265,7 +1268,7 @@ URL `http://ergoemacs.org/emacs/emacs_open_file_path_fast.html'"
                    (goto-char p0)
                    (buffer-substring-no-properties p1 p2)))))
     (if (string-match-p "\\`https?://" ξpath)
-        (browse-url ξpath)
+        (open-in-chrome ξpath)
       (progn ; not starting “http://”
         (if (string-match "^\\`\\(.+?\\):\\([0-9]+\\)\\'" ξpath)
             (progn
