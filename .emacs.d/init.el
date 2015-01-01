@@ -1226,6 +1226,13 @@
 (setq js-indent-level 2)
 
 ;;
+;; Ag (silver searcher)
+;;
+;; Note that ag mode configures itself to start in Evil's "motion" state.
+;; compile-goto-error is what the "Return" key does.
+(evil-define-key 'motion ag-mode-map "o" 'compile-goto-error)
+
+;;
 ;; Terminal (multi-term mode)
 ;;
 ;; (require 'multi-term-personal) ; Currently disabled; this doesn't work well.
