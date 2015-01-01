@@ -285,10 +285,10 @@
   ;; `forward-paragraph`, which uses these variables.
   (let ((paragraph-start "\f\\|[     ]*$")
         (paragraph-separate "[  ]*$"))
-    (evil-an-object-range count beg end type #'evil-move-paragraph nil nil t)))
+    (evil-select-an-object 'evil-paragraph beg end type count)))
 
 (define-key evil-outer-text-objects-map "p" 'evil-paragraph-from-newlines)
-(define-key evil-outer-text-objects-map "P" 'evil-a-pagraph)
+(define-key evil-outer-text-objects-map "P" 'evil-a-paragraph)
 
 (evil-leader/set-key
   "h" 'help
