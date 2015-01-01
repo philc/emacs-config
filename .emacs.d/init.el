@@ -843,6 +843,7 @@
   '((t (:background "#191919" :inherit mode-line)))
   "Face for powerline")
 
+;; TODO(philc): Can this be deleted? It may be the source of my crashing issues with powerline.
 (defun powerline-projectile-project-name (&optional face padding)
   "Returns a string describing the projectile project for the current buffer. Takes the same arguments as
    powerline-raw."
@@ -867,9 +868,8 @@
                           (lhs (list (powerline-raw "%*" 'powerline-black-face 'l)
                                      (powerline-buffer-id 'powerline-black-face 'l)
                                      (powerline-raw " " 'powerline-black-face)
-                                     (powerline-projectile-project-name 'powerline-black-face 'l)
+                                     ;; (powerline-projectile-project-name 'powerline-black-face 'l)
                                      (powerline-raw " " 'powerline-black-face)
-                                     (funcall separator-left mode-line face1)
                                      (powerline-major-mode face1 'l)
                                      (powerline-process face1)
                                      (powerline-minor-modes face1 'l)
@@ -881,9 +881,7 @@
                                      (powerline-raw "%4l" face1 'l) ; Current line number
                                      (powerline-raw ":" face1 'l)
                                      (powerline-raw "%3c" face1 'r) ; Current column number
-                                     (powerline-raw " " face1)
-                                     ;; A visual scrollbar shown inside 1x1 char
-                                     (powerline-hud 'powerline-white-face face1))))
+                                     (powerline-raw " " face1))))
                      (concat (powerline-render lhs)
                              (powerline-fill face1 (powerline-width rhs))
                              (powerline-render rhs)))))))
