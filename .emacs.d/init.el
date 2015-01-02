@@ -67,7 +67,7 @@
 (require 'cl)
 (add-to-list 'load-path "~/.emacs.d/elisp")
 (require 'lisp-helpers-personal)
-(require 'emacs-utils)
+(require 'emacs-utils-personal)
 
 ;; Anecdotally, this reduces the amount of display flicker on some Emacs startup.
 (setq redisplay-dont-pause t)
