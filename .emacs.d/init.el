@@ -419,7 +419,7 @@
    then it takes a second \\[keyboard-quit] to abort the minibuffer."
   (interactive)
   (if (and delete-selection-mode transient-mark-mode mark-active)
-      (setq deactivate-mark  t)
+      (setq deactivate-mark t)
     (when (get-buffer "*Completions*") (delete-windows-on "*Completions*"))
     (abort-recursive-edit)))
 
@@ -672,6 +672,15 @@
   (interactive)
   (message "%s" (eval (read (current-sexp)))))
 
+(defun view-echo-area-messages-and-scroll ()
+  "Opens the echo area messages buffer and scrolls to the bottom of it. That's where the latest messages are."
+  (interactive)
+  (view-echo-area-messages)
+  (util/preserve-selected-window
+   (lambda ()
+     (select-window (get-buffer-window "*Messages*"))
+     (goto-char (point-max)))))
+
 (evil-leader/set-key-for-mode 'emacs-lisp-mode
   ; Note that I'm saving the buffer before each eval because otherwise, the buffer gets saved after the eval,
   ; (due to save-when-switching-windows setup) and the output from the buffer save overwrites the eval results
@@ -679,7 +688,7 @@
   "eb" (lambda() (interactive) (util/save-buffer-if-dirty) (eval-buffer))
   "es" (lambda () (interactive) (util/save-buffer-if-dirty) (elisp-eval-current-sexp))
   "ex" (lambda () (interactive) (util/save-buffer-if-dirty) (call-interactively 'eval-defun))
-  "ee" 'view-echo-area-messages)
+  "ee" 'view-echo-area-messages-and-scroll)
 
 ;; Indentation rules.
 (put '-> 'lisp-indent-function nil)
