@@ -281,7 +281,7 @@
   "Select a paragraph separated by newlines."
   :type line
   ;; These two vars are set by the current programming mode. Set them to their default text mode values
-  ;; temporarily while we select the paragraph. The implementation of evil-move-paragraph invokes
+  ;; temporarily while we select the paragraph. The implementation of evil-select-an-object will invokes
   ;; `forward-paragraph`, which uses these variables.
   (let ((paragraph-start "\f\\|[     ]*$")
         (paragraph-separate "[  ]*$"))
