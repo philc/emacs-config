@@ -332,10 +332,13 @@
 (defun evil-indent-inside-paragraph ()
   "Fills (reflows/linewraps) the current paragraph. Equivalent to gqap in vim."
   (interactive)
-  (let ((region (if (use-region-p)
-                  (list (region-beginning) (region-end))
-                  (evil-inner-paragraph))))
-    (evil-indent-without-move (first region) (second region))))
+  ;; Even though evil-indent-without-move preserves the cursor position, we must also do it here.
+  (util/preserve-line-and-column
+   (lambda ()
+     (let ((region (if (use-region-p)
+                       (list (region-beginning) (region-end))
+                     (evil-inner-paragraph))))
+       (evil-indent-without-move (first region) (second region))))))
 
 (defun evil-shift-paragraph-left (beg end)
   "Shifts a paragraph left."
@@ -366,8 +369,7 @@
   "Indent text."
   :move-point nil
   :type line
-  (save-excursion
-    (evil-indent beg end)))
+  (util/preserve-line-and-column (lambda () (evil-indent beg end))))
 
 ;; Enable the typical Bash/readline keybindings when in insert mode.
 (util/define-keys evil-insert-state-map

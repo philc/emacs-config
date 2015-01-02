@@ -48,3 +48,14 @@
     (let ((original-window (selected-window)))
       (funcall f)
       (select-window original-window))))
+
+(defun util/preserve-line-and-column (f)
+  "Runs the given function and restores the cursor to its former line and column. This is helpful when the
+   text in the buffer moves (e.g. as a result of indentation commands). This is different from save-excursion
+   which will restore the (point). This does not restore the cursor to the previous point."
+  (lexical-let* ((previous-line (line-number-at-pos))
+                 (previous-col (current-column))
+                 (return-val (funcall f)))
+    (goto-line previous-line)
+    (move-to-column previous-col)
+    return-val))
