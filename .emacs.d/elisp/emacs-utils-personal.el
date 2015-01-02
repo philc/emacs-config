@@ -1,8 +1,7 @@
 ;;
 ;; Lisp utility functions to serve as building blocks for working with text in Emacs.
 ;;
-(provide 'emacs-utils)
-
+(provide 'emacs-utils-personal)
 (require 'lisp-helpers-personal)
 
 (defun util/line-indentation-level (line)
