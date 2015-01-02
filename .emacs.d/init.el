@@ -11,6 +11,10 @@
 ;;
 (require 'package)
 (add-to-list 'package-archives '("melpa" . "http://melpa.org/packages/"))
+(add-to-list 'package-archives '("melpa-stable" . "http://melpa-stable.milkbox.net/packages/"))
+
+;; Cider from MELPA has been too unstable for me. Only use versions from MELPA Stable.
+(add-to-list 'package-pinned-packages '(cider . "melpa-stable") t)
 
 (package-initialize)
 (when (not package-archive-contents)
