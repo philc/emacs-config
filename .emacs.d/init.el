@@ -27,7 +27,6 @@
                       auto-complete
                       cider ; repl for Clojure code evaluation.
                       clojure-mode
-                      clojure-test-mode
                       coffee-mode ; For syntax highlighting coffeescript.
                       dired-details+ ; Hides all of the unnecessary file details in dired mode.
                       diminish ; For hiding and shortening minor modes in the modeline
