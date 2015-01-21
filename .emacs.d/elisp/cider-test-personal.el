@@ -13,8 +13,8 @@
   "Saves and loads the current buffer, and compiles it. Runs the given function if there are no compile
   errors."
   (save-buffer)
-  (cider-load-current-buffer)
-  (sleep-for 0.1) ; cider-load-current-buffer is asynchronous, so we must work around that.
+  (cider-load-buffer)
+  (sleep-for 0.1) ; cider-load-buffer is asynchronous, so we must work around that.
   ;; If there was a compile error, halt. Otherwise we'll mask the compile error which has been printed to the
   ;; minibuffer.
   (when (not (cider-test/buffer-has-compile-errors?))
