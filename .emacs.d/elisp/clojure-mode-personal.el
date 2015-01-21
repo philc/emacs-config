@@ -22,10 +22,12 @@
 (evil-define-key 'normal clojure-mode-map "K"
   (lambda () (interactive) (util/preserve-selected-window (lambda () (call-interactively 'cider-doc)))))
 
-(evil-define-key 'normal clojure-mode-map "gf" 'cider-jump)
+(evil-define-key 'normal clojure-mode-map "gf" 'cider-jump-to-var)
 (evil-define-key 'normal clojure-mode-map "gb" 'cider-jump-back)
 (evil-define-key 'normal clojure-mode-map (kbd "C-S-H") 'shift-sexp-backward)
 (evil-define-key 'normal clojure-mode-map (kbd "C-S-L") 'shift-sexp-forward)
+(evil-define-key 'normal clojure-mode-map (kbd "C-S-K") 'shift-sexp-backward)
+(evil-define-key 'normal clojure-mode-map (kbd "C-S-J") 'shift-sexp-forward)
 
 ;; Hide the uninteresting nrepl-connection and nrepl-server buffers from the buffer list.
 (setq nrepl-hide-special-buffers t)
@@ -33,6 +35,10 @@
 ;; Prevent the auto-display of the REPL buffer in a separate window after connection is established.
 (setq cider-repl-pop-to-buffer-on-connect nil)
 
+(setq cider-auto-jump-to-error nil)
+
+;; Don't auto-focus the errors buffer when it pops up.
+(setq cider-auto-select-error-buffer nil)
 ;; Don't ask confirmation for closing any open nrepl connections when exiting Emacs.
 ;; http://stackoverflow.com/q/2706527/46237
 (defadvice save-buffers-kill-emacs (around no-query-kill-emacs activate)
