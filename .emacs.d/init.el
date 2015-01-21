@@ -1193,10 +1193,10 @@
   ;; NOTE(philc): This function opens the "main" files in the project types that I typically work on.
   ;; Customzie this to meet your needs if you want this functionality.
   (let* ((project-name (file-name-nondirectory project-path))
-         (is-clojure (file-exists-p (concat path "/project.clj")))
+         (is-clojure (file-exists-p (concat project-path "/project.clj")))
          (main-file (when is-clojure
                       (->> ["core.clj" "handler.clj"]
-                           (mapcar (lambda (file) (concat path "/src/" project-name "/" file)))
+                           (mapcar (lambda (file) (concat project-path "/src/" project-name "/" file)))
                            (remove-if-not 'file-exists-p)
                            first))))
     (if main-file
