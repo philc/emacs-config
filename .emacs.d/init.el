@@ -278,9 +278,9 @@
 (define-key evil-normal-state-map "-" 'evil-indent-without-move)
 
 ;; Evil uses the current file's mode's definition of a paragraph, which is often surprising. For instance, in
-;; Markdown mode, a single item in a bullet list consistutes a paragraph. Instead, I've defined a paragraph to
-;; be hunks of text separated by newlines. That's typically what I would expect of a paragraph. You can still
-;; use Evil's paragraph definition using the text object "P" instead of "p".
+;; Markdown mode, a single item in a bulleted list consistutes a paragraph. Instead, I've defined a paragraph
+;; to be hunks of text separated by newlines. That's typically what I would expect of a paragraph. You can
+;; still use Evil's paragraph definition using the text object "P" instead of "p".
 (evil-define-text-object evil-paragraph-from-newlines (count &optional beg end type)
   "Select a paragraph separated by newlines."
   :type line
@@ -324,10 +324,21 @@
 (defun evil-fill-inside-paragraph ()
   "Fills (reflows/linewraps) the current paragraph. Equivalent to gqap in vim."
   (interactive)
-  (let ((region (if (use-region-p)
-                  (list (region-beginning) (region-end))
-                  (evil-inner-paragraph))))
-    (evil-fill (first region) (second region))))
+  ;; When we line wrap (fill) the paragraph, the default behavior is to put your cursor at the end of the
+  ;; newly-wrapped paragraph. Better would be to keep your cursor where it was when you triggered this
+  ;; command, so you don't need ot navigate back there if you want to continue typing.
+  ;; This tries to estimate where your cursor should be after lines get wrapped.
+  (lexical-let* ((estimated-col (mod (current-column) fill-column))
+                 (estimated-line (+ (line-number-at-pos)
+                                    (/ (current-column) fill-column))))
+    (util/preserve-line-and-column
+     (lambda ()
+       (let ((region (if (use-region-p)
+                         (list (region-beginning) (region-end))
+                       (evil-inner-paragraph))))
+         (evil-fill (first region) (second region)))))
+    (goto-line estimated-line)
+    (move-to-column estimated-col)))
 
 (defun evil-indent-inside-paragraph ()
   "Fills (reflows/linewraps) the current paragraph. Equivalent to gqap in vim."
