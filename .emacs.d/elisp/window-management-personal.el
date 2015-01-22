@@ -33,6 +33,10 @@
 ;; show-ephemeral-buffer-in-a-sensible-window
 (setq special-display-auto-focused-buffers '())
 
+(defun get-ephemeral-windows ()
+  "Returns a list of windows which are showing ephemeral buffers."
+  (remove-if-not (lambda (w) (-> w window-buffer buffer-name special-display-p)) (window-list)))
+
 ;; References, for context:
 ;; http://snarfed.org/emacs_special-display-function_prefer-other-visible-frame
 ;; http://stackoverflow.com/questions/1002091/how-to-force-emacs-not-to-display-buffer-in-a-specific-window
@@ -58,10 +62,8 @@
   (interactive)
   (save-excursion
     (let ((original-window (selected-window)))
-      (dolist (window (window-list))
-        (let ((buffer (window-buffer window)))
-          (when (special-display-p (buffer-name buffer))
-            (quit-window nil window))))
+      (dolist (w (get-ephemeral-windows))
+        (quit-window nil w))
       (select-window original-window))))
 
 (setq buffer-underneath-maximized-ephemeral-window nil)
