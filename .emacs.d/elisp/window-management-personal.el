@@ -86,22 +86,26 @@
 (setq buffer-underneath-maximized-ephemeral-window nil)
 
 (defun toggle-maximize-lower-right-window ()
-  "Toggles the maximization of an ephemeral window showing in the lower right quadrant."
+  "Toggles the vertical maximization of an ephemeral window, whereever it's showing. If there's a window above
+   or below it, that window will be saved and will be restored if maximization is toggled."
   ;; I usually have a REPL or diff view showing in the lower right. Often I want to "maximize it" vertically,
   ;; to view a long stacktrace etc., without having to switch to the upper right and close that window.
   (interactive)
-  (util/preserve-selected-window
-   (lambda ()
-     (switch-to-lower-right)
-     (lexical-let ((w (window-in-direction 'above)))
-       (if w
-           (progn
-             (setq buffer-underneath-maximized-ephemeral-window (window-buffer w))
-             (delete-window w))
-         (progn
-           (when buffer-underneath-maximized-ephemeral-window
-             (split-window-vertically)
-             (set-window-buffer (selected-window) buffer-underneath-maximized-ephemeral-window))))))))
+  (window-in-direction 'above (get-buffer-window "*Messages*"))
+  (let ((ephemeral-window (first (get-ephemeral-windows))))
+    (when ephemeral-window
+      (lexical-let ((covered-window (or (window-in-direction 'above ephemeral-window)
+                                        (window-in-direction 'below ephemeral-window))))
+        (if covered-window
+            (progn
+              (setq buffer-underneath-maximized-ephemeral-window (window-buffer covered-window))
+              (delete-window covered-window))
+          (when buffer-underneath-maximized-ephemeral-window
+            (util/preserve-selected-window
+             (lambda ()
+               (select-window ephemeral-window)
+               (split-window-vertically)
+               (set-window-buffer (selected-window) buffer-underneath-maximized-ephemeral-window)))))))))
 
 (defun swap-window-buffers (window-move-fn)
   "Swaps the current buffer with the buffer in the window active after invoking window-move-fn."
