@@ -33,21 +33,38 @@
 ;; show-ephemeral-buffer-in-a-sensible-window
 (setq special-display-auto-focused-buffers '())
 
+;; Whether we can show an ephemeral buffer in other frames, if, say, another frame already contains another
+;; ephemeral buffer that we want to replace with a new one.
+(setq show-ephemeral-buffer-in-other-frames t)
+
 (defun get-ephemeral-windows ()
-  "Returns a list of windows which are showing ephemeral buffers."
-  (remove-if-not (lambda (w) (-> w window-buffer buffer-name special-display-p)) (window-list)))
+  "Returns a list of windows which are showing ephemeral buffers. Searches all visible frames."
+  (->> (visible-frame-list)
+       (mapcar (lambda (f) (window-list f)))
+       flatten
+       (remove-if-not (lambda (w) (-> w window-buffer buffer-name special-display-p)))))
 
 ;; References, for context:
 ;; http://snarfed.org/emacs_special-display-function_prefer-other-visible-frame
 ;; http://stackoverflow.com/questions/1002091/how-to-force-emacs-not-to-display-buffer-in-a-specific-window
 ;; The implementation of this function is based on `special-display-popup-frame` in window.el.
 (defun show-ephemeral-buffer-in-a-sensible-window (buffer &optional buffer-data)
-  "Given a buffer, shows the window in a split on the right side of the frame."
+  "Given a buffer, shows the window in a split on the right side of the frame. If the buffer is already
+   showing in some window, do nothing. If there's another ephemeral buffer already showing in a window,
+   show this new one on top of that one."
+  ;; NOTE(philc): Be careful about invoking `print` statements in this function when debugging it. For some
+  ;; reason it interfaces with the window switching behavior.
   (let* ((original-window (selected-window))
-         (should-create-new-window (one-window-p))
-         (window (if should-create-new-window
-                     (split-window-sensibly-reverse)
-                   (save-excursion (switch-to-lower-right) (selected-window)))))
+         (window-showing-buffer (get-buffer-window buffer show-ephemeral-buffer-in-other-frames))
+         (existing-ephemeral-window (first (get-ephemeral-windows)))
+         (should-create-new-window (and (not window-showing-buffer)
+                                        (not existing-ephemeral-window)
+                                        (one-window-p)))
+         (window (or window-showing-buffer
+                     existing-ephemeral-window
+                     (if should-create-new-window
+                         (split-window-sensibly-reverse)
+                       (save-excursion (switch-to-lower-right) (selected-window))))))
     (display-buffer-record-window (if should-create-new-window 'window 'reuse) window buffer)
     (set-window-buffer window buffer)
     (when should-create-new-window (set-window-prev-buffers window nil))
