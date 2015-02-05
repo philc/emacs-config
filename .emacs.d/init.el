@@ -36,6 +36,7 @@
                       evil-nerd-commenter
                       flx-ido ; Fuzzy matching for ido, which improves the UX of Projectile.
                       go-mode ; For editing Go files.
+                      hiwin ; For highlighting the active pane/window in Emacs.
                       less-css-mode ; Syntax highlighting for LESS CSS files.
                       ido-ubiquitous ; Make ido completions work everywhere.
                       ido-vertical-mode ; Show ido results vertically.
@@ -1276,6 +1277,17 @@
 ;; Terminal (multi-term mode)
 ;;
 ;; (require 'multi-term-personal) ; Currently disabled; this doesn't work well.
+
+;;
+;; Hiwin - for highlighting the active panel
+;;
+;; I use this to make it easy to determine which split is active when I have many splits.
+;; The mode is obscure and is in Japanese, but it works well.
+;; https://github.com/yoshida-mediba/hiwin-mode
+;; Found via this stackoverflow article: http://stackoverflow.com/q/1516830
+(require 'hiwin)
+(hiwin-activate)
+(set-face-background 'hiwin-face "#191d1d") ; The background color of inactive splits.
 
 ;;
 ;; Misc
