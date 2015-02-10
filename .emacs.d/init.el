@@ -1279,17 +1279,6 @@
 ;; (require 'multi-term-personal) ; Currently disabled; this doesn't work well.
 
 ;;
-;; Hiwin - for highlighting the active panel
-;;
-;; I use this to make it easy to determine which split is active when I have many splits.
-;; The mode is obscure and is in Japanese, but it works well.
-;; https://github.com/yoshida-mediba/hiwin-mode
-;; Found via this stackoverflow article: http://stackoverflow.com/q/1516830
-(require 'hiwin)
-(hiwin-activate)
-(set-face-background 'hiwin-face "#191d1d") ; The background color of inactive splits.
-
-;;
 ;; Misc
 ;;
 
