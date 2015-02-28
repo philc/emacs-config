@@ -44,10 +44,10 @@
 (defun util/preserve-selected-window (f)
   "Runs the given function and then restores focus to the original window. Useful when you want to invoke
    a function (like showing documentation) but don't want to keep editing your current buffer."
-  (lexical-let ((f f))
-    (let ((original-window (selected-window)))
-      (funcall f)
-      (select-window original-window))))
+  (lexical-let* ((f f)
+                 (original-window (selected-window)))
+    (funcall f)
+    (select-window original-window)))
 
 (defun util/preserve-line-and-column (f)
   "Runs the given function and restores the cursor to its former line and column. This is helpful when the
