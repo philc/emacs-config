@@ -107,18 +107,18 @@
                (split-window-vertically)
                (set-window-buffer (selected-window) buffer-underneath-maximized-ephemeral-window)))))))))
 
-(defun swap-window-buffers (window-move-fn)
-  "Swaps the current buffer with the buffer in the window active after invoking window-move-fn."
-  (let ((src-window (get-buffer-window))
-        (src-buffer (window-buffer)))
-    (funcall window-move-fn)
-    (set-window-buffer src-window (current-buffer))
-    (set-window-buffer (get-buffer-window) src-buffer)))
+;; (defun swap-window-buffers (window-move-fn)
+;;   "Swaps the current buffer with the buffer in the window active after invoking window-move-fn."
+;;   (let ((src-window (get-buffer-window))
+;;         (src-buffer (window-buffer)))
+;;     (funcall window-move-fn)
+;;     (set-window-buffer src-window (current-buffer))
+;;     (set-window-buffer (get-buffer-window) src-buffer)))
 
-(defun swap-window-with-upper-left () (interactive) (swap-window-buffers 'switch-to-upper-left))
-(defun swap-window-with-lower-left () (interactive) (swap-window-buffers 'switch-to-lower-left))
-(defun swap-window-with-upper-right () (interactive) (swap-window-buffers 'switch-to-upper-right))
-(defun swap-window-with-lower-right () (interactive) (swap-window-buffers 'switch-to-lower-right))
+;; (defun swap-window-with-upper-left () (interactive) (swap-window-buffers 'switch-to-upper-left))
+;; (defun swap-window-with-lower-left () (interactive) (swap-window-buffers 'switch-to-lower-left))
+;; (defun swap-window-with-upper-right () (interactive) (swap-window-buffers 'switch-to-upper-right))
+;; (defun swap-window-with-lower-right () (interactive) (swap-window-buffers 'switch-to-lower-right))
 
 (defun toggle-window-maximize ()
   (interactive)
@@ -138,12 +138,32 @@
   (split-window-horizontally)
   (other-window 1))
 
-(defun switch-to-upper-left () (interactive) (select-window (frame-first-window)))
-(defun switch-to-lower-left () (interactive) (switch-to-upper-left) (ignore-errors (windmove-down)))
-(defun switch-to-upper-right () (interactive) (switch-to-upper-left) (ignore-errors (windmove-right 1)))
-(defun switch-to-lower-right () (interactive) (switch-to-upper-right) (ignore-errors
-                                                                        (windmove-down)
-                                                                        (windmove-right)))
+; TODO(philc): Delete this if you don't start using it.
+(defun vertical-split-count ()
+  "Returns the number of vertical splits (or columns) in the current frame."
+  (util/preserve-selected-window
+   (lambda ()
+     (select-window (frame-first-window))
+     (let ((i 1))
+       (while (ignore-errors (windmove-right 1))
+         (setq i (+ i 1)))
+       i))))
+
+(defun create-new-column ()
+  "Creates a new column in my window layout by splitting the rightmost window and rebalancing windows."
+  (interactive)
+  (lexical-let* ((w (selected-window))
+                 (b (current-buffer)))
+    (while (ignore-errors (windmove-right 1)))
+    (if (not (window-splittable-p (selected-window)))
+        (select-window w)
+      (progn
+        (split-window-horizontally-and-focus)
+        ;; Ensure that no matter where the window is created, it has the same buffer as the window prior to
+        ;; creating the new one. Otherwise, the new window could have some random buffer in it, making it
+        ;; difficult to use commands like open-in-project, for instance.
+        (set-window-buffer (selected-window) b)
+        (balance-windows)))))
 
 (defun create-window-in-next-logical-spot ()
   "Creates a window in the next slot in my standard 2x2 configuration. So for instance, if I have only 1

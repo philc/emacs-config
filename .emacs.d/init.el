@@ -404,13 +404,13 @@
 (setq ns-use-native-fullscreen nil)
 
 ;; Window-management keybindings. "w" is the namespace I use.
-(evil-leader/set-key "wn" 'create-window-in-next-logical-spot)
+(evil-leader/set-key "wn" 'create-new-column)
 (evil-leader/set-key "wv" 'split-window-horizontally-and-focus)
 (evil-leader/set-key "wh" 'split-window-vertically-and-focus)
-(evil-leader/set-key "ws A-e" 'swap-window-with-upper-left)
-(evil-leader/set-key "ws A-d" 'swap-window-with-lower-left)
-(evil-leader/set-key "ws A-r" 'swap-window-with-upper-right)
-(evil-leader/set-key "ws A-f" 'swap-window-with-lower-right)
+;; (evil-leader/set-key "ws A-e" 'swap-window-with-upper-left)
+;; (evil-leader/set-key "ws A-d" 'swap-window-with-lower-left)
+;; (evil-leader/set-key "ws A-r" 'swap-window-with-upper-right)
+;; (evil-leader/set-key "ws A-f" 'swap-window-with-lower-right)
 ;; (evil-leader/set-key "ws A-e" 'swap-window-with-upper-right)
 (evil-leader/set-key "wk" (lambda () (interactive) (kill-buffer (current-buffer))))
 (evil-leader/set-key "wm" 'toggle-window-maximize)
@@ -541,10 +541,10 @@
                   ;; want them to take precedence over everything else.
                   (kbd "M-C-n") 'other-window
                   ;; Note that I have Ctrl-Space mapped to Alt, which makes these shortcuts easy to hit.
-                  (kbd "A-e") 'switch-to-upper-left
-                  (kbd "A-d") 'switch-to-lower-left
-                  (kbd "A-r") 'switch-to-upper-right
-                  (kbd "A-f") 'switch-to-lower-right
+                  (kbd "A-f") (lambda () (interactive) (ignore-errors (windmove-right)))
+                  (kbd "A-d") (lambda () (interactive) (ignore-errors (windmove-down)))
+                  (kbd "A-s") (lambda () (interactive) (ignore-errors (windmove-left)))
+                  (kbd "A-e") (lambda () (interactive) (ignore-errors (windmove-up)))
                   (kbd "M-i") 'escreen-set-tab-alias
                   (kbd "M-t") 'open-current-buffer-in-new-tab)
 
