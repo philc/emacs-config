@@ -149,6 +149,10 @@
          (setq i (+ i 1)))
        i))))
 
+(defun switch-to-lower-right ()
+  (while (ignore-errors (windmove-right 1)))
+  (while (ignore-errors (windmove-down 1))))
+
 (defun create-new-column ()
   "Creates a new column in my window layout by splitting the rightmost window and rebalancing windows."
   (interactive)
