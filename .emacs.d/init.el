@@ -416,8 +416,7 @@
 (evil-leader/set-key "wm" 'toggle-window-maximize)
 (evil-leader/set-key "wr" 'evil-window-rotate-downwards)
 (evil-leader/set-key "wR" 'evil-window-rotate-upwards)
-(evil-leader/set-key "wR" 'evil-window-rotate-upwards)
-;; Undo the last change you made to your window configuration.
+;; winner-undo will undo the last change you made to your window configuration.
 (evil-leader/set-key "wb" 'winner-undo)
 (evil-leader/set-key "we" 'toggle-maximize-lower-right-window)
 (evil-leader/set-key "q" 'dismiss-ephemeral-windows)
@@ -545,6 +544,10 @@
                   (kbd "A-d") (lambda () (interactive) (ignore-errors (windmove-down)))
                   (kbd "A-s") (lambda () (interactive) (ignore-errors (windmove-left)))
                   (kbd "A-e") (lambda () (interactive) (ignore-errors (windmove-up)))
+                  (kbd "A-F") 'swap-window-right
+                  (kbd "A-D") 'swap-window-down
+                  (kbd "A-S") 'swap-window-left
+                  (kbd "A-E") 'swap-window-up
                   (kbd "M-i") 'escreen-set-tab-alias
                   (kbd "M-t") 'open-current-buffer-in-new-tab)
 

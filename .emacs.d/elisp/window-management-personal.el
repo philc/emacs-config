@@ -107,18 +107,18 @@
                (split-window-vertically)
                (set-window-buffer (selected-window) buffer-underneath-maximized-ephemeral-window)))))))))
 
-;; (defun swap-window-buffers (window-move-fn)
-;;   "Swaps the current buffer with the buffer in the window active after invoking window-move-fn."
-;;   (let ((src-window (get-buffer-window))
-;;         (src-buffer (window-buffer)))
-;;     (funcall window-move-fn)
-;;     (set-window-buffer src-window (current-buffer))
-;;     (set-window-buffer (get-buffer-window) src-buffer)))
+(defun swap-window-buffers (window-move-fn)
+  "Swaps the current buffer with the buffer in the window active after invoking window-move-fn."
+  (let ((src-window (get-buffer-window))
+        (src-buffer (window-buffer)))
+    (funcall window-move-fn)
+    (set-window-buffer src-window (current-buffer))
+    (set-window-buffer (get-buffer-window) src-buffer)))
 
-;; (defun swap-window-with-upper-left () (interactive) (swap-window-buffers 'switch-to-upper-left))
-;; (defun swap-window-with-lower-left () (interactive) (swap-window-buffers 'switch-to-lower-left))
-;; (defun swap-window-with-upper-right () (interactive) (swap-window-buffers 'switch-to-upper-right))
-;; (defun swap-window-with-lower-right () (interactive) (swap-window-buffers 'switch-to-lower-right))
+(defun swap-window-left () (interactive) (swap-window-buffers 'windmove-left))
+(defun swap-window-right () (interactive) (swap-window-buffers 'windmove-right))
+(defun swap-window-down () (interactive) (swap-window-buffers 'windmove-down))
+(defun swap-window-up () (interactive) (swap-window-buffers 'windmove-up))
 
 (defun toggle-window-maximize ()
   (interactive)
