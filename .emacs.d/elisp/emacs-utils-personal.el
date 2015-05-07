@@ -60,3 +60,15 @@
     (goto-line previous-line)
     (move-to-column previous-col)
     return-val))
+
+(defun util/thing-at-point-no-properties (thing)
+  "Returns the text of the thing at point, but without properties. See `thing-at-point` for details."
+  (let ((bounds (bounds-of-thing-at-point thing)))
+    (when bounds ; NOTE(philc): I'm not sure if bounds-of-thing-at-point ever returns nil.
+      (buffer-substring-no-properties (car bounds) (cdr bounds)))))
+
+(defun util/delete-thing-at-point (thing)
+  "Deletes the thing at point, leaving the cursor at the beginning of the thing's region. See
+  `thing-at-point`."
+  (let ((bounds (bounds-of-thing-at-point thing)))
+    (delete-region (car bounds) (cdr bounds))))
