@@ -1052,6 +1052,9 @@
   "i" 'indent-html-buffer
   "vv" 'preview-html)
 
+;;
+;; CSS, LESS mode
+;;
 (defun indent-css-buffer ()
   "Pipe the current buffer into `css-beautify`, and replace the current buffer's contents."
   (interactive)
@@ -1065,6 +1068,38 @@
                          "--wrap-line-length" "110")
     (set-window-start (selected-window) scroll-y)
     (goto-char p)))
+
+;; `brace-block` is a text object which can be operated on by `thing-at-point`. (thing-at-point 'brace-block)
+;; will return all text between and including the set of curly braces surrounding the cursor.
+(put 'brace-block 'beginning-op (lambda () (re-search-backward "{")))
+(put 'brace-block 'end-op (lambda () (re-search-forward "}")))
+
+(defun toggle-fold-css-block ()
+  "Toggles whether a CSS rule is one line or multiple lines."
+  (interactive)
+  (let* ((text (util/thing-at-point-no-properties 'brace-block))
+         (lines (split-string text "\n"))
+         (should-expand (= (length lines) 1))
+         (new-text
+          (if should-expand
+              (let ((contents (-> text
+                                  (substring 1 -1) ; Remove the enclosing braces.
+                                  (split-string "; *")
+                                  ((lambda (x) (mapcar 'chomp x)))
+                                  (string/join ";\n"))))
+                (concat "{\n" contents "}"))
+            ;; else, collapse the CSS block into a single line.
+            (-> (mapcar 'chomp lines)
+                (string/join " ")))))
+    (util/delete-thing-at-point 'brace-block)
+    (insert new-text)
+    (when should-expand
+      ;; When expanding the CSS to multiple lines, we didn't preserve line indentation, so here we just
+      ;; re-indent the paragraph around the cursor. This is a workaround.
+      (evil-indent-inside-paragraph))))
+
+(evil-define-key 'normal css-mode-map
+  (kbd "A-C-f") 'toggle-fold-css-block)
 
 ;;
 ;; SCSS mode, for editing SCSS files.
