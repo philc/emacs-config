@@ -310,7 +310,7 @@
   "o" 'xah-open-file-at-cursor
   ;; "v" is a mnemonic prefix for "view X".
   ;; "vv" will be a natural choice as a mode-specific shortcut for previewing the current file.
-  "vu" 'mu4e
+  "vu" 'notmuch-go-to-inbox
   "vp" 'navigate-to-project
   "vn" 'open-markdown-file-from-notes-folder
   "vo" (lambda () (interactive) (find-file "~/Dropbox/tasks.org"))
@@ -1114,6 +1114,12 @@
 ;; (require 'mu4e-mode-personal)
 
 ;;
+;; notmuch - email & gmail in Emacs.
+;; This is an alternative to mu4e. WIP.
+;;
+(require 'notmuch-ext)
+
+;;
 ;; YAML mode, for editing YAML files
 ;;
 (require 'yaml-mode)
@@ -1273,6 +1279,8 @@
   (interactive)
   (save-excursion
     (call-process-region (point-min) (point-max) "jq" t (buffer-name) t ".")))
+
+;; TODO(philc): bind json-format to "leader-i"
 
 ;;
 ;; Java
