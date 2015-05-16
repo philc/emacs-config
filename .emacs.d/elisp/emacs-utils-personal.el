@@ -10,10 +10,16 @@
   (length (match-string 1 line)))
 
 (defun util/replace-current-line (new-line)
-  "Replaces hte current line with the new one."
+  "Replaces the current line with the new one."
   (save-excursion
    (delete-region (line-beginning-position) (line-end-position))
    (insert new-line)))
+
+(defun util/replace-buffer-text (new-text)
+  "Replaces the entire buffer with the new text."
+  (save-excursion
+   (delete-region (point-min) (point-max))
+   (insert new-text)))
 
 (defun util/get-current-line ()
   "Returns the text (without string properties) of the current line."
