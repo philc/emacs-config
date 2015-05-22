@@ -102,7 +102,8 @@
                     ;; I'm special casing shared_lib et al so that I can eval files from that project against
                     ;; the most recent repl.
                     ((or (search "shared_lib" project-directory)
-                         (search "ml_lib" project-directory))
+                         (search "ml_lib" project-directory)
+                         (search "admarkup" project-directory))
                      (car nrepl-connection-list))
                     (project-directory
                      (car (-filter
