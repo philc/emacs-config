@@ -28,15 +28,36 @@
 ;; Don't keep message buffers around.
 (setq message-kill-buffer-on-exit t)
 
-(evil-set-initial-state 'notmuch-search-mode 'normal)
-(evil-set-initial-state 'notmuch-tree-mode 'normal)
-(evil-set-initial-state 'notmuch-hello-mode 'normal)
-(evil-set-initial-state 'notmuch-show-mode 'normal)
+(setq notmuch-poll-script "~/scripts/mail/fetch_email")
+
+;;
+;; Settings for composing and sending emails.
+;; http://chrisdone.com/posts/emacs-mail
+;;
+;; Credentials are stored in ~/.authoinfo. See here for the format:
+;; http://emacswiki.org/emacs/GnusAuthinfo
+;; Note that you need to use a site-specific password if have Google's two-factor auth setup.
+
+(setq user-mail-address "phil.crosby@gmail.com"
+      user-full-name  "Phil Crosby")
+(require 'smtpmail)
+(setq message-send-mail-function 'smtpmail-send-it)
+(setq smtpmail-stream-type 'ssl)
+(setq smtpmail-smtp-server "smtp.gmail.com")
+(setq smtpmail-smtp-service 465)
+;; TODO(philc): This can be nil. I have a folder here so that draft buffers are backed by disk. Is that
+;; necessary?
+(setq notmuch-fcc-dirs ".sentmail")
 
 ;; Sort messages newest first.
 (set 'notmuch-search-oldest-first nil) ; The default is t.
 
 (setq notmuch-ext/markdown-to-html-command "markdown_page.rb")
+
+(evil-set-initial-state 'notmuch-search-mode 'normal)
+(evil-set-initial-state 'notmuch-tree-mode 'normal)
+(evil-set-initial-state 'notmuch-hello-mode 'normal)
+(evil-set-initial-state 'notmuch-show-mode 'normal)
 
 (evil-define-key 'normal notmuch-search-mode-map
   "o" 'notmuch-search-show-thread-in-other-window
@@ -51,7 +72,6 @@
   "Y" 'archive-message
   "D" 'delete-thread
   "r" 'notmuch-reply-to-newest-in-thread
-  "r" 'notmuch-reply-to-newest-in-thread
   "R" 'notmuch-reply-all-to-newest-in-thread
   ;; I'm using these custom-scroll functions for page-up and page-down because the built-in ones in Emacs
   ;; switch to the buffer when you try to scroll up past the beginning of the window.
@@ -61,11 +81,6 @@
   "d" (lambda () (interactive) (within-message-view (lambda ()
                                                       (condition-case nil (scroll-up)
                                                         (end-of-buffer (goto-char (point-max))))))))
-
-(evil-leader/set-key-for-mode 'notmuch-hello-mode
-  "gi" (lambda ()
-         (interactive)
-         (notmuch-search "tag:inbox")))
 
 (evil-leader/set-key-for-mode 'notmuch-search-mode
   "gli" (lambda ()
@@ -81,9 +96,20 @@
         (interactive)
         (print  (notmuch-search-find-thread-id)))
   "r" 'notmuch-refresh-this-buffer
+  "R" 'notmuch-poll-and-refresh-this-buffer
   "1" (lambda ()
          (interactive)
-         (move-thread "mylabel")))
+         (move-thread "1action")))
+
+(evil-define-key 'normal notmuch-show-mode-map
+  ;; notmuch-show-get-message-id
+  "r" 'notmuch-reply-to-newest-in-thread
+  "R" 'notmuch-reply-all-to-newest-in-thread)
+
+(evil-leader/set-key-for-mode 'notmuch-hello-mode
+  "gi" (lambda ()
+         (interactive)
+         (notmuch-search "tag:inbox")))
 
 (evil-leader/set-key-for-mode 'message-mode ; The compose window.
   "rr" 'notmuch-ext/view-message-in-browser
@@ -146,8 +172,6 @@
                                   first)))
     (-?> html-part (plist-get :content))))
 
-;; (notmuch-ext/get-html-body "17d3b0d8f5de40518cb03f3cabc336d5@async.facebook.com")
-
 (defun notmuch-ext/extract-message-id (message-body)
   "Extracts the message ID which is identified by the field 'In-Reply-To: <the-message-id@gmail.com>'."
   (string-match "In-Reply-To: <\\(.*\\)>" message-body)
@@ -164,19 +188,7 @@
                      "<#/multipart>")
                "\n"))
 
-;; TODO(philc): defunct.
-;; (defun notmuch-ext/strip-quoted-text (message-body)
-;;   "Removes all quoted reply history. This removes all lines at the end of the message body which begin with
-;;    a > symbol. Quoted sections of text embedded in the reply text itself will not be removed."
-;;   (--> message-body
-;;        (split-string it "\n")
-;;        nreverse
-;;        (-drop-while (lambda (s) (-> s s-trim (string/starts-with ">"))) it)
-;;        nreverse
-;;        (string/join it "\n")))
-
 (setq notmuch-ext/header-section-separator "--text follows this line--")
-
 (setq notmuch-ext/attribution-line-regexp ".+ \<.+\> writes:")
 
 (defun notmuch-ext/get-message-parts (message)
@@ -265,21 +277,6 @@
   ;; (message-send-and-exit)
   )
 
-;;
-;; Settings for composing and sending emails.
-;; http://chrisdone.com/posts/emacs-mail
-;;
-(setq user-mail-address "philc3@gmail.com"
-      user-full-name  "Phil Crosby")
-(require 'smtpmail)
-(setq message-send-mail-function 'smtpmail-send-it)
-(setq smtpmail-stream-type 'ssl)
-(setq smtpmail-smtp-server "smtp.gmail.com")
-(setq smtpmail-smtp-service 465)
-;; TODO(philc): This can be nil. I have af older here so that draft buffers are backed by disk. Is that
-;; necessary?
-(setq notmuch-fcc-dirs ".sentmail")
-
 (defun notmuch-preview-html-reply-in-browser ()
   (interactive)
   (let* ((separator "--text follows this line--")
@@ -299,19 +296,12 @@
 
 ;; Where the temporary "*message*" buffers created by the message mode are saved.
 (setq message-auto-save-directory "~/.mail/drafts")
-  ;; C-c C-c   send the message and exit the message buffer
-  ;; C-c C-a   add an attachment
-  ;; C-c C-k   cancel the message
-
 
 ;;
 ;; Settings for show mode
 ;;
 (setq notmuch-message-headers '("To")) ; The default list is '("Subject" "To" "Cc" "Date").
 (setq notmuch-show-indent-messages-width 2) ; The default is 1.
-
-; TODO(philc): Learn about the differences between a-list, plist, hash-table.
-(json-read-from-string "\{\"a\":1}")
 
 ;; Show HTML mail by default, and keep the text/plain hidden.
 ;; (setq notmuch-multipart/alternative-discouraged '("text/plain" "text/html"))
@@ -321,13 +311,18 @@
 ;; Make them be the same color as the email's body text.
 (set-face-foreground 'message-mml (face-attribute 'default :foreground))
 
-(evil-define-key 'normal notmuch-show-mode-mode
-  "r" 'notmuch-show-reply-sender
-  "R" 'notmuch-show-reply)
+(defun notmuch-ext/get-selected-message-id ()
+  "Returns the message ID of the selected thread. Works in both notmuch-search and notmuch-show modes."
+  (print major-mode)
+  (cond ((s-equals? major-mode "notmuch-show-mode")
+         (notmuch-show-get-message-id t))
+        ((s-equals? major-mode "notmuch-search-mode")
+         (-> (notmuch-search-find-thread-id) get-newest-message-in-thread))
+        (t (throw "This is not a recognized notmuch mode in get-selected-message-id" nil))))
 
 (defun notmuch-query-for-newest-message-in-thread ()
-  (->> (notmuch-search-find-thread-id)
-       get-newest-message-in-thread
+  (print (notmuch-ext/get-selected-message-id))
+  (->> (notmuch-ext/get-selected-message-id)
        (concat "id:")))
 
 (defun notmuch-reply-to-newest-in-thread ()
@@ -338,13 +333,6 @@
   (interactive)
   (notmuch-mua-new-reply (notmuch-query-for-newest-message-in-thread) nil t))
 
-(defun get-message-view ()
-  ;; TODO(philc): Select the notmuch-search buffer, then move to its right.
-  )
-
-;; (setq view-scroll-auto-exit nil)
-;; (setq scroll-error-top-bottom t)
-
 (defun within-message-view (f)
   "Execute the given function within the message view (the window to the right of the notmuch-search window."
   (lexical-let* ((f f)
@@ -354,9 +342,6 @@
                                          (select-window win)
                                          (funcall f)))
       (message "No Notmuch messages view window is visible."))))
-
-;; Useful functions
-;; notmuch-poll-and-refresh-this-buffer
 
 (defun notmuch-go-to-inbox ()
   (interactive)
