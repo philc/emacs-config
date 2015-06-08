@@ -249,6 +249,8 @@
   (lexical-let ((styled-html (concat "<style>" notmuch-ext/stylesheet-for-previews "</style>" html)))
     (call-process-and-check "browser" styled-html)))
 
+;; TODO(philc): add notmuch-ext/view-message-in-browser
+
 (defun notmuch-ext/view-message-in-browser ()
   (interactive)
   (-> (buffer-substring-no-properties (point-min) (point-max))
