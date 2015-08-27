@@ -17,6 +17,12 @@
 
 (add-hook 'org-mode-hook 'evil-org-mode) ;; only load with org-mode
 
+;; Highlight the TODO keywords using various colors
+;; See http://orgmode.org/manual/Faces-for-TODO-keywords.html.
+(setq org-todo-keyword-faces '(("WAITING" . (:foreground "#999999"))
+                               ("TODO" . (:foreground "orange")) ; The default red used for TODO is opressive
+                               ("INPROGRESS" .(:foreground "#85C7FF"))))
+
 (defun init-org-mode-personal ()
   ;; This enables "clean mode", such that sublists use whitespace for indentation (ala markdown) instead of
   ;; many stars.
