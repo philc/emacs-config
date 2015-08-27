@@ -1,0 +1,4 @@
+# name: border blue
+# key: bb
+# --
+border: 1px solid blue;
