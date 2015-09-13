@@ -2,8 +2,8 @@
 ;; I try to keep this file well-documented so new and veteran users can easily understand the parts
 ;; of my setup they may want to lift.
 ;;
-;; While the function definitions for major pieces of functionality are kept in separate files, I try to
-;; centralize the configuration for everything here in this file.
+;; While the function definitions which implement major pieces of functionality are kept in separate files, I
+;; try to centralize the configuration for everything here in this file.
 ;;
 
 ;;
@@ -69,7 +69,7 @@
 (require 'lisp-helpers-personal)
 (require 'emacs-utils-personal)
 
-;; Anecdotally, this reduces the amount of display flicker on some Emacs startup.
+;; Based on my anecdotal observations, this reduces the amount of display flicker during Emacs startup.
 (setq redisplay-dont-pause t)
 
 ;; Turn off graphical toolbars.
