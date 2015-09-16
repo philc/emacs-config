@@ -46,7 +46,7 @@
                       org ; For outlining. This is bundled with Emacs, but I'm using the latest version.
                       outline-magic ; Extensions to ouline mode, which I use heavily in markdown mode.
                       powerline ; Improve the appearance & density of the Emacs status bar.
-                      projectile ; Find file in project (ala CTRL-P).
+                      projectile ; Find file in project (ala Vim's CTRL-P or Textmate's Cmd-T)
                       rainbow-delimiters ; Highlight parentheses in rainbow colors.
                       ruby-electric ; Insert matching delimiters; unindent end blocks after you type them.
                       scss-mode
@@ -610,7 +610,7 @@
   (setq ido-enable-flex-matching t)
   (setq ido-use-virtual-buffers t)
   (setq ido-everywhere t)
-  ;; kill the highlighted buffer in the matches list.
+  ;; Kill (unload) the highlighted buffer in the matches list.
   (define-key ido-buffer-completion-map (kbd "M-d") 'ido-kill-buffer-at-head))
 
 ;;
@@ -723,6 +723,35 @@
 ;; Projectile (find file from the root of the current project).
 ;;
 (projectile-global-mode)
+;; NOTE(philc): Using this cache is annoying because it gets stale if files appear on disk after a git pull.
+;; However, in my large repos, without it, projectile-find-file takes about 1s to open, which is an
+;; unacceptable delay.
+(setq projectile-enable-caching t)
+
+(defun restart-projectile-find-file-hook ()
+  (remove-hook 'post-command-hook 'restart-projectile-find-file-hook)
+  (let ((query previous-projectile-input))
+    (makunbound 'previous-projectile-input)
+    (projectile-find-file-with-initial-value query)))
+
+(defun projectile-find-file-with-initial-value (initial-val)
+  "Useful to call after reloading the project cache while the find file dialog still open."
+  (interactive)
+  (let ((file (projectile-completing-read "Find file: "
+                                            (projectile-current-project-files) initial-val)))
+      (find-file (expand-file-name file (projectile-project-root)))
+      (run-hooks 'projectile-find-file-hook)))
+
+;; NOTE(philc): minibuffer-local-map has M-r bound already. Ideally we would use ido-file-completion-map
+;; instead. Also, minor note: for some reason, typing this keybinding recursively fails with "Error in
+;; post-command hook..."
+(define-key minibuffer-local-map (kbd "M-r")
+  (lambda ()
+    (interactive)
+    (setq previous-projectile-input (minibuffer-contents))
+    ;; Reference for running code after `minibuffer-keyboard-quit`: http://stackoverflow.com/q/21000540/46237
+    (add-hook 'post-command-hook 'restart-projectile-find-file-hook)
+    (minibuffer-keyboard-quit)))
 
 ;;
 ;; escreen (tabs)
