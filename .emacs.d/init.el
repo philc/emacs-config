@@ -83,8 +83,10 @@
 (setq initial-major-mode 'markdown-lite-mode)
 
 ;; Use the same PATH variable as your shell does. From http://clojure-doc.org/articles/tutorials/emacs.html
+;; NOTE(philc): If you use OSX and you use zsh, OSX may be configured to use bash. Either hard code
 (defun set-exec-path-from-shell-PATH ()
-  (let ((path-from-shell (shell-command-to-string "$SHELL -i -c 'echo $PATH'")))
+  (let* ((shell "zsh") ;; NOTE(philc): Change to your desired shell. You could also use the $SHELL env var.
+         (path-from-shell (shell-command-to-string (concat shell " -i -c 'echo $PATH'"))))
     (setenv "PATH" path-from-shell)
     (setq exec-path (split-string path-from-shell path-separator))))
 
