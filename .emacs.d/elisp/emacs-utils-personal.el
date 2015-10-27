@@ -23,8 +23,7 @@
                              ": `"
                              (mapconcat 'identity (append (list program) args) " ")
                              "`\n"
-                             (second result)
-                             )))
+                             (second result))))
         (throw nil message)))))
 
 (defun util/line-indentation-level (line)
