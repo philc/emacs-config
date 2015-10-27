@@ -115,7 +115,7 @@
          ;; NOTE(philc): line-number-at-pos is 1-indexed.
          ;; TODO(philc): Show a helpful error message if this command fails, e.g. because the ruby env is
          ;; messed up.
-         (command (format "~/scripts/publishing/markdown_page1.rb --css %s --scroll-to-line %s | browser"
+         (command (format "~/scripts/publishing/markdown_page.rb --css %s --scroll-to-line %s"
                           stylesheet
                           (- (line-number-at-pos) 1)))
          (markdown (buffer-substring-no-properties beg end))
