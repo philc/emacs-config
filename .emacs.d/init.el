@@ -744,13 +744,16 @@
       (find-file (expand-file-name file (projectile-project-root)))
       (run-hooks 'projectile-find-file-hook)))
 
-;; NOTE(philc): minibuffer-local-map has M-r bound already. Ideally we would use ido-file-completion-map
-;; instead. Also, minor note: for some reason, typing this keybinding recursively fails with "Error in
+;; Bind "M-r" when the find-files minibuffer is open to refreshing Projectile's cache. This is a common need
+;; when you open a find files dialog and realize a newly added file is not there, due to a stale cache.
+;; NOTE(philc): Ideally we would bind this key to ido-file-completion-map, but minibuffer-local-map has M-r
+;; bound already. Also, minor note: for some reason, typing this keybinding recursively fails with "Error in
 ;; post-command hook..."
 (define-key minibuffer-local-map (kbd "M-r")
   (lambda ()
     (interactive)
     (setq previous-projectile-input (minibuffer-contents))
+    (projectile-invalidate-cache nil)
     ;; Reference for running code after `minibuffer-keyboard-quit`: http://stackoverflow.com/q/21000540/46237
     (add-hook 'post-command-hook 'restart-projectile-find-file-hook)
     (minibuffer-keyboard-quit)))
