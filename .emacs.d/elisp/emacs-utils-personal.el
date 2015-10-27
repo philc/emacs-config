@@ -4,6 +4,29 @@
 (provide 'emacs-utils-personal)
 (require 'lisp-helpers-personal)
 
+(defun util/call-process-with-exit-status (program stdin &rest args)
+  "Runs a command and returns a list containing the status code and output string.
+   E.g.: (call-process-with-exit-status 'ls' '-h' '-l' '-a') ;; => (0 '-r-w-r-- 1 ...')"
+  (with-temp-buffer
+    (when stdin
+      (insert stdin))
+    (list (apply 'call-process-region (point-min) (point-max) program t (current-buffer) nil args)
+          (buffer-string))))
+
+(defun util/call-process-and-check (program stdin &rest args)
+  "Calls the given program and raises an error if the exist status is non-zero."
+  (lexical-let ((result (apply 'util/call-process-with-exit-status program stdin args)))
+    (if (= (first result) 0)
+        (second result)
+      (let ((message (concat "This command exited with status "
+                             (number-to-string (first result))
+                             ": `"
+                             (mapconcat 'identity (append (list program) args) " ")
+                             "`\n"
+                             (second result)
+                             )))
+        (throw nil message)))))
+
 (defun util/line-indentation-level (line)
   "The number of space characters prefixing a line."
   (string-match "\\([ ]*\\)" line)

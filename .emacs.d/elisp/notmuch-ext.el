@@ -160,8 +160,8 @@
   "Returns the HTML body for the given message ID. Returns nil if there is no HTML body (e.g. if there's only
    a plaintext body.)"
   (lexical-let* ((message (->> message-id
-                               (call-process-and-check "notmuch" nil "show" "--format=sexp"
-                                                       "--entire-thread=false" "--include-html")
+                               (util/call-process-and-check "notmuch" nil "show" "--format=sexp"
+                                                            "--entire-thread=false" "--include-html")
                                read
                                ;; Since we have --entire-thread=false, this list of messages can have nil
                                ;; entries.
@@ -225,7 +225,7 @@
                                          (string/join "\n\n")))
                  ;; TODO(philc): do I need Gmail CSS, i.e. do I need to pass "--css" "gmail" to this command?
                  (markdown-reply-text (->> (plist-get parts :reply-text)
-                                           (call-process-and-check notmuch-ext/markdown-to-html-command)))
+                                           (util/call-process-and-check notmuch-ext/markdown-to-html-command)))
                  (html-quoted-text (notmuch-ext/get-html-body (concat "id:" message-id)))
                  (quoted-text-as-html
                   ;; There may be no quoted-text if this is a new message with no reply history.
@@ -247,7 +247,7 @@
 (defun notmuch-ext/render-message-in-browser (html)
   ;; TODO(philc): Make this command configurable.
   (lexical-let ((styled-html (concat "<style>" notmuch-ext/stylesheet-for-previews "</style>" html)))
-    (call-process-and-check "browser" styled-html)))
+    (util/call-process-and-check "browser" styled-html)))
 
 ;; TODO(philc): add notmuch-ext/view-message-in-browser
 
@@ -285,8 +285,8 @@
          (buffer (buffer-substring-no-properties (point-min) (point-max)))
          (body (second (split-string buffer separator)))
          ;; TODO(philc): Consider centering this content in the browser window for a nicer preview.
-         (html-body (call-process-and-check notmuch-markdown-to-html body "--css" "gmail")))
-    (call-process-and-check "browser" html-body)))
+         (html-body (util/call-process-and-check notmuch-markdown-to-html body "--css" "gmail")))
+    (util/call-process-and-check "browser" html-body)))
 
 ;; Possible options ot customize
 ;; (defcustom message-directory "~/Mail/"
@@ -358,27 +358,6 @@
   (interactive)
   (notmuch-search "folder:1action"))
 
-;; TODO(philc): Move these into utils.
-;; Sample invocation: (process-exit-code-and-output "ls" "-h" "-l" "-a") ;; => (0 "-r-w-r-- 1 ...")
-(defun call-process-with-exit-status (program stdin &rest args)
-  "Runs a command and returns a list containing the status code and output string."
-  (with-temp-buffer
-    (when stdin
-      (insert stdin))
-    (list (apply 'call-process-region (point-min) (point-max) program t (current-buffer) nil args)
-          (buffer-string))))
-
-(defun call-process-and-check (program stdin &rest args)
-  "Calls the given program and raises an error if the exist status is non-zero."
-  (lexical-let ((result (apply 'call-process-with-exit-status program stdin args)))
-    (if (= (first result) 0)
-        (second result)
-      (throw nil (concat "This command exited with status "
-                         (number-to-string (first result))
-                         ": `"
-                         (mapconcat 'identity (append (list program) args) " ")
-                         "`")))))
-
 (defun get-messages-to-move (thread-id include-special-gmail-folders)
   (lexical-let ((filter-fn (if include-special-gmail-folders
                                (lambda (s) nil)
@@ -408,7 +387,7 @@
   (notmuch-refresh-this-buffer))
 
 (defun get-notmuch-db-path ()
-  (s-trim-right (call-process-and-check "notmuch" nil "config" "get" "database.path")))
+  (s-trim-right (util/call-process-and-check "notmuch" nil "config" "get" "database.path")))
 
 (defun delete-thread ()
   (interactive)
@@ -430,7 +409,7 @@
     ;; (print "exists?")
     ;; (print (file-exists-p file))
     ;; (print (concat deletions-folder (file-name-nondirectory file)))
-    ;; (call-process-and-check "mv" file (concat deletions-folder (file-name-nondirectory file)))
+    ;; (util/call-process-and-check "mv" file (concat deletions-folder (file-name-nondirectory file)))
     (rename-file file (concat deletions-folder (file-name-nondirectory file)))))
     ;; ))
 
