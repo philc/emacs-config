@@ -1171,16 +1171,23 @@
     "gf" 'godef-jump
     "K" 'godef-describe))
 
-(defun go-save-and-compile-fn (command-name)
+(defun go-save-and-compile-fn (command)
   "Returns a function for the purpose of binding to a key which saves the current buffer and then
    runs the given command in the root of the go project."
-  (lexical-let ((command-name command-name))
+  (lexical-let ((command command))
     #'(lambda ()
         (interactive)
-        (save-buffer)
-        (message command-name)
-        (without-confirmation
-         (lambda () (compile (concat "cd " (projectile-project-root) " && " command-name)))))))
+        (go-save-and-compile command))))
+
+;; Note that this function uses (projectile-project-root) to determine the directory to run `go` commands,
+;; which requires that the go project have a .projectile file in it or that it be at the root of a git repo.
+(defun go-save-and-compile (command)
+  "Saves the current buffer before invoking the given command."
+  (lexical-let ((has-makefile (file-exists-p (concat (projectile-project-root) "Makefile"))))
+    (save-buffer)
+    (message command)
+    (util/without-confirmation
+     (lambda () (compile (concat "cd " (projectile-project-root) " && " command))))))
 
 (evil-leader/set-key-for-mode 'go-mode
   ;; "r" is a namespace for run-related commands.
@@ -1193,7 +1200,7 @@
   "cp" 'previous-error
   "cw" (go-save-and-compile-fn "make web")
   "cb" (go-save-and-compile-fn "make benchmark")
-  "cc" (go-save-and-compile-fn "make")
+  "cc" (go-save-and-compile-fn "go build")
 
   "ai" 'go-import-add)
 
@@ -1334,7 +1341,7 @@
         (interactive)
         (save-buffer)
         (message command-name)
-        (without-confirmation
+        (util/without-confirmation
          (lambda ()
            (compile (concat "cd " (locate-dominating-file (buffer-file-name) "build.xml")
                             " && " command-name)))))))
