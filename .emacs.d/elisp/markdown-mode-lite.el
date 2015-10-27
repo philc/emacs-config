@@ -115,10 +115,14 @@
          ;; NOTE(philc): line-number-at-pos is 1-indexed.
          ;; TODO(philc): Show a helpful error message if this command fails, e.g. because the ruby env is
          ;; messed up.
-         (command (format "markdown_page.rb --css %s --scroll-to-line %s | browser"
+         (command (format "~/scripts/publishing/markdown_page1.rb --css %s --scroll-to-line %s | browser"
                           stylesheet
-                          (- (line-number-at-pos) 1))))
-    (call-process-region beg end "/bin/bash" nil nil nil "-c" command)))
+                          (- (line-number-at-pos) 1)))
+         (markdown (buffer-substring-no-properties beg end))
+         ;; This will throw an error if there's any issue with the mardkown->html conversion.
+         (html (util/call-process-and-check "/bin/bash" markdown "-c" command)))
+    ;; Show markdown in a browser
+    (util/call-process-and-check "browser" html)))
 
 (defun markdown-get-list-item-region ()
   "Returns '(start, end) for the markdown list item under the cursor, excluding subtrees."
