@@ -111,6 +111,8 @@
 ;; tried storing backups in my home directory as suggested by http://stackoverflow.com/q/151945/46237, but
 ;; still I see the occasional backup file.
 (setq make-backup-files nil)
+(setq auto-save-file-name-transforms
+      `((".*" ,temporary-file-directory t)))
 (setq auto-save-default nil)
 
 (setq vc-follow-symlinks t) ; Don't ask confirmation to follow symlinks to edit files.
