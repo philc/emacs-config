@@ -264,8 +264,11 @@
 (define-key evil-normal-state-map (kbd "j") 'evil-next-visual-line)
 (define-key evil-normal-state-map (kbd "k") 'evil-previous-visual-line)
 (define-key evil-normal-state-map (kbd "K") 'info-lookup-symbol)
-;; I use this shortcut for manually splitting lines. Note that it does not put you in insert mode.
+
+;; This splits the current line at the cursor position.
 (define-key evil-normal-state-map (kbd "RET") 'newline-and-indent)
+;; This creates a newline below the current line, like open, but does not enter insert mode.
+(define-key evil-normal-state-map (kbd "s") (lambda () (interactive) (evil-insert-newline-below)))
 
 ;; By default, Emacs will not indent when you hit enter/return within a comment.
 (define-key evil-insert-state-map (kbd "RET") 'newline-and-indent)
