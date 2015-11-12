@@ -87,6 +87,14 @@
 (add-to-list 'auto-mode-alist '("\\.markdown$" . markdown-lite-mode))
 (add-to-list 'auto-mode-alist '("\\.md$" . markdown-lite-mode))
 
+(defun markdown-create-link (beg end)
+  "Converts the currently selected text into a link, using what's the clipboard as the URL."
+  (interactive "r")
+  (lexical-let* ((caption (buffer-substring-no-properties beg end))
+                 (url (chomp (car kill-ring-yank-pointer))))
+    (delete-region beg end)
+    (insert (concat "[" caption "](" url ")"))))
+
 (defun markdown-insert-list-item-below ()
   "Inserts a new list item under the current one. markdown-insert-list-item inserts above, by default."
   (interactive)
@@ -177,7 +185,7 @@
   (interactive)
 
   (evil-define-key 'normal markdown-lite-mode-map
-    ";l" 'markdown-cleanup-list-numbers
+    ";l" 'markdown-create-link
     ";re" (lambda ()
             (interactive)
             (let ((markdown-stylesheet "gmail"))
@@ -185,7 +193,7 @@
     ";rr" 'preview-markdown)
 
   (evil-define-key 'visual markdown-lite-mode-map
-    ";l" 'markdown-cleanup-list-numbers
+    ";l" 'markdown-create-link
     ";re" (lambda ()
             (interactive)
             (let ((markdown-stylesheet "gmail"))
