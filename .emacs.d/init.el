@@ -1169,7 +1169,7 @@
 (add-to-list 'auto-mode-alist '("\\.yml$" . yaml-mode))
 
 ;;
-;; Go mode, for writing Go code
+;; Go mode, for writing Golang code
 ;;
 (with-eval-after-load "go-mode"
   (evil-define-key 'normal go-mode-map
@@ -1213,16 +1213,24 @@
 ;; goimports needs to be on your path. See https://godoc.org/code.google.com/p/go.tools/cmd/goimports
 (setq gofmt-command "goimports")
 
+(setq gofmt-in-progress nil)
+
 (defun gofmt-before-save-ignoring-errors ()
   "Don't pop up syntax errors in a new window when running gofmt-before-save."
   (interactive)
-  (flet ((gofmt--process-errors (&rest args) t)) ; Don't show any syntax error output
-    (gofmt-before-save)))
+  ;; Note that `gofmt-before-save` triggers this save-hook for some reason, so we lock on gmt-in-progress to
+  ;; to protect from infinite recurision.
+  (when (not gofmt-in-progress)
+    (setq gofmt-in-progress 't)
+    (flet ((gofmt--process-errors (&rest args) t)) ; Don't show any syntax error output
+      (gofmt-before-save))
+    (setq gofmt-in-progress nil)))
 
 (defun init-go-buffer-settings ()
+  (print "adding save hook")
   ;; I have Emacs configured to save when switching buffers, so popping up errors when I switch buffers is
   ;; really jarring.
-  (add-hook 'before-save-hook 'gofmt-before-save-ignoring-errors)
+  (add-hook 'before-save-hook 'gofmt-before-save-ignoring-errors nil t)
   ;; Make it so comments are line-wrapped properly when filling. It's an oversight that this is missing from
   ;; go-mode.
   (setq-local fill-prefix "// "))
