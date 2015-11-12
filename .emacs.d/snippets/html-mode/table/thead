@@ -1,0 +1,8 @@
+# name: <thead>...</thead>
+# key: thead
+# --
+<thead>
+  <tr>
+    <th>$1</th>
+  </tr>
+</thead>

@@ -1,0 +1,8 @@
+# name: <tbody>...</tbody>
+# key: tbody
+# --
+<tbody>
+  <tr>
+    <td>$1</td>
+  </tr>
+</tbody>
