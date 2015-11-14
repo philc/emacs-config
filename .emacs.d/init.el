@@ -795,7 +795,7 @@
                                                        "%d.%s")))
                                        (->> (or (gethash i escreen-number->alias) "unnamed")
                                             (format template (+ i 1))))))
-                 (tab-names (mapcar get-display-name (escreen-get-active-screen-numbers))))
+                 (tab-names (-map get-display-name (escreen-get-active-screen-numbers))))
     (message (string/join tab-names "  "))
     (lexical-let* ((input (string (read-char)))
                    (is-digit (and (string= (number-to-string (string-to-number input)) input))))
@@ -1129,11 +1129,11 @@
               (let ((contents (-> text
                                   (substring 1 -1) ; Remove the enclosing braces.
                                   (split-string "; *")
-                                  ((lambda (x) (mapcar 'chomp x)))
+                                  ((lambda (x) (-map 'chomp x)))
                                   (string/join ";\n"))))
                 (concat "{\n" contents "}"))
             ;; else, collapse the CSS block into a single line.
-            (-> (mapcar 'chomp lines)
+            (-> (-map 'chomp lines)
                 (string/join " ")))))
     (util/delete-thing-at-point 'brace-block)
     (insert new-text)
@@ -1265,16 +1265,14 @@
 (defun filter-files-in-directory (directory filter-fn include-subdirectories)
   "Filters the files in the given directory and subdirectories using filter-fn. Excludes .git subdirectories."
   (->> (directory-files directory t)
-       (remove-if (lambda (path)
-                    (or (string/ends-with path ".")
-                        (string/ends-with path "..")
-                        (string/ends-with path ".git"))))
-       (mapcar (lambda (file)
-                 (if (and include-subdirectories (file-directory-p file))
-                     (filter-files-in-directory file filter-fn include-subdirectories)
-                   file)))
+       (--remove (or (string/ends-with it ".")
+                     (string/ends-with it "..")
+                     (string/ends-with it ".git")))
+       (--map (if (and include-subdirectories (file-directory-p it))
+                  (filter-files-in-directory it filter-fn include-subdirectories)
+                it))
        flatten
-       (remove-if-not filter-fn)))
+       (-filter filter-fn)))
 
 (defun open-markdown-file-from-notes-folder ()
   "Prompts for the name of a .md notes file to open."
@@ -1282,12 +1280,11 @@
   (let* ((file-matches-pattern? (lambda (file)
                                   (some (lambda (ext) (string/ends-with file ext)) notes-file-extensions)))
          (file-list (->> notes-directories
-                         (mapcar (lambda (directory)
-                                   (filter-files-in-directory directory file-matches-pattern? t)))
+                         (--map (filter-files-in-directory it file-matches-pattern? t))
                          flatten)))
     (let ((file-to-open (ido-completing-read "Notes file: " (mapcar 'file-name-nondirectory file-list))))
       (->> file-list
-           (remove-if-not (lambda (file) (string/ends-with file (concat "/" file-to-open))))
+           (--filter (string/ends-with it (concat "/" file-to-open)))
            first
            find-file))))
 
@@ -1300,7 +1297,7 @@
          (is-clojure (file-exists-p (concat project-path "/project.clj")))
          (main-file (when is-clojure
                       (->> ["core.clj" "handler.clj"]
-                           (mapcar (lambda (file) (concat project-path "/src/" project-name "/" file)))
+                           (--map (concat project-path "/src/" project-name "/" it))
                            (remove-if-not 'file-exists-p)
                            first))))
     (if main-file
@@ -1314,21 +1311,18 @@
    Once a project is chosen, the current elscreen-tab is set to be the name of that project."
   (interactive)
   (let* ((all-project-folders (->> project-folders
-                                   (mapcar (lambda (file)
-                                             (filter-files-in-directory file 'file-directory-p nil)))
+                                   (--map (filter-files-in-directory it 'file-directory-p nil))
                                    flatten))
          (project-to-open (ido-completing-read "Project folder: "
-                                               (mapcar 'file-name-nondirectory all-project-folders)
+                                               (-map 'file-name-nondirectory all-project-folders)
                                                nil t))
          (project (->> all-project-folders
-                       (remove-if-not (lambda (project)
-                                        (string/ends-with project (concat "/" project-to-open))))
+                       (--filter (string/ends-with it (concast "/" project-to-open)))
                        first)))
     (open-root-of-project project)
     ;; If we invoke this inside of a split, don't set the tab's title.
     (when (= 1 (length (window-list)))
       (escreen-set-tab-alias (file-name-nondirectory project)))))
-
 
 ;;
 ;; JSON
