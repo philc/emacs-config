@@ -1400,15 +1400,16 @@
 (defun open-in-chrome (url)
   (call-process "open" nil nil nil url "-a" "Google Chrome"))
 
+;; Taken from http://ergoemacs.org/emacs/emacs_open_file_path_fast.html.
 (defun xah-open-file-at-cursor ()
   "Open the file path under cursor.
-If there is text selection, uses the text selection for path.
-If the path starts with “http://”, open the URL in browser.
-Input path can be {relative, full path, URL}.
-Path may have a trailing “:‹n›” that indicates line number. If so, jump to that line number.
-If path does not have a file extention, automatically try with “.el” for elisp files.
-This command is similar to `find-file-at-point' but without prompting for confirmation.
-URL `http://ergoemacs.org/emacs/emacs_open_file_path_fast.html'"
+   If there is text selection, uses the text selection for path.
+   If the path starts with “http://”, open the URL in browser.
+   Input path can be {relative, full path, URL}.
+   Path may have a trailing “:‹n›” that indicates line number. If so, jump to that line number.
+   If path does not have a file extention, automatically try with “.el” for elisp files.
+   This command is similar to `find-file-at-point' but without prompting for confirmation.
+   URL `http://ergoemacs.org/emacs/emacs_open_file_path_fast.html'"
   (interactive)
   (let ((ξpath (if (use-region-p)
                    (buffer-substring-no-properties (region-beginning) (region-end))
