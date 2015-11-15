@@ -1163,6 +1163,84 @@
 ;;
 (require 'notmuch-ext)
 
+;; Don't keep message buffers around.
+(setq message-kill-buffer-on-exit t)
+
+(setq notmuch-poll-script "~/scripts/mail/fetch_email")
+
+;; Settings for composing and sending emails.
+;; http://chrisdone.com/posts/emacs-mail
+;; Credentials are stored in ~/.authoinfo. See here for the format:
+;; http://emacswiki.org/emacs/GnusAuthinfo
+;; Note that you need to use a site-specific password if you have Google's two-factor auth enabled.
+(setq user-mail-address "phil.crosby@gmail.com"
+      user-full-name  "Phil Crosby")
+(require 'smtpmail)
+(setq message-send-mail-function 'smtpmail-send-it)
+(setq smtpmail-stream-type 'ssl)
+(setq smtpmail-smtp-server "smtp.gmail.com")
+(setq smtpmail-smtp-service 465)
+;; TODO(philc): This can be nil. I have a folder here so that draft buffers are backed by disk. Is that
+;; necessary?
+(setq notmuch-fcc-dirs ".sentmail")
+
+;; Sort messages newest first.
+(set 'notmuch-search-oldest-first nil) ; The default is t.
+
+;; The command used for converting plaintext markdown emails into HTML emails.
+(setq notmuch-ext/markdown-to-html-command "markdown_page.rb")
+
+(evil-set-initial-state 'notmuch-search-mode 'normal)
+(evil-set-initial-state 'notmuch-tree-mode 'normal)
+(evil-set-initial-state 'notmuch-hello-mode 'normal)
+(evil-set-initial-state 'notmuch-show-mode 'normal)
+
+(evil-define-key 'normal notmuch-search-mode-map
+  "o" 'notmuch-search-show-thread-in-other-window
+  "q" 'vimlike-quit
+  "c" 'notmuch-mua-new-mail
+  ;; "t" (fn () (interactive) (print (notmuch-search-get-result) ))
+  "t" (fn () (interactive) (print (notmuch-search-find-thread-id t)))
+  "T" (fn () (interactive) (notmuch-ext/reply))
+  ;; I'm using uppercase Y here to archive, so that I can still copy text from the thread view if I want. Will
+  ;; I ever do that, or should I switch this to being lowercase y?
+  "Y" 'archive-message
+  "D" 'delete-thread
+  "r" 'notmuch-reply-to-newest-in-thread
+  "R" 'notmuch-reply-all-to-newest-in-thread
+  ;; I'm using these custom-scroll functions for page-up and page-down because the built-in ones in Emacs
+  ;; switch to the buffer when you try to scroll up past the beginning of the window.
+  "u" (fn () (interactive)
+        (within-message-view (fn ()
+                               (condition-case nil (scroll-down)
+                                 (beginning-of-buffer (goto-char (point-min)))))))
+  "d" (fn () (interactive)
+        (within-message-view (fn ()
+                               (condition-case nil (scroll-up)
+                                 (end-of-buffer (goto-char (point-max))))))))
+
+(evil-leader/set-key-for-mode 'notmuch-search-mode
+  "gli" (fn () (interactive) (notmuch-go-to-inbox))
+  "gls" (fn () (interactive) (notmuch-go-to-sent))
+  "gl1" (fn () (interactive) (notmuch-go-to-label-1action))
+  "t" (fn () (interactive) (print (notmuch-search-find-thread-id)))
+  "r" 'notmuch-refresh-this-buffer
+  "R" 'notmuch-poll-and-refresh-this-buffer
+  "1" (fn () (interactive) (move-thread "1action")))
+
+(evil-define-key 'normal notmuch-show-mode-map
+  "r" 'notmuch-reply-to-newest-in-thread
+  "R" 'notmuch-reply-all-to-newest-in-thread)
+
+(evil-leader/set-key-for-mode 'notmuch-hello-mode
+  "gi" (fn () (interactive) (notmuch-search "tag:inbox")))
+
+(evil-leader/set-key-for-mode 'message-mode ; The compose window.
+  "rr" 'notmuch-ext/view-message-in-browser
+  "x" (fn () (interactive) (util/without-confirmation 'message-kill-buffer))
+  "S" 'message-send-and-exit
+  "s" 'notmuch-ext/convert-to-markdown-and-send)
+
 ;;
 ;; YAML mode, for editing YAML files
 ;;

@@ -10,113 +10,20 @@
 ;; * message-header: the text section of a message containing fields like To: and From:
 ;; * message-body: the whole text section below the email header, including the reply-text and quoted-text.
 ;; * reply-text: the mesage text excluding the quoted history and any "attribution lines" (e.g. "On Tues Oct 4
-;;   Phil wrote:"). For new emails which have nor eply history, `reply-text` is equal to `message-body`.
+;;   Phil wrote:"). For new emails which have no reply history, `reply-text` is equal to `message-body`.
 ;; * quoted-text: the text of all quoted history following `reply-text`. This does not include any quoted text
 ;;   (which can occur when writing "inline replies") which is part of the reply-text.
 ;;
 ;; References
 ;; * http://en.wikipedia.org/wiki/Posting_style
 ;;
-;; TODO(philc): standardize on the 's' string library.
 
 (provide 'notmuch-ext)
 (require 'dash)
 (require 'notmuch)
 (require 'json)
 (require 'dash)
-(require 's) ;; String lib.
-
-;; Don't keep message buffers around.
-(setq message-kill-buffer-on-exit t)
-
-(setq notmuch-poll-script "~/scripts/mail/fetch_email")
-
-;;
-;; Settings for composing and sending emails.
-;; http://chrisdone.com/posts/emacs-mail
-;;
-;; Credentials are stored in ~/.authoinfo. See here for the format:
-;; http://emacswiki.org/emacs/GnusAuthinfo
-;; Note that you need to use a site-specific password if have Google's two-factor auth setup.
-
-(setq user-mail-address "phil.crosby@gmail.com"
-      user-full-name  "Phil Crosby")
-(require 'smtpmail)
-(setq message-send-mail-function 'smtpmail-send-it)
-(setq smtpmail-stream-type 'ssl)
-(setq smtpmail-smtp-server "smtp.gmail.com")
-(setq smtpmail-smtp-service 465)
-;; TODO(philc): This can be nil. I have a folder here so that draft buffers are backed by disk. Is that
-;; necessary?
-(setq notmuch-fcc-dirs ".sentmail")
-
-;; Sort messages newest first.
-(set 'notmuch-search-oldest-first nil) ; The default is t.
-
-(setq notmuch-ext/markdown-to-html-command "markdown_page.rb")
-
-(evil-set-initial-state 'notmuch-search-mode 'normal)
-(evil-set-initial-state 'notmuch-tree-mode 'normal)
-(evil-set-initial-state 'notmuch-hello-mode 'normal)
-(evil-set-initial-state 'notmuch-show-mode 'normal)
-
-(evil-define-key 'normal notmuch-search-mode-map
-  "o" 'notmuch-search-show-thread-in-other-window
-  "q" 'vimlike-quit
-  "c" 'notmuch-mua-new-mail
-  ;; "t" (fn () (interactive) (print (notmuch-search-get-result) ))
-  "t" (fn () (interactive) (print (notmuch-search-find-thread-id t)))
-  "T" (fn () (interactive) (notmuch-ext/reply))
-  ;; I'm using "Y" here to archive, so that I can still copy text from the thread view if I want. Will I ever
-  ;; do that?
-  ;; "Y" 'notmuch-search-archive-thread
-  "Y" 'archive-message
-  "D" 'delete-thread
-  "r" 'notmuch-reply-to-newest-in-thread
-  "R" 'notmuch-reply-all-to-newest-in-thread
-  ;; I'm using these custom-scroll functions for page-up and page-down because the built-in ones in Emacs
-  ;; switch to the buffer when you try to scroll up past the beginning of the window.
-  "u" (fn () (interactive) (within-message-view (fn ()
-                                                  (condition-case nil (scroll-down)
-                                                    (beginning-of-buffer (goto-char (point-min)))))))
-  "d" (fn () (interactive) (within-message-view (fn ()
-                                                  (condition-case nil (scroll-up)
-                                                    (end-of-buffer (goto-char (point-max))))))))
-
-(evil-leader/set-key-for-mode 'notmuch-search-mode
-  "gli" (fn ()
-         (interactive)
-         (notmuch-go-to-inbox))
-  "gls" (fn ()
-         (interactive)
-         (notmuch-go-to-sent))
-  "gl1" (fn ()
-         (interactive)
-         (notmuch-go-to-label-1action))
-  "t" (fn ()
-        (interactive)
-        (print (notmuch-search-find-thread-id)))
-  "r" 'notmuch-refresh-this-buffer
-  "R" 'notmuch-poll-and-refresh-this-buffer
-  "1" (fn ()
-         (interactive)
-         (move-thread "1action")))
-
-(evil-define-key 'normal notmuch-show-mode-map
-  ;; notmuch-show-get-message-id
-  "r" 'notmuch-reply-to-newest-in-thread
-  "R" 'notmuch-reply-all-to-newest-in-thread)
-
-(evil-leader/set-key-for-mode 'notmuch-hello-mode
-  "gi" (fn ()
-         (interactive)
-         (notmuch-search "tag:inbox")))
-
-(evil-leader/set-key-for-mode 'message-mode ; The compose window.
-  "rr" 'notmuch-ext/view-message-in-browser
-  "x" (fn () (interactive) (util/without-confirmation 'message-kill-buffer))
-  "S" 'message-send-and-exit
-  "s" 'notmuch-ext/convert-to-markdown-and-send)
+(require 's)
 
 (defun in-notmuch (f)
   "Execute the given function within the notmuch view. Used for REPL-based development."
