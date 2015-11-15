@@ -63,9 +63,9 @@
   "o" 'notmuch-search-show-thread-in-other-window
   "q" 'vimlike-quit
   "c" 'notmuch-mua-new-mail
-  ;; "t" (lambda () (interactive) (print (notmuch-search-get-result) ))
-  "t" (lambda () (interactive) (print (notmuch-search-find-thread-id t)))
-  "T" (lambda () (interactive) (notmuch-ext/reply))
+  ;; "t" (fn () (interactive) (print (notmuch-search-get-result) ))
+  "t" (fn () (interactive) (print (notmuch-search-find-thread-id t)))
+  "T" (fn () (interactive) (notmuch-ext/reply))
   ;; I'm using "Y" here to archive, so that I can still copy text from the thread view if I want. Will I ever
   ;; do that?
   ;; "Y" 'notmuch-search-archive-thread
@@ -75,29 +75,29 @@
   "R" 'notmuch-reply-all-to-newest-in-thread
   ;; I'm using these custom-scroll functions for page-up and page-down because the built-in ones in Emacs
   ;; switch to the buffer when you try to scroll up past the beginning of the window.
-  "u" (lambda () (interactive) (within-message-view (lambda ()
-                                                      (condition-case nil (scroll-down)
-                                                        (beginning-of-buffer (goto-char (point-min)))))))
-  "d" (lambda () (interactive) (within-message-view (lambda ()
-                                                      (condition-case nil (scroll-up)
-                                                        (end-of-buffer (goto-char (point-max))))))))
+  "u" (fn () (interactive) (within-message-view (fn ()
+                                                  (condition-case nil (scroll-down)
+                                                    (beginning-of-buffer (goto-char (point-min)))))))
+  "d" (fn () (interactive) (within-message-view (fn ()
+                                                  (condition-case nil (scroll-up)
+                                                    (end-of-buffer (goto-char (point-max))))))))
 
 (evil-leader/set-key-for-mode 'notmuch-search-mode
-  "gli" (lambda ()
+  "gli" (fn ()
          (interactive)
          (notmuch-go-to-inbox))
-  "gls" (lambda ()
+  "gls" (fn ()
          (interactive)
          (notmuch-go-to-sent))
-  "gl1" (lambda ()
+  "gl1" (fn ()
          (interactive)
          (notmuch-go-to-label-1action))
-  "t" (lambda ()
+  "t" (fn ()
         (interactive)
         (print  (notmuch-search-find-thread-id)))
   "r" 'notmuch-refresh-this-buffer
   "R" 'notmuch-poll-and-refresh-this-buffer
-  "1" (lambda ()
+  "1" (fn ()
          (interactive)
          (move-thread "1action")))
 
@@ -107,23 +107,23 @@
   "R" 'notmuch-reply-all-to-newest-in-thread)
 
 (evil-leader/set-key-for-mode 'notmuch-hello-mode
-  "gi" (lambda ()
+  "gi" (fn ()
          (interactive)
          (notmuch-search "tag:inbox")))
 
 (evil-leader/set-key-for-mode 'message-mode ; The compose window.
   "rr" 'notmuch-ext/view-message-in-browser
-  "x" (lambda() (interactive) (util/without-confirmation 'message-kill-buffer))
+  "x" (fn() (interactive) (util/without-confirmation 'message-kill-buffer))
   "S" 'message-send-and-exit
   "s" 'notmuch-ext/convert-to-markdown-and-send)
 
 (defun in-notmuch (f)
   "Execute the given function within the notmuch view. Used for REPL-based development."
   (util/preserve-selected-window
-   (lexical-let ((fn f))
-     (lambda ()
+   (lexical-let ((f f))
+     (fn ()
        (select-window (get-buffer-window "*notmuch-search-folder:Inbox*"))
-       (funcall fn)))))
+       (funcall f)))))
 
 ;; (setq-global eval-expression-print-length nil)
 ;; (setq-global eval-expression-print-level nil)
@@ -340,7 +340,7 @@
   (lexical-let* ((f f)
                  (win (window-in-direction 'right)))
     (if win
-        (util/preserve-selected-window (lambda ()
+        (util/preserve-selected-window (fn ()
                                          (select-window win)
                                          (funcall f)))
       (message "No Notmuch messages view window is visible."))))
@@ -360,8 +360,8 @@
 
 (defun get-messages-to-move (thread-id include-special-gmail-folders)
   (lexical-let ((filter-fn (if include-special-gmail-folders
-                               (lambda (s) nil)
-                             (lambda (s) (search "[Gmail]" s)))))
+                               (fn (s) nil)
+                             (fn (s) (search "[Gmail]" s)))))
     (->>
      ;;"thread:0000000000000490"
      thread-id
@@ -392,7 +392,7 @@
 (defun delete-thread ()
   (interactive)
   (->> (get-messages-to-move (notmuch-search-find-thread-id) t)
-       (mapcar (lambda (m) (perform-delete-message m))))
+       (mapcar (fn (m) (perform-delete-message m))))
   ;; Now that some files have been removed from the disk, ask notmuch to update its database.
   (notmuch-call-notmuch-process "new")
   (notmuch-refresh-this-buffer))
@@ -433,10 +433,10 @@
 (defun perform-move-thread (thread-id dest-folder)
   (lexical-let ((destination (concat (get-notmuch-db-path) "/" dest-folder "/cur/")))
     (->> (get-messages-to-move thread-id nil)
-         (mapcar (lambda (m) (rename-file m destination))))))
+         (mapcar (fn (m) (rename-file m destination))))))
 
 (add-hook 'notmuch-search-hook
-          (lambda ()
+          (fn ()
             ;; I have global-visual-line-mode enabled in my init.el, but we don't want word-wrapping in the
             ;; search view. One message per line, no matter how long the subject.
             (visual-line-mode -1)
@@ -461,7 +461,7 @@
         (b (current-buffer)))
     (if (> (length thread-id) 0)
         (util/preserve-selected-window
-         (lambda ()
+         (fn ()
            (let ((right-window (or (window-in-direction 'right)
                                    (split-window-horizontally))))
              (select-window right-window))
@@ -558,13 +558,13 @@
 ;;     "q" 'vimlike-quit
 ;;     "a" 'mu4e-compose-reply
 ;;     ;; Opens the URL under the cursor.
-;;     (kbd "RET") (lambda () (interactive) (execute-kbd-macro (kbd "M-RET")))
+;;     (kbd "RET") (fn () (interactive) (execute-kbd-macro (kbd "M-RET")))
 ;;     "go" nil
-;;     "go1" (lambda () (interactive) (mu4e-view-go-to-url 1))
-;;     "go2" (lambda () (interactive) (mu4e-view-go-to-url 2))
-;;     "go3" (lambda () (interactive) (mu4e-view-go-to-url 3))
-;;     "go4" (lambda () (interactive) (mu4e-view-go-to-url 4))
-;;     "gl" (lambda ()
+;;     "go1" (fn () (interactive) (mu4e-view-go-to-url 1))
+;;     "go2" (fn () (interactive) (mu4e-view-go-to-url 2))
+;;     "go3" (fn () (interactive) (mu4e-view-go-to-url 3))
+;;     "go4" (fn () (interactive) (mu4e-view-go-to-url 4))
+;;     "gl" (fn ()
 ;;            (interactive)
 ;;            (switch-to-buffer-other-window "*mu4e-headers*")
 ;;            (call-interactively 'mu4e~headers-jump-to-maildir))
@@ -575,7 +575,7 @@
 ;;     "a" 'mu4e-reply-all
 ;;     "r" 'mu4e-compose-reply
 ;;     "f" 'mu4e-compose-forward
-;;     (kbd "M-r") '(lambda () (interactive) (mu4e-update-mail-and-index t))
+;;     (kbd "M-r") '(fn () (interactive) (mu4e-update-mail-and-index t))
 ;;     "c" 'mu4e-compose-new)
 
 ;; RET             notmuch-search-show-thread
