@@ -4,6 +4,9 @@
 (provide 'lisp-helpers-personal)
 (require 'dash)
 
+;; Use Clojure's convention of `fn` for anonymous functions. It's shorter.
+(defalias 'fn 'lambda)
+
 (defun flatten (mylist)
   (cond
    ((null mylist) nil)
