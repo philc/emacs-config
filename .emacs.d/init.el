@@ -29,6 +29,7 @@
                       clojure-mode
                       coffee-mode ; For syntax highlighting coffeescript.
                       dash
+                      dash-functional
                       dired-details+ ; Hides all of the unnecessary file details in dired mode.
                       diminish ; For hiding and shortening minor modes in the modeline
                       escreen
