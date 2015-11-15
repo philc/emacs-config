@@ -116,6 +116,10 @@
       `((".*" ,temporary-file-directory t)))
 (setq auto-save-default nil)
 
+;; Disable Emacs' write-lock, which creates temporary .#files when saving. This crashes coffeescript --watch.
+;; https://github.com/jashkenas/coffeescript/issues/985
+(setq create-lockfiles nil)
+
 (setq vc-follow-symlinks t) ; Don't ask confirmation to follow symlinks to edit files.
 
 ;; NOTE(philc): Disabling savehist-mode in an attempt to isolate a periodic Emacs segfault.
