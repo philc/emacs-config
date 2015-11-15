@@ -107,11 +107,12 @@
                                           body-lines))
                  ;; TODO(philc): If there's no attribution line in a reply message, we should instead just
                  ;; split on the starting index of the contiguous quoted region at the bottom of the email.
-                 ;; TODO(philc): Handle this for compose workflows.
                  (reply-text (--> body-lines (-slice it 0 attribution-line-index) (s-join "\n" it)))
-                 (quoted-text (--> body-lines (-slice it (+ 1 attribution-line-index)) (s-join "\n" it))))
+                 (quoted-text (when attribution-line-index
+                                (--> body-lines (-slice it (+ 1 attribution-line-index)) (s-join "\n" it)))))
     (list :header header
-          :attribution-line (nth attribution-line-index body-lines)
+          :attribution-line (-?> attribution-line-index (nth body-lines))
+          ;; TODO(philc): Rename this to compose-text.
           :reply-text reply-text
           :quoted-text quoted-text)))
 
@@ -119,21 +120,22 @@
   "Takes in a compose/reply buffer and returns a multipart response (plaintext and HTML) where the HTML
    portion contains the plaintext reply, converted to markdown.
    Returns a plist of header, plaintext, html."
-  (lexical-let* ((message-id (notmuch-ext/extract-message-id message-body))
+  (lexical-let* ((message-id (notmuch-ext/extract-message-id message-body)) ; nil if this msg isn't a reply.
                  (parts (notmuch-ext/get-message-parts message-body))
                  (quoted-text (plist-get parts :quoted-text))
                  (attribution-line (plist-get parts :attribution-line))
-                 (plaintext-response (-> (list (plist-get parts :reply-text)
-                                               attribution-line
-                                               quoted-text)
-                                         -non-nil
-                                         ((-partial 's-join "\n\n"))))
+                 (plaintext-response (->> (list (plist-get parts :reply-text)
+                                                attribution-line
+                                                quoted-text)
+                                          -non-nil
+                                          (s-join "\n\n")))
                  ;; TODO(philc): do I need Gmail CSS, i.e. do I need to pass "--css" "gmail" to this command?
                  (markdown-reply-text (->> (plist-get parts :reply-text)
                                            (util/call-process-and-check notmuch-ext/markdown-to-html-command)))
-                 (html-quoted-text (notmuch-ext/get-html-body (concat "id:" message-id)))
+                 (html-quoted-text (when message-id
+                                     (notmuch-ext/get-html-body (concat "id:" message-id))))
+                 ;; There may be no quoted-text if this is a new message with no reply history.
                  (quoted-text-as-html
-                  ;; There may be no quoted-text if this is a new message with no reply history.
                   (cond
                    (html-quoted-text (concat "<blockquote>\n" html-quoted-text "\n<blockquote>"))
                    (quoted-text (concat "<pre>\n" quoted-text "\n</pre>"))))
