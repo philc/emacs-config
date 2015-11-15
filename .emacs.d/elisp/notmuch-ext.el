@@ -19,10 +19,10 @@
 ;;
 
 (provide 'notmuch-ext)
-(require 'dash)
 (require 'notmuch)
 (require 'json)
 (require 'dash)
+(require 'dash-functional)
 (require 's)
 
 (defun in-notmuch (f)
@@ -32,9 +32,6 @@
      (fn ()
        (select-window (get-buffer-window "*notmuch-search-folder:Inbox*"))
        (funcall f)))))
-
-;; (setq-global eval-expression-print-length nil)
-;; (setq-global eval-expression-print-level nil)
 
 (defun notmuch-ext/get-body-parts-from-notmuch-message (notmuch-message)
   "Returns a flattened list of all parts of a notmuch-message.
@@ -89,12 +86,12 @@
 (defun notmuch-ext/assemble-multipart-mml (plaintext-body html-body)
   "Formats the plaintext + HTML text into a multipart message using MML syntax, which is understood by Emac's
    message-mode. See http://gnus.org/manual/emacs-mime_10.html#Simple-MML-Example for details."
-  (string/join (list "<#multipart type=alternative>"
-                     plaintext-body
-                     "<#part type=text/html>"
-                     html-body
-                     "<#/multipart>")
-               "\n"))
+  (->> (list "<#multipart type=alternative>"
+             plaintext-body
+             "<#part type=text/html>"
+             html-body
+             "<#/multipart>")
+       (s-join "\n")))
 
 (setq notmuch-ext/header-section-separator "--text follows this line--")
 (setq notmuch-ext/attribution-line-regexp ".+ \<.+\> writes:")
@@ -111,8 +108,8 @@
                  ;; TODO(philc): If there's no attribution line in a reply message, we should instead just
                  ;; split on the starting index of the contiguous quoted region at the bottom of the email.
                  ;; TODO(philc): Handle this for compose workflows.
-                 (reply-text (-> body-lines (-slice 0 attribution-line-index) (string/join "\n")))
-                 (quoted-text (-> body-lines (-slice (+ 1 attribution-line-index)) (string/join "\n"))))
+                 (reply-text (--> body-lines (-slice it 0 attribution-line-index) (s-join "\n" it)))
+                 (quoted-text (--> body-lines (-slice it (+ 1 attribution-line-index)) (s-join "\n" it))))
     (list :header header
           :attribution-line (nth attribution-line-index body-lines)
           :reply-text reply-text
@@ -130,7 +127,7 @@
                                                attribution-line
                                                quoted-text)
                                          -non-nil
-                                         (string/join "\n\n")))
+                                         ((-partial 's-join "\n\n"))))
                  ;; TODO(philc): do I need Gmail CSS, i.e. do I need to pass "--css" "gmail" to this command?
                  (markdown-reply-text (->> (plist-get parts :reply-text)
                                            (util/call-process-and-check notmuch-ext/markdown-to-html-command)))
@@ -172,11 +169,11 @@
 (defun notmuch-ext/get-mml-for-buffer ()
   (lexical-let* ((text (buffer-substring-no-properties (point-min) (point-max)))
                  (response (notmuch-ext/build-response-from-markdown text)))
-    (string/join (list (plist-get response :header)
-                       notmuch-ext/header-section-separator
-                       (notmuch-ext/assemble-multipart-mml (plist-get response :plaintext)
-                                                           (plist-get response :html)))
-                 "\n")))
+    (->> (list (plist-get response :header)
+               notmuch-ext/header-section-separator
+               (notmuch-ext/assemble-multipart-mml (plist-get response :plaintext)
+                                                   (plist-get response :html)))
+         (s-join "\n"))))
 
 (defun notmuch-ext/convert-to-markdown-and-send ()
   (interactive)
