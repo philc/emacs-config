@@ -23,6 +23,7 @@
 (require 'dash)
 (require 'notmuch)
 (require 'json)
+(require 'dash)
 (require 's) ;; String lib.
 
 ;; Don't keep message buffers around.
@@ -94,7 +95,7 @@
          (notmuch-go-to-label-1action))
   "t" (fn ()
         (interactive)
-        (print  (notmuch-search-find-thread-id)))
+        (print (notmuch-search-find-thread-id)))
   "r" 'notmuch-refresh-this-buffer
   "R" 'notmuch-poll-and-refresh-this-buffer
   "1" (fn ()
@@ -113,7 +114,7 @@
 
 (evil-leader/set-key-for-mode 'message-mode ; The compose window.
   "rr" 'notmuch-ext/view-message-in-browser
-  "x" (fn() (interactive) (util/without-confirmation 'message-kill-buffer))
+  "x" (fn () (interactive) (util/without-confirmation 'message-kill-buffer))
   "S" 'message-send-and-exit
   "s" 'notmuch-ext/convert-to-markdown-and-send)
 
@@ -249,8 +250,6 @@
   (lexical-let ((styled-html (concat "<style>" notmuch-ext/stylesheet-for-previews "</style>" html)))
     (util/call-process-and-check "browser" styled-html)))
 
-;; TODO(philc): add notmuch-ext/view-message-in-browser
-
 (defun notmuch-ext/view-message-in-browser ()
   (interactive)
   (-> (buffer-substring-no-properties (point-min) (point-max))
@@ -368,9 +367,7 @@
      list
      (append '("search" "--output=files" "--format=sexp"))
      (apply 'notmuch-call-notmuch-sexp)
-     (remove-if filter-fn)
-     )))
-
+     (-remove filter-fn))))
 
 (defun get-newest-message-in-thread (thread-id)
   (->> (list "search" "--output=messages" "--format=sexp" "--sort=newest-first" thread-id)
@@ -392,7 +389,7 @@
 (defun delete-thread ()
   (interactive)
   (->> (get-messages-to-move (notmuch-search-find-thread-id) t)
-       (mapcar (fn (m) (perform-delete-message m))))
+       (-map 'perform-delete-message))
   ;; Now that some files have been removed from the disk, ask notmuch to update its database.
   (notmuch-call-notmuch-process "new")
   (notmuch-refresh-this-buffer))
@@ -433,7 +430,7 @@
 (defun perform-move-thread (thread-id dest-folder)
   (lexical-let ((destination (concat (get-notmuch-db-path) "/" dest-folder "/cur/")))
     (->> (get-messages-to-move thread-id nil)
-         (mapcar (fn (m) (rename-file m destination))))))
+         (--map (rename-file it destination)))))
 
 (add-hook 'notmuch-search-hook
           (fn ()
