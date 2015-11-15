@@ -1,9 +1,9 @@
-
 (require 'cl)
 (require 'dash)
+(require 's)
 (require 'notmuch-ext)
 
-(defun trim-leading-whitespace (s)
+(defun trim-left-lines (s)
   "Trims the leading whitespace from every line in the given string."
   (replace-regexp-in-string "^ +" "" s))
 
@@ -11,18 +11,8 @@
   (assert (equal (notmuch-ext/remove-empty-envelopes '((nil (nil (1 2 3 nil) nil))))
                  '(1 2 3 nil)) t))
 
-(defun test-strip-quoted-text ()
-  (lexical-let ((fixture (trim-leading-whitespace
-                          "line 1
-                          > quote 1
-                          line 2
-                          > quote 2
-                          > quote 3")))
-    (assert (string= (notmuch-ext/strip-quoted-text fixture)
-                     "line 1\n> quote 1\nline 2") t)))
-
 (defun test-get-message-parts ()
-  (lexical-let* ((fixture (trim-leading-whitespace
+  (lexical-let* ((fixture (trim-left-lines
                            "From: a@a.com
                             --text follows this line--
                             Reply line 1
@@ -43,7 +33,6 @@
 (defun notmuch-ext/run-tests ()
   (test-extract-message-id)
   (test-get-message-parts)
-  (test-strip-quoted-text)
   (test-remove-empty-envelopes))
 
 (notmuch-ext/run-tests)
