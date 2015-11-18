@@ -1406,7 +1406,7 @@
                                                (-map 'file-name-nondirectory all-project-folders)
                                                nil t))
          (project (->> all-project-folders
-                       (--filter (string/ends-with it (concast "/" project-to-open)))
+                       (--filter (string/ends-with it (concat "/" project-to-open)))
                        first)))
     (open-root-of-project project)
     ;; If we invoke this inside of a split, don't set the tab's title.
