@@ -311,6 +311,11 @@
 (define-key evil-outer-text-objects-map "p" 'evil-paragraph-from-newlines)
 (define-key evil-outer-text-objects-map "P" 'evil-a-paragraph)
 
+(defun count-chars-region (beg end)
+  "Prints the character count of the selected region."
+  (interactive "r")
+  (-> (buffer-substring beg end) length number-to-string message))
+
 (evil-leader/set-key
   "h" 'help
   "b" 'ido-switch-buffer
@@ -325,6 +330,7 @@
           (magit-status-and-focus-unstaged))
   "gl" 'magit-log
   "o" 'xah-open-file-at-cursor
+  "wc" 'count-chars-region
   ;; "v" is a mnemonic prefix for "view X".
   ;; "vv" will be a natural choice as a mode-specific shortcut for previewing the current file.
   "vu" 'notmuch-go-to-inbox
