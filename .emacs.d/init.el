@@ -1253,6 +1253,24 @@
   "S" 'message-send-and-exit
   "s" 'notmuch-ext/convert-to-markdown-and-send)
 
+;; Initialize the Emacs message mode for sending emails for use with notmuch-mode.
+(defun init-message-mode-settings ()
+  ;; Use markdown-mode for composing emails.
+  (markdown-lite-mode)
+  ;; TODO(philc): Not sure why this is needed, but without it, syntax highlighting isn't updated.
+  (markdown-reload-extensions)
+  (setq tab-width 2) ; This is set to 4 by message-mode.
+  ;; TODO(philc): This mutates all of the evil keybindings in markdown mode. I haven't been able to figure out
+  ;; how to limit these changes to the current buffer.
+  (util/define-keys
+   evil-normal-state-local-map
+   ";rr" 'notmuch-ext/view-message-in-browser
+   ";x" (fn () (interactive) (util/without-confirmation 'message-kill-buffer))
+   ";S" 'message-send-and-exit ; For when you want to send a plaintext message, not markdown.
+   ";s" 'notmuch-ext/convert-to-markdown-and-send))
+
+(add-hook 'message-mode-hook 'init-message-mode-settings)
+
 ;;
 ;; YAML mode, for editing YAML files
 ;;
