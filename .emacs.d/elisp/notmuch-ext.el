@@ -180,9 +180,7 @@
 (defun notmuch-ext/convert-to-markdown-and-send ()
   (interactive)
   (util/replace-buffer-text (notmuch-ext/get-mml-for-buffer))
-  ;; TODO(philc): Make this actually send the email.
-  ;; (message-send-and-exit)
-  )
+  (message-send-and-exit))
 
 (defun notmuch-preview-html-reply-in-browser ()
   (interactive)
@@ -284,7 +282,7 @@
   "Intended to be called from the search view."
   (interactive)
   (->> (get-messages-to-move (notmuch-search-find-thread-id) nil)
-       (mapcar 'delete-file))
+       (-map 'delete-file))
   ;; Now that some files have been removed from the disk, ask notmuch to update its database.
   (notmuch-call-notmuch-process "new")
   (notmuch-refresh-this-buffer))
