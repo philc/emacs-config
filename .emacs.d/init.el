@@ -1184,8 +1184,9 @@
 ;; Credentials are stored in ~/.authoinfo. See here for the format:
 ;; http://emacswiki.org/emacs/GnusAuthinfo
 ;; Note that you need to use a site-specific password if you have Google's two-factor auth enabled.
-(setq user-mail-address "phil.crosby@gmail.com"
-      user-full-name  "Phil Crosby")
+(setq user-full-name "Phil Crosby")
+;; (setq user-mail-address "phil.crosby@gmail.com")
+(setq user-mail-address "phil@liftoff.io")
 (require 'smtpmail)
 (setq message-send-mail-function 'smtpmail-send-it)
 (setq smtpmail-stream-type 'ssl)
