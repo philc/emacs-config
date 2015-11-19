@@ -1336,7 +1336,6 @@
     (setq gofmt-in-progress nil)))
 
 (defun init-go-buffer-settings ()
-  (print "adding save hook")
   ;; I have Emacs configured to save when switching buffers, so popping up errors when I switch buffers is
   ;; really jarring.
   (add-hook 'before-save-hook 'gofmt-before-save-ignoring-errors nil t)
