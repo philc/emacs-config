@@ -218,7 +218,6 @@
 
 (defun notmuch-ext/get-selected-message-id ()
   "Returns the message ID of the selected thread. Works in both notmuch-search and notmuch-show modes."
-  (print major-mode)
   (cond ((s-equals? major-mode "notmuch-show-mode")
          (notmuch-show-get-message-id t))
         ((s-equals? major-mode "notmuch-search-mode")
