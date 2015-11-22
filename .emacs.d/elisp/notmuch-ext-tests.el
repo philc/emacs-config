@@ -41,7 +41,7 @@
     (assert (string= (notmuch-ext/extract-message-id fixture)
                      "message123@gmail.com") t)))
 
-(defun test-build-response-from-markdown-for-compose-messages ()
+(defun test-build-response-from-markdown-for-composing-new-messages ()
   (lexical-let* ((fixture (trim-left-lines
                            "From: a@a.com
                             --text follows this line--
@@ -55,6 +55,6 @@
   (test-get-message-parts-for-replies)
   (test-get-message-parts-for-non-replies)
   (test-remove-empty-envelopes)
-  (test-build-response-from-markdown-for-compose-messages))
+  (test-build-response-from-markdown-for-composing-new-messages))
 
 (notmuch-ext/run-tests)
