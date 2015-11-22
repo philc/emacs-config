@@ -56,10 +56,10 @@
 (defun notmuch-ext/remove-empty-envelopes (list)
   "Removes any empty containing lists surrounding a plist. notmuch show --format=sexp returns results with
    many empty surrounding lists, which sometimes include sparse nils (when using --entire-thread=false for
-   instance).
-   Example: (remove-empty-envelopes '(((nil (nil (1 2 3))))) => '(1 2 3)."
+   instance) and sublists containing just nils.
+   Example: (remove-empty-envelopes '(((nil (nil (:a 1))))) => '(:a 1)."
   (setq current list)
-  (while (and current (-> current -non-nil length (<= 1)))
+  (while (not (-> current -non-nil first symbolp))
     (setq current (-> current -non-nil first)))
   current)
 

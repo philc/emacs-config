@@ -9,8 +9,10 @@
   (replace-regexp-in-string "^ +" "" s))
 
 (defun test-remove-empty-envelopes ()
-  (assert (equal (notmuch-ext/remove-empty-envelopes '((nil (nil (1 2 3 nil) nil))))
-                 '(1 2 3 nil)) t))
+  (assert (equal (notmuch-ext/remove-empty-envelopes '((nil (nil (:a 1) nil))))
+                 '(:a 1)) t)
+  (assert (equal (notmuch-ext/remove-empty-envelopes '((:a 1) (nil nil)))
+                 '(:a 1)) t))
 
 (defun test-get-message-parts-for-replies ()
   (lexical-let* ((fixture (trim-left-lines
