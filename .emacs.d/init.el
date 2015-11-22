@@ -720,6 +720,16 @@
      (select-window (get-buffer-window "*Messages*"))
      (goto-char (point-max)))))
 
+(defun erase-messages-buffer ()
+  (interactive)
+  (util/preserve-selected-window
+   (lambda ()
+     (select-window (get-buffer-window "*Messages*"))
+     ;; The *Messages* buffer is readonly.
+     (read-only-mode -1)
+     (erase-buffer)
+     (read-only-mode 1))))
+
 (evil-leader/set-key-for-mode 'emacs-lisp-mode
   ; Note that I'm saving the buffer before each eval because otherwise, the buffer gets saved after the eval,
   ; (due to save-when-switching-windows setup) and the output from the buffer save overwrites the eval results
@@ -727,6 +737,7 @@
   "eb" (lambda() (interactive) (util/save-buffer-if-dirty) (eval-buffer))
   "es" (lambda () (interactive) (util/save-buffer-if-dirty) (elisp-eval-current-sexp))
   "ex" (lambda () (interactive) (util/save-buffer-if-dirty) (call-interactively 'eval-defun))
+  "ek" 'erase-messages-buffer
   "ee" 'view-echo-area-messages-and-scroll)
 
 ;; Indentation rules.
