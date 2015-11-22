@@ -28,10 +28,12 @@
 (defun in-notmuch (f)
   "Execute the given function within the notmuch view. Used for REPL-based development."
   (util/preserve-selected-window
-   (lexical-let ((f f))
+   (lexical-let* ((f f))
      (fn ()
-       (select-window (get-buffer-window "*notmuch-search-folder:Inbox*"))
-       (funcall f)))))
+       (lexical-let ((w (select-window (get-buffer-window "*notmuch-search-folder:Inbox*"))))
+         (when (not w)
+           (throw "Can't switch to the given notmuch window" nil))
+         (funcall f))))))
 
 (defun notmuch-ext/get-body-parts-from-notmuch-message (notmuch-message)
   "Returns a flattened list of all parts of a notmuch-message.
