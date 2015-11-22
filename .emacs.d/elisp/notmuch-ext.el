@@ -39,13 +39,13 @@
   "Returns a flattened list of all parts of a notmuch-message.
    Not that notmuch-messages can optionally contain multiple bodies with different content-types, sometimes
    nested, e.g. a multipart body which contains plaintext and text/HTML children.
-   notmuch-message: a plist of the form:
+   - notmuch-message: a plist of the form:
    (:body ((:content-type 'multipart' :body ((:content-type 'html' :content 'the-html-text') ...))))"
-  (setq queue (plist-get notmuch-message :body))
+  (setq queue (plist-sget notmuch-message :body))
   (setq result '())
   (while queue
     (lexical-let* ((item (pop queue))
-                   (content (plist-get item :content)))
+                   (content (plist-sget item :content)))
       (push item result)
       ;; Content can either be a string (in the case of text/html) or a list (in the case of
       ;; multipart/alternative)).
@@ -75,9 +75,9 @@
                                notmuch-ext/remove-empty-envelopes))
                  (parts (notmuch-ext/get-body-parts-from-notmuch-message message))
                  (html-part (-?>> parts
-                                  (--filter (string= (plist-get it :content-type) "text/html"))
+                                  (--filter (string= (plist-sget it :content-type) "text/html"))
                                   first)))
-    (-?> html-part (plist-get :content))))
+    (-?> html-part (plist-sget :content))))
 
 (defun notmuch-ext/extract-message-id (message-body)
   "Extracts the message ID which is identified by the field 'In-Reply-To: <the-message-id@gmail.com>'."
