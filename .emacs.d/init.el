@@ -1003,6 +1003,7 @@
 (evil-leader/set-key-for-mode 'coffee-mode
   "c" nil ; Establishes "c" as a "prefix key". I found this trick here: http://www.emacswiki.org/emacs/Evil
   ;; This compiles the file and jumps to the first error, if there is one.
+  "rr" 'reload-active-chrome-tab
   "cc" (lambda ()
          (interactive)
          (save-buffer)
@@ -1116,7 +1117,14 @@
 
 (evil-leader/set-key-for-mode 'html-mode
   "i" 'indent-html-buffer
+  "rr" 'reload-active-chrome-tab
   "vv" 'preview-html)
+
+(defun reload-active-chrome-tab ()
+  "Reloads the current tag in Chrome. This works on OSX only, using Applescript."
+  (interactive)
+  (util/call-process-with-exit-status "osascript"
+                                      "tell app \"Google Chrome\" to reload active tab of window 1"))
 
 ;;
 ;; CSS, LESS mode
@@ -1166,6 +1174,12 @@
 
 (evil-define-key 'normal css-mode-map
   (kbd "A-C-f") 'toggle-fold-css-block)
+
+(evil-leader/set-key-for-mode 'css-mode
+  "rr" 'reload-active-chrome-tab)
+
+(evil-leader/set-key-for-mode 'less-css-mode
+  "rr" 'reload-active-chrome-tab)
 
 ;;
 ;; SCSS mode, for editing SCSS files.
