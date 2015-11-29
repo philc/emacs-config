@@ -124,15 +124,17 @@
   "Wraps the form in 'print' and evaluates the expression."
   ;; Cider has cider-interactive-eval-to-repl, but it prints the results of expressions to random places in
   ;; the repl buffer.
-  (let* (;; NOTE(philc): I have pprint aliased into clojure.core as >pprint for all of my lein projects. I've
-         ;; done this through ~/.lein/profiles.clj. Assuming you don't, you can just use println as the
+  (let* (;; NOTE(philc): I have pprint aliased into clojure.core as >pprint for all of my lein projects, so
+         ;; >pprint can always be used, regardless of the namespace. I've done via through
+         ;; ~/.lein/profiles.clj. Assuming you don't have this setup, you can just use `println` as the
          ;; print-fn.
          (print-fn ">pprint")
-         (form (concat "(" print-fn form ")")))
+         (form (concat "(do (println \"\n\")" ; Insert a newline to separate the output across invocations.
+                       "(" print-fn form "))")))
     (cider-interactive-eval form)))
 
 (defun my-cider-eval-and-print-defun-at-point ()
-  ;; Based on cider-eval-defun-at-point.
+  (interactive)
   (my-cider-eval-and-print-to-repl (cider-defun-at-point)))
 
 (defun my-cider-eval-current-sexp (&optional print-result)
