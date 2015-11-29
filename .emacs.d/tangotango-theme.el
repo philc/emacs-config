@@ -46,7 +46,8 @@
  ;; - yellow :     "#edd400"
  ;; - green :      "#6ac214"
  ;; - orange/red : "tomato"
- `(default ((t (:family "Inconsolata" :foundry "unknown" :width normal :height 140 :weight normal :slant normal :underline nil :overline nil :strike-through nil :box nil :inverse-video nil :foreground "#eeeeec" :background "#202424" :stipple nil :inherit nil))))
+ ;; Source Code Pro gets me 3 more lines on screen than Monaco.
+ `(default ((t (:family "Source Code Pro" :foundry "unknown" :width normal :height 140 :weight normal :slant normal :underline nil :overline nil :strike-through nil :box nil :inverse-video nil :foreground "#eeeeec" :background "#202424" :stipple nil :inherit nil))))
  `(cursor ((t (:foreground "#222222" :background "#fce94f"))))
  `(fixed-pitch ((t (:inherit (default)))))
  `(variable-pitch ((t (:family "Sans Serif"))))
@@ -69,9 +70,9 @@
  `(font-lock-regexp-grouping-backslash ((t (:inherit (bold)))))
  `(font-lock-regexp-grouping-construct ((t (:inherit (bold)))))
  `(font-lock-string-face ((t (:foreground "#ad7fa8"))))
- `(font-lock-type-face ((t (:weight bold :foreground "#8ae234"))))
+ `(font-lock-type-face ((t (:weight normal :foreground "#8ae234")))) ; was previously bold
  `(font-lock-variable-name-face ((t (:foreground "tomato"))))
- `(font-lock-warning-face ((t (:weight bold :foreground "#f57900"))))
+ `(font-lock-warning-face ((t (:weight normal :foreground "#f57900")))) ; was previously bold
  `(button ((t (:inherit (link)))))
  `(link ((t (:foreground "dodger blue" :underline (:color foreground-color :style line)))))
  `(link-visited ((default (:inherit (link))) (((class color) (background light)) (:foreground "magenta4")) (((class color) (background dark)) (:foreground "violet"))))
