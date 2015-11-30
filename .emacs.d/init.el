@@ -61,8 +61,7 @@
                       smex
                       wcheck-mode ; Spell checking
                       yaml-mode
-                      yasnippet
-                      zoom-frm))
+                      yasnippet))
 
 (dolist (p my-packages)
   (when (not (package-installed-p p))
@@ -130,8 +129,6 @@
 
 ;; NOTE(philc): Disabling savehist-mode in an attempt to isolate a periodic Emacs segfault.
 ;; (savehist-mode t) ; Save your minibuffer history across Emacs sessions. UX win!
-
-(setq text-scale-mode-step 1.1) ;; When changing font size, change in small increments.
 
 ;; Include path information in duplicate buffer names (e.g. a/foo.txt b/foo.txt)
 (setq uniquify-buffer-name-style 'forward)
@@ -535,11 +532,47 @@
     (recenter arg)))
 
 ;;
+;; Changing font sizes - text-scale-mode
+;;
+;; These functions support changing text sizes across all open buffers, rather than on a per-buffer basis.
+;; zoom-frm.el does this as well, except that causes the Emacs frame to resize itself, which is undesirable.
+;;
+(require 'face-remap) ; This loads "text-scale-mode".
+
+(setq text-scale-mode-step 1.1) ; When changing font size, do so in small increments.
+(setq current-text-zoom-level 0) ; The global text zoom level which should apply to all buffers.
+
+;; Here we define a global minor mode which runs on all buffers. This is needed because we must set the text
+;; zoom level for newly created buffers, since text-scale-set works on a per-buffer basis.
+(define-globalized-minor-mode global-text-scale-mode text-scale-mode
+  (lambda () (text-scale-set current-text-zoom-level)))
+
+(global-text-scale-mode 1)
+
+(defun set-text-zoom (level)
+  "Sets the text zoom to the given level in every open buffer."
+  (setq current-text-zoom-level level)
+  (dolist (buffer (buffer-list))
+    (with-current-buffer buffer
+      (text-scale-set current-text-zoom-level))))
+
+(defun text-zoom-reset ()
+  (interactive)
+  (set-text-zoom 0))
+
+(defun text-zoom-in ()
+  (interactive)
+  (set-text-zoom (+ current-text-zoom-level 1)))
+
+(defun text-zoom-out ()
+  (interactive)
+  (set-text-zoom (- current-text-zoom-level 1)))
+
+;;
 ;; Mac OS X keybindings minor mode.
 ;; Make it so the OSX keybindings you're used to always work in every mode in Emacs.
 ;; http://stackoverflow.com/questions/683425/globally-override-key-binding-in-emacs
 ;;
-(require 'zoom-frm) ; For zooming (increasing font size of all windows) using M-- and M-+
 (defvar osx-keys-minor-mode-map (make-keymap) "osx-keys-minor-mode-keymap")
 (util/define-keys osx-keys-minor-mode-map
                   (kbd "M-`") 'other-frame
@@ -554,9 +587,9 @@
                   (kbd "M-c") 'clipboard-kill-ring-save
                   (kbd "M-m") 'iconify-or-deiconify-frame
                   (kbd "M-W") 'evil-quit ; Close all tabs in the current frame..
-                  (kbd "M--") 'zoom-out
-                  (kbd "M-=") 'zoom-in
-                  (kbd "M-0") 'zoom-frm-unzoom
+                  (kbd "M--") 'text-zoom-out
+                  (kbd "M-=") 'text-zoom-in
+                  (kbd "M-0") 'text-zoom-reset
                   ;; These aren't specifically replicating OSX shortcuts, but they manipulate the window, so I
                   ;; want them to take precedence over everything else.
                   (kbd "M-C-n") 'other-window
