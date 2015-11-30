@@ -154,7 +154,7 @@
          (save-buffer)
          ;; Note that I actually use cider-load-file here, not cider-eval-buffer, because it gives useful line
          ;; numbers on exceptions.
-         (with-nrepl-connection-of-current-buffer 'cider-load-current-buffer))
+         (with-nrepl-connection-of-current-buffer '(lambda () (cider-load-file (buffer-file-name)))))
   ;; cider-restart-nrepl is more handy than cider-jack-in, because it doesn't leave existing repls running.
   "en" 'my-cider-restart-nrepl
   "es" 'my-cider-eval-current-sexp
