@@ -6,6 +6,11 @@
 ;; try to centralize the configuration for everything here in this file.
 ;;
 
+;; Colorscheme
+(load-theme 'tangotango t) ; A reasonable color scheme which lives in my .emacs.d.
+;; Make the dividing line between window splits less bright. It's #EAEAEA in tangotango.
+(set-face-attribute 'vertical-border nil :foreground "#888888")
+
 ;;
 ;; Package management
 ;;
@@ -143,13 +148,6 @@
 ;; The preference file for Emac's "Customize" system. `M-x customize` to access it.
 (setq custom-file (expand-file-name "~/.emacs.d/custom.el"))
 (load custom-file t)
-
-;; Colorscheme
-(load-theme 'tangotango t) ; A reasonable color scheme which lives in my .emacs.d.
-;; A font face size of 140 can show 110 chars before wrapping on a 1920x1200 resolution.
-(set-face-attribute 'default nil :height 140)
-;; Make the dividing line between window splits less bright. It's #EAEAEA in tangotango.
-(set-face-attribute 'vertical-border nil :foreground "#888888")
 
 ;; Whitespace & line wrapping.
 (global-whitespace-mode t)
