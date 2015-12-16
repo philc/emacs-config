@@ -92,6 +92,38 @@
         (quit-window nil w))
       (select-window original-window))))
 
+(defun narrow-ephemeral-window ()
+  "Narrows the ephemeral window (usually a REPL) so that 3 vertical splits can fit on a Mac Thunderbolt
+   monitor: 2 splits of 110 chars without wrapping, and 1 split with a REPL."
+  (interactive)
+  (lexical-let ((shrink-by 12)
+                (ephemeral-window (first (get-ephemeral-windows))))
+    (when ephemeral-window
+      (balance-windows)
+      (lexical-let* ((non-ephemeral-windows (->> (get-visible-windows) (-remove 'ephemeral-window-p)))
+                     (window-width (-> non-ephemeral-windows first window-total-width))
+                     (vertical-splits (vertical-split-count)))
+        (util/preserve-selected-window
+         (lambda ()
+           (select-window ephemeral-window)
+           (shrink-window-horizontally shrink-by)))
+        ;; The ephemeral window has been shrunk, but the other non-ephemeral windows may not have gotten the
+        ;; remaining width distributed evently. Split the width from `shrink-by` between them.
+        (dolist (w non-ephemeral-windows)
+          (set-window-width w (+ window-width (/ shrink-by (- vertical-splits 1)))))))))
+
+(defun set-window-width (window width)
+  "Resizes a window to be the given size.
+   - horizontal: if true, resize the window horizontally, otherwise, vertically."
+  ;; NOTE(philc): I couldn't find an Emacs function which takes an absolute window size. shrink-window
+  ;; only takes deltas from the window's current width.
+  (let ((delta (- (window-total-width window)
+                  width)))
+    (util/preserve-selected-window
+     (lambda ()
+       (select-window window)
+       (shrink-window delta t)))))
+
 (setq buffer-underneath-maximized-ephemeral-window nil)
 
 (defun toggle-maximize-lower-right-window ()
@@ -147,7 +179,6 @@
   (split-window-horizontally)
   (other-window 1))
 
-; TODO(philc): Delete this if you don't start using it.
 (defun vertical-split-count ()
   "Returns the number of vertical splits (or columns) in the current frame."
   (util/preserve-selected-window

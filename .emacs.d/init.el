@@ -430,9 +430,11 @@
 (evil-leader/set-key "wm" 'toggle-window-maximize)
 (evil-leader/set-key "wr" 'evil-window-rotate-downwards)
 (evil-leader/set-key "wR" 'evil-window-rotate-upwards)
+(evil-leader/set-key "wb" 'balance-windows)
 ;; winner-undo will undo the last change you made to your window configuration.
-(evil-leader/set-key "wb" 'winner-undo)
-(evil-leader/set-key "we" 'toggle-maximize-lower-right-window)
+(evil-leader/set-key "wu" 'winner-undo)
+(evil-leader/set-key "we" 'narrow-ephemeral-window)
+(evil-leader/set-key "wE" 'toggle-maximize-lower-right-window)
 (evil-leader/set-key "q" 'dismiss-ephemeral-windows)
 (evil-leader/set-key "wf" 'toggle-frame-fullscreen)
 
