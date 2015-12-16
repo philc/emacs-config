@@ -270,6 +270,7 @@
 (define-key evil-normal-state-map (kbd "RET") 'newline-and-indent)
 ;; This creates a newline below the current line, like open, but does not enter insert mode.
 (define-key evil-normal-state-map (kbd "s") (lambda () (interactive) (evil-insert-newline-below)))
+(define-key evil-normal-state-map (kbd "S") (lambda () (interactive) (evil-insert-newline-above)))
 
 ;; By default, Emacs will not indent when you hit enter/return within a comment.
 (define-key evil-insert-state-map (kbd "RET") 'newline-and-indent)
