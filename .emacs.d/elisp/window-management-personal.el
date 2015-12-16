@@ -3,6 +3,8 @@
 ;;
 (provide 'window-management-personal)
 
+(require 'dash)
+
 ;; Settings for window splits.
 (setq split-height-threshold 40)
 (setq split-width-threshold 200)
@@ -37,12 +39,19 @@
 ;; ephemeral buffer that we want to replace with a new one.
 (setq show-ephemeral-buffer-in-other-frames t)
 
+(defun ephemeral-window-p (w)
+  "True if the given window is an 'ephemeral' window."
+  (-> w window-buffer buffer-name special-display-p))
+
+(defun get-visible-windows ()
+  "The list of visible windows across all frames."
+  (->> (visible-frame-list)
+       (--mapcat (window-list it))))
+
 (defun get-ephemeral-windows ()
   "Returns a list of windows which are showing ephemeral buffers. Searches all visible frames."
-  (->> (visible-frame-list)
-       (mapcar (lambda (f) (window-list f)))
-       flatten
-       (remove-if-not (lambda (w) (-> w window-buffer buffer-name special-display-p)))))
+  (->> (get-visible-windows)
+       (-filter 'ephemeral-window-p)))
 
 ;; References, for context:
 ;; http://snarfed.org/emacs_special-display-function_prefer-other-visible-frame
@@ -56,12 +65,12 @@
   ;; reason it interfaces with the window switching behavior.
   (let* ((original-window (selected-window))
          (window-showing-buffer (get-buffer-window buffer show-ephemeral-buffer-in-other-frames))
-         (existing-ephemeral-window (first (get-ephemeral-windows)))
+         (ephemeral-window (first (get-ephemeral-windows)))
          (should-create-new-window (and (not window-showing-buffer)
-                                        (not existing-ephemeral-window)
+                                        (not ephemeral-window)
                                         (one-window-p)))
          (window (or window-showing-buffer
-                     existing-ephemeral-window
+                     ephemeral-window
                      (if should-create-new-window
                          (split-window-sensibly-reverse)
                        (save-excursion (switch-to-lower-right) (selected-window))))))
