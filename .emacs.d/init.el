@@ -20,6 +20,7 @@
 
 ;; Cider from MELPA has been too unstable for me. Only use versions from MELPA Stable.
 (add-to-list 'package-pinned-packages '(cider . "melpa-stable") t)
+(add-to-list 'package-pinned-packages '(clojure-mode . "melpa-stable") t)
 
 (package-initialize)
 (when (not package-archive-contents)
