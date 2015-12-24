@@ -94,23 +94,18 @@
 
 (defun narrow-ephemeral-window ()
   "Narrows the ephemeral window (usually a REPL) so that 3 vertical splits can fit on a Mac Thunderbolt
-   monitor: 2 splits of 110 chars without wrapping, and 1 split with a REPL."
+   monitor: 2 splits which fit 110 chars without wrapping, and 1 narrower split with a REPL."
   (interactive)
-  (lexical-let ((shrink-by 12)
-                (ephemeral-window (first (get-ephemeral-windows))))
-    (when ephemeral-window
-      (balance-windows)
-      (lexical-let* ((non-ephemeral-windows (->> (get-visible-windows) (-remove 'ephemeral-window-p)))
-                     (window-width (-> non-ephemeral-windows first window-total-width))
-                     (vertical-splits (vertical-split-count)))
-        (util/preserve-selected-window
-         (lambda ()
-           (select-window ephemeral-window)
-           (shrink-window-horizontally shrink-by)))
-        ;; The ephemeral window has been shrunk, but the other non-ephemeral windows may not have gotten the
-        ;; remaining width distributed evently. Split the width from `shrink-by` between them.
-        (dolist (w non-ephemeral-windows)
-          (set-window-width w (+ window-width (/ shrink-by (- vertical-splits 1)))))))))
+  (when (first (get-ephemeral-windows))
+    (lexical-let* ((shrink-by-amt 12)
+                   (total-width (-> (frame-root-window) window-total-width))
+                   (vertical-splits (vertical-split-count))
+                   (ephemeral-width (- (/ total-width vertical-splits) shrink-by-amt))
+                   ;; Split the width from `shrink-by-amt` evently between the non-ephemeral windows.
+                   (non-ephemeral-width (-> (/ total-width vertical-splits)
+                                            (+ (/ shrink-by-amt (- vertical-splits 1))))))
+      (dolist (w (get-visible-windows))
+        (set-window-width w (if (ephemeral-window-p w) ephemeral-width non-ephemeral-width))))))
 
 (defun set-window-width (window width)
   "Resizes a window to be the given size.
