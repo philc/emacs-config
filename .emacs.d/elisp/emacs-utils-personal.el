@@ -71,7 +71,7 @@
 
 (defun util/preserve-selected-window (f)
   "Runs the given function and then restores focus to the original window. Useful when you want to invoke
-   a function (like showing documentation) but don't want to keep editing your current buffer."
+   a function (like showing documentation) but desire to keep your current buffer focused."
   (lexical-let* ((f f)
                  (original-window (selected-window))
                  (result (funcall f)))
