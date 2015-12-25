@@ -187,8 +187,12 @@
                   (kbd "C-e") 'end-of-line
                   (kbd "C-u") 'backward-kill-line
                   (kbd "C-d") 'delete-char
-                  (kbd "C-w") 'backward-kill-word
-                  (kbd "C-h") 'backward-delete-char)
+                  (kbd "C-w") 'backward-kill-word)
+
+;; Emacs modes universally bind C-h to "help", but I use C-h for backspace. It's very difficult to redefine
+;; C-h in many modes, like minibuffer-mode. This instead translates C-h to C-?. Unclear exactly how this works
+;; https://github.com/emacs-helm/helm/issues/24
+(define-key key-translation-map [?\C-h] [?\C-?])
 
 ;; Disable the prompt we get when killing a buffer with a process. This affects clojure mode in particular,
 ;; when we want to restart the nrepl process.
@@ -201,7 +205,6 @@
 ;; RecentF mode is the Emacs minor mode used when opening files via C-x C-f.
 (require 'recentf)
 (define-key recentf-mode-map (kbd "C-w") 'backward-kill-word)
-(define-key recentf-mode-map (kbd "C-h") 'backward-delete-char)
 
 ;; The poorly-named winner mode saves the history of your window splits, so you can undo and redo changes to
 ;; your window configuration.
@@ -408,7 +411,6 @@
                   (kbd "C-e") 'end-of-line
                   (kbd "C-u") 'backward-kill-line
                   (kbd "C-d") 'delete-char)
-(global-set-key (kbd "C-h") 'backward-delete-char) ; Here we clobber C-h, which accesses Emacs's help.
 
 ;; Commenting via NERD commentor.
 (define-key evil-normal-state-map "," 'evilnc-comment-operator)
