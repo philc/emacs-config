@@ -537,7 +537,8 @@
 ;; Changing font sizes - text-scale-mode
 ;;
 ;; These functions support changing text sizes across all open buffers, rather than on a per-buffer basis.
-;; zoom-frm.el does this as well, except that causes the Emacs frame to resize itself, which is undesirable.
+;; zoom-frm.el does this as well. However, it causeses the Emacs frame to resize itself which means every time
+;; change your font size, you also need to resize Emacs, which is a pain.
 ;;
 (require 'face-remap) ; This loads "text-scale-mode".
 
@@ -555,8 +556,11 @@
   "Sets the text zoom to the given level in every open buffer."
   (setq current-text-zoom-level level)
   (dolist (buffer (buffer-list))
-    (with-current-buffer buffer
-      (text-scale-set current-text-zoom-level))))
+    ;; Avoid resizing the echo area. Otherwise, the Emacs status bar will move up and down to make room for
+    ;; echo area whenever a message is printed. This is annoying.
+    (when (not (string-match "*Echo Area.+" (buffer-name buffer)))
+      (with-current-buffer buffer
+        (text-scale-set current-text-zoom-level)))))
 
 (defun text-zoom-reset ()
   (interactive)
