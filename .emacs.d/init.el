@@ -1376,7 +1376,8 @@
   "cp" 'previous-error
   "cw" (go-save-and-compile-fn "make web")
   "cb" (go-save-and-compile-fn "make benchmark")
-  "cc" (go-save-and-compile-fn "go build")
+  "cc" (go-save-and-compile-fn "make compile")
+  ;; "cc" (go-save-and-compile-fn "go build")
 
   "ai" 'go-import-add)
 
