@@ -299,12 +299,31 @@
 (evil-define-text-object evil-paragraph-from-newlines (count &optional beg end type)
   "Select a paragraph separated by newlines."
   :type line
-  ;; These two vars are set by the current programming mode. Set them to their default text mode values
-  ;; temporarily while we select the paragraph. The implementation of evil-select-an-object will invokes
-  ;; `forward-paragraph`, which uses these variables.
+  ;; The implementation of evil-select-an-object will invoke 'forward-evil-paragraph-from-newlines, which is
+  ;; defined below.
+  ;; NOTE(philc): I used to instead change `paragraph-start` and `paragraph-separate`, but that approach is
+  ;; more complicated and didn't work in go-mode. See http://stackoverflow.com/q/9923540.
   (let ((paragraph-start "\f\\|[     ]*$")
         (paragraph-separate "[  ]*$"))
-    (evil-select-an-object 'evil-paragraph beg end type count)))
+    (evil-select-an-object 'evil-paragraph-from-newlines beg end type count)))
+
+(defun forward-evil-paragraph-from-newlines (&optional count)
+  "Move forward COUNT paragraphs, where paragraphs are separated by newlines. Moves point COUNT paragraphs
+   forward or (- COUNT) paragraphs backward if COUNT is negative."
+  ;; Adapted from the implementation of forward-evil-paragraph from evil-common.el
+  (evil-motion-loop (dir (or count 1))
+    (cond
+     ((> dir 0)
+      (while (and (not (eobp))
+                  (not (string/blank? (util/get-current-line))))
+        (forward-line 1))
+      (while (and (not (eobp))
+                  (string/blank? (util/get-current-line)))
+        (forward-line 1)))
+     ((not (bobp))
+      (while (and (not (bobp))
+                  (not (string/blank? (util/get-current-line))))
+        (forward-line -1))))))
 
 (define-key evil-outer-text-objects-map "p" 'evil-paragraph-from-newlines)
 (define-key evil-outer-text-objects-map "P" 'evil-a-paragraph)
