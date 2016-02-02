@@ -328,6 +328,35 @@
 (define-key evil-outer-text-objects-map "p" 'evil-paragraph-from-newlines)
 (define-key evil-outer-text-objects-map "P" 'evil-a-paragraph)
 
+(define-key evil-motion-state-map (kbd "C-d") 'evil-scroll-down-patched)
+
+;; NOTE(philc): With the latest Evil, evil-scroll-down does not show the last few lines of the buffer
+;; when you reach teh bottom. This is a workaround.
+;; This implementation is based on evil-scroll-down.
+(evil-define-command evil-scroll-down-patched (count)
+  "Scrolls the window and the cursor COUNT lines downwards. The default is half the screen."
+  :repeat nil
+  :keep-visual t
+  (interactive "P")
+  (evil-save-column
+    (let* ((p (point))
+           (c (or count (/ (evil-num-visible-lines) 2)))
+           (scrollable (- c (save-excursion (forward-line c)))))
+      (save-excursion
+        (scroll-up scrollable))
+      (forward-line c)
+      (let ((win-beg (window-start))
+            (win-end (window-end nil 'update)))
+        ;; If we're at end of buffer, let the last line be at the bottom:
+        (when (= win-end (point-max))
+          ;; NOTE(philc): these lines do not work, but they do the same thing as "View-scroll-to-buffer-end",
+          ;; which is an Emacs function which does work.
+          ;; (scroll-down (- (evil-num-visible-lines)
+          ;;                 (count-lines win-beg win-end)))))
+          (View-scroll-to-buffer-end)))
+      (when (= 0 (count-lines p (point)))
+        (signal 'end-of-buffer nil)))))
+
 (defun count-chars-region (beg end)
   "Prints the character count of the selected region."
   (interactive "r")
