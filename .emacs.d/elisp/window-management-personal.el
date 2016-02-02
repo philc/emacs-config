@@ -17,6 +17,8 @@
 ;; I manage my windows in a 4x4 grid. I want ephemeral or status-based buffers to always show in the
 ;; lower-right or right window, in that order of preference.
 (setq special-display-buffer-names '("*Help*" "*compilation*" "COMMIT_EDITMSG" "*Messages*"
+                                     ;; Clojure
+                                     "*inf-clojure*"
                                      ;; Magit
                                      "*magit-process*" "*magit-commit*"
                                      ;; Emacs lisp

@@ -1128,20 +1128,24 @@
 ;;
 ;; Clojure
 ;;
-(require 'clojure-mode-personal)
-(require 'cider-test-personal)
+;; (require 'clojure-mode-personal)
+;; (require 'cider-test-personal)
 
-(evil-leader/set-key-for-mode 'clojure-mode
-  ; t is a mnemonic for "test"
-  "ta" (lambda ()
-         (interactive)
-         (with-nrepl-connection-of-current-buffer 'cider-test/run-all-tests))
-  "tt" (lambda ()
-         (interactive)
-         (with-nrepl-connection-of-current-buffer 'cider-test/run-test-at-point))
-  "tf" (lambda ()
-         (interactive)
-         (with-nrepl-connection-of-current-buffer 'cider-test/run-tests-in-ns)))
+(require 'clojure-mode-simple)
+
+
+
+;; (evil-leader/set-key-for-mode 'clojure-mode
+;;   ; t is a mnemonic for "test"
+;;   "ta" (lambda ()
+;;          (interactive)
+;;          (with-nrepl-connection-of-current-buffer 'cider-test/run-all-tests))
+;;   "tt" (lambda ()
+;;          (interactive)
+;;          (with-nrepl-connection-of-current-buffer 'cider-test/run-test-at-point))
+;;   "tf" (lambda ()
+;;          (interactive)
+;;          (with-nrepl-connection-of-current-buffer 'cider-test/run-tests-in-ns)))
 
 ;;
 ;; HTML mode
