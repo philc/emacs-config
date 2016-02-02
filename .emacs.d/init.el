@@ -1174,6 +1174,9 @@
   "rr" 'reload-active-chrome-tab
   "vv" 'preview-html)
 
+(evil-leader/set-key-for-mode 'mustache-mode
+  "rr" 'reload-active-chrome-tab)
+
 (defun reload-active-chrome-tab ()
   "Reloads the current tag in Chrome. This works on OSX only, using Applescript."
   (interactive)
