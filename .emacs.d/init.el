@@ -456,6 +456,7 @@
                   (kbd "C-k") 'kill-line
                   (kbd "C-e") 'end-of-line
                   (kbd "C-u") 'backward-kill-line
+                  (kbd "C-a") 'beginning-of-line
                   (kbd "C-d") 'delete-char)
 
 ;; Commenting via NERD commentor.
