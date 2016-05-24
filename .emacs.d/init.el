@@ -1478,8 +1478,8 @@
 ;;
 ;; Project navigation (my own functions on top of dired-mode and projectile)
 ;;
-(setq project-folders '("~/p" "~/src/liftoff" "~/src/liftoff/exp"))
-(setq notes-directories '("~/personal/notes" "~/Desktop" "~/Dropbox/scratch"))
+(setq project-folders '("~/p" "~/src" "~/src/liftoff" "~/src/liftoff/exp"))
+(setq notes-directories '("~/personal/notes" "~/Desktop" "~/Dropbox/scratch" "~/Dropbox/journals"))
 (setq notes-file-extensions '(".md" ".sql" ".txt"))
 
 ;; This is set to 600 by default. It shouldn't be the case, but for some reason, the filter-files-in-directory
