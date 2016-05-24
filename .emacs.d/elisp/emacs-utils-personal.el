@@ -82,11 +82,11 @@
   "Runs the given function and restores the cursor to its former line and column. This is helpful when the
    text in the buffer moves (e.g. as a result of indentation commands). This is different from save-excursion
    which will restore the (point). This does not restore the cursor to the previous point."
-  (lexical-let* ((previous-line (line-number-at-pos))
-                 (previous-col (current-column))
+  (lexical-let* ((former-line (line-number-at-pos))
+                 (former-col (current-column))
                  (return-val (funcall f)))
-    (goto-line previous-line)
-    (move-to-column previous-col)
+    (goto-line former-line)
+    (move-to-column former-col)
     return-val))
 
 (defun util/thing-at-point-no-properties (thing)
