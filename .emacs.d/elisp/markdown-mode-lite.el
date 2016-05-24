@@ -121,8 +121,6 @@
          (end (or end (point-max)))
          (stylesheet (if (boundp 'markdown-stylesheet) markdown-stylesheet "github"))
          ;; NOTE(philc): line-number-at-pos is 1-indexed.
-         ;; TODO(philc): Show a helpful error message if this command fails, e.g. because the ruby env is
-         ;; messed up.
          (command (format "~/scripts/publishing/markdown_page.rb --css %s --scroll-to-line %s"
                           stylesheet
                           (- (line-number-at-pos) 1)))
