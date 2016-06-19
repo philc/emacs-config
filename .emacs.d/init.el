@@ -1163,8 +1163,6 @@
 
 (require 'clojure-mode-simple)
 
-
-
 ;; (evil-leader/set-key-for-mode 'clojure-mode
 ;;   ; t is a mnemonic for "test"
 ;;   "ta" (lambda ()
@@ -1479,7 +1477,7 @@
 ;; Project navigation (my own functions on top of dired-mode and projectile)
 ;;
 (setq project-folders '("~/p" "~/src" "~/src/liftoff" "~/src/liftoff/exp"))
-(setq notes-directories '("~/personal/notes" "~/Desktop" "~/Dropbox/scratch" "~/Dropbox/journals"))
+(setq notes-directories '("~/Desktop" "~/Dropbox/scratch" "~/Dropbox/journals" "~/Dropbox/notes"))
 (setq notes-file-extensions '(".md" ".sql" ".txt"))
 
 ;; This is set to 600 by default. It shouldn't be the case, but for some reason, the filter-files-in-directory
