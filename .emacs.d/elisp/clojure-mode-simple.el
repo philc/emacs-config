@@ -14,8 +14,7 @@
   (modify-syntax-entry ?- "w" clojure-mode-syntax-table)
   ;; Comment lines using only one semi-colon instead of two.
   (setq indent-line-function 'lisp-indent-line-single-semicolon-fix)
-  (setq comment-add 0)
-  )
+  (setq comment-add 0))
 
 (add-hook 'clojure-mode-hook 'setup-clojure-buffer)
 (add-hook 'clojure-mode-hook 'inf-clojure-minor-mode)
@@ -271,3 +270,23 @@ but doesn't treat single semicolons as right-hand-side comments."
     (with-eligible-values 1) (when-eligible 1) (check 4)              ; Personal
     (url-of-form 1)                                                   ; Personal
     ))
+
+
+;;
+;; cljfmt -- automatic formatting of Clojure code. This configuration is Liftoff-specific.
+;;
+
+(load "/Users/phil/src/liftoff/exp/emacs/cljfmt.el")
+
+;; Note that `cljfmt-before-save` triggers this save-hook for some reason, so we lock on clj-in-progress to
+;; to protect from infinite recurision.
+(setq cljfmt-in-progress nil)
+(defun cljfmt-before-save-mutually-exclusive ()
+  (interactive)
+  (when (and (eq major-mode 'clojure-mode)
+             (not cljfmt-in-progress))
+    (setq cljfmt-in-progress 't)
+    (cljfmt)
+    (setq cljfmt-in-progress nil)))
+
+(add-hook 'before-save-hook 'cljfmt-before-save-mutually-exclusive nil)
