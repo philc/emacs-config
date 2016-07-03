@@ -231,9 +231,18 @@ but doesn't treat single semicolons as right-hand-side comments."
     (if (> (- (point-max) pos) (point))
         (goto-char (- (point-max) pos)))))
 
+(defun clj/open-clojure-docs-for-symbol-at-point ()
+  (interactive)
+  (-if-let (s (thing-at-point 'symbol))
+      (let ((clojure-docs-url
+             (concat "http://www.google.com/search?btnI=Im+Feeling+Lucky&q=site:clojuredocs.org+" s)))
+        (util/open-in-browser clojure-docs-url))
+    (message "There's no symbol under the cursor to look up documentation for.")))
+
 ; (evil-define-key 'normal clojure-mode-map "gf" 'cider-jump-to-var)
 ; (evil-define-key 'normal clojure-mode-map "gb" 'cider-jump-back)
 (evil-define-key 'normal clojure-mode-map "K" 'clj/show-doc-for-symbol-at-point)
+(evil-define-key 'normal clojure-mode-map (kbd "A-k") 'clj/open-clojure-docs-for-symbol-at-point)
 (evil-define-key 'normal clojure-mode-map "(" 'sp-backward-up-sexp)
 (evil-define-key 'normal clojure-mode-map ")" 'sp-forward-sexp)
 (evil-define-key 'normal clojure-mode-map (kbd "C-S-H") 'shift-sexp-backward)
