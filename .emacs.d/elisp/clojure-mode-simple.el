@@ -193,20 +193,6 @@ Prefix argument AND-GO means switch to the Clojure buffer afterwards."
       (inf-clojure-eval-region (point) end)))
   (if and-go (inf-clojure-switch-to-repl t)))
 
-
-;; (clj/eval-in-current-ns str)))
-;;     (inf-clojure-eval-region (point) end)))
-;; (clj/eval-in-current-ns (thing-at-point 'list t)))
-
-; "mf" (lambda () (interactive) (with-nrepl-connection-of-current-buffer 'my-cider-mark-recent-form))
-; "mb" 'my-cider-mark-current-buffer
-; ;; Shortcuts for printing the results of expressions. These eval functions take a second param which prints
-; ;; result of the expression.
-; "eps" (lambda () (interactive) (with-nrepl-connection-of-current-buffer
-;                                 (lambda () (my-cider-eval-current-sexp t))))
-; "epx" (lambda () (interactive) (with-nrepl-connection-of-current-buffer
-;                                 (lambda () (my-cider-eval-defun-at-point t)))))
-
 (defun lisp-indent-line-single-semicolon-fix (&optional whole-exp)
   "Identical to the built-in function lisp-indent-line,
 but doesn't treat single semicolons as right-hand-side comments."
