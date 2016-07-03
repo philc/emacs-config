@@ -26,6 +26,13 @@
                              (second result))))
         (throw nil message)))))
 
+(setq browser-mac-app-name "Google Chrome")
+
+(defun util/open-in-browser (url)
+  "On Mac, opens the given URL in a specific browser.
+   Just invoking `open the-url` will open the URL in a random open browser, rather than a deterministic one."
+  (call-process "open" nil nil nil url "-a" browser-mac-app-name))
+
 (defun util/line-indentation-level (line)
   "The number of space characters prefixing a line."
   (string-match "\\([ ]*\\)" line)
