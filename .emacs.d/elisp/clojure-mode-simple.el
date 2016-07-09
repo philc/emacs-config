@@ -7,6 +7,9 @@
 (require 'emacs-utils-personal)
 (require 'inf-clojure)
 (require 'thingatpt)
+(require 'dash)
+(require 's)
+(require 'ht)
 (require 'smartparens)
 
 (defun setup-clojure-buffer ()
@@ -59,6 +62,104 @@
       ;; inf-clojure-show-var-documentation will interactively prompt you for the variable.
       (inf-clojure-show-var-documentation s)
     (message "There's no symbol under the cursor to look up documentation for.")))
+
+(defun clj/open-clojure-docs-for-symbol-at-point ()
+  (interactive)
+  (-if-let (s (thing-at-point 'symbol))
+      (let ((clojure-docs-url
+             (concat "http://www.google.com/search?btnI=Im+Feeling+Lucky&q=site:clojuredocs.org+" s)))
+        (util/open-in-browser clojure-docs-url))
+    (message "There's no symbol under the cursor to look up documentation for.")))
+
+(defvar clj/commands
+  (->>
+   ;; This returns output of the form: "/home/username/shared_lib/core.clj,123"
+   ;; Inspiration taken from  https://github.com/clojure/clojure/blob/master/src/clj/clojure/repl.clj
+   ;; Note that the file metadata for a symbol can be rooted if it's already been loaded in the REPL.
+   (ht ("get-src-file"
+        "(let [m (-> '%s resolve meta)
+               path (:file m)
+               full-path (when (not= (subs path 0 1) \"/\")
+                           (->> path (.getResource (RT/baseLoader)) .getPath))]
+          (str (or full-path path) \":\" (:line m)))"))
+   ;; NOTE(philc): we strip newlines from all commands we send to the REPL, because this makes the output
+   ;; coming back from the REPL process have multiple #_=> prompts embedded in it. We may be able to reliably
+   ;; strip those from the output, but for now I'm just collapsing all clojure code snippets to one line.
+   (ht-map (lambda (k v) (list k (s-collapse-whitespace v))))
+   -flatten
+   ht<-plist))
+
+(defvar clj/buffers-before-jump '())
+
+;; TODO(philc):
+;; * Auto-eval the NS of the current file when invoking jump-to-var and it hasn't yet been eval'd.
+;; * Handle symbols which have no definition (currently throws a runtime exception).
+(defun clj/jump-to-var ()
+  (interactive)
+  (-if-let (s (-> (thing-at-point 'symbol) substring-no-properties))
+      (let* ((output (-> (format (ht-get clj/commands "get-src-file") s)
+                         clj/wrap-sexp-in-current-ns
+                         clj/eval-and-capture-output
+                         clj/remove-surrounding-quotes)))
+        ;; `output` is of the form "/home/USER/shared_lib/core.clj:123"
+        ;; If the function is in a JAR, output will be e.g. file:/home/USER/the-jar.jar!/path/in/jar
+        (message output)
+        (if (s-contains? "jar!" output)
+            (message (format "The var %s is defined in a JAR. Viewing source inside of a JAR is unimplemented." s))
+          (let ((file (->> output (s-split ":") (nth 0)))
+                (line (->> output (s-split ":") (nth 1) string-to-number)))
+            (message (buffer-file-name))
+            (message file)
+            (when (not (string= (buffer-file-name)
+                                file))
+              (push (list (current-buffer) (line-number-at-pos)) clj/buffers-before-jump)
+              (find-file file))
+            (goto-line line)
+            (recenter 0))))
+    (message "No symbol is under the cursor.")))
+
+(defun clj/jump-back ()
+  (interactive)
+  (when (> (length clj/buffers-before-jump) 0)
+    (let* ((item (pop clj/buffers-before-jump))
+           (buf (nth 0 item))
+           (line (nth 1 item)))
+      ;; (message item)
+      (set-window-buffer (selected-window) buf)
+      (goto-line line)
+      (recenter 0))))
+
+(defun clj/chomp-last-line (s)
+  "Removes the last line from the string s."
+  (-?>> s s-lines (-drop-last 1) (s-join "\n")))
+
+(defun clj/remove-surrounding-quotes (s)
+  (->> s (s-chop-prefix "\"") (s-chop-suffix "\"")))
+
+(defun clj/eval-and-capture-output (command)
+  (interactive)
+  (message "Evaluating:")
+  (message command)
+  ;; Taken from inf-clojure-show-arglist.
+  (let* ((command (concat command "\n"))
+         (proc (inf-clojure-proc))
+         (comint-filt (process-filter proc)))
+    (set-process-filter proc (lambda (proc string) (setq kept (concat kept string))))
+    (let* ((result (unwind-protect
+                       (let ((kept ""))
+                         (process-send-string proc command)
+                         (while (and (not (string-match inf-clojure-prompt kept))
+                                     (accept-process-output proc 2)))
+                         ;; TODO(philc): I couldn't get this code working.
+                         ;; some nasty #_=> garbage appears in the output
+                         ;; (setq result (and (string-match "(.+)" kept) (match-string 0 kept))))
+                         kept)
+                     (set-process-filter proc comint-filt)))
+           ;; The last line of output is a REPL prompt. Remove it.
+           (result (clj/chomp-last-line result)))
+
+      (when result
+        (message "%s" result)))))
 
 (defun clj/quit ()
   (interactive)
@@ -125,43 +226,24 @@
     (when (string-match "(ns \\(.+?\\)[ \n)]" contents)
       (match-string 1 contents))))
 
-(defun clj/eval-in-current-ns (str)
+(defun clj/wrap-sexp-in-current-ns (str)
   (-let* ((ns (or (clj/ns-of-buffer) "user"))
           (s (concat "(binding [*ns* '" ns "] " str ")")))
-    ;; TODO(philc): Only switch to `ns` if it's not already the current ns. This will save an extra
-    ;; nil from being printed to the REPL.
-    (inf-clojure-eval-string (concat "(do (clojure.core/in-ns '" ns ") nil)"))
-    (inf-clojure-eval-string str)))
+    (format "(do (clojure.core/in-ns '%s) %s)" ns str)))
+
+(defun clj/eval-in-current-ns (str)
+  (inf-clojure-eval-string (clj/wrap-sexp-in-current-ns str)))
+
+(defun clj/pretty-print-last-stack-trace ()
+  (interactive)
+  ;; TODO(philc): Consider embedding this helper file as a string in this .el."
+  (let ((helpers-file "/Users/phil/.lein/repl_helpers.clj")) ; TODO(philc): Make this path relative/configurable.
+    (-> (concat "(do (eval (read-string (slurp \"" helpers-file "\"))) (my-pst))")
+        (inf-clojure-eval-string))))
 
 (defun clj/get-last-sexp-str ()
   (buffer-substring-no-properties (save-excursion (backward-sexp) (point))
                                   (point)))
-
-; (progn
-;   (unwind-protect
-;       (let* ((proc (inf-clojure-proc))
-;              (f (process-filter proc))
-;              (kept "")
-;              )
-;         (progn
-;           (set-process-filter proc (lambda (proc string)
-;                                      (print string)
-;                                      (setq kept (concat kept string))))
-;           (process-send-string proc "(+ 1 3 4)\n")
-;           (while (and (not (string-match inf-clojure-prompt kept))
-;                       (accept-process-output proc 1)))
-;           ; (accept-process-output proc 1)
-;           (print kept))
-;         ; (let ((eldoc-snippet (format inf-clojure-arglist-command fn)))
-;         ;   (process-send-string proc eldoc-snippet)
-;         ;   (while (and (not (string-match inf-clojure-prompt kept))
-;         ;               (accept-process-output proc 2)))
-;         ;   ; some nasty #_=> garbage appears in the output
-;         ;   (setq eldoc (and (string-match "(.+)" kept) (match-string 0 kept)))
-;         ;   ))
-;         (set-process-filter proc f)))
-;   nil)
-
 
 (defun clj/eval-sexp ()
   (interactive)
@@ -217,17 +299,11 @@ but doesn't treat single semicolons as right-hand-side comments."
     (if (> (- (point-max) pos) (point))
         (goto-char (- (point-max) pos)))))
 
-(defun clj/open-clojure-docs-for-symbol-at-point ()
-  (interactive)
-  (-if-let (s (thing-at-point 'symbol))
-      (let ((clojure-docs-url
-             (concat "http://www.google.com/search?btnI=Im+Feeling+Lucky&q=site:clojuredocs.org+" s)))
-        (util/open-in-browser clojure-docs-url))
-    (message "There's no symbol under the cursor to look up documentation for.")))
-
-; (evil-define-key 'normal clojure-mode-map "gf" 'cider-jump-to-var)
 ; (evil-define-key 'normal clojure-mode-map "gb" 'cider-jump-back)
 (evil-define-key 'normal clojure-mode-map "K" 'clj/show-doc-for-symbol-at-point)
+(evil-define-key 'normal clojure-mode-map "gf" 'clj/jump-to-var)
+(evil-define-key 'normal clojure-mode-map "gb" 'clj/jump-back)
+;; (evil-define-key 'normal clojure-mode-map "gf" 'clj/eval-and-capture-output)
 (evil-define-key 'normal clojure-mode-map (kbd "A-k") 'clj/open-clojure-docs-for-symbol-at-point)
 (evil-define-key 'normal clojure-mode-map "(" 'sp-backward-up-sexp)
 (evil-define-key 'normal clojure-mode-map ")" 'sp-forward-sexp)
@@ -243,6 +319,7 @@ but doesn't treat single semicolons as right-hand-side comments."
   "en" 'clj/restart-repl
   "es" 'clj/eval-sexp
   "mb" 'clj/mark-current-buffer
+  "ep" 'clj/pretty-print-last-stack-trace
   ; "es" 'inf-clojure-eval-last-sexp
   ;; "ex" 'inf-clojure-eval-defun
   "ex" 'clj/eval-defun
