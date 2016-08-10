@@ -12,6 +12,9 @@
 (require 'ht)
 (require 'smartparens)
 
+;; Use clojure.pprint when printing data structures to the REPL.
+(setq use-pprint t)
+
 (defun setup-clojure-buffer ()
   ;; Count hyphens, etc. as word characters in lisps
   (modify-syntax-entry ?- "w" clojure-mode-syntax-table)
@@ -232,7 +235,10 @@
     (format "(do (clojure.core/in-ns '%s) %s)" ns str)))
 
 (defun clj/eval-in-current-ns (str)
-  (inf-clojure-eval-string (clj/wrap-sexp-in-current-ns str)))
+  (let ((str (if use-pprint
+                 (concat "(do (println \"\n\") (clojure.pprint/pprint " str "))")
+               str)))
+    (inf-clojure-eval-string (clj/wrap-sexp-in-current-ns str))))
 
 (defun clj/pretty-print-last-stack-trace ()
   (interactive)
