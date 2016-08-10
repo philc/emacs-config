@@ -308,14 +308,14 @@ but doesn't treat single semicolons as right-hand-side comments."
 (evil-define-key 'normal clojure-mode-map (kbd "C-S-J") 'shift-sexp-forward)
 
 (evil-leader/set-key-for-mode 'clojure-mode
-  ; "eap" (lambda () (interactive) (with-nrepl-connection-of-current-buffer 'cider-eval-paragraph))
+  ;; "eap" (lambda () (interactive) (with-nrepl-connection-of-current-buffer 'cider-eval-paragraph))
   "ee" 'clj/show-repl
   "ek" 'clj/clear-repl
   "en" 'clj/restart-repl
   "es" 'clj/eval-sexp
   "mb" 'clj/mark-current-buffer
-  "ep" 'clj/pretty-print-last-stack-trace
-  ; "es" 'inf-clojure-eval-last-sexp
+  "eP" 'clj/pretty-print-last-stack-trace
+  ;; "es" 'inf-clojure-eval-last-sexp
   ;; "ex" 'inf-clojure-eval-defun
   "ex" 'clj/eval-defun
   "eb" 'clj/load-buffer)
