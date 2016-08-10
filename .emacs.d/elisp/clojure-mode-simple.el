@@ -258,17 +258,6 @@
 (defun clj/eval-defun ()
   (interactive)
   (clj/eval-in-current-ns (thing-at-point 'defun t)))
-  ;; (let ((str (buffer-substring-no-properties (save-excursion
-  ;;                                              (beginning-of-defun)
-  ;;                                              (proint))
-  ;;                                              (let ((end (point))
-  ;;                                                    (case-fold-search t))
-  ;;                                                (beginning-of-defun)))
-
-  ;;             (save-excursion
-  ;;                                              (end-of-defun))
-  ;;                                            )))
-  ;; (print str)))
 
 (defun inf-clojure-eval-defun (&optional and-go)
   "Send the current defun to the inferior Clojure process.
