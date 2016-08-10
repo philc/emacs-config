@@ -227,7 +227,7 @@
         (t (throw "This is not a recognized notmuch mode in get-selected-message-id" nil))))
 
 (defun notmuch-query-for-newest-message-in-thread ()
-  (print (notmuch-ext/get-selected-message-id))
+  ;; (print (notmuch-ext/get-selected-message-id))
   (->> (notmuch-ext/get-selected-message-id)
        (concat "id:")))
 
@@ -240,7 +240,7 @@
   (notmuch-mua-new-reply (notmuch-query-for-newest-message-in-thread) nil t))
 
 (defun within-message-view (f)
-  "Execute the given function within the message view (the window to the right of the notmuch-search window."
+  "Execute the given function within the message view (the window to the right of the notmuch-search window. For REPL development."
   (lexical-let* ((f f)
                  (win (window-in-direction 'right)))
     (if win
