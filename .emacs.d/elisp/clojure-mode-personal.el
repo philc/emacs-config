@@ -4,6 +4,10 @@
 ;; Docs:
 ;; https://github.com/clojure-emacs/cider
 ;; http://clojure-doc.org/articles/tutorials/emacs.html
+;;
+;; NOTE(philc): I'm no longer using this configuration and will soon delete it. Instead I'm using
+;; clojure-mode-simple.el, which doesn't rely Cider. It's still a work-in-progress, however.
+;;
 
 (provide 'clojure-mode-personal)
 (require 'cider)
