@@ -2,7 +2,7 @@
 ;; Lisp utility functions to serve as building blocks for working with text in Emacs.
 ;;
 (provide 'emacs-utils-personal)
-(require 'lisp-helpers-personal)
+(require 'lisp-utils)
 
 (defun util/call-process-with-exit-status (program stdin &rest args)
   "Runs a command and returns a list containing the status code and output string.

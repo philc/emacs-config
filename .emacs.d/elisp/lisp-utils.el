@@ -1,7 +1,7 @@
 ;;
-;; Utility functions for writing lisp in Emacs.
+;; Utility functions for writing Emacs lisp.
 ;;
-(provide 'lisp-helpers-personal)
+(provide 'lisp-utils)
 (require 'dash)
 
 ;; Use Clojure's convention of `fn` for anonymous functions. It's shorter.
