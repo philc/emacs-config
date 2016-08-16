@@ -6,7 +6,7 @@
 ;; try to centralize the configuration for everything here in this file.
 ;;
 
-;; Colorscheme
+;; Color scheme
 (load-theme 'tangotango t) ; A reasonable color scheme which lives in my .emacs.d.
 ;; Make the dividing line between window splits less bright. It's #EAEAEA in tangotango.
 (set-face-attribute 'vertical-border nil :foreground "#888888")
@@ -46,8 +46,6 @@
                       ido-ubiquitous ; Make ido completions work everywhere.
                       ido-vertical-mode ; Show ido results vertically.
                       magit ; A mode for committing to git repositories and viewing Git history.
-                      midje-mode ; For editing clojure tests
-                      ;; multi-term ; Display many termianls inside emacs, not just one.
                       org ; For outlining. This is bundled with Emacs, but I'm using the latest version.
                       outline-magic ; Extensions to ouline mode, which I use heavily in markdown mode.
                       powerline ; Improve the appearance & density of the Emacs status bar.
