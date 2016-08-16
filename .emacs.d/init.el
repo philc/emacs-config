@@ -232,6 +232,7 @@
 (setq evil-want-C-u-scroll t)
 (require 'evil-leader) ; Provide configuration functions for assigning actions to a Vim leader key.
 (require 'evil)
+(require 'evil-ext)
 (require 'evil-nerd-commenter)
 (global-evil-leader-mode t)
 (evil-mode t)
