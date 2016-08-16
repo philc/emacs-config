@@ -1136,12 +1136,6 @@
 (add-to-list 'auto-mode-alist '("\\.scss\\'" . scss-mode))
 
 ;;
-;; mu4e - email & gmail in Emacs.
-;; NOTE(philc): This mu4e just doesn't work well; I don't actively use it.
-;;
-;; (require 'mu4e-mode-personal)
-
-;;
 ;; notmuch - email & gmail in Emacs.
 ;; This is an alternative to mu4e. WIP, not currently used.
 ;;
