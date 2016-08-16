@@ -25,6 +25,16 @@
 (add-hook 'clojure-mode-hook 'setup-clojure-buffer)
 (add-hook 'clojure-mode-hook 'inf-clojure-minor-mode)
 
+(defun init-repl-settings ()
+  "Customize the way the REPL buffer works."
+  ;; Normally we maintain a margin of N lines between the cursor and the edge of the window, but in the REPL
+  ;; buffer, the cursor should always be at the bottom of the window.
+  (setq-local scroll-margin 0)
+  (setq-local scroll-conservatively 0)
+  (setq-local scroll-step 1))
+
+(add-hook 'inf-clojure-mode-hook 'init-repl-settings)
+
 ; "A saved function to execute later. Saved via `mark-current-buffer`"
 (setq marked-function nil)
 
