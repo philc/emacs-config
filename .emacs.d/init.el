@@ -336,7 +336,7 @@
 ;;
 ;; Window manipulation, switching, & management.
 ;;
-(require 'window-management-personal)
+(require 'window-management)
 
 ;; Don't use the native OSX full screen support, because it uses OSX Spaces which don't play well with
 ;; CMD-tabbing to applications which are behind Emacs. Invoke fullscreen with `toggle-frame-fullscreen`.

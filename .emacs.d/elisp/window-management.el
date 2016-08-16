@@ -1,8 +1,7 @@
 ;;
-;; Functions & configuration for window manipulation, switching, & management.
+;; Functions and configuration for window manipulation, management, and switching.
 ;;
-(provide 'window-management-personal)
-
+(provide 'window-management)
 (require 'dash)
 
 ;; Settings for window splits.
