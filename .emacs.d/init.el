@@ -123,8 +123,7 @@
 
 (setq vc-follow-symlinks t) ; Don't ask confirmation to follow symlinks to edit files.
 
-;; NOTE(philc): Disabling savehist-mode in an attempt to isolate a periodic Emacs segfault.
-;; (savehist-mode t) ; Save your minibuffer history across Emacs sessions. UX win!
+(savehist-mode t) ; Save your minibuffer history across Emacs sessions.
 
 ;; Include path information in duplicate buffer names (e.g. a/foo.txt b/foo.txt)
 (setq uniquify-buffer-name-style 'forward)
