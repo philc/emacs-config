@@ -4,7 +4,7 @@
 ; https://github.com/clojure-emacs/cider/issues/1305
 
 (provide 'clojure-mode-simple)
-(require 'emacs-utils-personal)
+(require 'emacs-utils)
 (require 'inf-clojure)
 (require 'thingatpt)
 (require 'dash)

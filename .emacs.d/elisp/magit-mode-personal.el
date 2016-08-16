@@ -1,6 +1,6 @@
 ;;; My configuration and customizations of magit mode, for interacting with Git.
 
-(require 'emacs-utils-personal)
+(require 'emacs-utils)
 (provide 'magit-mode-personal)
 
 (with-eval-after-load "magit"

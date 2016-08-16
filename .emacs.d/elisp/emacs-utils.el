@@ -1,7 +1,7 @@
 ;;
-;; Lisp utility functions to serve as building blocks for working with text in Emacs.
+;; Utility functions for programming Emacs.
 ;;
-(provide 'emacs-utils-personal)
+(provide 'emacs-utils)
 (require 'lisp-utils)
 
 (defun util/call-process-with-exit-status (program stdin &rest args)

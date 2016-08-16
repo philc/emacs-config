@@ -11,7 +11,7 @@
 
 (provide 'clojure-mode-personal)
 (require 'cider)
-(require 'emacs-utils-personal)
+(require 'emacs-utils)
 
 (defun setup-clojure-buffer ()
   ;; Count hyphens, etc. as word characters in lisps
