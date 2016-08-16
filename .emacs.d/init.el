@@ -316,26 +316,6 @@
 ;; Ensure we evil-leader works in non-editing modes like magit. This is referenced from evil-leader's README.
 (setq evil-leader/no-prefix-mode-rx '("magit-.*-mode"))
 
-(defun evil-shift-paragraph-left (beg end)
-  "Shifts a paragraph left."
-  (interactive "r")
-  (let ((region (evil-inner-paragraph)))
-    (save-excursion
-      (evil-shift-left (first region) (second region)))))
-
-(defun evil-shift-paragraph-right (beg end)
-  "Shifts a paragraph right."
-  (interactive "r")
-  (let ((region (evil-inner-paragraph)))
-    (save-excursion
-      (evil-shift-right (first region) (second region)))))
-
-(defun eval-surrounding-sexp (levels)
-  (interactive "p")
-  (save-excursion
-    (up-list (abs levels))
-    (eval-last-sexp nil)))
-
 (defun backward-kill-line (arg)
   "Delete backward (Ctrl-u) as in Bash."
   (interactive "p")
