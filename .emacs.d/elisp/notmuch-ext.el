@@ -377,133 +377,102 @@
 
 
 ;;
-;; TODO(philc): bindings to bind
+;; Configuration
 ;;
 
-;; (set-keymap-parent map notmuch-common-keymap)
-;; (define-key map "Z" 'notmuch-tree-from-show-current-query)
-;; (define-key map (kbd "<C-tab>") 'widget-backward)
-;; (define-key map (kbd "M-TAB") 'notmuch-show-previous-button)
-;; (define-key map (kbd "<backtab>") 'notmuch-show-previous-button)
-;; (define-key map (kbd "TAB") 'notmuch-show-next-button)
-;; (define-key map "f" 'notmuch-show-forward-message)
-;; (define-key map "r" 'notmuch-show-reply-sender)
-;; (define-key map "R" 'notmuch-show-reply)
-;; (define-key map "|" 'notmuch-show-pipe-message)
-;; (define-key map "w" 'notmuch-show-save-attachments)
-;; (define-key map "V" 'notmuch-show-view-raw-message)
-;; (define-key map "c" 'notmuch-show-stash-map)
-;; (define-key map "h" 'notmuch-show-toggle-visibility-headers)
-;; (define-key map "*" 'notmuch-show-tag-all)
-;; (define-key map "-" 'notmuch-show-remove-tag)
-;; (define-key map "+" 'notmuch-show-add-tag)
-;; (define-key map "X" 'notmuch-show-archive-thread-then-exit)
-;; (define-key map "x" 'notmuch-show-archive-message-then-next-or-exit)
-;; (define-key map "A" 'notmuch-show-archive-thread-then-next)
-;; (define-key map "a" 'notmuch-show-archive-message-then-next-or-next-thread)
-;; (define-key map "N" 'notmuch-show-next-message)
-;; (define-key map "P" 'notmuch-show-previous-message)
-;; (define-key map "n" 'notmuch-show-next-open-message)
-;; (define-key map "p" 'notmuch-show-previous-open-message)
-;; (define-key map (kbd "M-n") 'notmuch-show-next-thread-show)
-;; (define-key map (kbd "M-p") 'notmuch-show-previous-thread-show)
-;; (define-key map (kbd "DEL") 'notmuch-show-rewind)
-;; (define-key map " " 'notmuch-show-advance-and-archive)
-;; (define-key map (kbd "M-RET") 'notmuch-show-open-or-close-all)
-;; (define-key map (kbd "RET") 'notmuch-show-toggle-message)
-;; (define-key map "#" 'notmuch-show-print-message)
-;; (define-key map "!" 'notmuch-show-toggle-elide-non-matching)
-;; (define-key map "$" 'notmuch-show-toggle-process-crypto)
-;; (define-key map "<" 'notmuch-show-toggle-thread-indentation)
-;; (define-key map "t" 'toggle-truncate-lines)
-;; (define-key map "." 'notmuch-show-part-map)
-;; map)
+;; Don't keep message buffers around.
+(setq message-kill-buffer-on-exit t)
 
-;; (defvar notmuch-search-mode-map
-;;   (let ((map (make-sparse-keymap)))
-;;     (set-keymap-parent map notmuch-common-keymap)
-;;     (define-key map "x" 'notmuch-bury-or-kill-this-buffer)
-;;     (define-key map (kbd "<DEL>") 'notmuch-search-scroll-down)
-;;     (define-key map "b" 'notmuch-search-scroll-down)
-;;     (define-key map " " 'notmuch-search-scroll-up)
-;;     (define-key map "<" 'notmuch-search-first-thread)
-;;     (define-key map ">" 'notmuch-search-last-thread)
-;;     (define-key map "p" 'notmuch-search-previous-thread)
-;;     (define-key map "n" 'notmuch-search-next-thread)
-;;     (define-key map "r" 'notmuch-search-reply-to-thread-sender)
-;;     (define-key map "R" 'notmuch-search-reply-to-thread)
-;;     (define-key map "o" 'notmuch-search-toggle-order)
-;;     (define-key map "c" 'notmuch-search-stash-map)
-;;     (define-key map "t" 'notmuch-search-filter-by-tag)
-;;     (define-key map "f" 'notmuch-search-filter)
-;;     (define-key map [mouse-1] 'notmuch-search-show-thread)
-;;     (define-key map "*" 'notmuch-search-tag-all)
-;;     (define-key map "a" 'notmuch-search-archive-thread)
-;;     (define-key map "-" 'notmuch-search-remove-tag)
-;;     (define-key map "+" 'notmuch-search-add-tag)
-;;     (define-key map (kbd "RET") 'notmuch-search-show-thread)
-;;     (define-key map "Z" 'notmuch-tree-from-search-current-query)
-;;     map)
+(setq notmuch-poll-script "~/scripts/mail/fetch_email")
 
-;;   (evil-make-overriding-map mu4e-view-mode-map 'normal t)
-;;   (evil-define-key 'normal mu4e-view-mode-map
-;;     "j" 'evil-next-line
-;;     "k" 'evil-previous-line
-;;     "n" 'mu4e-view-headers-next
-;;     "p" 'mu4e-view-headers-prev
-;;     "#" 'mu4e-view-mark-for-trash
-;;     "d" 'mu4e-view-mark-for-trash
-;;     "y" 'mu4e-view-mark-for-refile
-;;     "/" 'mu4e-view-search-edit
-;;     "x" 'mu4e-view-mark-for-something
-;;     "z" 'mu4e-view-mark-for-unmark
-;;     "q" 'vimlike-quit
-;;     "a" 'mu4e-compose-reply
-;;     ;; Opens the URL under the cursor.
-;;     (kbd "RET") (fn () (interactive) (execute-kbd-macro (kbd "M-RET")))
-;;     "go" nil
-;;     "go1" (fn () (interactive) (mu4e-view-go-to-url 1))
-;;     "go2" (fn () (interactive) (mu4e-view-go-to-url 2))
-;;     "go3" (fn () (interactive) (mu4e-view-go-to-url 3))
-;;     "go4" (fn () (interactive) (mu4e-view-go-to-url 4))
-;;     "gl" (fn ()
-;;            (interactive)
-;;            (switch-to-buffer-other-window "*mu4e-headers*")
-;;            (call-interactively 'mu4e~headers-jump-to-maildir))
-;;     ;; consider calling this with t, for "no confirmation".
-;;     "e" 'mu4e-view-marked-execute
-;;     (kbd "SPC") 'evil-ace-jump-word-mode
-;;     "ESC" nil
-;;     "a" 'mu4e-reply-all
-;;     "r" 'mu4e-compose-reply
-;;     "f" 'mu4e-compose-forward
-;;     (kbd "M-r") '(fn () (interactive) (mu4e-update-mail-and-index t))
-;;     "c" 'mu4e-compose-new)
+;; Settings for composing and sending emails.
+;; http://chrisdone.com/posts/emacs-mail
+;; Credentials are stored in ~/.authoinfo. See here for the format:
+;; http://emacswiki.org/emacs/GnusAuthinfo
+;; Note that you need to use a site-specific password if you have Google's two-factor auth enabled.
+(setq user-full-name "Phil Crosby")
+;; (setq user-mail-address "phil.crosby@gmail.com")
+(setq user-mail-address "phil@liftoff.io")
+(require 'smtpmail)
+(setq message-send-mail-function 'smtpmail-send-it)
+(setq smtpmail-stream-type 'ssl)
+(setq smtpmail-smtp-server "smtp.gmail.com")
+(setq smtpmail-smtp-service 465)
+;; TODO(philc): This can be nil. I have a folder here so that draft buffers are backed by disk. Is that
+;; necessary?
+(setq notmuch-fcc-dirs ".sentmail")
 
-;; RET             notmuch-search-show-thread
-;; SPC             notmuch-search-scroll-up
-;; *               notmuch-search-tag-all
-;; +               notmuch-search-add-tag
-;; -               notmuch-search-remove-tag
-;; <               notmuch-search-first-thread
-;; =               notmuch-refresh-this-buffer
-;; >               notmuch-search-last-thread
-;; ?               notmuch-help
-;; G               notmuch-poll-and-refresh-this-buffer
-;; R               notmuch-search-reply-to-thread
-;; Z               notmuch-tree-from-search-current-query
-;; a               notmuch-search-archive-thread
-;; b               notmuch-search-scroll-down
-;; c               notmuch-search-stash-map
-;; f               notmuch-search-filter
-;; j               notmuch-jump-search
-;; m               notmuch-mua-new-mail
-;; n               notmuch-search-next-thread
-;; o               notmuch-search-toggle-order
-;; p               notmuch-search-previous-thread
-;; r               notmuch-search-reply-to-thread-sender
-;; s               notmuch-search
-;; t               notmuch-search-filter-by-tag
-;; x               notmuch-bury-or-kill-this-buffer
-;; z               notmuch-tree
-;; DEL             notmuch-search-scroll-down
+;; Sort messages newest first.
+(set 'notmuch-search-oldest-first nil) ; The default is t.
+
+;; The command used for converting plaintext markdown emails into HTML emails.
+(setq notmuch-ext/markdown-to-html-command "markdown_page.rb")
+
+(evil-set-initial-state 'notmuch-search-mode 'normal)
+(evil-set-initial-state 'notmuch-tree-mode 'normal)
+(evil-set-initial-state 'notmuch-hello-mode 'normal)
+(evil-set-initial-state 'notmuch-show-mode 'normal)
+
+(evil-define-key 'normal notmuch-search-mode-map
+  "o" 'notmuch-search-show-thread-in-other-window
+  "q" 'vimlike-quit
+  "c" 'notmuch-mua-new-mail
+  ;; "t" (fn () (interactive) (print (notmuch-search-get-result) ))
+  "t" (fn () (interactive) (print (notmuch-search-find-thread-id t)))
+  "T" (fn () (interactive) (notmuch-ext/reply))
+  ;; I'm using uppercase Y here to archive, so that I can still copy text from the thread view if I want. Will
+  ;; I ever do that, or should I switch this to being lowercase y?
+  "Y" 'archive-message
+  "D" 'delete-thread
+  "r" 'notmuch-reply-to-newest-in-thread
+  "R" 'notmuch-reply-all-to-newest-in-thread
+  ;; I'm using these custom-scroll functions for page-up and page-down because the built-in ones in Emacs
+  ;; switch to the buffer when you try to scroll up past the beginning of the window.
+  "u" (fn () (interactive)
+        (within-message-view (fn ()
+                               (condition-case nil (scroll-down)
+                                 (beginning-of-buffer (goto-char (point-min)))))))
+  "d" (fn () (interactive)
+        (within-message-view (fn ()
+                               (condition-case nil (scroll-up)
+                                 (end-of-buffer (goto-char (point-max))))))))
+
+(evil-leader/set-key-for-mode 'notmuch-search-mode
+  "gli" (fn () (interactive) (notmuch-go-to-inbox))
+  "gls" (fn () (interactive) (notmuch-go-to-sent))
+  "gl1" (fn () (interactive) (notmuch-go-to-label-1action))
+  "t" (fn () (interactive) (print (notmuch-search-find-thread-id)))
+  "r" 'notmuch-refresh-this-buffer
+  "R" 'notmuch-poll-and-refresh-this-buffer
+  "1" (fn () (interactive) (move-thread "1action")))
+
+(evil-define-key 'normal notmuch-show-mode-map
+  "r" 'notmuch-reply-to-newest-in-thread
+  "R" 'notmuch-reply-all-to-newest-in-thread)
+
+(evil-leader/set-key-for-mode 'notmuch-hello-mode
+  "gi" (fn () (interactive) (notmuch-search "tag:inbox")))
+
+(evil-leader/set-key-for-mode 'message-mode ; The compose window.
+  "rr" 'notmuch-ext/view-message-in-browser
+  "x" (fn () (interactive) (util/without-confirmation 'message-kill-buffer))
+  "S" 'message-send-and-exit
+  "s" 'notmuch-ext/convert-to-markdown-and-send)
+
+;; Initialize the Emacs message mode for sending emails for use with notmuch-mode.
+(defun init-message-mode-settings ()
+  ;; Use markdown-mode for composing emails.
+  (markdown-lite-mode)
+  ;; TODO(philc): Not sure why this is needed, but without it, syntax highlighting isn't updated.
+  (markdown-reload-extensions)
+  (setq tab-width 2) ; This is set to 4 by message-mode.
+  ;; TODO(philc): This mutates all of the evil keybindings in markdown mode. I haven't been able to figure out
+  ;; how to limit these changes to the current buffer.
+  (util/define-keys
+   evil-normal-state-local-map
+   ";rr" 'notmuch-ext/view-message-in-browser
+   ";x" (fn () (interactive) (util/without-confirmation 'message-kill-buffer))
+   ";S" 'message-send-and-exit ; For when you want to send a plaintext message, not markdown.
+   ";s" 'notmuch-ext/convert-to-markdown-and-send))
+
+(add-hook 'message-mode-hook 'init-message-mode-settings)
