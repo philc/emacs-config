@@ -345,6 +345,8 @@ but doesn't treat single semicolons as right-hand-side comments."
 
 (load "/Users/phil/src/liftoff/exp/emacs/cljfmt.el")
 
+(setq cljfmt-show-errors nil)
+
 ;; Note that `cljfmt-before-save` triggers this save-hook for some reason, so we lock on clj-in-progress to
 ;; to protect from infinite recurision.
 (setq cljfmt-in-progress nil)
@@ -357,3 +359,6 @@ but doesn't treat single semicolons as right-hand-side comments."
     (setq cljfmt-in-progress nil)))
 
 (add-hook 'before-save-hook 'cljfmt-before-save-mutually-exclusive nil)
+;; Run this again after save so we see any formatting error messages in the Emacs echo area,
+;; because they get clobbered by Emacs's "Wrote [file]" message.
+(add-hook 'after-save-hook 'cljfmt-before-save-mutually-exclusive nil)
