@@ -35,7 +35,7 @@
                       dash-functional ; Useful combinators for Emacs Lisp.
                       dired-details+ ; Hides all of the unnecessary file details in dired mode.
                       diminish ; For hiding and shortening minor modes in the modeline
-                      escreen
+                      escreen ; For a tab-like UI in Emacs.
                       evil ; Evil mode implements Vim's modal bindings and text object manipulation.
                       evil-leader
                       evil-nerd-commenter
@@ -544,9 +544,16 @@
   (isearch-push-state)
   (isearch-update))
 
-;; When pressing enter to confirm a search, or jumping to the next result, scroll the result to the center of
-;; the window. This solves the UX problem of the result appearing at the bottom of the screen, with little
-;; context.
+;; Taken from https://groups.google.com/forum/#!topic/gnu.emacs.help/vASrP0P-tXM
+(defun recenter-no-redraw (&optional arg)
+  "Centers the viewport around the cursor."
+  (interactive "P")
+  (let ((recenter-redisplay nil))
+    (recenter arg)))
+
+;; When pressing enter to confirm a search, or jumping to the next result, scroll the result into the center
+;; of the window. This removes the UX problem of the result appearing at the bottom of the screen with little
+;; context around it.
 (defadvice evil-search-next (after isearch-recenter activate)
   (recenter-no-redraw))
 
@@ -555,13 +562,6 @@
 
 (defadvice isearch-exit (before isearch-recenter activate)
   (recenter-no-redraw))
-
-;; Taken from https://groups.google.com/forum/#!topic/gnu.emacs.help/vASrP0P-tXM
-(defun recenter-no-redraw (&optional arg)
-  "Centers the viewport around the cursor."
-  (interactive "P")
-  (let ((recenter-redisplay nil))
-    (recenter arg)))
 
 ;;
 ;; Changing font sizes - text-scale-mode
@@ -612,8 +612,7 @@
 (defvar osx-keys-minor-mode-map (make-keymap) "osx-keys-minor-mode-keymap")
 (util/define-keys osx-keys-minor-mode-map
                   (kbd "M-`") 'other-frame
-                  (kbd "M-~")
-                  '(lambda () (interactive) (other-frame -1))
+                  (kbd "M-~") '(lambda () (interactive) (other-frame -1))
                   (kbd "M-w") 'vimlike-quit
                   (kbd "M-q") 'save-buffers-kill-terminal
                   (kbd "M-n") 'new-frame
@@ -626,9 +625,10 @@
                   (kbd "M--") 'text-zoom-out
                   (kbd "M-=") 'text-zoom-in
                   (kbd "M-0") 'text-zoom-reset
+                  (kbd "M-t") 'open-current-buffer-in-new-tab
+                  (kbd "M-i") 'escreen-set-tab-alias
                   ;; These aren't specifically replicating OSX shortcuts, but they manipulate the window, so I
                   ;; want them to take precedence over everything else.
-                  (kbd "M-C-n") 'other-window
                   (kbd "A-f") (lambda () (interactive) (ignore-errors (windmove-right)))
                   (kbd "A-d") (lambda () (interactive) (ignore-errors (windmove-down)))
                   (kbd "A-s") (lambda () (interactive) (ignore-errors (windmove-left)))
@@ -636,9 +636,7 @@
                   (kbd "A-F") 'swap-window-right
                   (kbd "A-D") 'swap-window-down
                   (kbd "A-S") 'swap-window-left
-                  (kbd "A-E") 'swap-window-up
-                  (kbd "M-i") 'escreen-set-tab-alias
-                  (kbd "M-t") 'open-current-buffer-in-new-tab)
+                  (kbd "A-E") 'swap-window-up)
 
 (define-minor-mode osx-keys-minor-mode
   "A minor-mode for emulating osx keyboard shortcuts."
