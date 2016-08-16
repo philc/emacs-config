@@ -32,12 +32,12 @@
                       auto-complete
                       clojure-mode
                       coffee-mode ; For syntax highlighting coffeescript.
-                      dash
-                      dash-functional
+                      dash ; Dash provides modern functions for working with lists in Emacs Lisp.
+                      dash-functional ; Useful combinators for Emacs Lisp.
                       dired-details+ ; Hides all of the unnecessary file details in dired mode.
                       diminish ; For hiding and shortening minor modes in the modeline
                       escreen
-                      evil
+                      evil ; Evil mode implements Vim's modal bindings and text object manipulation.
                       evil-leader
                       evil-nerd-commenter
                       flx-ido ; Fuzzy matching for ido, which improves the UX of Projectile.
@@ -46,7 +46,7 @@
                       less-css-mode ; Syntax highlighting for LESS CSS files.
                       ido-ubiquitous ; Make ido completions work everywhere.
                       ido-vertical-mode ; Show ido results vertically.
-                      magit
+                      magit ; A mode for committing to git repositories and viewing Git history.
                       midje-mode ; For editing clojure tests
                       ;; multi-term ; Display many termianls inside emacs, not just one.
                       org ; For outlining. This is bundled with Emacs, but I'm using the latest version.
@@ -55,12 +55,12 @@
                       projectile ; Find file in project (ala Vim's CTRL-P or Textmate's Cmd-T)
                       rainbow-delimiters ; Highlight parentheses in rainbow colors.
                       ruby-electric ; Insert matching delimiters; unindent end blocks after you type them.
-                      scss-mode
-                      smartparens
-                      smex
+                      scss-mode ; For editing SCSS files.
+                      smartparens ; For editing expressions in parentheses.
+                      smex ; Makes the M-x command more useful by showing you recently used commands, etc.
                       wcheck-mode ; Spell checking
-                      yaml-mode
-                      yasnippet))
+                      yaml-mode ; For editing YAML files
+                      yasnippet)) ; Insert snippets using tab.
 
 (dolist (p my-packages)
   (when (not (package-installed-p p))
