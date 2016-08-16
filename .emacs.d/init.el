@@ -314,7 +314,7 @@
 (define-key evil-motion-state-map (kbd "C-d") 'evil-scroll-down-patched)
 
 ;; NOTE(philc): With the latest Evil, evil-scroll-down does not show the last few lines of the buffer
-;; when you reach teh bottom. This is a workaround.
+;; when you reach the bottom. This is a workaround for this issue.
 ;; This implementation is based on evil-scroll-down.
 (evil-define-command evil-scroll-down-patched (count)
   "Scrolls the window and the cursor COUNT lines downwards. The default is half the screen."
@@ -1415,4 +1415,5 @@
   (setq current-prefix-arg '(4)) ; Sets the prefix to C-u
   (call-interactively 'info))
 
+;; Ensure .mustache files are opened and edited using mustache mode.
 (add-to-list 'auto-mode-alist '("\\.mustache$" . mustache-mode))
