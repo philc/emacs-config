@@ -83,13 +83,12 @@
 (when (and (fboundp 'tool-bar-mode) tool-bar-mode) (tool-bar-mode -1))
 (when (and (fboundp 'scroll-bar-mode) scroll-bar-mode) (scroll-bar-mode -1))
 
-(setq initial-scratch-message "") ; When opening a new buffer, don't show the scratch message.
-
 ;; Make it so that the scratch buffer uses markdown. By default it uses Emacs Lisp mode.
 (setq initial-major-mode 'markdown-lite-mode)
 
 ;; Use the same PATH variable as your shell does. From http://clojure-doc.org/articles/tutorials/emacs.html
-;; NOTE(philc): If you use OSX and you use zsh, OSX may be configured to use bash. Either hard code
+;; NOTE(philc): If you use OSX and you use zsh in your terminals, OSX may be configured to use bash. I haven't
+;; found a good workaround so I hardcode my shell (zsh) here.
 (defun set-exec-path-from-shell-PATH ()
   (let* ((shell "zsh") ;; NOTE(philc): Change to your desired shell. You could also use the $SHELL env var.
          (path-from-shell (shell-command-to-string (concat shell " -i -c 'echo $PATH'"))))
@@ -100,22 +99,26 @@
 
 (global-auto-revert-mode 1) ; Reload an open file from disk if it is changed outside of Emacs.
 
+;; Remove some of Emacs UI
+(setq initial-scratch-message "") ; When opening a new buffer, don't show the scratch message.
 (setq inhibit-startup-message t)
 (setq inhibit-startup-echo-area-message t)
 (setq ring-bell-function 'ignore)
+
 (setq mac-option-modifier 'alt)
 (setq mac-command-modifier 'meta)
 
-;; Require typing only "y" or"n" instead of the full "yes" to confirm destructive actions.
+;; By default, you must type "yes" when confirming destructive actions. Change that so only "y" is required.
 (defalias 'yes-or-no-p 'y-or-n-p)
 
 ;; Increase the maximum stack depth (the default is 1000).
-;; This triggers for some routes I've written (like open-markdown-file-from-notes-folder) which are iterative.
+;; Without this, some of the iterative functions I've written (like
+;; project-nav/project-nav/open-file-from-notes-folder) trigger a stack overflow exception.
 (setq max-specpdl-size 2000)
 
 ;; Turn off backups and autosaves so we don't have ~ and # files strewn about the working directory. I've
 ;; tried storing backups in my home directory as suggested by http://stackoverflow.com/q/151945/46237, but
-;; still I see the occasional backup file.
+;; still I see the occasional backup file in the working directory for some reason.
 (setq make-backup-files nil)
 (setq auto-save-file-name-transforms
       `((".*" ,temporary-file-directory t)))
@@ -129,7 +132,7 @@
 
 (savehist-mode t) ; Save your minibuffer history across Emacs sessions.
 
-;; Include path information in duplicate buffer names (e.g. a/foo.txt b/foo.txt)
+;; Include the path when displaying buffer names which have the same filename open (e.g. a/foo.txt b/foo.txt)
 (setq uniquify-buffer-name-style 'forward)
 
 ;; Start scrolling the window when the cursor reaches its edge.
@@ -170,8 +173,9 @@
 ;; Highlight the line the cursor is on. This is mostly to make it easier to tell which split is active.
 (global-hl-line-mode)
 
-;; Don't use tabs by default. Modes that really need tabs should enable indent-tabs-mode explicitly.
-;; Makefile-mode already does that, for example. If indent-tabs-mode is off, untabify before saving.
+;; Indent with spaces instead of tabs by default. Modes that really need tabs should enable indent-tabs-mode
+;; explicitly. Makefile-mode already does that, for example. If indent-tabs-mode is off, replace tabs with
+;; spaces before saving the file.
 (setq-default indent-tabs-mode nil)
 (add-hook 'write-file-hooks
           (lambda ()
@@ -210,13 +214,13 @@
 
 ;; Save buffers whenever they lose focus.
 ;; This obviates the need to hit the Save key thousands of times a day. Inspired by http://goo.gl/2z0g5O.
-(add-hook 'focus-out-hook 'util/save-buffer-if-dirty) ; This hook is only available in Emacs 24.4+.
-(add-hook 'focus-out-hook '(lambda () (evil-normal-state))) ; This hook is only available in Emacs 24.4+.
-
 (defadvice windmove-up (before other-window-now activate) (util/save-buffer-if-dirty))
 (defadvice windmove-down (before other-window-now activate) (util/save-buffer-if-dirty))
 (defadvice windmove-left (before other-window-now activate) (util/save-buffer-if-dirty))
 (defadvice windmove-right (before other-window-now activate) (util/save-buffer-if-dirty))
+;; When switching focus out of the Emacs app, save the buffer.
+(add-hook 'focus-out-hook 'util/save-buffer-if-dirty) ; This hook is only available in Emacs 24.4+.
+(add-hook 'focus-out-hook '(lambda () (evil-normal-state))) ; This hook is only available in Emacs 24.4+.
 
 ; This is fired whenever the buffer list is updated, which is a reasonably robust way to detect that the
 ; window config has changed and the current buffer should be saved.
@@ -241,6 +245,7 @@
 
 ;; Unbind "q" so it doesn't record macros. I activate this mistakenly all the time and then wreak havoc.
 (define-key evil-normal-state-map (kbd "q") nil)
+
 (define-key evil-normal-state-map (kbd "M-s") 'save-buffer)
 (define-key evil-insert-state-map (kbd "M-s") 'save-buffer)
 
@@ -264,7 +269,7 @@
 (define-key evil-normal-state-map (kbd "C-i")
   (lambda () (interactive) (evil-jump-forward) (recenter-no-redraw)))
 
-; Some help keybindings which conflict with nothing else, so you can pull up help in any context.
+; These keybindings conflict with nothing else, which allows me to pull up help from within any mode.
 (global-set-key (kbd "C-A-M-h") 'help)
 (global-set-key (kbd "C-A-M-b") 'describe-bindings)
 
@@ -275,8 +280,7 @@
 
 ;; Evil uses the current file's mode's definition of a paragraph, which is often surprising. For instance, in
 ;; Markdown mode, a single item in a bulleted list consistutes a paragraph. Instead, I've defined a paragraph
-;; to be hunks of text separated by newlines. That's typically what I would expect of a paragraph. You can
-;; still use Evil's paragraph definition using the text object "P" instead of "p".
+;; to be hunks of text separated by newlines. That's typically what I would expect of a paragraph.
 (evil-define-text-object evil-paragraph-from-newlines (count &optional beg end type)
   "Select a paragraph separated by newlines."
   :type line
@@ -307,7 +311,6 @@
         (forward-line -1))))))
 
 (define-key evil-outer-text-objects-map "p" 'evil-paragraph-from-newlines)
-(define-key evil-outer-text-objects-map "P" 'evil-a-paragraph)
 
 (define-key evil-motion-state-map (kbd "C-d") 'evil-scroll-down-patched)
 
