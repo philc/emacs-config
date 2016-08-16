@@ -363,8 +363,8 @@
   ;; "v" is a mnemonic prefix for "view X".
   ;; "vv" will be a natural choice as a mode-specific shortcut for previewing the current file.
   "vu" 'notmuch-go-to-inbox
-  "vp" 'navigate-to-project
-  "vn" 'open-markdown-file-from-notes-folder
+  "vp" 'project-nav/navigate-to-project
+  "vn" 'project-nav/open-file-from-notes-folder
   "vo" (lambda () (interactive) (find-file "~/Dropbox/tasks.org"))
   "ve" (lambda () (interactive) (find-file "~/.emacs.d/init.el")))
 
@@ -941,7 +941,6 @@
 ;;   well once configured.
 ;;
 ;; You may need to install aspell and enchant (e.g. `brew install aspell enchant` on Mac).
-
 (require 'wcheck-mode)
 (setq-default wcheck-language "English")
 (setq-default wcheck-language-data
@@ -1350,77 +1349,11 @@
 (require 'magit-mode-personal)
 
 ;;
-;; Project navigation (my own functions on top of dired-mode and projectile)
+;; Project navigation functions for opening project folders in dired-mode.
 ;;
-(setq project-folders '("~/p" "~/src" "~/src/liftoff" "~/src/liftoff/exp"))
-(setq notes-directories '("~/Desktop" "~/Dropbox/scratch" "~/Dropbox/journals" "~/Dropbox/notes"))
-(setq notes-file-extensions '(".md" ".sql" ".txt"))
-
-;; This is set to 600 by default. It shouldn't be the case, but for some reason, the filter-files-in-directory
-;; function hits this limit.
-(setq max-lisp-eval-depth 1200)
-
-(defun filter-files-in-directory (directory filter-fn include-subdirectories)
-  "Filters the files in the given directory and subdirectories using filter-fn. Excludes .git subdirectories."
-  (->> (directory-files directory t)
-       (--remove (or (string/ends-with it ".")
-                     (string/ends-with it "..")
-                     (string/ends-with it ".git")))
-       (--map (if (and include-subdirectories (file-directory-p it))
-                  (filter-files-in-directory it filter-fn include-subdirectories)
-                it))
-       flatten
-       (-filter filter-fn)))
-
-(defun open-markdown-file-from-notes-folder ()
-  "Prompts for the name of a .md notes file to open."
-  (interactive)
-  (let* ((file-matches-pattern? (lambda (file)
-                                  (some (lambda (ext) (string/ends-with file ext)) notes-file-extensions)))
-         (file-list (->> notes-directories
-                         (--map (filter-files-in-directory it file-matches-pattern? t))
-                         flatten)))
-    (let ((file-to-open (ido-completing-read "Notes file: " (mapcar 'file-name-nondirectory file-list))))
-      (->> file-list
-           (--filter (string/ends-with it (concat "/" file-to-open)))
-           first
-           find-file))))
-
-(defun open-root-of-project (project-path)
-  "Opens the project at path. If it's a clojure project, find the project's 'main' file and open that.
-   Otherwise, used dired to open the file in `path`."
-  ;; NOTE(philc): This function opens the "main" files in the project types that I typically work on.
-  ;; Customzie this to meet your needs if you want this functionality.
-  (let* ((project-name (file-name-nondirectory project-path))
-         (is-clojure (file-exists-p (concat project-path "/project.clj")))
-         (main-file (when is-clojure
-                      (->> ["core.clj" "handler.clj"]
-                           (--map (concat project-path "/src/" project-name "/" it))
-                           (remove-if-not 'file-exists-p)
-                           first))))
-    (if main-file
-        (set-window-buffer (selected-window) (find-file main-file))
-      (dired project-path))))
-
-(defun navigate-to-project ()
-  "Prompts for the name of a project which exists in your common project folders and opens a dired window in
-   the root of the project folder. This is a fast way to open a new project and be able to run
-   projectile-file-file.
-   Once a project is chosen, the current elscreen-tab is set to be the name of that project."
-  (interactive)
-  (let* ((all-project-folders (->> project-folders
-                                   (--map (filter-files-in-directory it 'file-directory-p nil))
-                                   flatten))
-         (project-to-open (ido-completing-read "Project folder: "
-                                               (-map 'file-name-nondirectory all-project-folders)
-                                               nil t))
-         (project (->> all-project-folders
-                       (--filter (string/ends-with it (concat "/" project-to-open)))
-                       first)))
-    (open-root-of-project project)
-    ;; If we invoke this inside of a split, don't set the tab's title.
-    (when (= 1 (length (window-list)))
-      (escreen-set-tab-alias (file-name-nondirectory project)))))
+(require 'project-nav)
+(setq project-nav/project-folders '("~/p" "~/src" "~/src/liftoff" "~/src/liftoff/exp"))
+(setq project-nav/notes-directories '("~/Desktop" "~/Dropbox/scratch" "~/Dropbox/journals" "~/Dropbox/notes"))
 
 ;;
 ;; JSON
