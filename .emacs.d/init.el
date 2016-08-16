@@ -29,7 +29,6 @@
 (defvar my-packages '(ace-jump-mode ; Jump to any text on screen in a few keystrokes. Like Vim's EasyMotion.
                       ag ; Silver searcher integration for Emacs
                       autopair ; Insert matching delimiters, e.g. insert closing braces.
-                      auto-complete
                       clojure-mode
                       coffee-mode ; For syntax highlighting coffeescript.
                       dash ; Dash provides modern functions for working with lists in Emacs Lisp.
@@ -207,20 +206,6 @@
 ;; The poorly-named winner mode saves the history of your window splits, so you can undo and redo changes to
 ;; your window configuration.
 (winner-mode t)
-
-;;
-;; Emacs general autocompletion
-;; One nice feature of Emac's autocomplete mode is that it auto-populates likely completions as you type.
-;; However, in doing so, it causes my cursors to flicker in other splits while I'm typing. This makes the mode
-;; unusable.
-(setq ac-auto-start nil)
-;; (add-hook 'prog-mode-hook 'auto-complete-mode)
-;; (with-eval-after-load "auto-complete"
-;;      (define-key ac-complete-mode-map "\C-n" 'ac-next)
-;;      (define-key ac-complete-mode-map "\C-p" 'ac-previous)
-;;      (setq ac-auto-start nil)
-;;      (ac-set-trigger-key "TAB")
-;;      (ac-linum-workaround))
 
 (defun create-scratch-buffer nil
    "Create a scratch buffer. Helpful if you save your scratch buffer as a file, or accidentally kill it."
