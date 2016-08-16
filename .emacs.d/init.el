@@ -753,7 +753,7 @@
       (dired-move-to-filename))))
 
 ;;
-;; Emacs Lisp (elisp)
+;; Emacs Lisp (elisp) mode.
 ;;
 (add-hook 'emacs-lisp-mode-hook (lambda () (modify-syntax-entry ?- "w" emacs-lisp-mode-syntax-table)))
 (evil-define-key 'normal emacs-lisp-mode-map
@@ -786,6 +786,7 @@
      (goto-char (point-max)))))
 
 (defun erase-messages-buffer ()
+  "Clears the messages buffer. Useful when you want to clear and reset the output from your Elisp code."
   (interactive)
   (util/preserve-selected-window
    (lambda ()
@@ -810,7 +811,7 @@
 (put '->> 'lisp-indent-function nil)
 
 ;;
-;; Org mode, for TODOs and note taking.
+;; Org mode. For TODOs and note taking.
 ;;
 (require 'org-mode-personal)
 
@@ -837,9 +838,9 @@
       (find-file (expand-file-name file (projectile-project-root)))
       (run-hooks 'projectile-find-file-hook)))
 
-;; Bind "M-r" when the find-files minibuffer is open to refreshing Projectile's cache. This is a common need
-;; when you open a find files dialog and realize a newly added file is not there, due to a stale cache.
-;; NOTE(philc): Ideally we would bind this key to ido-file-completion-map, but minibuffer-local-map has M-r
+;; Bind "M-r" when the find-files minibuffer is open to refresh Projectile's cache. This is a common need when
+;; you open a find files dialog and realize a newly added file is not there due to a stale cache.
+;; NOTE(philc): Ideally we would bind this key in ido-file-completion-map, but minibuffer-local-map has M-r
 ;; bound already. Also, minor note: for some reason, typing this keybinding recursively fails with "Error in
 ;; post-command hook..."
 (define-key minibuffer-local-map (kbd "M-r")
@@ -860,11 +861,11 @@
 (require 'escreen)
 (escreen-install)
 
-;; KeyRemap4Macbook translates M-j and M-k to these keys.
+;; I have KeyRemap4Macbook configured to translate M-j and M-k to these keys.
 (global-set-key (kbd "<A-M-left>") 'escreen-goto-prev-screen)
 (global-set-key (kbd "<A-M-right>") 'escreen-goto-next-screen)
 
-;; I alias/nickname each of my tabs (escreen's numbered screens).
+;; I alias/nickname each of my tabs (escreen's numbered screens) for easier reference.
 (setq escreen-number->alias (make-hash-table))
 
 (defun escreen-set-tab-alias (alias)
@@ -885,7 +886,7 @@
                  (tab-names (-map get-display-name (escreen-get-active-screen-numbers))))
     (message (string/join tab-names "  "))
     (lexical-let* ((input (string (read-char)))
-                   (is-digit (and (string= (number-to-string (string-to-number input)) input))))
+                   (is-digit (string= (number-to-string (string-to-number input)) input)))
       (when is-digit
         (escreen-goto-screen (- (string-to-number input) 1))))))
 
@@ -933,13 +934,13 @@
 ;; https://github.com/tlikonen/wcheck-mode
 ;;
 ;; * FlySpell is the default choice for spellchecking, but I found it slow, even using every flyspell perf
-;;   improvement I could find. Speck doesn't slow down your typing.
+;;   improvement I could find. Speck, as an alternative, doesn't slow down your typing.
 ;; * I suspect speck mode is the culrprit of periodic emacs crashes. It's also poorly documented and doesn't
 ;;   support binding "add to personal dictionary" as a keybinding.
 ;; * wcheck-mode is hard to configure because of its genericism, but at least it's documented and performs
 ;;   well once configured.
 ;;
-;; You may need to install aspell and enchant (e.g. `brew install aspell enchant`).
+;; You may need to install aspell and enchant (e.g. `brew install aspell enchant` on Mac).
 
 (require 'wcheck-mode)
 (setq-default wcheck-language "English")
@@ -981,6 +982,7 @@
 ;;
 ;; Diminish - hide or shorten the names of minor modes in your modeline.
 ;; To see which minor modes you have loaded and what their modeline strings are: (message minor-mode-alist)
+;;
 (require 'diminish)
 (diminish 'visual-line-mode "")
 (diminish 'global-whitespace-mode "")
@@ -1141,20 +1143,9 @@
 ;;
 ;; (require 'clojure-mode-personal)
 ;; (require 'cider-test-personal)
+;; NOTE(philc): My Clojure setup is a work-in-progress. I'm progressively rewriting Cider for my own use case.
 
 (require 'clojure-mode-simple)
-
-;; (evil-leader/set-key-for-mode 'clojure-mode
-;;   ; t is a mnemonic for "test"
-;;   "ta" (lambda ()
-;;          (interactive)
-;;          (with-nrepl-connection-of-current-buffer 'cider-test/run-all-tests))
-;;   "tt" (lambda ()
-;;          (interactive)
-;;          (with-nrepl-connection-of-current-buffer 'cider-test/run-test-at-point))
-;;   "tf" (lambda ()
-;;          (interactive)
-;;          (with-nrepl-connection-of-current-buffer 'cider-test/run-tests-in-ns)))
 
 ;;
 ;; HTML mode
@@ -1220,6 +1211,7 @@
 
 (defun toggle-fold-css-block ()
   "Toggles whether a CSS rule is one line or multiple lines."
+  ;; This is a transformation I do all the time, and so wrote a helper for it.
   (interactive)
   (let* ((text (util/thing-at-point-no-properties 'brace-block))
          (lines (split-string text "\n"))
@@ -1238,8 +1230,8 @@
     (util/delete-thing-at-point 'brace-block)
     (insert new-text)
     (when should-expand
-      ;; When expanding the CSS to multiple lines, we didn't preserve line indentation, so here we just
-      ;; re-indent the paragraph around the cursor. This is a workaround.
+      ;; When expanding the CSS to multiple lines, we didn't preserve line indentation, so as a workaround,
+      ;; here we just re-indent the paragraph around the cursor.
       (evil-indent-inside-paragraph))))
 
 (evil-define-key 'normal css-mode-map
@@ -1576,15 +1568,10 @@
 (evil-define-key 'motion ag-mode-map "o" 'compile-goto-error)
 
 ;;
-;; Terminal (multi-term mode)
-;;
-;; (require 'multi-term-personal) ; Currently disabled; this doesn't work well.
-
-;;
 ;; Misc
 ;;
 
-;; I just invoke this by name using M-x.
+;; This is unbound; I invoke it using M-x.
 (defun prompt-to-open-info-page ()
   "Prompts you for the name of an info page to view. It's the same as calling info with a prefix argument
    ala C-u C-h i using the regular Emacs key bindings."
