@@ -6,7 +6,7 @@
 ;; http://clojure-doc.org/articles/tutorials/emacs.html
 ;;
 ;; NOTE(philc): I'm no longer using this configuration and will soon delete it. Instead I'm using
-;; clojure-mode-simple.el, which doesn't rely Cider. It's still a work-in-progress, however.
+;; clojure-mode-simple.el, which doesn't rely on Cider. It's still a work-in-progress however.
 ;;
 
 (provide 'clojure-mode-personal)
@@ -181,7 +181,6 @@
     (values 1) (delete 1) (upsert 1) (subselect 1)
     (clone-for 1)                                                     ; Enlive
     (up 1) (down 1) (alter 1) (table 1) (create 1)                    ; Lobos
-    (checker 1)                                                         ; Midje
     (with-eligible-values 1) (when-eligible 1) (check 4)              ; Personal
     (url-of-form 1)                                                   ; Personal
     ))
