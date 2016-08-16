@@ -19,7 +19,7 @@
                      (string/ends-with it "..")
                      (string/ends-with it ".git")))
        (--map (if (and include-subdirectories (file-directory-p it))
-                  (filter-files-in-directory it filter-fn include-subdirectories)
+                  (project-nav/filter-files-in-directory it filter-fn include-subdirectories)
                 it))
        flatten
        (-filter filter-fn)))
