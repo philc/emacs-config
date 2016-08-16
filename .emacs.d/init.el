@@ -274,7 +274,7 @@
 (global-set-key (kbd "C-A-M-h") 'help)
 (global-set-key (kbd "C-A-M-b") 'describe-bindings)
 
-;; gq is normally bound to evil-fill-and-move, but when I reflow a paragraph, I like the cursor to remain
+;; By default gq is bound to evil-fill-and-move, but when I reflow a paragraph, I like the cursor to remain
 ;; where it was.
 (define-key evil-normal-state-map "gq" 'evil-fill)
 (define-key evil-normal-state-map "-" 'evil-indent-without-move)
