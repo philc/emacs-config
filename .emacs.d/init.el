@@ -1,12 +1,15 @@
 ;;
-;; I try to keep this file well-documented so new and veteran users can easily understand the parts
-;; of my setup they may want to lift.
+;; I try to keep this file well-documented so new and veteran users can easily understand the parts of my
+;; setup they may want to use.
 ;;
-;; While the function definitions which implement major pieces of functionality are kept in separate files, I
-;; try to centralize the configuration for everything here in this file.
+;; I often extend existing Emacs modes with new functions, and those are typically kept in separate files
+;; (e.g. see elisp/magit-mode-ext.el). However, I try to keep all of the configuration for those modes (like
+;; keybindings) here in init.el.
 ;;
 
+;;
 ;; Color scheme
+;;
 (load-theme 'tangotango t) ; A reasonable color scheme which lives in my .emacs.d.
 ;; Make the dividing line between window splits less bright. It's #EAEAEA in tangotango.
 (set-face-attribute 'vertical-border nil :foreground "#888888")
@@ -29,7 +32,7 @@
 (defvar my-packages '(ace-jump-mode ; Jump to any text on screen in a few keystrokes. Like Vim's EasyMotion.
                       ag ; Silver searcher integration for Emacs
                       autopair ; Insert matching delimiters, e.g. insert closing braces.
-                      clojure-mode
+                      clojure-mode ; For editing Clojure files.
                       coffee-mode ; For syntax highlighting coffeescript.
                       dash ; Dash provides modern functions for working with lists in Emacs Lisp.
                       dash-functional ; Useful combinators for Emacs Lisp.
@@ -59,6 +62,7 @@
                       yaml-mode ; For editing YAML files
                       yasnippet)) ; Insert snippets using tab.
 
+;; Ensure that every package above is installed. This is helpful when setting up Emacs on a new machine.
 (dolist (p my-packages)
   (when (not (package-installed-p p))
     (package-install p)))
@@ -184,15 +188,15 @@
                   (kbd "C-w") 'backward-kill-word)
 
 ;; Emacs modes universally bind C-h to "help", but I use C-h for backspace. It's very difficult to redefine
-;; C-h in many modes, like minibuffer-mode. This instead translates C-h to C-?. Unclear exactly how this works
-;; https://github.com/emacs-helm/helm/issues/24
+;; C-h in many modes, like minibuffer-mode. This instead translates C-h to C-?. It's unclear to me exactly how
+;; this works. See https://github.com/emacs-helm/helm/issues/24 for discussion.
 (define-key key-translation-map [?\C-h] [?\C-?])
 
 ;; Disable the prompt we get when killing a buffer with a process. This affects clojure mode in particular,
 ;; when we want to restart the nrepl process.
 (setq kill-buffer-query-functions (remq 'process-kill-buffer-query-function kill-buffer-query-functions))
 
-;; Use smex to show the M-x command prompt. It has better completion support than the default M<x.
+;; Use smex to show the M-x command prompt. It has better completion support than the default M-x.
 (require 'smex)
 (global-set-key (kbd "M-x") 'smex)
 
@@ -203,12 +207,6 @@
 ;; The poorly-named winner mode saves the history of your window splits, so you can undo and redo changes to
 ;; your window configuration.
 (winner-mode t)
-
-(defun create-scratch-buffer nil
-   "Create a scratch buffer. Helpful if you save your scratch buffer as a file, or accidentally kill it."
-   (interactive)
-   (switch-to-buffer (get-buffer-create "*scratch*"))
-   (lisp-interaction-mode))
 
 ;; Save buffers whenever they lose focus.
 ;; This obviates the need to hit the Save key thousands of times a day. Inspired by http://goo.gl/2z0g5O.
@@ -233,14 +231,15 @@
 (require 'evil-nerd-commenter)
 (global-evil-leader-mode t)
 (evil-mode t)
-;; Note that there is a bug where Evil-leader isn't properly bound to the initial buffers Emacs opens
-;; with. We work around this by killing them. See https://github.com/cofi/evil-leader/issues/10.
+
+;; Note that there is a bug where Evil-leader isn't properly bound to the initial buffers that Emacs
+;; opens on-startup. Work around this by killing them. See https://github.com/cofi/evil-leader/issues/10.
 (kill-buffer "*Messages*")
 
 ;; When opening new lines, indent according to the previous line.
 (setq evil-auto-indent t)
 
-;; Unbind "q" so it doesn't record macros. I activate this mistakenly all the time and wreak havoc.
+;; Unbind "q" so it doesn't record macros. I activate this mistakenly all the time and then wreak havoc.
 (define-key evil-normal-state-map (kbd "q") nil)
 (define-key evil-normal-state-map (kbd "M-s") 'save-buffer)
 (define-key evil-insert-state-map (kbd "M-s") 'save-buffer)
