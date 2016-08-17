@@ -91,7 +91,7 @@
      (let ((region (if (use-region-p)
                        (list (region-beginning) (region-end))
                      (evil-inner-paragraph))))
-       (evil-indent-without-move (first region) (second region))))))
+       (evil-ext/indent-without-move (first region) (second region))))))
 
 (evil-define-operator evil-ext/indent-without-move (beg end)
   "Indent text."
