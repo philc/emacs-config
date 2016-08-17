@@ -214,13 +214,13 @@
 
 ;; Save buffers whenever they lose focus.
 ;; This obviates the need to hit the Save key thousands of times a day. Inspired by http://goo.gl/2z0g5O.
-(defadvice windmove-up (before other-window-now activate) (util/save-buffer-if-dirty))
-(defadvice windmove-down (before other-window-now activate) (util/save-buffer-if-dirty))
-(defadvice windmove-left (before other-window-now activate) (util/save-buffer-if-dirty))
-(defadvice windmove-right (before other-window-now activate) (util/save-buffer-if-dirty))
+(dolist (f '(windmove-up windmove-right windmove-down windmove-left))
+  (advice-add f :before 'util/save-buffer-if-dirty))
+
 ;; When switching focus out of the Emacs app, save the buffer.
-(add-hook 'focus-out-hook 'util/save-buffer-if-dirty) ; This hook is only available in Emacs 24.4+.
-(add-hook 'focus-out-hook '(lambda () (evil-normal-state))) ; This hook is only available in Emacs 24.4+.
+(add-hook 'focus-out-hook 'util/save-buffer-if-dirty)
+;; Exit insert mode when unfocusing Emacs, so when we return to Emacs, we're in normal mode.
+(add-hook 'focus-out-hook 'evil-normal-state)
 
 ; This is fired whenever the buffer list is updated, which is a reasonably robust way to detect that the
 ; window config has changed and the current buffer should be saved.
