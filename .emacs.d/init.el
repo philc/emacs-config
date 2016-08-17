@@ -1277,6 +1277,8 @@
 ;;
 (setq js-indent-level 2)
 
+(evil-leader/set-key-for-mode 'js-mode
+  "rr" 'reload-active-chrome-tab)
 ;;
 ;; Ag (silver searcher)
 ;;
