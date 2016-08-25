@@ -88,13 +88,13 @@
   (->>
    ;; This returns output of the form: "/home/username/shared_lib/core.clj,123"
    ;; Inspiration taken from  https://github.com/clojure/clojure/blob/master/src/clj/clojure/repl.clj
-   ;; Note that the file metadata for a symbol can be rooted if it's already been loaded in the REPL.
+   ;; Note that the file metadata for a symbol can be rooted if it's already been loaded by the REPL.
    (ht ("get-src-file"
-        "(let [m (-> '%s resolve meta)
-               path (:file m)
-               full-path (when (not= (subs path 0 1) \"/\")
-                           (->> path (.getResource (RT/baseLoader)) .getPath))]
-          (str (or full-path path) \":\" (:line m)))"))
+        "(when-let [m (-> '%s resolve meta)]
+           (let [path (:file m)
+                 full-path (when (not= (subs path 0 1) \"/\")
+                             (->> path (.getResource (clojure.lang.RT/baseLoader)) .getPath))]
+              (str (or full-path path) \":\" (:line m))))"))
    ;; NOTE(philc): we strip newlines from all commands we send to the REPL, because this makes the output
    ;; coming back from the REPL process have multiple #_=> prompts embedded in it. We may be able to reliably
    ;; strip those from the output, but for now I'm just collapsing all clojure code snippets to one line.
@@ -117,18 +117,23 @@
         ;; `output` is of the form "/home/USER/shared_lib/core.clj:123"
         ;; If the function is in a JAR, output will be e.g. file:/home/USER/the-jar.jar!/path/in/jar
         (message output)
-        (if (s-contains? "jar!" output)
-            (message (format "The var %s is defined in a JAR. Viewing source inside of a JAR is unimplemented." s))
+        (cond
+         ((string= output "nil")
+          (message (format "Could find a definition for the symbol %s" s)))
+         ((s-contains? "jar!" output)
+          (message (format "The var %s is defined in a JAR. Viewing source inside of a JAR is unimplemented." s)))
+         (t
           (let ((file (->> output (s-split ":") (nth 0)))
                 (line (->> output (s-split ":") (nth 1) string-to-number)))
             (message (buffer-file-name))
             (message file)
+            ;; Save which buffer we are jumping from, so clj/jump-back can take us back.
             (when (not (string= (buffer-file-name)
                                 file))
               (push (list (current-buffer) (line-number-at-pos)) clj/buffers-before-jump)
               (find-file file))
             (goto-line line)
-            (recenter 0))))
+            (recenter 0)))))
     (message "No symbol is under the cursor.")))
 
 (defun clj/jump-back ()
