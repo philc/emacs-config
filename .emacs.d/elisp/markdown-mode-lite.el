@@ -188,6 +188,10 @@
             (interactive)
             (let ((markdown-stylesheet "gmail"))
               (call-interactively 'preview-markdown)))
+    ";rd" (lambda ()
+            (interactive)
+            (let ((markdown-stylesheet "google-docs"))
+              (call-interactively 'preview-markdown)))
     ";rr" 'preview-markdown)
 
   (evil-define-key 'visual markdown-lite-mode-map
@@ -195,6 +199,10 @@
     ";re" (lambda ()
             (interactive)
             (let ((markdown-stylesheet "gmail"))
+              (call-interactively 'preview-markdown)))
+    ";rd" (lambda ()
+            (interactive)
+            (let ((markdown-stylesheet "google-docs"))
               (call-interactively 'preview-markdown)))
     ";rr" 'preview-markdown)
 
