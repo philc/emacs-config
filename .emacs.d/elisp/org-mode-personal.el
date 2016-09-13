@@ -187,7 +187,7 @@
   "Prompts for the name of a top-level heading and jumps to there."
   ;; TODO(philc): Populate these completions with the top-level headers from the buffer.
   (let* ((headings '("Liftoff" "Home" "Study" "Entertainment" "Emacs" "Journal" "Gumshoe" "Side projects"
-                     "Vimium"))
+                     "Vimium" "Email"))
          (heading (ido-completing-read "Heading: " headings)))
     (goto-char 0)
     (org-move-to-heading heading)
