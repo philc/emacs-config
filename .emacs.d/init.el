@@ -215,7 +215,7 @@
 ;; Save buffers whenever they lose focus.
 ;; This obviates the need to hit the Save key thousands of times a day. Inspired by http://goo.gl/2z0g5O.
 (dolist (f '(windmove-up windmove-right windmove-down windmove-left))
-  (advice-add f :before 'util/save-buffer-if-dirty))
+  (advice-add f :before (lambda (&optional args) (util/save-buffer-if-dirty))))
 
 ;; When switching focus out of the Emacs app, save the buffer.
 (add-hook 'focus-out-hook 'util/save-buffer-if-dirty)
