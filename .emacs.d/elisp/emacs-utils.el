@@ -82,7 +82,8 @@
   (lexical-let* ((f f)
                  (original-window (selected-window))
                  (result (funcall f)))
-    (select-window original-window)
+    (select-frame-set-input-focus (window-frame original-window))
+    (select-window original-window t)
     result))
 
 (defun util/preserve-line-and-column (f)
