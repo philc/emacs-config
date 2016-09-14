@@ -576,6 +576,8 @@
 (ido-mode t)
 (ido-ubiquitous-mode t)
 (ido-vertical-mode t)
+(setq ido-vertical-define-keys 'C-n-C-p-up-down-left-right)
+
 ;; By default, ido-switch-buffer will move your focus to another frame if the buffer is open there. I instead
 ;; want the desired buffer to open again within my current frame, even if it's already open in another frame.
 (setq ido-default-buffer-method 'selected-window)
