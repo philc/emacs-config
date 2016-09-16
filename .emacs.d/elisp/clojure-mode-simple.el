@@ -122,12 +122,11 @@
          (t
           (let ((file (->> output (s-split ":") (nth 0)))
                 (line (->> output (s-split ":") (nth 1) string-to-number)))
-            (message (buffer-file-name))
-            (message file)
             ;; Save which buffer we are jumping from, so clj/jump-back can take us back.
             (when (not (string= (buffer-file-name)
                                 file))
-              (push (list (current-buffer) (line-number-at-pos)) clj/buffers-before-jump)
+              (push (list (current-buffer) (line-number-at-pos))
+                    clj/buffers-before-jump)
               (find-file file))
             (goto-line line)
             (recenter 0)))))
