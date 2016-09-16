@@ -217,9 +217,7 @@
   (interactive)
   (util/preserve-selected-window
    (lambda ()
-     (inf-clojure-switch-to-repl nil)
-     ; Scroll to the bottom of the window.
-     (goto-char (point-max)))))
+     (inf-clojure-switch-to-repl t))))
 
 (defun clj/in-repl-buffer (fn)
   (util/preserve-selected-window
