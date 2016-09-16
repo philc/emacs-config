@@ -84,33 +84,30 @@
         (util/open-in-browser clojure-docs-url))
     (message "There's no symbol under the cursor to look up documentation for.")))
 
-(defvar clj/commands
-  (->>
-   ;; This returns output of the form: "/home/username/shared_lib/core.clj,123"
-   ;; Inspiration taken from  https://github.com/clojure/clojure/blob/master/src/clj/clojure/repl.clj
-   ;; Note that the file metadata for a symbol can be rooted if it's already been loaded by the REPL.
-   (ht ("get-src-file"
-        "(when-let [m (-> '%s resolve meta)]
-           (let [path (:file m)
-                 full-path (when (not= (subs path 0 1) \"/\")
-                             (->> path (.getResource (clojure.lang.RT/baseLoader)) .getPath))]
-              (str (or full-path path) \":\" (:line m))))"))
-   ;; NOTE(philc): we strip newlines from all commands we send to the REPL, because this makes the output
-   ;; coming back from the REPL process have multiple #_=> prompts embedded in it. We may be able to reliably
-   ;; strip those from the output, but for now I'm just collapsing all clojure code snippets to one line.
-   (ht-map (lambda (k v) (list k (s-collapse-whitespace v))))
-   -flatten
-   ht<-plist))
+;; NOTE(philc): in all of our snippets, we strip newlines from all commands we send to the REPL, because this
+;; makes the output coming back from the REPL process have multiple #_=> prompts embedded in it. We may be
+;; able to reliably strip those from the output, but for now I'm just collapsing all clojure code snippets to
+;; one line.
+(defun clj/snippet-get-source-file (symbol-name)
+  "Returns output of the form: /home/username/the_project/core.clj,123"
+  ;; Inspiration taken from  https://github.com/clojure/clojure/blob/master/src/clj/clojure/repl.clj
+  ;; Note that the file metadata for a symbol can be rooted if it's already been loaded by the REPL.
+  (-> "(when-let [m (-> '%s resolve meta)]
+         (let [path (:file m)
+               full-path (when (not= (subs path 0 1) \"/\")
+                           (->> path (.getResource (clojure.lang.RT/baseLoader)) .getPath))]
+           (str (or full-path path) \":\" (:line m))))"
+      s-collapse-whitespace
+      (format symbol-name)))
 
 (defvar clj/buffers-before-jump '())
 
 ;; TODO(philc):
 ;; * Auto-eval the NS of the current file when invoking jump-to-var and it hasn't yet been eval'd.
-;; * Handle symbols which have no definition (currently throws a runtime exception).
 (defun clj/jump-to-var ()
   (interactive)
   (-if-let (s (-> (thing-at-point 'symbol) substring-no-properties))
-      (let* ((output (-> (format (ht-get clj/commands "get-src-file") s)
+      (let* ((output (-> (clj/snippet-get-source-file s)
                          clj/wrap-sexp-in-current-ns
                          clj/eval-and-capture-output
                          clj/remove-surrounding-quotes)))
