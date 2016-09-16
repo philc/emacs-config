@@ -338,7 +338,11 @@ but doesn't treat single semicolons as right-hand-side comments."
   ;; "es" 'inf-clojure-eval-last-sexp
   ;; "ex" 'inf-clojure-eval-defun
   "ex" 'clj/eval-defun
-  "eb" 'clj/load-buffer)
+  "eb" 'clj/load-buffer
+  "ta" 'clj/run-all-tests
+  "tf" 'clj/run-tests-in-ns
+  "tt" 'clj/run-test-at-point
+  )
 
 ;; Make it possible to eval any marked buffer from any window -- a clojure window need not be focused.
 (evil-leader/set-key
@@ -358,6 +362,45 @@ but doesn't treat single semicolons as right-hand-side comments."
     (url-of-form 1)                                                   ; Personal
     ))
 
+;;
+;; Functions for working with clojure.test mode.
+;;
+
+; TODO(philc): Consider removing this. Do I use it?
+(defun clj/run-all-tests ()
+  (interactive)
+  (util/save-buffer-if-dirty)
+  (-> (format (concat "(do (clojure.core/load-file \"%s\")"
+                      "(clojure.test/run-all-tests))")
+              (buffer-file-name))
+      (inf-clojure-eval-string )))
+
+(defun clj/run-tests-in-ns ()
+  (interactive)
+  (util/save-buffer-if-dirty)
+  (-> (format (concat "(do (clojure.core/load-file \"%s\")"
+                      "(clojure.test/run-tests))")
+              (buffer-file-name))
+      clj/eval-in-current-ns))
+
+(defun clj/defun-name-at-point ()
+  "Returns the name of the function at point, and nil if it can't be found."
+  ;; This should work with both defn and deftest.
+  (let* ((form (thing-at-point 'defun t))
+         (result (string-match "(def[^ ]* \\([^ ]*\\)" form)))
+    (when result
+      (match-string 1 form))))
+
+(defun clj/run-test-at-point ()
+  "Runs the clojure.test under the cursor by invoking the function defined by the test in the cider repl."
+  (interactive)
+  ;; Note that prior to running the test, we eval the test's definition in case we've edited it source since
+  ;; our last eval. We load the entire buffer rather than just evaling the test's definition
+  ;; because loading the buffer properly sets the file metadata for the function definition, so that test
+  ;; failure output has the correct source file and line number of the failing test.
+  (-when-let (fn-name (clj/defun-name-at-point))
+    (clj/load-buffer)
+    (clj/eval-in-current-ns (concat "(" fn-name ")"))))
 
 ;;
 ;; cljfmt -- automatic formatting of Clojure code. This configuration is Liftoff-specific.
