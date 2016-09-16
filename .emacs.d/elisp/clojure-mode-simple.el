@@ -240,8 +240,10 @@
 
 (defun clj/wrap-sexp-in-current-ns (str)
   (-let* ((ns (or (clj/ns-of-buffer) "user"))
-          (s (concat "(binding [*ns* '" ns "] " str ")")))
-    (format "(do (clojure.core/in-ns '%s) %s)" ns str)))
+          (s (format "(binding [*ns* '%s] %s)" ns str))
+          (require-statement (format "(clojure.core/require '%s)" ns)))
+    ;; We first require the namespace before switching to it in case it hasn't yet been loaded.
+    (format "(do %s (clojure.core/in-ns '%s) %s)" require-statement ns str)))
 
 (defun clj/eval-in-current-ns (str)
   (let ((str (if use-pprint
