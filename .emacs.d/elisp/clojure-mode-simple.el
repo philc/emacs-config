@@ -262,24 +262,33 @@
   (buffer-substring-no-properties (save-excursion (backward-sexp) (point))
                                   (point)))
 
+(defun clj/parse-fn-name-from-defn (str)
+  ;; This regexp must capture the fn-name for defn, defn-, and defns with metadata, e.g.
+  ;; (defn- {:a 1} fn-name\n "the doctring" [])
+  (when (string-match "(defn-? +\\(?:\\^{.+?} +\\)?\\([^ ]+\\)" str)
+    (match-string 1 str)))
+
+(defun clj/correct-defn-file-metadata (exp thing)
+  "If exp starts with a defn, this will wrap exp and set its file metadata.
+   - thing: the same arg you would pass to thing-at-point (e.g. 'list, 'sexp, 'defun)."
+  (let ((fn-name (clj/parse-fn-name-from-defn exp)))
+    (if fn-name
+        (format "(do %s (alter-meta! #'%s assoc :file \"%s\" :line %s :column 0))"
+                exp fn-name (buffer-file-name)
+                (-> (bounds-of-thing-at-point thing) first line-number-at-pos))
+      exp)))
+
 (defun clj/eval-sexp ()
   (interactive)
-  (clj/eval-in-current-ns (thing-at-point 'list t)))
+  (-> (thing-at-point 'list t)
+      (clj/correct-defn-file-metadata 'list)
+      clj/eval-in-current-ns))
 
 (defun clj/eval-defun ()
   (interactive)
-  (clj/eval-in-current-ns (thing-at-point 'defun t)))
-
-(defun inf-clojure-eval-defun (&optional and-go)
-  "Send the current defun to the inferior Clojure process.
-Prefix argument AND-GO means switch to the Clojure buffer afterwards."
-  (interactive "P")
-  (save-excursion
-    (end-of-defun)
-    (let ((end (point)) (case-fold-search t))
-      (beginning-of-defun)
-      (inf-clojure-eval-region (point) end)))
-  (if and-go (inf-clojure-switch-to-repl t)))
+  (-> (thing-at-point 'defun t)
+      (clj/correct-defn-file-metadata 'defun)
+      clj/eval-in-current-ns))
 
 (defun lisp-indent-line-single-semicolon-fix (&optional whole-exp)
   "Identical to the built-in function lisp-indent-line,
