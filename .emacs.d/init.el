@@ -372,8 +372,8 @@
 
 ;; Make it so Esc means quit, no matter the context.
 ;; http://stackoverflow.com/a/10166400/46237
-;; Note that when Emacs becomes unresponsive (e.g. because I accidentally grepped my home directory), I might
-;; still need to hold C-g (the Emacs esc/cancel key) to bring it back.
+;; Note that when Emacs becomes unresponsive (e.g. because I accidentally grepped through qmy home directory),
+;; I might still need to hold C-g (the Emacs esc/cancel key) to bring it back.
 (defun minibuffer-keyboard-quit ()
   "Abort recursive edit. In Delete Selection mode, if the mark is active, just deactivate it;
    then it takes a second \\[keyboard-quit] to abort the minibuffer."
@@ -844,6 +844,7 @@
 ;;   well once configured.
 ;;
 ;; You may need to install aspell and enchant (e.g. `brew install aspell enchant` on Mac).
+;; TODO(philc): Throw a helpful error if these programs aren't present.
 (require 'wcheck-mode)
 (setq-default wcheck-language "English")
 (setq-default wcheck-language-data
@@ -1258,6 +1259,7 @@
 (defun json-format ()
   "Pipe the current buffer into `jq .`, and replace the current buffer's contents."
   (interactive)
+  ;; TODO(philc): Try to replace this with **json-pretty-print' and 'json-pretty-print-buffer' from Emacs 25.
   (save-excursion
     (call-process-region (point-min) (point-max) "jq" t (buffer-name) t ".")))
 
