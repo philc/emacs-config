@@ -223,8 +223,15 @@
 
 ;; When switching focus out of the Emacs app, save the buffer.
 (add-hook 'focus-out-hook 'util/save-buffer-if-dirty)
+
+(defun switch-to-evil-normal-state-on-focus-out ()
+  ;; Don't switch to the normal state in a minibuffer. In the minibuffer we should always be in insert mode.
+  ;; Otheriwse the UX becomes confusing.
+  (when (not (window-minibuffer-p))
+    (evil-normal-state)))
+
 ;; Exit insert mode when unfocusing Emacs, so when we return to Emacs, we're in normal mode.
-(add-hook 'focus-out-hook 'evil-normal-state)
+(add-hook 'focus-out-hook 'switch-to-evil-normal-state-on-focus-out)
 
 ; This is fired whenever the buffer list is updated, which is a reasonably robust way to detect that the
 ; window config has changed and the current buffer should be saved.
