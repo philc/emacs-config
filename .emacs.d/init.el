@@ -7,6 +7,10 @@
 ;; keybindings) here in init.el.
 ;;
 
+;; Launch a debugger with a stactrace if there's any error in Emacs lisp. This is especially helpful on
+;; startup, when your init.el has an error.
+(setq debug-on-error t)
+
 ;;
 ;; Color scheme
 ;;
