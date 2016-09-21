@@ -292,8 +292,6 @@
 
 (define-key evil-outer-text-objects-map "p" 'evil-paragraph-from-newlines)
 
-(define-key evil-motion-state-map (kbd "C-d") 'evil-ext/scroll-down-patched)
-
 (defun count-chars-region (beg end)
   "Prints the character count of the selected region."
   (interactive "r")
