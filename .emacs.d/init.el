@@ -670,8 +670,7 @@
 
 (defun current-sexp ()
   "Returns the text content of the sexp list around the cursor."
-  (let ((position (bounds-of-thing-at-point 'list)))
-    (buffer-substring-no-properties (car position) (cdr position))))
+  (thing-at-point 'list t))
 
 (defun elisp-eval-current-sexp ()
   (interactive)
