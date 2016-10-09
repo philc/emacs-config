@@ -14,15 +14,6 @@
   ;; Natural Markdown tab width
   (setq tab-width 4)
   ;; Comments
-  (make-local-variable 'comment-start)
-  (setq comment-start "<!-- ")
-  (make-local-variable 'comment-end)
-  (setq comment-end " -->")
-  (make-local-variable 'comment-start-skip)
-  (setq comment-start-skip "<!--[ \t]*")
-  (make-local-variable 'comment-column)
-  (setq comment-column 0)
-  (set (make-local-variable 'comment-auto-fill-only-comments) nil)
   (set (make-local-variable 'markdown-mode-font-lock-keywords) nil)
   (set (make-local-variable 'font-lock-defaults) nil)
   (set (make-local-variable 'font-lock-multiline) t)
