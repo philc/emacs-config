@@ -241,6 +241,7 @@
 ;; Evil mode -- Vim keybindings for Emacs.
 ;;
 (setq evil-want-C-u-scroll t)
+(setq evil-want-Y-yank-to-eol t) ; Map "Y" to copy to the end of line (y$ in Vim).
 (require 'evil-leader) ; Provide configuration functions for assigning actions to a Vim leader key.
 (require 'evil)
 (require 'evil-ext)
