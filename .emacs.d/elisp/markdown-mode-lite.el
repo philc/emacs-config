@@ -56,10 +56,6 @@
     (make-local-hook 'font-lock-extend-region-functions)
     (make-local-hook 'window-configuration-change-hook))
 
-  ;; Multiline font lock
-  (add-hook 'jit-lock-after-change-extend-region-functions
-            'markdown-font-lock-extend-region)
-
   ;; Anytime text changes make sure it gets fontified correctly
   ;; (add-hook 'after-change-functions 'markdown-check-change-for-wiki-link t t)
 
@@ -587,21 +583,6 @@ If the point is not in a list item, do nothing."
   (save-excursion
     (beginning-of-line)
     (re-search-forward "^\\s *$" (line-end-position) t)))
-
-(defun markdown-font-lock-extend-region ()
-  "Extend the search region to include an entire block of text.
-This helps improve font locking for block constructs such as pre blocks."
-  ;; Avoid compiler warnings about these global variables from font-lock.el.
-  ;; See the documentation for variable `font-lock-extend-region-functions'.
-  (eval-when-compile (defvar font-lock-beg) (defvar font-lock-end))
-  (save-excursion
-    (goto-char font-lock-beg)
-    (unless (looking-back "\n\n")
-      (let ((found (or (re-search-backward "\n\n" nil t) (point-min))))
-        (goto-char font-lock-end)
-        (when (re-search-forward "\n\n" nil t)
-          (setq font-lock-end (match-beginning 0))
-          (setq font-lock-beg found))))))
 
 (defun markdown-nobreak-p ()
   "Return nil if it is acceptable to break the current line at the point."
