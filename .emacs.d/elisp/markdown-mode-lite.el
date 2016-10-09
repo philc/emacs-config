@@ -48,25 +48,12 @@
   ;; Indentation and filling
   (make-local-variable 'fill-nobreak-predicate)
   (add-hook 'fill-nobreak-predicate 'markdown-nobreak-p)
-  ;; (setq indent-line-function markdown-indent-function)
 
   ;; Prepare hooks for XEmacs compatibility
   (when (featurep 'xemacs)
     (make-local-hook 'after-change-functions)
     (make-local-hook 'font-lock-extend-region-functions)
     (make-local-hook 'window-configuration-change-hook))
-
-  ;; Anytime text changes make sure it gets fontified correctly
-  ;; (add-hook 'after-change-functions 'markdown-check-change-for-wiki-link t t)
-
-  ;; If we left the buffer there is a really good chance we were
-  ;; creating one of the wiki link documents. Make sure we get
-  ;; refontified when we come back.
-  ;; (add-hook 'window-configuration-change-hook
-  ;;           'markdown-fontify-buffer-wiki-links t t)
-
-  ;; do the initial link fontification
-  ;; (markdown-fontify-buffer-wiki-links)
   )
 
 (add-to-list 'auto-mode-alist '("\\.markdown$" . markdown-lite-mode))
@@ -609,11 +596,6 @@ If the point is not in a list item, do nothing."
   "Default highlighting expressions for Markdown mode.
 This variable is defined as a buffer-local variable for dynamic
 extension support.")
-
-;; (defcustom markdown-indent-function 'markdown-indent-line
-;;   "Function to use to indent."
-;;   :group 'markdown
-;;   :type 'function)
 
 (defvar markdown-lite-mode-map
   "Keymap for Markdown lite major mode."
