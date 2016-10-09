@@ -9,7 +9,6 @@
 (require 'outline-magic)
 
 (define-derived-mode markdown-lite-mode text-mode "Markdown-lite"
-  ;; TODO(philc): RE-enable some of these.
   "Major mode for editing Markdown files."
   ;; Natural Markdown tab width
   (setq tab-width 4)
@@ -37,8 +36,8 @@
 
   ;; Outline mode
   (make-local-variable 'outline-regexp)
-  ;; markdown-mode has support for outline mode, but the implementations is that headings are folded. For my
-  ;; purposes, I like instead to fold subtrees of lists.
+  ;; markdown-mode has support for outline mode, but in that implementations, headings are folded. My
+  ;; preference is to instead fold subtrees in bulleted lists, akin to Org mode and Workflowly.
   (setq outline-regexp "[ ]*\\*") ; matches a leading bullet point
 
   (make-local-variable 'outline-level)
