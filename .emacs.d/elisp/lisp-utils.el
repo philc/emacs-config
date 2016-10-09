@@ -82,3 +82,12 @@
   (when (not (plist-member plist prop))
     (throw (concat "plist is missing property: " (prin1-to-string prop) ". " (prin1-to-string plist)) nil))
   (plist-get plist prop))
+
+(defmacro setq-temporarily (var value form)
+  "Uses setq to set the variable `var` temporarily for the duration of form, and then restores it to its
+   former value. Returns the value that `form` returns."
+  `(lexical-let* ((old-val (symbol-value ',var))
+                  (_ (setq ,var ,value))
+                  (ret-val ,form))
+     (setq ,var old-val)
+     ret-val))
