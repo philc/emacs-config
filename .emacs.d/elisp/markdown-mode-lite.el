@@ -10,7 +10,6 @@
 
 (define-derived-mode markdown-lite-mode text-mode "Markdown-lite"
   "Major mode for editing Markdown files."
-  ;; Natural Markdown tab width
   (setq tab-width 4)
   ;; Comments
   (set (make-local-variable 'markdown-mode-font-lock-keywords) nil)
@@ -58,7 +57,7 @@
     (make-local-hook 'window-configuration-change-hook))
 
   ;; Multiline font lock
-  (add-hook 'font-lock-extend-region-functions
+  (add-hook 'jit-lock-after-change-extend-region-functions
             'markdown-font-lock-extend-region)
 
   ;; Anytime text changes make sure it gets fontified correctly
