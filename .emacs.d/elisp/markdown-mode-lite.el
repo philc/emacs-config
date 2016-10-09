@@ -178,13 +178,11 @@
               (call-interactively 'preview-markdown)))
     ";rr" 'preview-markdown)
 
-  (define-key markdown-lite-mode-map (kbd "<tab>") nil) ; Normally bound to markdown-cycle.
-
   (evil-define-key 'normal markdown-lite-mode-map
     ;; Autocomplete setext headers by typing "==" or "--" on the header's line in normal mode.
     (kbd "==") '(lambda () (interactive) (insert-markdown-setext-header "=="))
     (kbd "--") '(lambda () (interactive) (insert-markdown-setext-header "--"))
-    (kbd "TAB") '(lambda () (interactive) (save-excursion (outline-cycle)))
+    (kbd "TAB") 'markdown-cycle
     (kbd "C-S-L") 'markdown-demote
     (kbd "C-S-H") 'markdown-promote
     (kbd "C-S-A-L") 'markdown-demote-subtree
@@ -202,6 +200,11 @@
         '(normal insert)))
 
 (setup-markdown-mode)
+
+(defun markdown-cycle ()
+  "Cycle the visibility of the list under the cursor."
+  (interactive)
+  (save-excursion (outline-cycle)))
 
 ;;
 ;; Much of this code is taken from markdown-mode.el.
@@ -599,10 +602,7 @@ extension support.")
 
 (defvar markdown-lite-mode-map
   "Keymap for Markdown lite major mode."
-  (let ((map (make-keymap)))
-    ;; (define-key map (kbd "<backspace>") 'markdown-exdent-or-delete)
-    ;; (define-key map (kbd "<tab>") 'markdown-cycle)
-    map))
+  (mark-keymap))
 
 (defun markdown-cur-line-indent ()
   "Return the number of leading whitespace characters in the current line."
