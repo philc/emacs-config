@@ -187,13 +187,19 @@
                 (untabify (point-min) (point-max)))
             nil))
 
+(defun backward-delete-word ()
+  "Deletes the word behind the cursor, and does not yank the contents to the clipboard."
+  ; This implementation is based on backward-kill-word.
+  (interactive)
+  (delete-region (point) (progn (forward-word -1) (point))))
+
 ;; Enable the common Bash text-editing shortcuts in the minibuffer.
 (util/define-keys minibuffer-local-map
                   (kbd "C-k") 'kill-line
                   (kbd "C-e") 'end-of-line
                   (kbd "C-u") 'backward-kill-line
                   (kbd "C-d") 'delete-char
-                  (kbd "C-w") 'backward-kill-word)
+                  (kbd "C-w") 'backward-delete-word)
 
 ;; Emacs modes universally bind C-h to "help", but I use C-h for backspace. It's very difficult to redefine
 ;; C-h in many modes, like minibuffer-mode. This instead translates C-h to C-?. It's unclear to me exactly how
@@ -210,7 +216,7 @@
 
 ;; RecentF mode is the Emacs minor mode used when opening files via C-x C-f.
 (require 'recentf)
-(define-key recentf-mode-map (kbd "C-w") 'backward-kill-word)
+(define-key recentf-mode-map (kbd "C-w") 'backward-delete-word)
 
 ;; The poorly-named winner mode saves the history of your window splits, so you can undo and redo changes to
 ;; your window configuration.
@@ -327,7 +333,7 @@
 (setq evil-leader/no-prefix-mode-rx '("magit-.*-mode"))
 
 (defun backward-kill-line (arg)
-  "Delete backward (Ctrl-u) as in Bash."
+  "Delete backward (Ctrl-u) as in Bash, and save the contents to the clipboard."
   (interactive "p")
   (kill-line (- 1 arg)))
 
@@ -337,6 +343,7 @@
                   (kbd "C-e") 'end-of-line
                   (kbd "C-u") 'backward-kill-line
                   (kbd "C-a") 'beginning-of-line
+                  (kbd "C-w") 'backward-delete-word
                   (kbd "C-d") 'delete-char)
 
 ;; Commenting via NERD commentor.
@@ -596,7 +603,7 @@
   (setq ido-use-virtual-buffers t)
   (setq ido-everywhere t)
   ;; Kill (unload) the highlighted buffer in the matches list.
-  (define-key ido-file-completion-map (kbd "C-w") 'backward-kill-word)
+  (define-key ido-file-completion-map (kbd "C-w") 'backward-delete-word)
   (define-key ido-buffer-completion-map (kbd "M-d") 'ido-kill-buffer-at-head))
 
 ;;
