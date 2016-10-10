@@ -619,12 +619,21 @@
 ;; copy, the other dir in the split pane will be default destination. Same for R (rename; move)."
 (setq dired-dwim-target t)
 
+(defun dired-open-file-in-window-to-the-right ()
+  "Opens the file under cursor in the window to the right of the dired mode window. Leaves the cursor focus in
+   the dired window."
+  (interactive)
+  (lexical-let ((f (dired-get-file-for-visit))
+                (w (window-in-direction 'right)))
+    (util/preserve-selected-window (lambda () (select-window w) (find-file f)))))
+
 ;; Use the same buffer for going into and up directories.
 (evil-define-key 'normal dired-mode-map (kbd "gu") (lambda () (interactive) (find-alternate-file "..")))
 (evil-define-key 'normal dired-mode-map "H" (lambda () (interactive) (find-alternate-file "..")))
 (evil-define-key 'normal dired-mode-map (kbd "<return>")
-  'dired-find-alternate-file) ; was dired-advertised-find-file
+  'dired-find-alternate-file) ; This was originally dired-advertised-find-file
 (evil-define-key 'normal dired-mode-map "o" 'dired-find-alternate-file)
+(evil-define-key 'normal dired-mode-map "O" 'dired-open-file-in-window-to-the-right)
 
 ;; dired overrides my global "other window" shorcut.
 (evil-define-key 'normal dired-mode-map (kbd "M-C-n") 'other-window)
