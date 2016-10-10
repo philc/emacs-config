@@ -265,6 +265,8 @@
 ;; Unbind "q" so it doesn't record macros. I activate this mistakenly all the time and then wreak havoc.
 (define-key evil-normal-state-map (kbd "q") nil)
 
+(define-key evil-normal-state-map (kbd "C-*") 'evil-search-word-backward) ; This is also mapped to "#".
+
 (define-key evil-normal-state-map (kbd "M-s") 'save-buffer)
 (define-key evil-insert-state-map (kbd "M-s") 'save-buffer)
 
