@@ -636,6 +636,8 @@
   'dired-find-alternate-file) ; This was originally dired-advertised-find-file
 (evil-define-key 'normal dired-mode-map "o" 'dired-find-alternate-file)
 (evil-define-key 'normal dired-mode-map "O" 'dired-open-file-in-window-to-the-right)
+(evil-define-key 'normal dired-mode-map "gg" 'evil-goto-first-line)
+(evil-define-key 'normal dired-mode-map "G" 'evil-goto-line)
 
 ;; dired overrides my global "other window" shorcut.
 (evil-define-key 'normal dired-mode-map (kbd "M-C-n") 'other-window)
