@@ -66,6 +66,7 @@
 (evil-set-initial-state 'magit-commit-mode 'normal)
 (evil-set-initial-state 'magit-diff-mode 'normal)
 (evil-set-initial-state 'git-commit-mode 'insert)
+(evil-set-initial-state 'git-rebase-mode 'normal)
 
 ;; Have Magit open in the current window, not a new split.
 (setq magit-status-buffer-switch-function 'switch-to-buffer)

@@ -331,7 +331,7 @@
 
 (setq evil-leader/leader ";")
 
-;; Ensure we evil-leader works in non-editing modes like magit. This is referenced from evil-leader's README.
+;; Ensure evil-leader works in non-editing modes like magit. This is referenced from evil-leader's README.
 (setq evil-leader/no-prefix-mode-rx '("magit-.*-mode"))
 
 (defun backward-kill-line (arg)
