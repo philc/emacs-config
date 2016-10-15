@@ -420,8 +420,8 @@ but doesn't treat single semicolons as right-hand-side comments."
   (when (and (eq major-mode 'clojure-mode)
              (not cljfmt-in-progress))
     (setq cljfmt-in-progress 't)
-    (cljfmt)
-    (setq cljfmt-in-progress nil)))
+    (unwind-protect (cljfmt)
+      (setq cljfmt-in-progress nil))))
 
 (add-hook 'before-save-hook 'cljfmt-before-save-mutually-exclusive nil)
 ;; Run this again after save so we see any formatting error messages in the Emacs echo area,
