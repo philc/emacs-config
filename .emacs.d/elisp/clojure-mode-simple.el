@@ -395,13 +395,14 @@ but doesn't treat single semicolons as right-hand-side comments."
 (defun clj/run-test-at-point ()
   "Runs the clojure.test under the cursor by invoking the function defined by the test in the cider repl."
   (interactive)
-  ;; Note that prior to running the test, we eval the test's definition in case we've edited it source since
-  ;; our last eval. We load the entire buffer rather than just evaling the test's definition
-  ;; because loading the buffer properly sets the file metadata for the function definition, so that test
-  ;; failure output has the correct source file and line number of the failing test.
+  ;; Note that prior to running the test, we eval the test's definition in case we've edited its source since
+  ;; our last eval. We load the entire buffer rather than just evaling the test's definition because loading
+  ;; the buffer properly sets the file metadata for the function definition, so that test failure output has
+  ;; the correct source file and line number of the failing test.
   (-when-let (fn-name (clj/defun-name-at-point))
     (clj/load-buffer)
-    (clj/eval-in-current-ns (concat "(" fn-name ")"))))
+    (-> (format "(clojure.test/test-vars [#'%s])" fn-name)
+        clj/eval-in-current-ns)))
 
 ;;
 ;; cljfmt -- automatic formatting of Clojure code. This configuration is Liftoff-specific.
