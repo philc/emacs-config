@@ -623,34 +623,33 @@
 (setq dired-dwim-target t)
 
 (defun dired-open-file-in-window-to-the-right ()
-  "Opens the file under cursor in the window to the right of the dired mode window. Leaves the cursor focus in
-   the dired window."
+  "Opens the file in the window to the right of the dired window. Focus remains in the dired window."
   (interactive)
   (lexical-let ((f (dired-get-file-for-visit))
                 (w (window-in-direction 'right)))
     (util/preserve-selected-window (lambda () (select-window w) (find-file f)))))
 
 ;; Use the same buffer for going into and up directories.
-(evil-define-key 'normal dired-mode-map (kbd "gu") (lambda () (interactive) (find-alternate-file "..")))
-(evil-define-key 'normal dired-mode-map "H" (lambda () (interactive) (find-alternate-file "..")))
-(evil-define-key 'normal dired-mode-map (kbd "<return>")
-  'dired-find-alternate-file) ; This was originally dired-advertised-find-file
-(evil-define-key 'normal dired-mode-map "o" 'dired-find-alternate-file)
-(evil-define-key 'normal dired-mode-map "O" 'dired-open-file-in-window-to-the-right)
-(evil-define-key 'normal dired-mode-map "gg" 'evil-goto-first-line)
-(evil-define-key 'normal dired-mode-map "G" 'evil-goto-line)
-
-;; dired overrides my global "other window" shorcut.
-(evil-define-key 'normal dired-mode-map (kbd "M-C-n") 'other-window)
-(evil-define-key 'normal dired-mode-map ";" nil) ; Ensure my evil-leader key works unhindered.
-(evil-define-key 'normal dired-mode-map (kbd "M-C-n") 'other-window)
-(evil-define-key 'normal dired-mode-map "cd" 'dired-create-directory)
-(evil-define-key 'normal dired-mode-map "cf" 'dired-create-file)
-(evil-define-key 'normal dired-mode-map "x" 'dired-mark)
-(evil-define-key 'normal dired-mode-map "v" 'dired-details-toggle)
-;; The "e" prefix is for execute.
-(evil-define-key 'normal dired-mode-map "ed" 'dired-do-flagged-delete)
-(evil-define-key 'normal dired-mode-map "em" 'dired-do-rename)
+(evil-define-key 'normal dired-mode-map
+  (kbd "gu") (lambda () (interactive) (find-alternate-file ".."))
+  "H" (lambda () (interactive) (find-alternate-file ".."))
+  ;; This was originally dired-advertised-find-file
+  (kbd "<return>") 'dired-find-alternate-file
+  "o" 'dired-find-alternate-file
+  "O" 'dired-open-file-in-window-to-the-right
+  "gg" 'evil-goto-first-line
+  "G" 'evil-goto-line
+  ;; dired overrides my global "other window" shorcut.
+  (kbd "M-C-n") 'other-window
+  ";" nil ; Ensure my evil-leader key works unhindered.
+  (kbd "M-C-n") 'other-window
+  "cd" 'dired-create-directory
+  "cf" 'dired-create-file
+  "x" 'dired-mark
+  "v" 'dired-details-toggle
+  ;; The "e" prefix is for execute.
+  "ed" 'dired-do-flagged-delete
+  "em" 'dired-do-rename)
 
 ;; Taken from http://stackoverflow.com/a/18885461/46237.
 (defun dired-create-file (file)
