@@ -464,6 +464,14 @@ upon failure."
       (setq indent (markdown-cur-line-indent)))
     prev))
 
+(defun markdown-next-line-blank-p ()
+  "Return t if the next line is blank and nil otherwise.
+   If we are at the last line, then consider the next line to be blank."
+  (or (= (point-at-eol) (point-max))
+      (save-excursion
+        (forward-line 1)
+        (markdown-cur-line-blank-p))))
+
 (defun markdown-next-list-item (level)
   "Search forward from point for the next list item with indentation LEVEL.
 Set point to the beginning of the item, and return point, or nil
