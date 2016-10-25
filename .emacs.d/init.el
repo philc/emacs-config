@@ -5,7 +5,6 @@
 ;; I often extend existing Emacs modes with new functions, and those are typically kept in separate files
 ;; (e.g. see elisp/magit-mode-ext.el). However, I try to keep all of the configuration for those modes (like
 ;; keybindings) here in init.el.
-;;
 
 ;; Launch a debugger with a stactrace if there's any error in Emacs lisp. This is especially helpful on
 ;; startup, when your init.el has an error.
@@ -1323,6 +1322,19 @@
 ;; Note that ag mode configures itself to start in Evil's "motion" state.
 ;; compile-goto-error is what the "Return" key does.
 (evil-define-key 'motion ag-mode-map "o" 'compile-goto-error)
+
+;;
+;; Emacs' package manager. Invoke it via "M-x package-list-packages".
+;;
+
+(evil-set-initial-state 'package-mode 'normal)
+
+(evil-define-key 'normal package-menu-mode-map
+  (kbd "d") 'package-menu-mark-delete
+  (kbd "r") 'package-menu-refresh
+  (kbd "x") 'package-menu-execute
+  (kbd "u") 'package-menu-mark-unmark
+  (kbd "i") 'package-menu-mark-install)
 
 ;;
 ;; Misc
