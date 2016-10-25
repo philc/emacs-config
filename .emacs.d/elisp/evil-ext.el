@@ -36,6 +36,12 @@
                   (not (string/blank? (util/get-current-line))))
         (forward-line -1))))))
 
+(defun evil-ext/fill-inside-string ()
+  "Fills the current quote surrounded string. Equivalent to gqi\"."
+  (interactive)
+  (let ((region (evil-a-double-quote)))
+    (evil-fill (first region) (second region))))
+
 (defun evil-ext/fill-inside-paragraph ()
   "Fills (reflows/linewraps) the current paragraph. Equivalent to gqip in vim."
   (interactive)

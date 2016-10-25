@@ -165,6 +165,7 @@
 ;; Some modes have their own tab-width variables which need to be overridden.
 (setq-default css-indent-offset 2)
 
+(setq sentence-end-double-space nil) ; Don't add double spaces after periods when filling strings in quotes.
 (setq-default fill-column 110) ; When wrapping with the Emacs fill commands, wrap at 110 chars.
 (auto-fill-mode t) ; When typing across the fill-column, hard-wrap the line as you type.
 (add-hook 'text-mode-hook 'turn-on-auto-fill) ; Some modes, like markdown, turn off autofill. Force it!
@@ -688,6 +689,8 @@
         ;; window. Inspired from help-fns.el.
         (with-help-window "*Help*"
           (describe-function (intern (current-word))))))
+
+(evil-leader/set-key-for-mode 'emacs-lisp-mode "SPC" 'evil-ext/fill-inside-string)
 
 (defun current-sexp ()
   "Returns the text content of the sexp list around the cursor."

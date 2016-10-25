@@ -342,7 +342,7 @@ but doesn't treat single semicolons as right-hand-side comments."
   "ta" 'clj/run-all-tests
   "tf" 'clj/run-tests-in-ns
   "tt" 'clj/run-test-at-point
-  )
+  "SPC" 'evil-ext/fill-inside-string)
 
 ;; Make it possible to eval any marked buffer from any window -- a clojure window need not be focused.
 (evil-leader/set-key
