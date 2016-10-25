@@ -318,7 +318,7 @@
   "gs" (lambda() (interactive)
           (util/save-buffer-if-dirty)
           (magit-status-and-focus-unstaged))
-  "gl" 'magit-log
+  "gl" 'magit-log-current
   "o" 'util/open-file-at-cursor
   "wc" 'count-chars-region
   ;; "v" is a mnemonic prefix for "view X".
@@ -1263,7 +1263,7 @@
 ;;
 ;; Magit - for staging hunks and making commits to git from within Emacs.
 ;;
-(require 'magit-mode-personal)
+(require 'magit-config)
 
 ;;
 ;; Project navigation functions for opening project folders in dired-mode.
