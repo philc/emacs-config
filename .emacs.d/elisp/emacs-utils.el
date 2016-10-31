@@ -155,3 +155,10 @@
                   (find-file (concat ξpath ".el"))
                 (when (y-or-n-p (format "file doesn't exist: 「%s」. Create?" ξpath))
                   (find-file ξpath ))))))))))
+
+(defmacro util/with-patch-function (fun-name fun-args fun-body &rest body)
+  "Temporarily override the definition of FUN-NAME whilst BODY is executed.
+   Assumes FUNCTION is already defined. See http://emacs.stackexchange.com/a/3452/304."
+  `(cl-letf (((symbol-function ,fun-name)
+              (lambda ,fun-args ,fun-body)))
+     ,@body))

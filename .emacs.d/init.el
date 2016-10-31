@@ -321,6 +321,7 @@
   "gl" 'magit-log-current
   "o" 'util/open-file-at-cursor
   "wc" 'count-chars-region
+  "s" 'ag-in-current-window ; Grep (use the "ag" command) for files in the current directory.
   ;; "v" is a mnemonic prefix for "view X".
   ;; "vv" will be a natural choice as a mode-specific shortcut for previewing the current file.
   "vu" 'notmuch-go-to-inbox
@@ -1319,9 +1320,42 @@
 ;;
 ;; Ag (silver searcher)
 ;;
+
 ;; Note that ag mode configures itself to start in Evil's "motion" state.
-;; compile-goto-error is what the "Return" key does.
-(evil-define-key 'motion ag-mode-map "o" 'compile-goto-error)
+(evil-define-key 'motion ag-mode-map
+  ;; By default, ag's search results buffer opens in random windows. This also happens when opening one of the
+  ;; files in the search results. Instead, use "o" to open the search result in the same buffer and "O" to
+  ;; open in a new buffer. This mirrors Vim's convention of o and O.
+  (kbd "RET") 'ag/open-search-result-in-same-window
+  "o" 'ag/open-search-result-in-same-window
+  "O" 'ag/open-search-result-in-window-to-right
+  "gg" 'evil-goto-first-line)
+
+(defun ag/open-search-result-in-same-window ()
+  (interactive)
+  (let ((ag-reuse-window t)) (compile-goto-error)))
+
+(defun ag/open-search-result-in-window-to-right ()
+  (interactive)
+  (lexical-let ((move-right-or-create (lambda ()
+                                        (message "called")
+                                        (condition-case nil (windmove-right)
+                                          (error (progn (split-window-right) (windmove-right)))))))
+    (util/with-patch-function
+     'pop-to-buffer (buffer &rest args) (progn (funcall move-right-or-create) (switch-to-buffer buffer))
+     (compile-goto-error))))
+
+(defun ag-in-current-window (beg end)
+  (interactive "r")
+  "Like `ag`, but shows the search output in the current window. If a selection is highlighted, use that
+   as the search string rather than prompting."
+  (interactive)
+  (let ((search-string (if (use-region-p)
+                           (buffer-substring-no-properties (region-beginning) (region-end))
+                         (read-from-minibuffer "Search: " (ag/dwim-at-point))))) ; Taken from (ag) in ag.el.
+    (util/with-patch-function
+     'display-buffer (buffer &rest args) (progn (switch-to-buffer buffer) (selected-window))
+     (ag/search search-string (read-directory-name "Directory: ")))))
 
 ;;
 ;; Emacs' package manager. Invoke it via "M-x package-list-packages".
