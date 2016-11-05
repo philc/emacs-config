@@ -978,6 +978,19 @@
 ;;
 (require 'markdown-mode-lite)
 
+(defun markdown-format-outline-into-sections ()
+  "In a document formatted as an outline of nested lists, convert the top-level list items into section
+   headers. When writing a doc, it's nicer to organize it as one big list/outline. But when formatting that
+   doc for reading, it's nicer to format the top-level list items into headers, so the doc is divided into
+   clear sections."
+  (interactive)
+  ;; NOTE(philc): This is a script I've written to perform this transformation.
+  (let* ((command "~/scripts/publishing/format_outline_into_sections.rb")
+         (input (buffer-substring-no-properties (point-min) (point-max)))
+         ;; This will throw an error if there's any issue with the mardkown->html conversion.
+         (out (util/call-process-and-check "/bin/bash" input "-c" command)))
+    (util/replace-buffer-text out)))
+
 ;;
 ;; CSS
 ;;
