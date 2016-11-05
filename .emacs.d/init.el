@@ -321,7 +321,7 @@
   "gl" 'magit-log-current
   "o" 'util/open-file-at-cursor
   "wc" 'count-chars-region
-  "s" 'ag-in-current-window ; Grep (use the "ag" command) for files in the current directory.
+  "s" 'ag-project-in-current-window ; Grep (using the "ag" command) for files in the current directory.
   ;; "v" is a mnemonic prefix for "view X".
   ;; "vv" will be a natural choice as a mode-specific shortcut for previewing the current file.
   "vu" 'notmuch-go-to-inbox
@@ -1321,6 +1321,9 @@
 ;; Ag (silver searcher)
 ;;
 
+;; Use Projectile to determine what the current project is when invoking ag-project.
+(setq ag-project-root-function (lambda (f) (projectile-project-root)))
+
 ;; Note that ag mode configures itself to start in Evil's "motion" state.
 (evil-define-key 'motion ag-mode-map
   ;; By default, ag's search results buffer opens in random windows. This also happens when opening one of the
@@ -1345,17 +1348,17 @@
      'pop-to-buffer (buffer &rest args) (progn (funcall move-right-or-create) (switch-to-buffer buffer))
      (compile-goto-error))))
 
-(defun ag-in-current-window (beg end)
-  (interactive "r")
-  "Like `ag`, but shows the search output in the current window. If a selection is highlighted, use that
-   as the search string rather than prompting."
+(defun ag-project-in-current-window ()
+  "Like `ag-project`, but shows the search output in the current window. If a selection is highlighted, use
+   that as the search string rather than prompting."
   (interactive)
-  (let ((search-string (if (use-region-p)
-                           (buffer-substring-no-properties (region-beginning) (region-end))
-                         (read-from-minibuffer "Search: " (ag/dwim-at-point))))) ; Taken from (ag) in ag.el.
+  (let* ((project-dir (ag/project-root default-directory))
+         (search-string (if (region-active-p)
+                            (buffer-substring-no-properties (region-beginning) (region-end))
+                          (read-from-minibuffer "Search: " (ag/dwim-at-point))))) ; Taken from (ag) in ag.el.
     (util/with-patch-function
      'display-buffer (buffer &rest args) (progn (switch-to-buffer buffer) (selected-window))
-     (ag/search search-string (read-directory-name "Directory: ")))))
+     (ag/search search-string project-dir))))
 
 ;;
 ;; Emacs' package manager. Invoke it via "M-x package-list-packages".
