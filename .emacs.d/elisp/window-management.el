@@ -3,7 +3,11 @@
 ;;
 (provide 'window-management)
 (require 'dash)
+(require 'framemove)
+;; When switching between windows using windmove, also jump across frames if there are multiple frames.
+(setq framemove-hook-into-windmove t)
 
+;; TODO(philc): Rename this
 ;; Settings for window splits.
 (setq split-height-threshold 40)
 (setq split-width-threshold 200)
