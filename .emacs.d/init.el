@@ -1333,6 +1333,7 @@
 ;;
 ;; Ag (silver searcher)
 ;;
+(require 'ag)
 
 ;; Use Projectile to determine what the current project is when invoking ag-project.
 (setq ag-project-root-function (lambda (f) (projectile-project-root)))
