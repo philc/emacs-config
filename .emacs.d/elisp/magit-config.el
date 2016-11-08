@@ -11,13 +11,21 @@
 (require 'dash)
 (require 's)
 (require 'view) ; for View-scroll-half-page-backward.
-(provide 'magit-config)
 (require 'magit)
+(provide 'magit-config)
 
 ;; When committing, don't have Magit show the diff of what's changed. This feature is annoying because it
 ;; creates two buffers. I've already reviewed the staged changes prior to activating commit mode and don't
 ;; need to see the changes again.
 (setq magit-commit-show-diff nil)
+
+;; Disable Emacs' built-in VC package for git repositories. This prevents it from doing unnecessary work when
+;; Magit is performing git operations. This was recommended by the Magit manual. Empirically, I've noticed
+;; this greatly speeds up git rebasing with Magit.
+(setq vc-handled-backends (delq 'Git vc-handled-backends))
+
+;; Don't refresh the status buffer unless it's currently focused. This should improve performance.
+(setq magit-refresh-status-buffer nil)
 
 ;; Have Magit open buffers in the current window, rather than a new split.
 ;; https://github.com/magit/magit/issues/2541
