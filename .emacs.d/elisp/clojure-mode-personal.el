@@ -47,6 +47,7 @@
 (setq cider-auto-select-error-buffer nil)
 ;; Don't ask confirmation for closing any open nrepl connections when exiting Emacs.
 ;; http://stackoverflow.com/q/2706527/46237
+;; TODO(philc): Move this somewhere else, and don't use flet, which is deprecated.
 (defadvice save-buffers-kill-emacs (around no-query-kill-emacs activate)
   "Prevent annoying \"Active processes exist\" query when you quit Emacs."
   (flet ((process-list ())) ad-do-it))

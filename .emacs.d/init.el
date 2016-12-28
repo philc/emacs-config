@@ -1248,11 +1248,11 @@
 (defun gofmt-before-save-ignoring-errors ()
   "Don't pop up syntax errors in a new window when running gofmt-before-save."
   (interactive)
-  ;; Note that `gofmt-before-save` triggers this save-hook for some reason, so we lock on gmt-in-progress to
+  ;; Note that `gofmt-before-save` triggers this save-hook for some reason, so we lock on gofmt-in-progress to
   ;; to protect from infinite recurision.
   (when (not gofmt-in-progress)
     (setq gofmt-in-progress 't)
-    (flet ((gofmt--process-errors (&rest args) t)) ; Don't show any syntax error output
+    (cl-letf (((symbol-function #'gofmt--process-errors) (lambda (&rest args) t)))
       (gofmt-before-save))
     (setq gofmt-in-progress nil)))
 
