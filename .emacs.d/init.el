@@ -1118,10 +1118,17 @@
   "rr" 'reload-active-chrome-tab)
 
 (defun reload-active-chrome-tab ()
-  "Reloads the current tag in Chrome. This works on OSX only, using Applescript."
+  "Reloads the current tab in Chrome. This works on OSX only, using Applescript."
   (interactive)
   (util/call-process-with-exit-status "osascript"
                                       "tell app \"Google Chrome\" to reload active tab of window 1"))
+
+(defun reload-chrome-extensions-and-active-tab ()
+  "Reloads the current tab in Chrome and the code for any developer-mode extensions. This is useful for
+   Chrome extension development."
+  (interactive)
+  (util/call-process-with-exit-status "bash"
+                                      (expand-file-name "~/scripts/reload_chrome_extensions_and_tab.sh")))
 
 ;;
 ;; CSS, LESS mode
@@ -1329,7 +1336,8 @@
 (setq js-indent-level 2)
 
 (evil-leader/set-key-for-mode 'js-mode
-  "rr" 'reload-active-chrome-tab)
+  "rr" 'reload-active-chrome-tab
+  "rc" 'reload-chrome-extensions-and-active-tab)
 ;;
 ;; Ag (silver searcher)
 ;;
