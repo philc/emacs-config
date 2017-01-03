@@ -151,6 +151,35 @@
 (defun markdown-promote-subtree () (interactive) (markdown-perform-promote-subtree t))
 (defun markdown-demote-subtree () (interactive) (markdown-perform-promote-subtree nil))
 
+(defun bounds-of-space-delimitted-word ()
+  "Returns a cons list of coordinates of the boundary of the word under the cursor, where 'word' is defined
+   as any sequence of non-whitespace characters."
+  (let* ((start nil)
+         (end nil))
+    (save-excursion
+      (while (and (not (bolp))
+                  (not (string= (char-to-string (char-before)) " ")))
+        (backward-char))
+      (setq start (point)))
+    (save-excursion
+      (while (and (not (eolp))
+                  (not (string= (char-to-string (char-after)) " "))
+                  (not (string= (char-to-string (char-after)) "\n")))
+        (forward-char))
+      (setq end (point)))
+    (cons start end)))
+
+(defun markdown-bold ()
+  "Surrounds the currently selected text or the word under the cursor in bold asterisks."
+  (interactive)
+  (lexical-let* ((is-region (region-active-p))
+                 (word-boundary (bounds-of-space-delimitted-word))
+                 (start (if is-region (region-beginning) (car word-boundary)))
+                 (end (if is-region (region-end) (cdr word-boundary)))
+                 (contents (buffer-substring-no-properties start end)))
+    (delete-region start end)
+    (insert (concat "**" contents "**"))))
+
 (defun setup-markdown-mode ()
   (interactive)
 
@@ -167,6 +196,7 @@
     ";rr" 'preview-markdown)
 
   (evil-define-key 'visual markdown-lite-mode-map
+    (kbd "M-b") 'markdown-bold
     ";l" 'markdown-create-link
     ";re" (lambda ()
             (interactive)
@@ -193,6 +223,7 @@
     (kbd "C-S-L") 'markdown-demote)
   (mapc (lambda (state)
           (evil-define-key state markdown-lite-mode-map
+            (kbd "M-b") 'markdown-bold
             (kbd "C-S-K") 'markdown-move-list-item-up
             (kbd "C-S-J") 'markdown-move-list-item-down
             ;; M-return creates a new todo item and enters insert mode.
