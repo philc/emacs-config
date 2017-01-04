@@ -61,6 +61,17 @@
 
 (defun util/save-buffer-if-dirty ()
   (when (and buffer-file-name (buffer-modified-p))
+    (util/save-buffer-silently)))
+
+(defun util/save-buffer-silently ()
+  "Saves the buffer while suppressing output to the *Messages* buffer. This avoids cluttering up the
+   Messages buffer with lots of 'save' output."
+  (interactive)
+  ;; NOTE(philc): Saving files generates messages in the *Messages* buffer of the form "Wrote file xyz".
+  ;; However, note that if there's an issue saving a file, it's possible the error will be masked/hidden
+  ;; because of this output supression.
+  (let* ((inhibit-message t) ; Don't show messages in the echo area.
+         (message-log-max nil)) ; Don't show in the Messages buffer. http://stackoverflow.com/q/10164929
     (save-buffer)))
 
 (defun util/with-env-var (name value fn)

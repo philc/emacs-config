@@ -268,8 +268,8 @@
 
 (define-key evil-normal-state-map (kbd "C-*") 'evil-search-word-backward) ; This is also mapped to "#".
 
-(define-key evil-normal-state-map (kbd "M-s") 'save-buffer)
-(define-key evil-insert-state-map (kbd "M-s") 'save-buffer)
+(define-key evil-normal-state-map (kbd "M-s") 'util/save-buffer-silently)
+(define-key evil-insert-state-map (kbd "M-s") 'util/save-buffer-silently)
 
 ;; Move up and down through long, wrapped lines one visual line at a time.
 (define-key evil-normal-state-map (kbd "j") 'evil-next-visual-line)
