@@ -1121,6 +1121,7 @@
 (defun reload-active-chrome-tab ()
   "Reloads the current tab in Chrome. This works on OSX only, using Applescript."
   (interactive)
+  (util/save-buffer-if-dirty)
   (util/call-process-with-exit-status "osascript"
                                       "tell app \"Google Chrome\" to reload active tab of window 1"))
 
@@ -1128,6 +1129,7 @@
   "Reloads the current tab in Chrome and the code for any developer-mode extensions. This is useful for
    Chrome extension development."
   (interactive)
+  (util/save-buffer-if-dirty)
   (util/call-process-with-exit-status "bash"
                                       (expand-file-name "~/scripts/reload_chrome_extensions_and_tab.sh")))
 
