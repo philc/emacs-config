@@ -263,6 +263,10 @@
 ;; When opening new lines, indent according to the previous line.
 (setq evil-auto-indent t)
 
+;; Don't append to the kill ring (Emacs' clipboard) when visually selecting some text. See thorough
+;; description of the motivation here: http://emacs.stackexchange.com/a/15054
+(fset 'evil-visual-update-x-selection 'ignore)
+
 ;; Unbind "q" so it doesn't record macros. I activate this mistakenly all the time and then wreak havoc.
 (define-key evil-normal-state-map (kbd "q") nil)
 
