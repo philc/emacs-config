@@ -63,7 +63,8 @@
   "Converts the currently selected text into a link, using what's the clipboard as the URL."
   (interactive "r")
   (lexical-let* ((caption (buffer-substring-no-properties beg end))
-                 (url (chomp (car kill-ring-yank-pointer))))
+                 ;; Note that this uses the OSX clipboard, and so this will not work on non-Mac.
+                 (url (chomp (util/call-process-and-check "pbpaste" nil))))
     (delete-region beg end)
     (insert (concat "[" caption "](" url ")"))))
 
