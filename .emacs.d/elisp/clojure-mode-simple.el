@@ -22,6 +22,29 @@
   (setq indent-line-function 'lisp-indent-line-single-semicolon-fix)
   (setq comment-add 0))
 
+(defun remove-junk-from-inf-clojure-output (output-str)
+  (-?>> output-str
+       s-trim
+       (replace-regexp-in-string inf-clojure-prompt "")
+       (replace-regexp-in-string "#_=>" "") ; Remove sub-prompts.
+       s-trim))
+
+;; Overrided the inf-clojure-preoutput-filter defined in inf-clojure.
+(defun inf-clojure-preoutput-filter (str)
+  "Preprocess the output STR from interactive commands."
+  ;; NOTE(philc): When debugging this function, you can't write to stdout using print, or it messes up
+  ;; the process filter... until I find a better way, my strategy for debugging this is to store intermediate
+  ;; values into variables for later inspection outside of this function.
+  ;; (setq output-debug str)
+  (let ((str (remove-junk-from-inf-clojure-output str)))
+    ;; Don't output anything if the command from the REPL had no output. This is often the case when
+    ;; sending statements which don't cause any output (like when we switch namespaces) before evaling
+    ;; a command).
+    (setq output str)
+    (if (not (string= str ""))
+        (concat str "\n\n")
+      "")))
+
 (add-hook 'clojure-mode-hook 'setup-clojure-buffer)
 (add-hook 'clojure-mode-hook 'inf-clojure-minor-mode)
 

@@ -689,10 +689,12 @@
   (kbd "C-S-L") 'shift-sexp-forward
   "K" (lambda ()
         (interactive)
-        ;; Run `describe-function` and show its output in a help
-        ;; window. Inspired from help-fns.el.
-        (with-help-window "*Help*"
-          (describe-function (intern (current-word))))))
+        (util/preserve-selected-window
+         (lambda ()
+           ;; Run `describe-function` and show its output in a help
+           ;; window. Inspired from help-fns.el.
+           (with-help-window "*Help*"
+             (describe-function (intern (current-word))))))))
 
 (evil-leader/set-key-for-mode 'emacs-lisp-mode "SPC" 'evil-ext/fill-inside-string)
 
