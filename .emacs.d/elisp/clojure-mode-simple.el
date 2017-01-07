@@ -400,7 +400,7 @@ but doesn't treat single semicolons as right-hand-side comments."
 ;; Clojure indentation rules
 (with-eval-after-load "clojure-mode"
   (define-clojure-indent
-    (send-off 1) (cli 1) (go-loop 1)                                  ; Core
+    (send-off 1) (cli 1) (go-loop 1) (assoc 1)                        ; Core
     (ANY 2) (GET 2) (POST 2) (PUT 2) (PATCH 2) (DELETE 2) (context 2) ; Compojure
     (OPTIONS 2)
     (select 1) (insert 1) (update 1) (where 1) (set-fields 1)         ; Korma
@@ -409,7 +409,7 @@ but doesn't treat single semicolons as right-hand-side comments."
     (up 1) (down 1) (alter 1) (table 1) (create 1)                    ; Lobos
     (cache-get 1) (time 1)                                            ; Workbench
     (with-eligible-values 1) (when-eligible 1) (check 4)              ; Personal
-    (url-of-form 1)                                                   ; Personal
+    (url-of-form 1) (construct-partial 1)                             ; Personal
     ))
 
 ;;
