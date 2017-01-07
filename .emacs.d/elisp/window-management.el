@@ -21,7 +21,7 @@
 ;; lower-right or right window, in that order of preference.
 (setq special-display-buffer-names '("*Help*" "*compilation*" "COMMIT_EDITMSG" "*Messages*"
                                      ;; Clojure
-                                     "*inf-clojure*" "*Cljfmt Errors*"
+                                     "*clojure-simple*" "*inf-clojure*" "*Cljfmt Errors*"
                                      ;; Magit
                                      "*magit-process*" "*magit-commit*"
                                      ;; Emacs lisp
