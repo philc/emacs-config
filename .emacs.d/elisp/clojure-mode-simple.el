@@ -23,27 +23,26 @@
   (setq comment-add 0))
 
 (defun remove-junk-from-inf-clojure-output (output-str)
-  (-?>> output-str
-       s-trim
-       (replace-regexp-in-string inf-clojure-prompt "")
-       (replace-regexp-in-string "#_=>" "") ; Remove sub-prompts.
-       s-trim))
+  "Strips nested prompt symbols and the vast amounts of white space that inf-clojure is returning back."
+  (let ((str (-?>> output-str
+                   s-trim-left
+                   (replace-regexp-in-string inf-clojure-prompt "")
+                   (replace-regexp-in-string "#_=>" "")
+                   s-trim-left))) ; Remove sub-prompts.
+    (if (string= "" (s-trim str))
+        ""
+      str)))
 
-;; Overrided the inf-clojure-preoutput-filter defined in inf-clojure.
+;; This redefines the inf-clojure-preoutput-filter defined in inf-clojure.
 (defun inf-clojure-preoutput-filter (str)
   "Preprocess the output STR from interactive commands."
-  ;; NOTE(philc): When debugging this function, you can't write to stdout using print, or it messes up
+  ;; NOTE(philc): When debugging this function, you can't write to stdout using print, because it will mess up
   ;; the process filter... until I find a better way, my strategy for debugging this is to store intermediate
   ;; values into variables for later inspection outside of this function.
-  ;; (setq output-debug str)
   (let ((str (remove-junk-from-inf-clojure-output str)))
-    ;; Don't output anything if the command from the REPL had no output. This is often the case when
-    ;; sending statements which don't cause any output (like when we switch namespaces) before evaling
-    ;; a command).
-    (setq output str)
-    (if (not (string= str ""))
-        (concat str "\n\n")
-      "")))
+    (setq output-debug str)
+    (clj/append-to-repl-buffer str)
+    str))
 
 (add-hook 'clojure-mode-hook 'setup-clojure-buffer)
 (add-hook 'clojure-mode-hook 'inf-clojure-minor-mode)
@@ -228,29 +227,53 @@
   "Starts the REPL if it's not running; otherwise resetarts it by killing and recreating the REPL buffer."
   (interactive)
   (save-excursion
-    (clj/quit)
-    (message "Starting REPL...")
-    (clj/show-repl)
-    (clj/on-inf-clojure-buffer-created)
-    ))
+    (util/preserve-selected-window
+     (lambda ()
+       (clj/clear-repl)
+       (clj/quit)
+       (message "Starting REPL...")
+       (clj/show-repl)
+       (run-clojure inf-clojure-program)
+       ;; Hide the inf-clojure buffer which pops up.
+       (with-selected-window (get-buffer-window inf-clojure-buffer t)
+         (quit-window))))))
 
 (defun clj/show-repl ()
   "Shows the REPL in a popup window but does not switch to it."
   (interactive)
   (util/preserve-selected-window
    (lambda ()
-     (inf-clojure-switch-to-repl t))))
+     (pop-to-buffer (clj/repl-buffer))
+     (clj/scroll-to-repl-buffer-end)
+     )))
+
+(defun clj/repl-buffer ()
+  (lexical-let ((b (get-buffer-create "*clojure-simple*")))
+    (with-current-buffer b
+      (setq-local scroll-margin 1)
+    b)))
 
 (defun clj/in-repl-buffer (fn)
-  (util/preserve-selected-window
+  (with-current-buffer (clj/repl-buffer)
+    (funcall fn)))
+
+(defun clj/scroll-to-repl-buffer-end ()
+  (let ((w (get-buffer-window (clj/repl-buffer))))
+    (when w
+      (with-selected-window w
+        (View-scroll-to-buffer-end)))))
+
+(defun clj/append-to-repl-buffer (str)
+  (clj/in-repl-buffer
    (lambda ()
-     (inf-clojure-switch-to-repl nil)
-     (funcall fn))))
+     (save-excursion
+       (goto-char (point-max))
+       (insert str))))
+  (clj/scroll-to-repl-buffer-end))
 
 (defun clj/clear-repl ()
   (interactive)
-  ; inf-clojure-clear-repl-buffer assumes the REPL buffer is currently focused.
-  (clj/in-repl-buffer 'inf-clojure-clear-repl-buffer))
+  (clj/in-repl-buffer (lambda () (erase-buffer))))
 
 (defun clj/ns-of-buffer (&optional buffer)
   "Returns the namespace of the clojure file (as defined in the `(ns)` form) or nil if none could be found."
@@ -267,18 +290,22 @@
     ;; We first require the namespace before switching to it in case it hasn't yet been loaded.
     (format "(do %s (clojure.core/in-ns '%s) %s)" require-statement ns str)))
 
+(defun clj/eval-str (str)
+  (clj/append-to-repl-buffer "\n------\n") ; This marker here is to separate the output from each command.
+  (inf-clojure-eval-string str))
+
 (defun clj/eval-in-current-ns (str)
   (let ((str (if use-pprint
-                 (concat "(do (println \"\n\") (clojure.pprint/pprint " str "))")
+                 (concat "(do (clojure.pprint/pprint " str "))")
                str)))
-    (inf-clojure-eval-string (clj/wrap-sexp-in-current-ns str))))
+    (clj/eval-str (clj/wrap-sexp-in-current-ns str))))
 
 (defun clj/pretty-print-last-stack-trace ()
   (interactive)
   ;; TODO(philc): Consider embedding this helper file as a string in this .el."
   (let ((helpers-file "/Users/phil/.lein/repl_helpers.clj")) ; TODO(philc): Make this path relative/configurable.
     (-> (concat "(do (eval (read-string (slurp \"" helpers-file "\"))) (my-pst))")
-        (inf-clojure-eval-string))))
+        inf-clojure-eval-string)))
 
 (defun clj/get-last-sexp-str ()
   (buffer-substring-no-properties (save-excursion (backward-sexp) (point))
@@ -396,7 +423,7 @@ but doesn't treat single semicolons as right-hand-side comments."
   (-> (format (concat "(do (clojure.core/load-file \"%s\")"
                       "(clojure.test/run-all-tests))")
               (buffer-file-name))
-      (inf-clojure-eval-string )))
+      inf-clojure-eval-string))
 
 (defun clj/run-tests-in-ns ()
   (interactive)
