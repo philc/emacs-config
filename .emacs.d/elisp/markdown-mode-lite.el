@@ -184,13 +184,17 @@
 (defun markdown-bold ()
   "Surrounds the currently selected text or the word under the cursor in bold asterisks."
   (interactive)
+  ;; Note that a newline at the end of the selection is handled as a special case. This allows you to visually
+  ;; select a line and bold it, without havint the bold characters be placed on the next line.
   (lexical-let* ((is-region (region-active-p))
                  (word-boundary (bounds-of-space-delimitted-word))
                  (start (if is-region (region-beginning) (car word-boundary)))
                  (end (if is-region (region-end) (cdr word-boundary)))
-                 (contents (buffer-substring-no-properties start end)))
+                 (end-is-newline (string= (buffer-substring-no-properties (- end 1) end) "\n"))
+                 (contents (buffer-substring-no-properties start end))
+                 (contents (if end-is-newline (s-trim-right contents) contents)))
     (delete-region start end)
-    (insert (concat "**" contents "**"))))
+    (insert (concat "**" contents "**" (when end-is-newline "\n")))))
 
 (defun setup-markdown-mode ()
   (interactive)
