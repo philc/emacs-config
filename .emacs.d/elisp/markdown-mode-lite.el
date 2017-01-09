@@ -78,10 +78,21 @@
 (defun insert-markdown-setext-header (setext-type)
   "With the cursor focused on the header's text, insert a setext header line below that text.
    setet-string: either '==' or '--'"
-  (let* ((line-length (length (buffer-substring-no-properties (line-beginning-position) (line-end-position))))
-         (setext-str (make-string line-length (get-byte 0 setext-type))))
-    (end-of-line)
-    (insert (concat "\n" setext-str))))
+  (let* ((text-of-line (lambda ()
+                         (buffer-substring-no-properties (line-beginning-position) (line-end-position))))
+         (line-length (length (funcall text-of-line)))
+         (setext-str (make-string line-length (get-byte 0 setext-type)))
+         (next-line (save-excursion (forward-line) (funcall text-of-line))))
+    ;; If there's already a setext header, delete it, so we don't add two. It's useful to support this because
+    ;; the existing setext header may be the incorrect length (i.e. not equal to line-length).
+    (when (or (s-starts-with? "--" next-line) (s-starts-with? "==" next-line))
+      (save-excursion
+        (next-line)
+        (beginning-of-line)
+        (delete-region (- (point) 1) (line-end-position))))
+    (save-excursion
+      (end-of-line)
+      (insert (concat "\n" setext-str)))))
 
 (defun preview-markdown (beg end)
   "Pipes the buffer's contents into a script which renders the markdown as HTML and opens in a browser.
