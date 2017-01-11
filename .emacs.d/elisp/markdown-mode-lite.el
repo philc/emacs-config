@@ -62,7 +62,11 @@
 (defun markdown-create-link (beg end)
   "Converts the currently selected text into a link, using what's the clipboard as the URL."
   (interactive "r")
-  (lexical-let* ((caption (buffer-substring-no-properties beg end))
+  (lexical-let* ((is-region (region-active-p))
+                 (word-boundary (bounds-of-space-delimitted-word))
+                 (start (if is-region (region-beginning) (car word-boundary)))
+                 (end (if is-region (region-end) (cdr word-boundary)))
+                 (caption (buffer-substring-no-properties beg end))
                  ;; Note that this uses the OSX clipboard, and so this will not work on non-Mac.
                  (url (chomp (util/call-process-and-check "pbpaste" nil))))
     (delete-region beg end)
