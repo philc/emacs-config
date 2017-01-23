@@ -198,7 +198,8 @@
   (interactive)
   (lexical-let* ((w (selected-window))
                  (b (current-buffer)))
-    (while (ignore-errors (windmove-right 1)))
+    (let ((framemove-hook-into-windmove nil)) ; Don't jump across frames.
+      (while (ignore-errors (windmove-right 1))))
     (if (not (window-splittable-p (selected-window)))
         (select-window w)
       (progn
