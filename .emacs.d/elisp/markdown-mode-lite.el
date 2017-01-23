@@ -59,17 +59,17 @@
 (add-to-list 'auto-mode-alist '("\\.markdown$" . markdown-lite-mode))
 (add-to-list 'auto-mode-alist '("\\.md$" . markdown-lite-mode))
 
-(defun markdown-create-link (beg end)
+(defun markdown-create-link ()
   "Converts the currently selected text into a link, using what's the clipboard as the URL."
-  (interactive "r")
+  (interactive)
   (lexical-let* ((is-region (region-active-p))
                  (word-boundary (bounds-of-space-delimitted-word))
                  (start (if is-region (region-beginning) (car word-boundary)))
                  (end (if is-region (region-end) (cdr word-boundary)))
-                 (caption (buffer-substring-no-properties beg end))
+                 (caption (buffer-substring-no-properties start end))
                  ;; Note that this uses the OSX clipboard, and so this will not work on non-Mac.
                  (url (chomp (util/call-process-and-check "pbpaste" nil))))
-    (delete-region beg end)
+    (delete-region start end)
     (insert (concat "[" caption "](" url ")"))))
 
 (defun markdown-insert-list-item-below ()
