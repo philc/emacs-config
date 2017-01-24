@@ -258,7 +258,7 @@
     (funcall fn)))
 
 (defun clj/scroll-to-repl-buffer-end ()
-  (let ((w (get-buffer-window (clj/repl-buffer))))
+  (let ((w (get-buffer-window (clj/repl-buffer) t)))
     (when w
       (with-selected-window w
         (View-scroll-to-buffer-end)))))
