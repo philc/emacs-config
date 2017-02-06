@@ -59,19 +59,6 @@
 (add-to-list 'auto-mode-alist '("\\.markdown$" . markdown-lite-mode))
 (add-to-list 'auto-mode-alist '("\\.md$" . markdown-lite-mode))
 
-(defun markdown-create-link ()
-  "Converts the currently selected text into a link, using what's the clipboard as the URL."
-  (interactive)
-  (lexical-let* ((is-region (region-active-p))
-                 (word-boundary (bounds-of-space-delimitted-word))
-                 (start (if is-region (region-beginning) (car word-boundary)))
-                 (end (if is-region (region-end) (cdr word-boundary)))
-                 (caption (buffer-substring-no-properties start end))
-                 ;; Note that this uses the OSX clipboard, and so this will not work on non-Mac.
-                 (url (chomp (util/call-process-and-check "pbpaste" nil))))
-    (delete-region start end)
-    (insert (concat "[" caption "](" url ")"))))
-
 (defun markdown-insert-list-item-below ()
   "Inserts a new list item under the current one. markdown-insert-list-item inserts above, by default."
   (interactive)
@@ -185,20 +172,40 @@
       (setq end (point)))
     (cons start end)))
 
-(defun markdown-bold ()
-  "Surrounds the currently selected text or the word under the cursor in bold asterisks."
-  (interactive)
-  ;; Note that a newline at the end of the selection is handled as a special case. This allows you to visually
-  ;; select a line and bold it, without havint the bold characters be placed on the next line.
+(defun replace-region-with-contents (fn)
+  "Replace the currently selected region (or the current word if no region is selected) with the given
+   text. `fn` takes the currently selected text and returns the text it should be replaced with."
+  ; TODO(philc): I think a better approach is to change bounds-of-space-delimitted-word to ignore punctuation.
   (lexical-let* ((is-region (region-active-p))
                  (word-boundary (bounds-of-space-delimitted-word))
                  (start (if is-region (region-beginning) (car word-boundary)))
                  (end (if is-region (region-end) (cdr word-boundary)))
-                 (end-is-newline (string= (buffer-substring-no-properties (- end 1) end) "\n"))
+                 (last-char (buffer-substring-no-properties (- end 1) end))
+                 ;; Typical usage for e.g. markdown's bold markers is to surround the contents of the replaced
+                 ;; region before any punctuation characters, not after them. "\n" is here because it allows
+                 ;; you to visually select the whole line and surround it with text without having the
+                 ;; surrounded text appear on the next line.
+                 (special-last-char? (-contains? '("\n" ":" "." "," ";") last-char))
                  (contents (buffer-substring-no-properties start end))
-                 (contents (if end-is-newline (s-trim-right contents) contents)))
+                 (contents (if special-last-char?
+                               (->> contents (s-chop-suffix last-char) s-trim-right)
+                             contents)))
     (delete-region start end)
-    (insert (concat "**" contents "**" (when end-is-newline "\n")))))
+    (insert (concat (funcall fn contents)
+                    (when special-last-char? last-char)))))
+
+(defun markdown-create-link ()
+  "Converts the currently selected text into a link, using what's the clipboard as the URL."
+  (interactive)
+  (let ((url (chomp (util/call-process-and-check "pbpaste" nil))))
+    (replace-region-with-contents (lambda (existing-text)
+                                    (concat "[" existing-text "](" url ")")))))
+
+(defun markdown-bold ()
+  "Surrounds the currently selected text or the word under the cursor in bold asterisks."
+  (interactive)
+  (replace-region-with-contents (lambda (existing-text)
+                                  (concat "**" existing-text "**"))))
 
 (defun setup-markdown-mode ()
   (interactive)
