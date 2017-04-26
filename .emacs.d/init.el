@@ -993,10 +993,19 @@
   (interactive)
   ;; NOTE(philc): This is a script I've written to perform this transformation.
   (let* ((command "~/scripts/publishing/format_outline_into_sections.rb")
-         (input (buffer-substring-no-properties (point-min) (point-max)))
+         (input (if (region-active-p)
+                    (buffer-substring-no-properties (region-beginning) (region-end))
+                  (buffer-substring-no-properties (point-min) (point-max))))
          ;; This will throw an error if there's any issue with the mardkown->html conversion.
          (out (util/call-process-and-check "/bin/bash" input "-c" command)))
-    (util/replace-buffer-text out)))
+    (if (region-active-p)
+        (util/replace-region out)
+      (util/replace-buffer-text out))))
+
+(defun markdown-insert-date ()
+  (interactive)
+  ;; I insert this type of time string into my markdown docs often.
+  (insert (format-time-string "(%b %d %Y)"))) ; Apr 17 2017
 
 ;;
 ;; CSS

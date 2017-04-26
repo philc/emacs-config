@@ -50,6 +50,12 @@
    (delete-region (point-min) (point-max))
    (insert new-text)))
 
+(defun util/replace-region (new-text)
+  "Replaces the entire buffer with the new text."
+  (save-excursion
+   (delete-region (region-beginning) (region-end))
+   (insert new-text)))
+
 (defun util/get-current-line ()
   "Returns the text (without string properties) of the current line."
   (buffer-substring-no-properties (line-beginning-position) (line-end-position)))

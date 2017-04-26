@@ -211,6 +211,7 @@
   (interactive)
 
   (evil-define-key 'normal markdown-lite-mode-map
+    (kbd "<S-tab>") 'outline-hide-sublevels
     ";l" 'markdown-create-link
     ";re" (lambda ()
             (interactive)
