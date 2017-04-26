@@ -330,9 +330,18 @@
       (clj/correct-defn-file-metadata 'list)
       clj/eval-in-current-ns))
 
+(defun clj/strip-commented-form (s)
+  "Strips #_ from #_(exp)"
+  (if (s-starts-with? "#_" s)
+      (s-chop-prefix "#_" s)
+    s))
+
 (defun clj/eval-defun ()
   (interactive)
   (-> (thing-at-point 'defun t)
+      ;; If the user evals a reader-commented form, e.g. #_(+ 1 1), assume they want to run the form
+      ;; that's commented out, not eval a comment.
+      clj/strip-commented-form
       (clj/correct-defn-file-metadata 'defun)
       clj/eval-in-current-ns))
 
