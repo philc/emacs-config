@@ -219,9 +219,7 @@
   ;; (print inf-clojure-buffer)
   (with-current-buffer inf-clojure-buffer
     ;; (print "in buffer")
-    (evil-normal-state)
-    )
-  )
+    (evil-normal-state)))
 
 (defun clj/restart-repl ()
   "Starts the REPL if it's not running; otherwise resetarts it by killing and recreating the REPL buffer."
@@ -244,8 +242,7 @@
   (util/preserve-selected-window
    (lambda ()
      (pop-to-buffer (clj/repl-buffer))
-     (clj/scroll-to-repl-buffer-end)
-     )))
+     (clj/scroll-to-repl-buffer-end))))
 
 (defun clj/repl-buffer ()
   (lexical-let ((b (get-buffer-create "*clojure-simple*")))
