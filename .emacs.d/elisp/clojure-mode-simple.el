@@ -403,7 +403,6 @@ but doesn't treat single semicolons as right-hand-side comments."
     (select 1) (insert 1) (update 1) (where 1) (set-fields 1)         ; Korma
     (values 1) (delete 1) (upsert 1) (subselect 1)
     (clone-for 1)                                                     ; Enlive
-    (up 1) (down 1) (alter 1) (table 1) (create 1)                    ; Lobos
     (cache-get 1) (time 1)                                            ; Workbench
     (with-eligible-values 1) (when-eligible 1) (check 4)              ; Personal
     (url-of-form 1) (construct-partial 1)                             ; Personal
