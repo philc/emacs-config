@@ -22,8 +22,6 @@
 (setq special-display-buffer-names '("*Help*" "*compilation*" "COMMIT_EDITMSG" "*Messages*"
                                      ;; Clojure
                                      "*clojure-simple*" "*inf-clojure*" "*Cljfmt Errors*"
-                                     ;; Magit
-                                     "*magit-process*" "*magit-commit*"
                                      ;; Emacs lisp
                                      "*Backtrace*"
                                      ;; Coffeescript
