@@ -66,6 +66,13 @@
   (call-interactively 'markdown-insert-list-item)
   (evil-append nil))
 
+(defun markdown-create-list-item ()
+  "Takes the current visualize line and makes it into a list item."
+  (interactive)
+  (save-excursion
+    (beginning-of-line)
+    (insert "* ")))
+
 (defun insert-markdown-setext-header (setext-type)
   "With the cursor focused on the header's text, insert a setext header line below that text.
    setet-string: either '==' or '--'"
@@ -254,6 +261,9 @@
             (kbd "M-b") 'markdown-bold
             (kbd "C-S-K") 'markdown-move-list-item-up
             (kbd "C-S-J") 'markdown-move-list-item-down
+            ;; Note for this C-S-I keybinding to work, you must (define-key input-decode-map [?\C-i] [C-i])
+            ;; https://emacs.stackexchange.com/a/221
+            (kbd "C-S-I") 'markdown-create-list-item
             ;; M-return creates a new todo item and enters insert mode.
             (kbd "<C-return>") 'markdown-insert-list-item-below))
         '(normal insert)))
