@@ -98,11 +98,11 @@
 
 (defun util/preserve-selected-window (f)
   "Runs the given function and then restores focus to the original window. Useful when you want to invoke
-   a function (like showing documentation) but desire to keep your current buffer focused."
+   a function (like showing documentation) but desire to keep your current window focused."
   (lexical-let* ((f f)
                  (original-window (selected-window))
                  (result (funcall f)))
-    (select-frame-set-input-focus (window-frame original-window))
+    (select-frame-set-input-focus (window-frame original-window) t)
     (select-window original-window t)
     result))
 
