@@ -716,7 +716,7 @@
   (view-echo-area-messages)
   (util/preserve-selected-window
    (lambda ()
-     (select-window (get-buffer-window "*Messages*"))
+     (select-window (get-buffer-window "*Messages*" t))
      (goto-char (point-max)))))
 
 (defun erase-messages-buffer ()
@@ -724,7 +724,7 @@
   (interactive)
   (util/preserve-selected-window
    (lambda ()
-     (select-window (get-buffer-window "*Messages*"))
+     (select-window (get-buffer-window "*Messages*" t) t)
      ;; The *Messages* buffer is readonly.
      (read-only-mode -1)
      (erase-buffer)
