@@ -187,6 +187,10 @@
                 (untabify (point-min) (point-max)))
             nil))
 
+;; Allow <C-i> to be bindable as keybinding. In terminal's, C-i is translated to Tab, and that's how it works
+;; in Emacs. This workaround came from https://emacs.stackexchange.com/a/221.
+(define-key input-decode-map [?\C-i] [C-i])
+
 (defun backward-delete-word ()
   "Deletes the word behind the cursor, and does not yank the contents to the clipboard."
   ; This implementation is based on backward-kill-word.
