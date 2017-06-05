@@ -65,13 +65,13 @@
    showing in some window, do nothing. If there's another ephemeral buffer already showing in a window,
    show this new one on top of that one."
   ;; NOTE(philc): Be careful about invoking `print` statements in this function when debugging it. For some
-  ;; reason it interfaces with the window switching behavior.
+  ;; reason it interferes with Emacs' window switching behavior.
   (let* ((original-window (selected-window))
          (window-showing-buffer (get-buffer-window buffer show-ephemeral-buffer-in-other-frames))
          (ephemeral-window (first (get-ephemeral-windows)))
          (should-create-new-window (and (not window-showing-buffer)
                                         (not ephemeral-window)
-                                        (one-window-p)))
+                                        (save-excursion (switch-to-lower-right) (one-window-p))))
          (window (or window-showing-buffer
                      ephemeral-window
                      (if should-create-new-window
@@ -187,9 +187,20 @@
          (setq i (+ i 1)))
        i))))
 
+(defun while-window-changes (f)
+  "Run the given function until the selected window stops changing after each invocation. This is useful
+   because the return value of `windmove-right` is not reliable when combined with framemove. It can return
+   false even though the selected window was successfully changed."
+  ;; TODO(philc): I think a better approach with less quirks is to remove framemove and to provide advice to
+  ;; windmove-* myself.
+  (lexical-let ((window nil))
+    (while (not (eq window (selected-window)))
+      (setq window (selected-window))
+      (funcall f))))
+
 (defun switch-to-lower-right ()
-  (while (ignore-errors (windmove-right 1)))
-  (while (ignore-errors (windmove-down 1))))
+  (while-window-changes (lambda () (ignore-errors (windmove-right 1))))
+  (while-window-changes (lambda () (ignore-errors (windmove-down 1)))))
 
 (defun create-new-column ()
   "Creates a new column in my window layout by splitting the rightmost window and rebalancing windows."
