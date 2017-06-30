@@ -92,13 +92,15 @@
 (defun set-env-vars-from-shell ()
   "This fetches a list of env vars exported in the interactive shell, and sets them as env vars within Emacs
    so that subshells run from Emacs have the same environment vars as if they were executed from a shell."
-  ;; [Phil] Doing this is necessary because if you launch Emacs.app on OSX not from a terminal, Emacs not have
-  ;; the same environment as my user shell. I have many env vars (e.g. Ansible's env) which are critical for
-  ;; executing my REPLs from within Emacs.
-  (let ((shell "zsh") ;; NOTE(philc): Change to your desired shell. You could also use the $SHELL env var.
-        (env-vars (->> (util/call-process-and-check shell nil "-ic" "env")
-                       (s-split "\n")
-                       (-map (lambda (line) (s-split "=" line 1))))))
+  ;; NOTE(philc): Doing this is necessary because if you launch Emacs.app on OSX not from a terminal, Emacs
+  ;; not have the same environment as my user shell. I have many env vars (e.g. Ansible's env) which are
+  ;; critical for executing my REPLs from within Emacs.
+  (let* ((shell "zsh") ;; NOTE(philc): Change to your desired shell. You could also use the $SHELL env var.
+         ;; NOTE(philc): Starting an interactive shell "-i" takes 1s on my machine, so this delays the startup
+         ;; time of Emacs by that much.
+         (env-vars (->> (util/call-process-and-check shell nil "-ic" "env")
+                        (s-split "\n")
+                        (-map (lambda (line) (s-split "=" line 1))))))
     (-each env-vars
       (lambda (pair)
         (when pair (setenv (first pair) (second pair)))))))
