@@ -74,6 +74,7 @@
 ;; General settings
 ;;
 (require 'cl)
+(require 's)
 (add-to-list 'load-path "~/.emacs.d/elisp")
 (require 'lisp-utils)
 (require 'emacs-utils)
