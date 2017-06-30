@@ -1004,6 +1004,16 @@
 ;;
 (require 'markdown-mode-lite)
 
+(defun replace-region-with-command-output (command-string)
+  (let* ((input (if (region-active-p)
+                    (buffer-substring-no-properties (region-beginning) (region-end))
+                  (buffer-substring-no-properties (point-min) (point-max))))
+         ;; This will throw an error if there's any issue with the mardkown->html conversion.
+         (out (util/call-process-and-check "/bin/bash" input "-c" command-string)))
+    (if (region-active-p)
+        (util/replace-region out)
+      (util/replace-buffer-text out))))
+
 (defun markdown-format-outline-into-sections ()
   "In a document formatted as an outline of nested lists, convert the top-level list items into section
    headers. When writing a doc, it's nicer to organize it as one big list/outline. But when formatting that
@@ -1011,20 +1021,20 @@
    clear sections."
   (interactive)
   ;; NOTE(philc): This is a script I've written to perform this transformation.
-  (let* ((command "~/scripts/publishing/format_outline_into_sections.rb")
-         (input (if (region-active-p)
-                    (buffer-substring-no-properties (region-beginning) (region-end))
-                  (buffer-substring-no-properties (point-min) (point-max))))
-         ;; This will throw an error if there's any issue with the mardkown->html conversion.
-         (out (util/call-process-and-check "/bin/bash" input "-c" command)))
-    (if (region-active-p)
-        (util/replace-region out)
-      (util/replace-buffer-text out))))
+  (replace-region-with-command-output "~/scripts/publishing/format_outline_into_sections.rb"))
 
 (defun markdown-insert-date ()
   (interactive)
   ;; I insert this type of time string into my markdown docs often.
   (insert (format-time-string "(%b %d %Y)"))) ; Apr 17 2017
+
+(defun swap-female-pronouns ()
+  (interactive)
+  (replace-region-with-command-output "~/scripts/publishing/swap_pronouns.rb female"))
+
+(defun swap-male-pronouns ()
+  (interactive)
+  (replace-region-with-command-output "~/scripts/publishing/swap_pronouns.rb male"))
 
 ;;
 ;; CSS
