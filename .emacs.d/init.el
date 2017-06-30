@@ -82,6 +82,10 @@
 ;; Based on my anecdotal observations, this reduces the amount of display flicker during Emacs startup.
 (setq redisplay-dont-pause t)
 
+;; This allows Emacs to occupy the full screen width and height, so that nothing below it (e.g. the desktop)
+;; is visible. The default behavior in Emacs is to allow only resizing by whole character-columns and rows.
+(setq frame-resize-pixelwise t)
+
 ;; Turn off graphical toolbars.
 (if (display-graphic-p) (menu-bar-mode 1) (menu-bar-mode -1))
 (when (and (fboundp 'tool-bar-mode) tool-bar-mode) (tool-bar-mode -1))
