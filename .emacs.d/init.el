@@ -89,16 +89,31 @@
 ;; Make it so that the scratch buffer uses markdown. By default it uses Emacs Lisp mode.
 (setq initial-major-mode 'markdown-lite-mode)
 
-;; Use the same PATH variable as your shell does. From http://clojure-doc.org/articles/tutorials/emacs.html
-;; NOTE(philc): If you use OSX and you use zsh in your terminals, OSX may be configured to use bash. I haven't
-;; found a good workaround so I hardcode my shell (zsh) here.
+(defun set-env-vars-from-shell ()
+  "This fetches a list of env vars exported in the interactive shell, and sets them as env vars within Emacs
+   so that subshells run from Emacs have the same environment vars as if they were executed from a shell."
+  ;; [Phil] Doing this is necessary because if you launch Emacs.app on OSX not from a terminal, Emacs not have
+  ;; the same environment as my user shell. I have many env vars (e.g. Ansible's env) which are critical for
+  ;; executing my REPLs from within Emacs.
+  (let ((shell "zsh") ;; NOTE(philc): Change to your desired shell. You could also use the $SHELL env var.
+        (env-vars (->> (util/call-process-and-check shell nil "-ic" "env")
+                       (s-split "\n")
+                       (-map (lambda (line) (s-split "=" line 1))))))
+    (-each env-vars
+      (lambda (pair)
+        (when pair (setenv (first pair) (second pair)))))))
+
 (defun set-exec-path-from-shell-PATH ()
+  "Use the same PATH within Emacs as your shell."
+  ;; From http://clojure-doc.org/articles/tutorials/emacs.html
   (let* ((shell "zsh") ;; NOTE(philc): Change to your desired shell. You could also use the $SHELL env var.
          (path-from-shell (shell-command-to-string (concat shell " -i -c 'echo $PATH'"))))
     (setenv "PATH" path-from-shell)
     (setq exec-path (split-string path-from-shell path-separator))))
 
-(when window-system (set-exec-path-from-shell-PATH))
+(when window-system
+  (set-exec-path-from-shell-PATH)
+  (set-env-vars-from-shell))
 
 (global-auto-revert-mode 1) ; Reload an open file from disk if it is changed outside of Emacs.
 
