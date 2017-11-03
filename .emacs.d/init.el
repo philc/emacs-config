@@ -35,6 +35,7 @@
 (defvar my-packages '(ace-jump-mode ; Jump to any text on screen in a few keystrokes. Like Vim's EasyMotion.
                       ag ; Silver searcher integration for Emacs
                       autopair ; Insert matching delimiters, e.g. insert closing braces.
+                      browse-at-remote ; Jump to the Github page for a given line in a git-tracked file.
                       clojure-mode ; For editing Clojure files.
                       coffee-mode ; For syntax highlighting coffeescript.
                       dash ; Dash provides modern functions for working with lists in Emacs Lisp.
