@@ -1031,6 +1031,14 @@
   ;; NOTE(philc): This is a script I've written to perform this transformation.
   (replace-region-with-command-output "~/scripts/publishing/format_outline_into_sections.rb"))
 
+(defun markdown-convert-to-org ()
+  (interactive)
+  (replace-region-with-command-output "~/scripts/publishing/convert_markdown_to_org.rb"))
+
+(defun org-convert-to-markdown()
+  (interactive)
+  (replace-region-with-command-output "~/scripts/publishing/convert_org_to_markdown.rb"))
+
 (defun markdown-insert-date ()
   (interactive)
   ;; I insert this type of time string into my markdown docs often.
