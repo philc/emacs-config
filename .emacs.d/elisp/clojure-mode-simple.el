@@ -299,10 +299,10 @@
 
 (defun clj/pretty-print-last-stack-trace ()
   (interactive)
-  ;; TODO(philc): Consider embedding this helper file as a string in this .el."
-  (let ((helpers-file "/Users/phil/.lein/repl_helpers.clj")) ; TODO(philc): Make this path relative/configurable.
+  ;; TODO(philc): Make this path relative/configurable.
+  (let ((helpers-file "/Users/phil/.emacs.d/elisp/clojure_repl_helpers.clj"))
     (-> (concat "(do (eval (read-string (slurp \"" helpers-file "\"))) (my-pst))")
-        inf-clojure-eval-string)))
+        clj/eval-str)))
 
 (defun clj/get-last-sexp-str ()
   (buffer-substring-no-properties (save-excursion (backward-sexp) (point))
