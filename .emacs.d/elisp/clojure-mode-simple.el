@@ -171,30 +171,32 @@
 (defun clj/remove-surrounding-quotes (s)
   (->> s (s-chop-prefix "\"") (s-chop-suffix "\"")))
 
-(defun clj/eval-and-capture-output (command)
+(defun clj/eval-and-capture-output (command &optional silence)
+  "This will run the command, progressively output its stdout to our clj buffer as it comes in, and return the
+   full output string once the command has finished executing."
   (interactive)
-  (message "Evaluating:")
-  (message command)
   ;; Taken from inf-clojure-show-arglist.
   (let* ((command (concat command "\n"))
          (proc (inf-clojure-proc))
-         (comint-filt (process-filter proc)))
-    (set-process-filter proc (lambda (proc string) (setq kept (concat kept string))))
+         (comint-filt (process-filter proc))
+         (kept "")
+         (last-string ""))
+    (set-process-filter proc (lambda (proc string)
+                               (setq last-string string)
+                               (let ((s (remove-junk-from-inf-clojure-output string)))
+                                 (when (not silence)
+                                   (clj/append-to-repl-buffer s))
+                                 (setq kept (concat kept s)))))
     (let* ((result (unwind-protect
-                       (let ((kept ""))
+                       (progn
                          (process-send-string proc command)
-                         (while (and (not (string-match inf-clojure-prompt kept))
-                                     (accept-process-output proc 2)))
-                         ;; TODO(philc): I couldn't get this code working.
-                         ;; some nasty #_=> garbage appears in the output
-                         ;; (setq result (and (string-match "(.+)" kept) (match-string 0 kept))))
+                         (while (and (not (string-match inf-clojure-prompt last-string))
+                                     (accept-process-output proc 0.5)))
                          kept)
                      (set-process-filter proc comint-filt)))
            ;; The last line of output is a REPL prompt. Remove it.
-           (result (clj/chomp-last-line result)))
-
-      (when result
-        (message "%s" result)))))
+           (result (clj/chomp-last-line result))))
+    kept))
 
 (defun clj/quit ()
   (interactive)
@@ -204,7 +206,7 @@
 (defun clj/load-file (file-name)
   "Load a Clojure file FILE-NAME into the inferior Clojure process."
   (comint-send-string (inf-clojure-proc)
-                      (format inf-clojure-load-command file-name)))
+                      (format "(clojure.core/load-file \"%s\")\n" file-name)))
 
 ;; TODO(philc): Different from eval-buffer -- doesn't eval each statement individually and send the output to the REPL.
 (defun clj/load-buffer ()
