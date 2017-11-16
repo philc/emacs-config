@@ -272,11 +272,6 @@
 ;; Exit insert mode when unfocusing Emacs, so when we return to Emacs, we're in normal mode.
 (add-hook 'focus-out-hook 'switch-to-evil-normal-state-on-focus-out)
 
-; This is fired whenever the buffer list is updated, which is a reasonably robust way to detect that the
-; window config has changed and the current buffer should be saved.
-(defadvice switch-to-buffer (before save-buffer-now activate)
-  (util/save-buffer-if-dirty))
-
 ;;
 ;; Evil mode -- Vim keybindings for Emacs.
 ;;
