@@ -369,6 +369,32 @@ but doesn't treat single semicolons as right-hand-side comments."
     (if (> (- (point-max) pos) (point))
         (goto-char (- (point-max) pos)))))
 
+(defun move-to-start-of-word ()
+  (let ((word-boundary (bounds-of-space-delimitted-word)))
+    (if (not (= (car word-boundary) (cdr word-boundary)))
+        (goto-char (car word-boundary)))))
+
+;; TODO(philc): These commands need work. I think paredit's model of expanding/contracting the sexp under the
+;; cursor may be better.
+
+(defun slurp-into-prev-sexp ()
+  (interactive)
+  (move-to-start-of-word)
+  (util/preserve-line-and-column
+   (lambda ()
+     (sp-backward-sexp)
+     (forward-char)
+     (sp-forward-slurp-sexp))))
+
+(defun slurp-into-next-sexp ()
+  (interactive)
+  (move-to-start-of-word)
+  (util/preserve-line-and-column
+   (lambda ()
+     (sp-backward-sexp)
+     (forward-char)
+     (sp-forward-slurp-sexp))))
+
 ; (evil-define-key 'normal clojure-mode-map "gb" 'cider-jump-back)
 (evil-define-key 'normal clojure-mode-map "K" 'clj/show-doc-for-symbol-at-point)
 (evil-define-key 'normal clojure-mode-map "gf" 'clj/jump-to-var)
@@ -381,6 +407,7 @@ but doesn't treat single semicolons as right-hand-side comments."
 (evil-define-key 'normal clojure-mode-map (kbd "C-S-L") 'shift-sexp-forward)
 (evil-define-key 'normal clojure-mode-map (kbd "C-S-K") 'shift-sexp-backward)
 (evil-define-key 'normal clojure-mode-map (kbd "C-S-J") 'shift-sexp-forward)
+(evil-define-key 'normal clojure-mode-map (kbd "C-A-h") 'slurp-into-prev-sexp)
 
 (evil-leader/set-key-for-mode 'clojure-mode
   ;; "eap" (lambda () (interactive) (with-nrepl-connection-of-current-buffer 'cider-eval-paragraph))
