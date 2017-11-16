@@ -1458,6 +1458,30 @@
   (kbd "u") 'package-menu-mark-unmark
   (kbd "i") 'package-menu-mark-install)
 
+
+;;
+;; Lua mode
+;;
+
+(setq lua-indent-level 2) ; The default is 3 for some reason.
+
+;; I'm using this Perl script to indent lua code because the default indenter for Emacs is really strange. See
+;; discussion about it here: https://stackoverflow.com/q/4643206
+;; The formatter script comes from here:
+;; http://notebook.kulchenko.com/programming/lua-beautifier-in-55-lines-of-perl
+(defun indent-lua-buffer ()
+  "Pipe the current buffer into `html-beautify`, and replace the current buffer's contents."
+  (interactive)
+  ;; I don't know why, but save-excursion does not maintain the cursor position.
+  (let ((p (point))
+        (scroll-y (window-start)))
+    (call-process-region (point-min) (point-max) "lua_indent.pl" t (buffer-name) t)
+    (set-window-start (selected-window) scroll-y)
+    (goto-char p)))
+
+(evil-leader/set-key-for-mode 'lua-mode
+  "i" 'indent-lua-buffer)
+
 ;;
 ;; Misc
 ;;
