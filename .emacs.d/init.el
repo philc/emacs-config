@@ -92,6 +92,12 @@
 (when (and (fboundp 'tool-bar-mode) tool-bar-mode) (tool-bar-mode -1))
 (when (and (fboundp 'scroll-bar-mode) scroll-bar-mode) (scroll-bar-mode -1))
 
+
+;; Make it possible to open files via the command line in this Emacs using `emacsclient`.
+(require 'server)
+(or (server-running-p)
+    (server-start))
+
 ;; Make it so that the scratch buffer uses markdown. By default it uses Emacs Lisp mode.
 (setq initial-major-mode 'markdown-lite-mode)
 
@@ -1406,7 +1412,8 @@
 ;;
 (require 'ag)
 
-;; Use Projectile to determine what the current project is when invoking ag-project.
+;; Use Projectile to determine what the current project is when invoking ag-project. Normally, AG will simply
+;; find the surrounding .git directory and use that as the project.
 (setq ag-project-root-function (lambda (f) (projectile-project-root)))
 
 ;; Note that ag mode configures itself to start in Evil's "motion" state.
