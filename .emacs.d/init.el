@@ -725,6 +725,7 @@
              (describe-function (intern (current-word))))))))
 
 (evil-leader/set-key-for-mode 'emacs-lisp-mode "SPC" 'evil-ext/fill-inside-string)
+(evil-set-initial-state 'debugger-mode 'normal) ; Elisp debugger mode, used by the *backtrace* buffer.
 
 (defun current-sexp ()
   "Returns the text content of the sexp list around the cursor."
