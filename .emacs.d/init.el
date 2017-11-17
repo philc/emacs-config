@@ -343,7 +343,7 @@
   "h" 'help
   "b" 'ido-switch-buffer
   "f" 'projectile-find-file
-  "p" 'escreen-tab-switcher
+  "T" 'escreen-tab-switcher ; "T" for tab (I use lowercase "t" for shortcuts related to tests)
   "SPC" 'evil-ext/fill-inside-paragraph ; Shortcut for Vim's gqip
   "i" 'evil-ext/indent-inside-paragraph ; Shortcut to Vim's =ip
   "d" 'projectile-dired
