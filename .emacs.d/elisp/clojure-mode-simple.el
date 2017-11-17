@@ -34,8 +34,9 @@
       str)))
 
 ;; This redefines the inf-clojure-preoutput-filter defined in inf-clojure.
+;; TODO(philc): Can I get rid of this?
 (defun inf-clojure-preoutput-filter (str)
-  "Preprocess the output STR from interactive commands."
+  "Preprocess the output (`str`) from the clojure process, removing whitespace etc.."
   ;; NOTE(philc): When debugging this function, you can't write to stdout using print, because it will mess up
   ;; the process filter... until I find a better way, my strategy for debugging this is to store intermediate
   ;; values into variables for later inspection outside of this function.
@@ -205,8 +206,7 @@
 
 (defun clj/load-file (file-name)
   "Load a Clojure file FILE-NAME into the inferior Clojure process."
-  (comint-send-string (inf-clojure-proc)
-                      (format "(clojure.core/load-file \"%s\")\n" file-name)))
+  (clj/eval-str (format "(clojure.core/load-file \"%s\")\n" file-name)))
 
 ;; TODO(philc): Different from eval-buffer -- doesn't eval each statement individually and send the output to the REPL.
 (defun clj/load-buffer ()
@@ -289,22 +289,66 @@
     ;; We first require the namespace before switching to it in case it hasn't yet been loaded.
     (format "(do %s (clojure.core/in-ns '%s) %s)" require-statement ns str)))
 
+(defun clj/print-separator ()
+  ;; This marker here is to separate the output from each command.
+  (clj/append-to-repl-buffer "\n------\n"))
+
 (defun clj/eval-str (str)
-  (clj/append-to-repl-buffer "\n------\n") ; This marker here is to separate the output from each command.
+  (clj/print-separator)
   (inf-clojure-eval-string str))
 
-(defun clj/eval-in-current-ns (str)
-  (let ((str (if use-pprint
-                 (concat "(do (clojure.pprint/pprint " str "))")
-               str)))
-    (clj/eval-str (clj/wrap-sexp-in-current-ns str))))
+(defun clj/wrap-sexp (str pprint wrap-ns &optional dont-record-exceptions)
+  "Wraps the given sexp with pretty printing, execution in the current file's namespace, and sets
+   the `_last-exception` var in the clojure process if this statement causes an exception.
+   - dont-record-exceptions: don't modify _last-exception as a result of evaluating `str`."
+  (when pprint
+    (setq str (concat "(do (clojure.pprint/pprint " str "))")))
+  (when wrap-ns
+    (setq str (clj/wrap-sexp-in-current-ns str)))
+  (when (not dont-record-exceptions)
+    (setq str (format "(do (intern 'user '_last-exception nil)
+                           (try %s
+                             (catch Exception e (intern 'user '_last-exception e) (throw e))))"
+                      str)))
+  str)
+
+(defun clj/wrap-with-repl-helpers-file (str)
+  ;; TODO(philc): Make this path relative/configurable.
+  (let ((helpers-file "/Users/phil/.emacs.d/elisp/clojure_repl_helpers.clj"))
+    (format "(do (eval (read-string (slurp \"%s\"))) %s)" helpers-file str)))
 
 (defun clj/pretty-print-last-stack-trace ()
   (interactive)
-  ;; TODO(philc): Make this path relative/configurable.
-  (let ((helpers-file "/Users/phil/.emacs.d/elisp/clojure_repl_helpers.clj"))
-    (-> (concat "(do (eval (read-string (slurp \"" helpers-file "\"))) (my-pst))")
-        clj/eval-str)))
+  (clj/eval-str (clj/wrap-with-repl-helpers-file "(my-pst)")))
+
+(defun clj/print-any-exceptions ()
+  "If an exception was caused by the last evaled Clojure statement, print just its backtrace."
+  (let ((exception-str (-> "user/_last-exception" (clj/eval-and-capture-output t) s-trim)))
+    (when (not (string= "nil" exception-str))
+      ;; We're omitting the message on the exception because the message (but not the stacktrace) has
+      ;; already been printed to the REPL by nREPL. It is not possible to disable this exception output
+      ;; from nREPL, to as a workaround, we just print the backtrace.
+      ;; See https://dev.clojure.org/jira/browse/CLJ-2040
+      (-> "(my-pst user/_last-exception true)" clj/wrap-with-repl-helpers-file inf-clojure-eval-string))))
+
+(defun clj/eval-in-current-ns (str)
+  (clj/print-separator)
+  (clj/eval-and-capture-output (clj/wrap-sexp str t t nil))
+  (clj/print-any-exceptions))
+
+(defun clj/load-file (file-name)
+  "Load and run a Clojure file. This uses clojure.core/load-file. This is better than evaluating the string
+   contents of a file, because load-file preserves file and line-number metadata, which makes exception
+   backtraces intelligible."
+  (-> (format "(clojure.core/load-file \"%s\")\n" file-name)
+      (clj/wrap-sexp t nil)
+      clj/eval-and-capture-output)
+  (clj/print-any-exceptions))
+
+(defun clj/load-buffer ()
+  (interactive)
+  (util/save-buffer-if-dirty)
+  (clj/load-file (buffer-file-name)))
 
 (defun clj/get-last-sexp-str ()
   (buffer-substring-no-properties (save-excursion (backward-sexp) (point))
