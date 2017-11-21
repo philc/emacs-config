@@ -119,7 +119,7 @@
 ;; able to reliably strip those from the output, but for now I'm just collapsing all clojure code snippets to
 ;; one line.
 (defun clj/snippet-get-source-file (symbol-name)
-  "Returns output of the form: /home/username/the_project/core.clj,123"
+  "Returns output of the form: /home/username/the_project/core.clj:123"
   ;; Inspiration taken from  https://github.com/clojure/clojure/blob/master/src/clj/clojure/repl.clj
   ;; Note that the file metadata for a symbol can be rooted if it's already been loaded by the REPL.
   (-> "(when-let [m (-> '%s resolve meta)]
@@ -135,9 +135,12 @@
 
 ;; TODO(philc):
 ;; * Auto-eval the NS of the current file when invoking jump-to-var and it hasn't yet been eval'd.
-(defun clj/jump-to-var ()
+(defun clj/jump-to-var (&optional symbol-name)
   (interactive)
-  (-if-let (s (-> (thing-at-point 'symbol) substring-no-properties))
+  (let ((s (or symbol-name
+               (-> (thing-at-point 'symbol) substring-no-properties))))
+    (if (not s)
+        (message "No symbol is under the cursor.")
       (let* ((output (-> (clj/snippet-get-source-file s)
                          clj/wrap-sexp-in-current-ns
                          clj/eval-and-capture-output
@@ -160,8 +163,7 @@
                     clj/buffers-before-jump)
               (find-file file))
             (goto-line line)
-            (recenter 0)))))
-    (message "No symbol is under the cursor.")))
+            (recenter 0))))))))
 
 (defun clj/jump-back ()
   (interactive)
@@ -313,15 +315,64 @@
   (interactive)
   (clj/eval-str (clj/wrap-with-repl-helpers-file "(my-pst)")))
 
+(setq clj/backtrace-cursor-linenum nil)
+
 (defun clj/print-any-exceptions ()
   "If an exception was caused by the last evaled Clojure statement, print just its backtrace."
   (let ((exception-str (-> "user/_last-exception" (clj/eval-and-capture-output t) s-trim)))
     (when (not (string= "nil" exception-str))
+      ;; Reset the exception navigation cursor.
+      (setq clj/backtrace-cursor-linenum nil)
       ;; We're omitting the message on the exception because the message (but not the stacktrace) has
       ;; already been printed to the REPL by nREPL. It is not possible to disable this exception output
       ;; from nREPL, to as a workaround, we just print the backtrace.
       ;; See https://dev.clojure.org/jira/browse/CLJ-2040
       (-> "(my-pst user/_last-exception true)" clj/wrap-with-repl-helpers-file inf-clojure-eval-string))))
+
+(defun clj/file-of-backtrace-line (line)
+  "`line` should be of the form:
+    'the-ns.class/the-fn-name (the-file-name.clj:213)'.
+    Returns a list containing file name and line number."
+  (string-match ".+ (\\(.+\\))" line)
+  (let* ((tuple-str (match-string 1 line))
+         (tuple (s-split ":" tuple-str)))
+    (list (first tuple) (string-to-number (second tuple)))))
+
+(defun clj/update-backtrace-cursor (direction)
+  (let* ((exception-str (-> "(my-pst user/_last-exception true)"
+                            clj/wrap-with-repl-helpers-file
+                            (clj/eval-and-capture-output t)))
+         (lines (->> exception-str
+                     s-trim
+                     (s-split "\n")
+                     (-drop-last 1) ; the last line is the string "nil"
+                     (-map 's-trim))))
+    (if (not clj/backtrace-cursor-linenum)
+        ;; Find the first line in the backtrace which corresponds to the current buffer, and start there.
+        (let* ((index (-find-index (lambda (x) (string= (buffer-name) (first (clj/file-of-backtrace-line x))))
+                                   lines)))
+          (if index
+              (setq clj/backtrace-cursor-linenum index)
+            (message "No stack frame found which corresponds to the current buffer.")))
+      (setq clj/backtrace-cursor-linenum (+ clj/backtrace-cursor-linenum direction)))
+    (let* ((line (nth clj/backtrace-cursor-linenum lines))
+           ;; This removes any non-top-level functions from the symbol name in the exception outout.
+           ;; So "the.ns/fn/inner-fn" becomes "the.ns/fn".
+           (clj-symbol (->> line (s-split " ") first (s-split "/") (-take 2) (s-join "/")))
+           (file-and-linenum (clj/file-of-backtrace-line line))
+           (linenum (second file-and-linenum)))
+      ;; Assume this is an anonymous eval form, like "ns/eval1234", which we can't easily resolve.
+      (if (s-contains? "/eval" clj-symbol)
+          (message "Jumping to anonymous top-level forms like %s isn't implemented." clj-symbol)
+        (progn
+          (clj/jump-to-var clj-symbol)
+          (goto-line linenum)
+          (recenter 0)
+          (message "Jumped to: %s:%s" (first file-and-linenum) linenum))))))
+
+(defun clj/goto-next-exception () (interactive) (clj/update-backtrace-cursor 1))
+
+(defun clj/goto-prev-exception () (interactive) (clj/update-backtrace-cursor -1))
 
 (defun clj/eval-in-current-ns (str)
   (clj/print-separator)
@@ -501,7 +552,9 @@ but doesn't treat single semicolons as right-hand-side comments."
   "ta" 'clj/run-all-tests
   "tf" 'clj/run-tests-in-ns
   "tt" 'clj/run-test-at-point
-  "SPC" 'evil-ext/fill-inside-string)
+  "SPC" 'evil-ext/fill-inside-string
+  "n" 'clj/goto-next-exception
+  "N" 'clj/goto-prev-exception)
 
 ;; Make it possible to eval any marked buffer from any window -- a clojure window need not be focused.
 (evil-leader/set-key
