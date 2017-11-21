@@ -159,22 +159,25 @@
             ;; Save which buffer we are jumping from, so clj/jump-back can take us back.
             (when (not (string= (buffer-file-name)
                                 file))
-              (push (list (current-buffer) (line-number-at-pos))
+              (push (list (current-buffer) (line-number-at-pos) (current-column))
                     clj/buffers-before-jump)
               (find-file file))
             (goto-line line)
-            (recenter 0))))))))
+            (recenter))))))))
 
 (defun clj/jump-back ()
   (interactive)
   (when (> (length clj/buffers-before-jump) 0)
     (let* ((item (pop clj/buffers-before-jump))
            (buf (nth 0 item))
-           (line (nth 1 item)))
+           (line (nth 1 item))
+           (col (nth 2 item)))
       ;; (message item)
       (set-window-buffer (selected-window) buf)
-      (goto-line line)
-      (recenter 0))))
+      (with-selected-window (selected-window)
+        (goto-line line)
+        (move-to-column col)
+        (recenter)))))
 
 (defun clj/restart-repl ()
   "Starts the REPL if it's not running; otherwise resetarts it by killing and recreating the REPL buffer."
@@ -367,7 +370,7 @@
         (progn
           (clj/jump-to-var clj-symbol)
           (goto-line linenum)
-          (recenter 0)
+          (recenter) ; Put the line in the center of the screen: for errors, you need context above & below.
           (message "Jumped to: %s:%s" (first file-and-linenum) linenum))))))
 
 (defun clj/goto-next-exception () (interactive) (clj/update-backtrace-cursor 1))
