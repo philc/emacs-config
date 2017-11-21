@@ -143,7 +143,7 @@
         (message "No symbol is under the cursor.")
       (let* ((output (-> (clj/snippet-get-source-file s)
                          clj/wrap-sexp-in-current-ns
-                         clj/eval-and-capture-output
+                         (clj/eval-and-capture-output t)
                          clj/remove-surrounding-quotes)))
         ;; `output` is of the form "/home/USER/shared_lib/core.clj:123"
         ;; If the function is in a JAR, output will be e.g. file:/home/USER/the-jar.jar!/path/in/jar
