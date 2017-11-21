@@ -15,6 +15,10 @@
 ;; Use clojure.pprint when printing data structures to the REPL.
 (setq use-pprint t)
 
+;;
+;; Buffer setup
+;;
+
 (defun setup-clojure-buffer ()
   ;; Count hyphens, etc. as word characters in lisps
   (modify-syntax-entry ?- "w" clojure-mode-syntax-table)
@@ -33,6 +37,14 @@
         ""
       str)))
 
+(defun init-repl-settings ()
+  "Customize the way the REPL buffer works."
+  ;; Normally we maintain a margin of N lines between the cursor and the edge of the window, but in the REPL
+  ;; buffer, the cursor should always be at the bottom of the window.
+  (setq-local scroll-margin 0)
+  (setq-local scroll-conservatively 0)
+  (setq-local scroll-step 1))
+
 ;; This redefines the inf-clojure-preoutput-filter defined in inf-clojure.
 ;; TODO(philc): Can I get rid of this?
 (defun inf-clojure-preoutput-filter (str)
@@ -45,18 +57,21 @@
     (clj/append-to-repl-buffer str)
     str))
 
+(defun init-comint-mode-settings ()
+  (define-key comint-mode-map (kbd "C-d") nil)
+  ;; Comint mode uses a local keymap which overrides Evil's keymaps.
+  ;; See here for the bindings it creates: http://www.cs.indiana.edu/pub/scheme-repository/utl/comint.el
+  (local-set-key (kbd "C-d") 'evil-scroll-down))
+
 (add-hook 'clojure-mode-hook 'setup-clojure-buffer)
 (add-hook 'clojure-mode-hook 'inf-clojure-minor-mode)
-
-(defun init-repl-settings ()
-  "Customize the way the REPL buffer works."
-  ;; Normally we maintain a margin of N lines between the cursor and the edge of the window, but in the REPL
-  ;; buffer, the cursor should always be at the bottom of the window.
-  (setq-local scroll-margin 0)
-  (setq-local scroll-conservatively 0)
-  (setq-local scroll-step 1))
-
 (add-hook 'inf-clojure-mode-hook 'init-repl-settings)
+(add-hook 'comint-mode-hook 'init-comint-mode-settings)
+
+;; Don't ask confirmation for closing any open REPL subprocesses when exiting Emacs.
+;; http://stackoverflow.com/q/2706527/46237
+(add-hook 'comint-exec-hook
+          (lambda () (set-process-query-on-exit-flag (get-buffer-process (current-buffer)) nil)))
 
 ; "A saved function to execute later. Saved via `mark-current-buffer`"
 (setq marked-function nil)
@@ -78,19 +93,6 @@
       (message "Executing mark.")
       (funcall marked-function))))
 
-;; Don't ask confirmation for closing any open REPL subprocesses when exiting Emacs.
-;; http://stackoverflow.com/q/2706527/46237
-(add-hook 'comint-exec-hook
-          (lambda () (set-process-query-on-exit-flag (get-buffer-process (current-buffer)) nil)))
-
-(defun init-comint-mode-settings ()
-  (define-key comint-mode-map (kbd "C-d") nil)
-  ;; Comint mode uses a local keymap which overrides Evil's keymaps.
-  ;; See here for the bindings it creates: http://www.cs.indiana.edu/pub/scheme-repository/utl/comint.el
-  (local-set-key (kbd "C-d") 'evil-scroll-down))
-
-(add-hook 'comint-mode-hook 'init-comint-mode-settings)
-
 (defun clj/show-doc-for-symbol-at-point ()
   (interactive)
   (-if-let (s (thing-at-point 'symbol))
@@ -105,6 +107,12 @@
              (concat "http://www.google.com/search?btnI=Im+Feeling+Lucky&q=site:clojuredocs.org+" s)))
         (util/open-in-browser clojure-docs-url))
     (message "There's no symbol under the cursor to look up documentation for.")))
+
+;;
+;; General commands
+;;
+
+(defvar clj/buffers-before-jump '())
 
 ;; NOTE(philc): in all of our snippets, we strip newlines from all commands we send to the REPL, because this
 ;; makes the output coming back from the REPL process have multiple #_=> prompts embedded in it. We may be
@@ -122,7 +130,8 @@
       s-collapse-whitespace
       (format symbol-name)))
 
-(defvar clj/buffers-before-jump '())
+(defun clj/remove-surrounding-quotes (s)
+  (->> s (s-chop-prefix "\"") (s-chop-suffix "\"")))
 
 ;; TODO(philc):
 ;; * Auto-eval the NS of the current file when invoking jump-to-var and it hasn't yet been eval'd.
@@ -165,12 +174,60 @@
       (goto-line line)
       (recenter 0))))
 
+(defun clj/restart-repl ()
+  "Starts the REPL if it's not running; otherwise resetarts it by killing and recreating the REPL buffer."
+  (interactive)
+  (save-excursion
+    (util/preserve-selected-window
+     (lambda ()
+       (clj/clear-repl)
+       (clj/quit)
+       (message "Starting REPL...")
+       (clj/show-repl)
+       (run-clojure inf-clojure-program)
+       ;; Hide the inf-clojure buffer which pops up.
+       (with-selected-window (get-buffer-window inf-clojure-buffer t)
+         (quit-window))))))
+
+(defun clj/quit ()
+  (interactive)
+  (-?> (ignore-errors (inf-clojure-proc)) delete-process)
+  (-?> (get-buffer "*inf-clojure*") kill-buffer))
+
+(defun clj/scroll-to-repl-buffer-end ()
+  (let ((w (get-buffer-window (clj/repl-buffer) t)))
+    (when w
+      (with-selected-window w
+        (View-scroll-to-buffer-end)))))
+
+(defun clj/append-to-repl-buffer (str)
+  (clj/in-repl-buffer
+   (lambda ()
+     (save-excursion
+       (goto-char (point-max))
+       (insert str))))
+  (clj/scroll-to-repl-buffer-end))
+
+(defun clj/show-repl ()
+  "Shows the REPL in a popup window but does not switch to it."
+  (interactive)
+  (util/preserve-selected-window
+   (lambda ()
+     (pop-to-buffer (clj/repl-buffer))
+     (clj/scroll-to-repl-buffer-end))))
+
+(defun clj/clear-repl ()
+  (interactive)
+  (clj/in-repl-buffer (lambda () (erase-buffer))))
+
+
+;;
+;; Evaluation functions
+;;
+
 (defun clj/chomp-last-line (s)
   "Removes the last line from the string s."
   (-?>> s s-lines (-drop-last 1) (s-join "\n")))
-
-(defun clj/remove-surrounding-quotes (s)
-  (->> s (s-chop-prefix "\"") (s-chop-suffix "\"")))
 
 (defun clj/eval-and-capture-output (command &optional silence)
   "This will run the command, progressively output its stdout to our clj buffer as it comes in, and return the
@@ -199,11 +256,6 @@
            (result (clj/chomp-last-line result))))
     kept))
 
-(defun clj/quit ()
-  (interactive)
-  (-?> (ignore-errors (inf-clojure-proc)) delete-process)
-  (-?> (get-buffer "*inf-clojure*") kill-buffer))
-
 (defun clj/load-file (file-name)
   "Load a Clojure file FILE-NAME into the inferior Clojure process."
   (clj/eval-str (format "(clojure.core/load-file \"%s\")\n" file-name)))
@@ -213,66 +265,6 @@
   (interactive)
   (util/save-buffer-if-dirty)
   (clj/load-file (buffer-file-name)))
-
-(defun clj/on-inf-clojure-buffer-created ()
-  "Perform any setup you desire to newly created inf-clojure buffers. This exists because the inf clojure
-   buffer has no major mode, so it's hard to customize."
-  ;; (print "setting up")
-  ;; (print inf-clojure-buffer)
-  (with-current-buffer inf-clojure-buffer
-    ;; (print "in buffer")
-    (evil-normal-state)))
-
-(defun clj/restart-repl ()
-  "Starts the REPL if it's not running; otherwise resetarts it by killing and recreating the REPL buffer."
-  (interactive)
-  (save-excursion
-    (util/preserve-selected-window
-     (lambda ()
-       (clj/clear-repl)
-       (clj/quit)
-       (message "Starting REPL...")
-       (clj/show-repl)
-       (run-clojure inf-clojure-program)
-       ;; Hide the inf-clojure buffer which pops up.
-       (with-selected-window (get-buffer-window inf-clojure-buffer t)
-         (quit-window))))))
-
-(defun clj/show-repl ()
-  "Shows the REPL in a popup window but does not switch to it."
-  (interactive)
-  (util/preserve-selected-window
-   (lambda ()
-     (pop-to-buffer (clj/repl-buffer))
-     (clj/scroll-to-repl-buffer-end))))
-
-(defun clj/repl-buffer ()
-  (lexical-let ((b (get-buffer-create "*clojure-simple*")))
-    (with-current-buffer b
-      (setq-local scroll-margin 1)
-    b)))
-
-(defun clj/in-repl-buffer (fn)
-  (with-current-buffer (clj/repl-buffer)
-    (funcall fn)))
-
-(defun clj/scroll-to-repl-buffer-end ()
-  (let ((w (get-buffer-window (clj/repl-buffer) t)))
-    (when w
-      (with-selected-window w
-        (View-scroll-to-buffer-end)))))
-
-(defun clj/append-to-repl-buffer (str)
-  (clj/in-repl-buffer
-   (lambda ()
-     (save-excursion
-       (goto-char (point-max))
-       (insert str))))
-  (clj/scroll-to-repl-buffer-end))
-
-(defun clj/clear-repl ()
-  (interactive)
-  (clj/in-repl-buffer (lambda () (erase-buffer))))
 
 (defun clj/ns-of-buffer (&optional buffer)
   "Returns the namespace of the clojure file (as defined in the `(ns)` form) or nil if none could be found."
@@ -340,6 +332,7 @@
   "Load and run a Clojure file. This uses clojure.core/load-file. This is better than evaluating the string
    contents of a file, because load-file preserves file and line-number metadata, which makes exception
    backtraces intelligible."
+  (clj/print-separator)
   (-> (format "(clojure.core/load-file \"%s\")\n" file-name)
       (clj/wrap-sexp t nil)
       clj/eval-and-capture-output)
@@ -391,6 +384,29 @@
       (clj/correct-defn-file-metadata 'defun)
       clj/eval-in-current-ns))
 
+(defun clj/on-inf-clojure-buffer-created ()
+  "Perform any setup you desire to newly created inf-clojure buffers. This exists because the inf clojure
+   buffer has no major mode, so it's hard to customize."
+  ;; (print "setting up")
+  ;; (print inf-clojure-buffer)
+  (with-current-buffer inf-clojure-buffer
+    ;; (print "in buffer")
+    (evil-normal-state)))
+
+(defun clj/repl-buffer ()
+  (lexical-let ((b (get-buffer-create "*clojure-simple*")))
+    (with-current-buffer b
+      (setq-local scroll-margin 1)
+    b)))
+
+(defun clj/in-repl-buffer (fn)
+  (with-current-buffer (clj/repl-buffer)
+    (funcall fn)))
+
+;;
+;; Indenting and moving sexps.
+;;
+
 (defun lisp-indent-line-single-semicolon-fix (&optional whole-exp)
   "Identical to the built-in function lisp-indent-line,
 but doesn't treat single semicolons as right-hand-side comments."
@@ -414,6 +430,20 @@ but doesn't treat single semicolons as right-hand-side comments."
     ;; position after the indentation.  Else stay at same point in text.
     (if (> (- (point-max) pos) (point))
         (goto-char (- (point-max) pos)))))
+
+;; Clojure indentation rules
+(with-eval-after-load "clojure-mode"
+  (define-clojure-indent
+    (send-off 1) (cli 1) (go-loop 1) (assoc 1)                        ; Core
+    (ANY 2) (GET 2) (POST 2) (PUT 2) (PATCH 2) (DELETE 2) (context 2) ; Compojure
+    (OPTIONS 2)
+    (select 1) (insert 1) (update 1) (where 1) (set-fields 1)         ; Korma
+    (values 1) (delete 1) (upsert 1) (subselect 1)
+    (clone-for 1)                                                     ; Enlive
+    (cache-get 1) (time 1)                                            ; Workbench
+    (with-eligible-values 1) (when-eligible 1) (check 4)              ; Personal
+    (url-of-form 1) (construct-partial 1)                             ; Personal
+    ))
 
 (defun move-to-start-of-word ()
   (let ((word-boundary (bounds-of-space-delimitted-word)))
@@ -476,20 +506,6 @@ but doesn't treat single semicolons as right-hand-side comments."
 ;; Make it possible to eval any marked buffer from any window -- a clojure window need not be focused.
 (evil-leader/set-key
   "me" 'mark-execute)
-
-;; Clojure indentation rules
-(with-eval-after-load "clojure-mode"
-  (define-clojure-indent
-    (send-off 1) (cli 1) (go-loop 1) (assoc 1)                        ; Core
-    (ANY 2) (GET 2) (POST 2) (PUT 2) (PATCH 2) (DELETE 2) (context 2) ; Compojure
-    (OPTIONS 2)
-    (select 1) (insert 1) (update 1) (where 1) (set-fields 1)         ; Korma
-    (values 1) (delete 1) (upsert 1) (subselect 1)
-    (clone-for 1)                                                     ; Enlive
-    (cache-get 1) (time 1)                                            ; Workbench
-    (with-eligible-values 1) (when-eligible 1) (check 4)              ; Personal
-    (url-of-form 1) (construct-partial 1)                             ; Personal
-    ))
 
 ;;
 ;; Functions for working with clojure.test mode.
