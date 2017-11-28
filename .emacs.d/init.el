@@ -392,7 +392,8 @@
 (require 'window-management)
 
 ;; Don't use the native OSX full screen support, because it uses OSX Spaces which don't play well with
-;; CMD-tabbing to applications which are behind Emacs. Invoke fullscreen with `toggle-frame-fullscreen`.
+;; CMD-tabbing to applications which are behind Emacs. With this set to nil, if you want to invoke fullscreen,
+;; do so the emacs command `toggle-frame-fullscreen`.
 (setq ns-use-native-fullscreen nil)
 
 ;; Window-management keybindings. "w" is the namespace I use.
