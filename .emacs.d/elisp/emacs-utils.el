@@ -96,14 +96,28 @@
             ((symbol-function 'yes-or-no-p) #'always-yes))
     (apply fn args)))
 
+(defun util/get-frame->selected-window ()
+  "Returns a list of pairs of (frame selected-window)"
+  (let* ((original-frame (window-frame))
+         (result (->> (visible-frame-list)
+                      (-map (lambda (f)
+                              (select-frame f t)
+                              (list f (selected-window)))))))
+    (select-frame original-frame t)
+    result))
+
 (defun util/preserve-selected-window (f)
   "Runs the given function and then restores focus to the original window. Useful when you want to invoke
    a function (like showing documentation) but desire to keep your current window focused."
-  (lexical-let* ((f f)
-                 (original-window (selected-window))
+  ;; Note that we must preserve the selected window of every frame, because the function being executed may
+  ;; change the focused frame, even if the current frame is in focus.
+  (lexical-let* ((original-frame (selected-frame))
+                 (frames->windows (util/get-frame->selected-window))
                  (result (funcall f)))
-    (select-frame-set-input-focus (window-frame original-window) t)
-    (select-window original-window t)
+    (-each frames->windows (lambda (x)
+                             (select-frame (first x) t)
+                             (select-window (second x) t)))
+    (select-frame-set-input-focus original-frame t)
     result))
 
 (defun util/preserve-line-and-column (f)
