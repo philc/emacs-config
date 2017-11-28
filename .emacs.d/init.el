@@ -92,6 +92,9 @@
 (when (and (fboundp 'tool-bar-mode) tool-bar-mode) (tool-bar-mode -1))
 (when (and (fboundp 'scroll-bar-mode) scroll-bar-mode) (scroll-bar-mode -1))
 
+;; Disable Eldoc mode, which is enabled by default in Emacs. I've found that it makes navigating Elisp files
+;; slow, and I don't use it.
+(global-eldoc-mode -1)
 
 ;; Make it possible to open files via the command line in this Emacs using `emacsclient`.
 (require 'server)
