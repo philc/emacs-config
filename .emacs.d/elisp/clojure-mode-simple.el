@@ -218,7 +218,7 @@
   (interactive)
   (util/preserve-selected-window
    (lambda ()
-     (pop-to-buffer (clj/repl-buffer))
+     (pop-to-buffer (clj/repl-buffer) nil t)
      (clj/scroll-to-repl-buffer-end))))
 
 (defun clj/clear-repl ()
