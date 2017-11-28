@@ -19,6 +19,8 @@
 ;; Buffer setup
 ;;
 
+(setq clojure-simple-output-prefix "clojure-simple::")
+
 (defun setup-clojure-buffer ()
   ;; Count hyphens, etc. as word characters in lisps
   (modify-syntax-entry ?- "w" clojure-mode-syntax-table)
@@ -243,13 +245,16 @@
          (proc (inf-clojure-proc))
          (comint-filt (process-filter proc))
          (kept "")
-         (last-string ""))
-    (set-process-filter proc (lambda (proc string)
-                               (setq last-string string)
-                               (let ((s (remove-junk-from-inf-clojure-output string)))
-                                 (when (not silence)
-                                   (clj/append-to-repl-buffer s))
-                                 (setq kept (concat kept s)))))
+         (last-string "")
+         (process-fn (lambda (proc string)
+                       (setq last-string string)
+                       (let ((s (remove-junk-from-inf-clojure-output string)))
+                         ;; TODO(philc): describe the asynchronous nature here
+                         (when (not silence)
+                           (clj/append-to-repl-buffer s))
+                         (setq kept (concat kept s))))))
+    (progn (print ">>>> command") (prin1 command t))
+    (set-process-filter proc process-fn)
     (let* ((result (unwind-protect
                        (progn
                          (process-send-string proc command)
@@ -300,14 +305,22 @@
    - dont-record-exceptions: don't modify _last-exception as a result of evaluating `str`."
   (when pprint
     (setq str (concat "(do (clojure.pprint/pprint " str "))")))
-  (when wrap-ns
-    (setq str (clj/wrap-sexp-in-current-ns str)))
   (when (not dont-record-exceptions)
     (setq str (format "(do (intern 'user '_last-exception nil)
                            (try %s
-                             (catch Exception e (intern 'user '_last-exception e) (throw e))))"
-                      str)))
+                             (catch Exception e
+                               (intern 'user '_last-exception e)
+                               (println \"got exception\")
+                               (println \"%sexception-occurred\")
+                               (throw e)
+                             )))"
+                      str
+                      clojure-simple-output-prefix)))
+  (when wrap-ns
+    (setq str (clj/wrap-sexp-in-current-ns str)))
   str)
+;; (catch RuntimeException
+                             ;; (catch CompilerException e (intern 'user '_last-exception e) (println \"BB!\") (throw e))
 
 (defun clj/wrap-with-repl-helpers-file (str)
   ;; TODO(philc): Make this path relative/configurable.
@@ -323,7 +336,11 @@
 (defun clj/print-any-exceptions ()
   "If an exception was caused by the last evaled Clojure statement, print just its backtrace."
   (let ((exception-str (-> "user/_last-exception" (clj/eval-and-capture-output t) s-trim)))
-    (when (not (string= "nil" exception-str))
+    ;; NOTE(philc): I'm not sure why, but for the first command in a new REPL, _last-exception
+    ;; is returned by inf-clojure as an empty string.
+    (progn (print ">>>> exception-str") (prin1 exception-str t))
+    (when (not (or (string= "nil" exception-str)
+                   (string= "" exception-str)))
       ;; Reset the exception navigation cursor.
       (setq clj/backtrace-cursor-linenum nil)
       ;; We're omitting the message on the exception because the message (but not the stacktrace) has
@@ -380,7 +397,8 @@
 (defun clj/eval-in-current-ns (str)
   (clj/print-separator)
   (clj/eval-and-capture-output (clj/wrap-sexp str t t nil))
-  (clj/print-any-exceptions))
+  ;; (clj/print-any-exceptions))
+  )
 
 (defun clj/load-file (file-name)
   "Load and run a Clojure file. This uses clojure.core/load-file. This is better than evaluating the string
@@ -390,7 +408,8 @@
   (-> (format "(clojure.core/load-file \"%s\")\n" file-name)
       (clj/wrap-sexp t nil)
       clj/eval-and-capture-output)
-  (clj/print-any-exceptions))
+  ;; (clj/print-any-exceptions)
+  )
 
 (defun clj/load-buffer ()
   (interactive)
