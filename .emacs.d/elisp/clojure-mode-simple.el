@@ -1,7 +1,13 @@
-; http://martintrojer.github.io/clojure/2015/02/14/clojure-and-emacs-without-cider-redux/
-; https://gist.github.com/levand/b1012bb7bdb5fcc6486f
-; https://github.com/clojure-emacs/cider/issues/1472
-; https://github.com/clojure-emacs/cider/issues/1305
+;; My experiment ground for a product and simple-to-debug clojure mode.
+;; I think where I'll eventually end up is using nrepl, so that I can keep track of asynchronous output from
+;; commands and cleanly kill expensive commands.
+;;
+;; Frustrations with cider which caused me to start this experiment:
+;;
+;; http://martintrojer.github.io/clojure/2015/02/14/clojure-and-emacs-without-cider-redux/
+;; https://gist.github.com/levand/b1012bb7bdb5fcc6486f
+;; https://github.com/clojure-emacs/cider/issues/1472
+;; https://github.com/clojure-emacs/cider/issues/1305
 
 (provide 'clojure-mode-simple)
 (require 'emacs-utils)
