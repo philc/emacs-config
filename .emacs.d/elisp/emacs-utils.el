@@ -196,3 +196,24 @@
   `(cl-letf (((symbol-function ,fun-name)
               (lambda ,fun-args ,fun-body)))
      ,@body))
+
+;; http://ergoemacs.org/emacs/elisp_read_file_content.html
+(defun util/read-file-as-string (path)
+  "Return filePath's file content."
+  (with-temp-buffer
+    (insert-file-contents path)
+    (buffer-string)))
+
+(defun util/show-and-scroll-repl-window (buffer)
+  "Shows the REPL in a popup window and scrolls to its end, but does not switch to the window."
+  (interactive)
+  (util/preserve-selected-window
+   (lambda ()
+     (pop-to-buffer buffer nil t)
+     (util/scroll-to-buffer-end buffer))))
+
+(defun util/scroll-to-buffer-end (buffer)
+  (let ((w (get-buffer-window buffer t)))
+    (when w
+      (with-selected-window w
+        (View-scroll-to-buffer-end)))))
