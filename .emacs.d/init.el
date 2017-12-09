@@ -819,14 +819,19 @@
 ;; escreen (tabs)
 ;;
 ;; I use one tab per "workspace" (i.e. open project). All of my tab-related config is geared towards that use
-;; case. I was previously using elscreen, but it has two major bugs: tab bars would get rendered on
+;; case. I previously used elscreen for this, but it has two major bugs: its tab bar UI would get rendered on
 ;; random windows, and Emacs's redraws would begin flashing if you changed monitors or font size.
 (require 'escreen)
 (escreen-install)
 
 ;; I have KeyRemap4Macbook configured to translate M-j and M-k to these keys.
-(global-set-key (kbd "<A-M-left>") 'escreen-goto-prev-screen)
-(global-set-key (kbd "<A-M-right>") 'escreen-goto-next-screen)
+(global-set-key (kbd "<A-M-left>") (lambda () (interactive)
+                                     (call-interactively 'escreen-goto-prev-screen)
+                                     (escreen-show-selected-tab)))
+
+(global-set-key (kbd "<A-M-right>") (lambda () (interactive)
+                                     (call-interactively 'escreen-goto-next-screen)
+                                     (escreen-show-selected-tab)))
 
 ;; I alias/nickname each of my tabs (escreen's numbered screens) for easier reference.
 (setq escreen-number->alias (make-hash-table))
@@ -837,21 +842,25 @@
   (when (> (length alias) 0)
     (puthash (escreen-get-current-screen-number) alias escreen-number->alias)))
 
-(defun escreen-tab-switcher ()
-  "Shows a menu in the minibuffer of tab names and numbers. Type the tab number to switch to it."
-  (interactive)
+(defun escreen-show-selected-tab ()
+  "In the echo area, shows the name of tab, and which is currently selected."
   (lexical-let* ((get-display-name (lambda (i)
                                      (let ((template (if (= i (escreen-get-current-screen-number))
-                                                         "*%d.%s*"
-                                                       "%d.%s")))
+                                                         "[%d.%s]"
+                                                       " %d.%s ")))
                                        (->> (or (gethash i escreen-number->alias) "unnamed")
                                             (format template (+ i 1))))))
                  (tab-names (-map get-display-name (escreen-get-active-screen-numbers))))
-    (message (string/join tab-names "  "))
-    (lexical-let* ((input (string (read-char)))
-                   (is-digit (string= (number-to-string (string-to-number input)) input)))
-      (when is-digit
-        (escreen-goto-screen (- (string-to-number input) 1))))))
+    (message (string/join tab-names ""))))
+
+(defun escreen-tab-switcher ()
+  "Shows a menu in the minibuffer of tab names and numbers. Type the tab number to switch to it."
+  (interactive)
+  (escreen-show-selected-tab)
+  (lexical-let* ((input (string (read-char)))
+                 (is-digit (string= (number-to-string (string-to-number input)) input)))
+    (when is-digit
+      (escreen-goto-screen (- (string-to-number input) 1)))))
 
 (defun open-current-buffer-in-new-tab ()
   (interactive)
