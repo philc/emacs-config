@@ -49,6 +49,7 @@
                       flx-ido ; Fuzzy matching for ido, which improves the UX of Projectile.
                       go-mode ; For editing Go files.
                       hiwin ; For highlighting the active pane/window in Emacs.
+                      js-comint ; For evaluating javascript code to a REPL.
                       less-css-mode ; Syntax highlighting for LESS CSS files.
                       ido-ubiquitous ; Make ido completions work everywhere.
                       ido-vertical-mode ; Show ido results vertically.
@@ -1411,10 +1412,17 @@
 ;;
 ;; Javascript
 ;;
+
+(require 'javascript-config)
+
 (setq js-indent-level 2)
 
 (evil-leader/set-key-for-mode 'js-mode
   "rr" 'reload-active-chrome-tab
+  "eb" 'js/load-file
+  "ee" 'js/show-repl
+  "ek" 'js-comint-clear
+  "en" 'js/restart-repl
   "rc" 'reload-chrome-extensions-and-active-tab)
 ;;
 ;; Ag (silver searcher)
