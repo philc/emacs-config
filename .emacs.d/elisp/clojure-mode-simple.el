@@ -54,7 +54,8 @@
   (setq-local scroll-step 1))
 
 ;; This redefines the inf-clojure-preoutput-filter defined in inf-clojure.
-;; TODO(philc): Can I get rid of this?
+;; TODO(philc): Can I get rid of this? If not, I can just declare my own function and add it as a preoutput
+;; filter to the proc.
 (defun inf-clojure-preoutput-filter (str)
   "Preprocess the output (`str`) from the clojure process, removing whitespace etc.."
   ;; NOTE(philc): When debugging this function, you can't write to stdout using print, because it will mess up
@@ -62,8 +63,15 @@
   ;; values into variables for later inspection outside of this function.
   (let ((str (remove-junk-from-inf-clojure-output str)))
     (setq output-debug str)
-    (clj/append-to-repl-buffer str)
-    str))
+    (let* ((exception-output-token (format "%sexception-occurred\n" clojure-simple-output-prefix))
+           (exception-occurred (s-contains? exception-output-token str)))
+      (when exception-occurred
+        (setq str (s-replace exception-output-token "" str))
+        ;; (setq debug-out "elisp: found an exception which occured")
+        (clj/print-any-exceptions)
+        )
+      (clj/append-to-repl-buffer str)
+      str)))
 
 (defun init-comint-mode-settings ()
   (define-key comint-mode-map (kbd "C-d") nil)
@@ -207,27 +215,18 @@
   (-?> (ignore-errors (inf-clojure-proc)) delete-process)
   (-?> (get-buffer "*inf-clojure*") kill-buffer))
 
-(defun clj/scroll-to-repl-buffer-end ()
-  (let ((w (get-buffer-window (clj/repl-buffer) t)))
-    (when w
-      (with-selected-window w
-        (View-scroll-to-buffer-end)))))
-
 (defun clj/append-to-repl-buffer (str)
   (clj/in-repl-buffer
    (lambda ()
      (save-excursion
        (goto-char (point-max))
        (insert str))))
-  (clj/scroll-to-repl-buffer-end))
+  (util/scroll-to-buffer-end (clj/repl-buffer)))
 
 (defun clj/show-repl ()
   "Shows the REPL in a popup window but does not switch to it."
   (interactive)
-  (util/preserve-selected-window
-   (lambda ()
-     (pop-to-buffer (clj/repl-buffer) nil t)
-     (clj/scroll-to-repl-buffer-end))))
+  (util/show-and-scroll-repl-window (clj/repl-buffer)))
 
 (defun clj/clear-repl ()
   (interactive)
@@ -245,32 +244,53 @@
 (defun clj/eval-and-capture-output (command &optional silence)
   "This will run the command, progressively output its stdout to our clj buffer as it comes in, and return the
    full output string once the command has finished executing."
+  ;; NOTE(philc): Warning: this can return no/incomplete output after a timeout, to keep Emacs responsive. I
+  ;; should signal this with an exception.
   (interactive)
-  ;; Taken from inf-clojure-show-arglist.
-  (let* ((command (concat command "\n"))
+  (let* ((output-path "/tmp/clojure_simple.out")
+         (command (if silence
+                      (clj/wrap-redirect-output-to-file command output-path)
+                    command))
+         (command (concat command "\n"))
          (proc (inf-clojure-proc))
          (comint-filt (process-filter proc))
          (kept "")
          (last-string "")
+         (exception-output-token (format "%sexception-occurred\n" clojure-simple-output-prefix))
+         ;; Taken from inf-clojure-show-arglist.
          (process-fn (lambda (proc string)
                        (setq last-string string)
-                       (let ((s (remove-junk-from-inf-clojure-output string)))
+                       (let* ((s (remove-junk-from-inf-clojure-output string))
+                              (exception-occurred (s-contains? exception-output-token s)))
+                         (progn (print ">>>> s") (prin1 s t))
+                         ;; (when exception-occurred
+                         ;;   (setq s (s-replace exception-output-token "" s)))
+                         ;; (clj/print-any-exceptions)
                          ;; TODO(philc): describe the asynchronous nature here
-                         (when (not silence)
-                           (clj/append-to-repl-buffer s))
-                         (setq kept (concat kept s))))))
-    (progn (print ">>>> command") (prin1 command t))
-    (set-process-filter proc process-fn)
+                         ;; (when (not silence)
+                         (clj/append-to-repl-buffer s)
+                         (setq kept (concat kept s))
+                         ;; (when (and exception-occurred)
+                         ;;   (print "elisp: found an exception which occured")
+                         ;;   (clj/print-any-exceptions)
+                         ;;   )
+                         ))))
+    ;; (progn (print ">>>> command") (prin1 command t))
+    ;; (set-process-filter proc process-fn)
     (let* ((result (unwind-protect
                        (progn
                          (process-send-string proc command)
                          (while (and (not (string-match inf-clojure-prompt last-string))
-                                     (accept-process-output proc 0.5)))
+                                     (accept-process-output proc 0.1)))
                          kept)
                      (set-process-filter proc comint-filt)))
            ;; The last line of output is a REPL prompt. Remove it.
-           (result (clj/chomp-last-line result))))
-    kept))
+           (result (clj/chomp-last-line result)))
+      (if silence
+          (-> (util/read-file-as-string output-path)
+              remove-junk-from-inf-clojure-output)
+        result
+        ))))
 
 (defun clj/load-file (file-name)
   "Load a Clojure file FILE-NAME into the inferior Clojure process."
@@ -305,7 +325,11 @@
   (clj/print-separator)
   (inf-clojure-eval-string str))
 
-(defun clj/wrap-sexp (str pprint wrap-ns &optional dont-record-exceptions)
+(defun clj/wrap-redirect-output-to-file (str path)
+  (format "(with-open [f (clojure.java.io/writer \"%s\")]
+             (binding [*out* f *err* f] (println %s)))" path str))
+
+(defun clj/wrap-sexp (str pprint wrap-ns &optional dont-record-exceptions file-to-redirect-output)
   "Wraps the given sexp with pretty printing, execution in the current file's namespace, and sets
    the `_last-exception` var in the clojure process if this statement causes an exception.
    - dont-record-exceptions: don't modify _last-exception as a result of evaluating `str`."
@@ -314,7 +338,7 @@
   (when (not dont-record-exceptions)
     (setq str (format "(do (intern 'user '_last-exception nil)
                            (try %s
-                             (catch Exception e
+                             (catch RuntimeException e
                                (intern 'user '_last-exception e)
                                (println \"got exception\")
                                (println \"%sexception-occurred\")
@@ -344,7 +368,7 @@
   (let ((exception-str (-> "user/_last-exception" (clj/eval-and-capture-output t) s-trim)))
     ;; NOTE(philc): I'm not sure why, but for the first command in a new REPL, _last-exception
     ;; is returned by inf-clojure as an empty string.
-    (progn (print ">>>> exception-str") (prin1 exception-str t))
+    ;; (progn (print ">>>> exception-str") (prin1 exception-str t))
     (when (not (or (string= "nil" exception-str)
                    (string= "" exception-str)))
       ;; Reset the exception navigation cursor.
@@ -353,7 +377,8 @@
       ;; already been printed to the REPL by nREPL. It is not possible to disable this exception output
       ;; from nREPL, to as a workaround, we just print the backtrace.
       ;; See https://dev.clojure.org/jira/browse/CLJ-2040
-      (-> "(my-pst user/_last-exception true)" clj/wrap-with-repl-helpers-file inf-clojure-eval-string))))
+      (-> "(my-pst user/_last-exception true)" clj/wrap-with-repl-helpers-file inf-clojure-eval-string)
+      )))
 
 (defun clj/file-of-backtrace-line (line)
   "`line` should be of the form:
