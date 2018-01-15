@@ -95,8 +95,8 @@
 
 (defun preview-markdown (beg end)
   "Pipes the buffer's contents into a script which renders the markdown as HTML and opens in a browser.
-   If the markdown-stylesheet var is bound, then that stylesheet will be used (i.e. passed as an argument into
-   markdown_page."
+   If the `markdown-stylesheet` var is bound, then that stylesheet will be used (i.e. passed as an argument into
+   `markdown_page.rb`."
   (interactive (if (use-region-p)
                    (list (region-beginning) (region-end))
                  (list nil nil)))

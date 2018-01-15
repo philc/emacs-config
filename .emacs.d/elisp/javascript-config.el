@@ -3,6 +3,7 @@
 (require 'js-comint) ; For connecting to and evaluating code in Node REPLs.
 
 (defun js/get-repl-buffer ()
+  ; TODO(philc): Make this fail if a REPL doesn't exist.
   (get-buffer (js-comint-get-buffer-name)))
 
 (defun js/show-repl ()

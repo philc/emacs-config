@@ -368,8 +368,8 @@
   "vu" 'notmuch-go-to-inbox
   "vp" 'project-nav/navigate-to-project
   "vn" 'project-nav/open-file-from-notes-folder
-  "vo" (lambda () (interactive) (find-file "~/Dropbox/tasks.org"))
-  "ve" (lambda () (interactive) (find-file "~/.emacs.d/init.el")))
+  "vo" (lambda () (interactive) (find-file "~/Dropbox/tasks.org")) ; "View my task list in org mode"
+  "ve" (lambda () (interactive) (find-file "~/.emacs.d/init.el"))) ; "View Emacs init.el"
 
 (setq evil-leader/leader ";")
 
