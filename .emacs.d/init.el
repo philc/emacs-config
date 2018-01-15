@@ -311,6 +311,10 @@
 (define-key evil-normal-state-map (kbd "j") 'evil-next-visual-line)
 (define-key evil-normal-state-map (kbd "k") 'evil-previous-visual-line)
 (define-key evil-normal-state-map (kbd "K") 'info-lookup-symbol)
+(define-key evil-normal-state-map (kbd "J")
+  (lambda ()
+    (interactive)
+    (util/preserve-line-and-column (lambda () (call-interactively 'evil-join)))))
 
 ;; This splits the current line at the cursor position.
 (define-key evil-normal-state-map (kbd "RET") 'newline-and-indent)
