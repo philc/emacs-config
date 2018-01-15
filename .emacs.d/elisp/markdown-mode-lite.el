@@ -8,6 +8,7 @@
 ;; of subtrees, the same way org mode does it.
 (require 'outline-magic)
 (require 'evil)
+(require 'markdown-tables)
 
 (define-derived-mode markdown-lite-mode text-mode "Markdown-lite"
   "Major mode for editing Markdown files."
