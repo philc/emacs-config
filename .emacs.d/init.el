@@ -402,20 +402,21 @@
 
 ;; Window-management keybindings. "w" is the namespace I use.
 ;; There are also some window switching keybindings set in osx-keys-minor-mode-map, below.
-(evil-leader/set-key "wn" 'create-new-column)
-(evil-leader/set-key "wv" 'split-window-horizontally-and-focus)
-(evil-leader/set-key "wh" 'split-window-vertically-and-focus)
-(evil-leader/set-key "wk" (lambda () (interactive) (kill-buffer (current-buffer))))
-(evil-leader/set-key "wm" 'toggle-window-maximize)
-(evil-leader/set-key "wr" 'evil-window-rotate-downwards)
-(evil-leader/set-key "wR" 'evil-window-rotate-upwards)
-(evil-leader/set-key "wb" 'balance-windows)
-;; winner-undo will undo the last change you made to your window configuration.
-(evil-leader/set-key "wu" 'winner-undo)
-(evil-leader/set-key "we" 'narrow-ephemeral-window)
-(evil-leader/set-key "wE" 'toggle-maximize-lower-right-window)
-(evil-leader/set-key "q" 'dismiss-ephemeral-windows)
-(evil-leader/set-key "wf" 'toggle-frame-fullscreen)
+(evil-leader/set-key
+  "wn" 'create-new-column
+  "wv" 'split-window-horizontally-and-focus
+  "wh" 'split-window-vertically-and-focus
+  "wk" (lambda () (interactive) (kill-buffer (current-buffer)))
+  "wm" 'toggle-window-maximize
+  "wr" 'evil-window-rotate-downwards
+  "wR" 'evil-window-rotate-upwards
+  "wb" 'balance-windows
+  ;; winner-undo will undo the last change you made to your window configuration.
+  "wu" 'winner-undo
+  "we" 'narrow-ephemeral-window
+  "wE" 'toggle-maximize-lower-right-window
+  "q" 'dismiss-ephemeral-windows
+  "wf" 'toggle-frame-fullscreen)
 
 ;; Make it so Esc means quit, no matter the context.
 ;; http://stackoverflow.com/a/10166400/46237
