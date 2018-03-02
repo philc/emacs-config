@@ -174,7 +174,8 @@
                               (?n "Entertainment")
                               (?m "Emacs")
                               (?p "Side projects")
-                              (?v "Vimium"))))
+                              (?v "Vimium")
+                              (?d "PD"))))
     (when subheading
       (lexical-let ((new-todo (read-from-minibuffer (concat subheading " TODO: "))))
         (save-excursion
@@ -186,7 +187,7 @@
   (interactive)
   "Prompts for the name of a top-level heading and jumps to there."
   ;; TODO(philc): Populate these completions with the top-level headers from the buffer.
-  (let* ((headings '("Liftoff" "Base" "Study" "Entertainment" "Emacs" "Journal" "Gumshoe" "Side projects"
+  (let* ((headings '("Liftoff" "Base" "Study" "PD" "Entertainment" "Emacs" "Journal" "Gumshoe" "Side projects"
                      "Vimium" "Email"))
          (heading (ido-completing-read "Heading: " headings)))
     (goto-char 0)
