@@ -589,7 +589,7 @@ but doesn't treat single semicolons as right-hand-side comments."
 (evil-define-key 'normal clojure-mode-map (kbd "C-S-J") 'shift-sexp-forward)
 (evil-define-key 'normal clojure-mode-map (kbd "C-A-h") 'slurp-into-prev-sexp)
 
-(evil-leader/set-key-for-mode 'clojure-mode
+(define-leader-keys 'clojure-mode-map
   ;; "eap" (lambda () (interactive) (with-nrepl-connection-of-current-buffer 'cider-eval-paragraph))
   "ee" 'clj/show-repl
   "ek" 'clj/clear-repl
@@ -607,10 +607,8 @@ but doesn't treat single semicolons as right-hand-side comments."
   "tt" 'clj/run-test-at-point
   "SPC" 'evil-ext/fill-inside-string
   "n" 'clj/goto-next-exception
-  "N" 'clj/goto-prev-exception)
-
-;; Make it possible to eval any marked buffer from any window -- a clojure window need not be focused.
-(evil-leader/set-key
+  "N" 'clj/goto-prev-exception
+  ;; Make it possible to eval any marked buffer from any window -- a clojure window need not be focused.
   "me" 'mark-execute)
 
 ;;

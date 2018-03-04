@@ -60,7 +60,8 @@
   (call-process-region (point-min) (point-max) "/bin/bash" nil nil nil "-c"
                        "convert_org_to_markdown.rb | markdown_page.rb | bcat"))
 
-(evil-leader/set-key-for-mode 'org-mode
+
+(define-leader-keys 'org-mode-map
   "a" '(lambda () (interactive)
          (org-archive-subtree)
          ;; For some reason org-archive-subtree aggressively scrolls the window down. Re-center the window on

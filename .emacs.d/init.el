@@ -44,8 +44,8 @@
                       diminish ; For hiding and shortening minor modes in the modeline
                       escreen ; For a tab-like UI in Emacs.
                       evil ; Evil mode implements Vim's modal bindings and text object manipulation.
-                      evil-leader
                       evil-nerd-commenter
+                      general ; Functions for defining keybindings and leader keys. Complements Evil.
                       flx-ido ; Fuzzy matching for ido, which improves the UX of Projectile.
                       go-mode ; For editing Go files.
                       hiwin ; For highlighting the active pane/window in Emacs.
@@ -80,6 +80,9 @@
 (add-to-list 'load-path "~/.emacs.d/elisp")
 (require 'lisp-utils)
 (require 'emacs-utils)
+
+;; The prefix key to use when defining Vim style leader keys. See the Evil section below.
+(setq global-leader-prefix ";")
 
 ;; Based on my anecdotal observations, this reduces the amount of display flicker during Emacs startup.
 (setq redisplay-dont-pause t)
@@ -281,16 +284,10 @@
 ;;
 (setq evil-want-C-u-scroll t)
 (setq evil-want-Y-yank-to-eol t) ; Map "Y" to copy to the end of line (y$ in Vim).
-(require 'evil-leader) ; Provide configuration functions for assigning actions to a Vim leader key.
 (require 'evil)
 (require 'evil-ext)
 (require 'evil-nerd-commenter)
-(global-evil-leader-mode t)
 (evil-mode t)
-
-;; Note that there is a bug where Evil-leader isn't properly bound to the initial buffers that Emacs
-;; opens on-startup. Work around this by killing them. See https://github.com/cofi/evil-leader/issues/10.
-(kill-buffer "*Messages*")
 
 ;; When opening new lines, indent according to the previous line.
 (setq evil-auto-indent t)
@@ -347,34 +344,35 @@
   (interactive "r")
   (-> (buffer-substring beg end) length number-to-string message))
 
-(evil-leader/set-key
-  "h" 'help
-  "b" 'ido-switch-buffer
-  "f" 'projectile-find-file
-  "T" 'escreen-tab-switcher ; "T" for tab (I use lowercase "t" for shortcuts related to tests)
-  "SPC" 'evil-ext/fill-inside-paragraph ; Shortcut for Vim's gqip
-  "i" 'evil-ext/indent-inside-paragraph ; Shortcut to Vim's =ip
-  "d" 'projectile-dired
-  "D" (lambda () (interactive) (-> (buffer-file-name) file-name-directory dired))
-  "gs" (lambda() (interactive)
-          (util/save-buffer-if-dirty)
-          (magit-status-and-focus-unstaged))
-  "gl" 'magit-log-current
-  "o" 'util/open-file-at-cursor
-  "wc" 'count-chars-region
-  "s" 'ag-project-in-current-window ; Grep (using the "ag" command) for files in the current directory.
-  ;; "v" is a mnemonic prefix for "view X".
-  ;; "vv" will be a natural choice as a mode-specific shortcut for previewing the current file.
-  "vu" 'notmuch-go-to-inbox
-  "vp" 'project-nav/navigate-to-project
-  "vn" 'project-nav/open-file-from-notes-folder
-  "vo" (lambda () (interactive) (find-file "~/Dropbox/tasks.org")) ; "View my task list in org mode"
-  "ve" (lambda () (interactive) (find-file "~/.emacs.d/init.el"))) ; "View Emacs init.el"
+(setq general-default-keymaps 'evil-normal-state-map)
 
-(setq evil-leader/leader ";")
+; Create a few shorthand-aliases.
 
-;; Ensure evil-leader works in non-editing modes like magit. This is referenced from evil-leader's README.
-(setq evil-leader/no-prefix-mode-rx '("magit-.*-mode"))
+(general-define-key
+ :prefix global-leader-prefix
+ :keymaps 'normal
+ "h" 'help
+ "b" 'ido-switch-buffer
+ "f" 'projectile-find-file
+ "T" 'escreen-tab-switcher ; "T" for tab (I use lowercase "t" for shortcuts related to tests)
+ "SPC" 'evil-ext/fill-inside-paragraph ; Shortcut for Vim's gqip
+ "i" 'evil-ext/indent-inside-paragraph ; Shortcut to Vim's =ip
+ "d" 'projectile-dired
+ "D" (lambda () (interactive) (-> (buffer-file-name) file-name-directory dired))
+ "gs" (lambda() (interactive)
+        (util/save-buffer-if-dirty)
+        (magit-status-and-focus-unstaged))
+ "gl" 'magit-log-current
+ "o" 'util/open-file-at-cursor
+ "wc" 'count-chars-region
+ "s" 'ag-project-in-current-window ; Grep (using the "ag" command) for files in the current directory.
+ ;; "v" is a mnemonic prefix for "view X".
+ ;; "vv" will be a natural choice as a mode-specific shortcut for previewing the current file.
+ "vu" 'notmuch-go-to-inbox
+ "vp" 'project-nav/navigate-to-project
+ "vn" 'project-nav/open-file-from-notes-folder
+ "vo" (lambda () (interactive) (find-file "~/Dropbox/tasks.org")) ; "View my task list in org mode"
+ "ve" (lambda () (interactive) (find-file "~/.emacs.d/init.el"))) ; "View Emacs init.el"
 
 (defun backward-kill-line (arg)
   "Delete backward (Ctrl-u) as in Bash, and save the contents to the clipboard."
@@ -406,21 +404,23 @@
 
 ;; Window-management keybindings. "w" is the namespace I use.
 ;; There are also some window switching keybindings set in osx-keys-minor-mode-map, below.
-(evil-leader/set-key
-  "wn" 'create-new-column
-  "wv" 'split-window-horizontally-and-focus
-  "wh" 'split-window-vertically-and-focus
-  "wk" (lambda () (interactive) (kill-buffer (current-buffer)))
-  "wm" 'toggle-window-maximize
-  "wr" 'evil-window-rotate-downwards
-  "wR" 'evil-window-rotate-upwards
-  "wb" 'balance-windows
-  ;; winner-undo will undo the last change you made to your window configuration.
-  "wu" 'winner-undo
-  "we" 'narrow-ephemeral-window
-  "wE" 'toggle-maximize-lower-right-window
-  "q" 'dismiss-ephemeral-windows
-  "wf" 'toggle-frame-fullscreen)
+(general-define-key
+ :prefix global-leader-prefix
+ :keymaps 'normal
+ "wn" 'create-new-column
+ "wv" 'split-window-horizontally-and-focus
+ "wh" 'split-window-vertically-and-focus
+ "wk" (lambda () (interactive) (kill-buffer (current-buffer)))
+ "wm" 'toggle-window-maximize
+ "wr" 'evil-window-rotate-downwards
+ "wR" 'evil-window-rotate-upwards
+ "wb" 'balance-windows
+ ;; winner-undo will undo the last change you made to your window configuration.
+ "wu" 'winner-undo
+ "we" 'narrow-ephemeral-window
+ "wE" 'toggle-maximize-lower-right-window
+ "q" 'dismiss-ephemeral-windows
+ "wf" 'toggle-frame-fullscreen)
 
 ;; Make it so Esc means quit, no matter the context.
 ;; http://stackoverflow.com/a/10166400/46237
@@ -684,7 +684,6 @@
   "G" 'evil-goto-line
   ;; dired overrides my global "other window" shorcut.
   (kbd "M-C-n") 'other-window
-  ";" nil ; Ensure my evil-leader key works unhindered.
   (kbd "M-C-n") 'other-window
   "cd" 'dired-create-directory
   "cf" 'dired-create-file
@@ -734,7 +733,6 @@
            (with-help-window "*Help*"
              (describe-function (intern (current-word))))))))
 
-(evil-leader/set-key-for-mode 'emacs-lisp-mode "SPC" 'evil-ext/fill-inside-string)
 (evil-set-initial-state 'debugger-mode 'normal) ; Elisp debugger mode, used by the *backtrace* buffer.
 
 (defun current-sexp ()
@@ -765,15 +763,16 @@
      (erase-buffer)
      (read-only-mode 1))))
 
-(evil-leader/set-key-for-mode 'emacs-lisp-mode
-  ; Note that I'm saving the buffer before each eval because otherwise, the buffer gets saved after the eval,
-  ; (due to save-when-switching-windows setup) and the output from the buffer save overwrites the eval results
-  ; in the minibuffer.
-  "eb" (lambda() (interactive) (util/save-buffer-if-dirty) (eval-buffer))
-  "es" (lambda () (interactive) (util/save-buffer-if-dirty) (elisp-eval-current-sexp))
-  "ex" (lambda () (interactive) (util/save-buffer-if-dirty) (call-interactively 'eval-defun))
-  "ek" 'erase-messages-buffer
-  "ee" 'view-echo-area-messages-and-scroll)
+(define-leader-keys 'emacs-lisp-mode-map
+  "SPC" 'evil-ext/fill-inside-string
+  ;; Note that I'm saving the buffer before each eval because otherwise, the buffer gets saved after the eval,
+  ;; (due to save-when-switching-windows setup) and the output from the buffer save overwrites the eval results
+  ;; in the minibuffer.
+  "e b" (lambda() (interactive) (util/save-buffer-if-dirty) (eval-buffer))
+  "e s" (lambda () (interactive) (util/save-buffer-if-dirty) (elisp-eval-current-sexp))
+  "e x" (lambda () (interactive) (util/save-buffer-if-dirty) (call-interactively 'eval-defun))
+  "e k" 'erase-messages-buffer
+  "e e" 'view-echo-area-messages-and-scroll)
 
 ;; Indentation rules.
 (put '-> 'lisp-indent-function nil)
@@ -1085,14 +1084,11 @@
 ;; Coffeescript
 ;;
 (setq coffee-tab-width 2)
-(evil-leader/set-key-for-mode 'coffee-mode
+(define-leader-keys 'coffee-mode-map
   "c" nil ; Establishes "c" as a "prefix key". I found this trick here: http://www.emacswiki.org/emacs/Evil
   ;; This compiles the file and jumps to the first error, if there is one.
   "rr" 'reload-active-chrome-tab
-  "cc" (lambda ()
-         (interactive)
-         (save-buffer)
-         (coffee-compile-without-side-effect))
+  "cc" (lambda () (interactive) (save-buffer) (coffee-compile-without-side-effect))
   ;; The mnemonic for this is "compile & preview". It shows the javascript output in a new buffer.
   "cp" 'coffee-compile-buffer)
 
@@ -1191,12 +1187,12 @@
     (set-window-start (selected-window) scroll-y)
     (goto-char p)))
 
-(evil-leader/set-key-for-mode 'html-mode
+(define-leader-keys 'html-mode-map
   "i" 'indent-html-buffer
   "rr" 'reload-active-chrome-tab
   "vv" 'preview-html)
 
-(evil-leader/set-key-for-mode 'mustache-mode
+(define-leader-keys 'mustache-mode-map
   "rr" 'reload-active-chrome-tab)
 
 (defun reload-active-chrome-tab ()
@@ -1264,10 +1260,8 @@
 (evil-define-key 'normal css-mode-map
   (kbd "A-C-f") 'toggle-fold-css-block)
 
-(evil-leader/set-key-for-mode 'css-mode
-  "rr" 'reload-active-chrome-tab)
 
-(evil-leader/set-key-for-mode 'less-css-mode
+(define-leader-keys '(css-mode-map less-css-mode-map)
   "rr" 'reload-active-chrome-tab)
 
 ;;
@@ -1314,7 +1308,7 @@
     (util/without-confirmation
      (lambda () (compile (concat "cd " (projectile-project-root) " && " command))))))
 
-(evil-leader/set-key-for-mode 'go-mode
+(define-leader-keys 'go-mode-map
   ;; "r" is a namespace for run-related commands.
   "rr" (go-save-and-compile-fn "make run")
   "rb" (go-save-and-compile-fn "make synthetic-benchmark")
@@ -1327,7 +1321,6 @@
   "cb" (go-save-and-compile-fn "make benchmark")
   "cc" (go-save-and-compile-fn "make compile")
   ;; "cc" (go-save-and-compile-fn "go build")
-
   "ai" 'go-import-add)
 
 ;; goimports formats your code and also adds or removes imports as needed.
@@ -1408,7 +1401,8 @@
            (compile (concat "cd " (locate-dominating-file (buffer-file-name) "build.xml")
                             " && " command-name)))))))
 
-(evil-leader/set-key-for-mode 'java-mode
+
+(define-leader-keys 'java-mode-map
   ;; ant -find searches up the directory tree and finds the closest build file.
   "cc" (java-save-and-compile-fn "ant debug -silent")
   "cn" 'next-error
@@ -1422,7 +1416,7 @@
 
 (setq js-indent-level 2)
 
-(evil-leader/set-key-for-mode 'js-mode
+(define-leader-keys 'js-mode-map
   "rr" 'reload-active-chrome-tab
   "eb" 'js/load-file
   "ee" 'js/show-repl
@@ -1508,7 +1502,8 @@
     (set-window-start (selected-window) scroll-y)
     (goto-char p)))
 
-(evil-leader/set-key-for-mode 'lua-mode
+
+(define-leader-keys 'lua-mode-map
   "i" 'indent-lua-buffer)
 
 ;;

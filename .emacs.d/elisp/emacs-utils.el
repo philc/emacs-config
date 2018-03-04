@@ -4,6 +4,11 @@
 (provide 'emacs-utils)
 (require 'lisp-utils)
 
+(defmacro define-leader-keys (keymaps &rest keybindings)
+  "A shorthand for defining leader keys using the `general` keybinding package.
+   `global-leader-key` must be defined as a top-level variable."
+  `(general-define-key :prefix global-leader-prefix :states '(normal visual) :keymaps ,keymaps ,@keybindings))
+
 (defun util/call-process-with-exit-status (program stdin &rest args)
   "Runs a command and returns a list containing the status code and output string.
    E.g.: (call-process-with-exit-status 'ls' '-h' '-l' '-a') ;; => (0 '-r-w-r-- 1 ...')"
