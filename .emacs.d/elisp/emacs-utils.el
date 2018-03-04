@@ -89,7 +89,7 @@
           (funcall fn))
       (setenv name original-value))))
 
-(defun util/without-confirmation (fn)
+(defun util/without-confirmation (fn &rest args)
   "Applies the given fn but skips any confirmation prompts invoked via yes-or-no-p."
   ;; Taken from https://www.emacswiki.org/emacs/YesOrNoP.
   (cl-letf (((symbol-function 'y-or-n-p) #'always-yes)
