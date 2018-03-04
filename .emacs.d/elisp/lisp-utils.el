@@ -14,11 +14,9 @@
    (t
     (append (flatten (car mylist)) (flatten (cdr mylist))))))
 
-(defun inc (i)
-  (+ i 1))
+(defun inc (i) (+ i 1))
 
-(defun dec (i)
-  (- i 1))
+(defun dec (i) (- i 1))
 
 (defun constantly (x)
   (lexical-let ((x x))
