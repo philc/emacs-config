@@ -134,14 +134,20 @@
 (defun markdown-perform-promote (should-promote)
   "Promotes the list item under the cursor, excluding subtrees"
   (let* ((region (markdown-get-list-item-region))
-         (indent-amount (if should-promote -2 2)))
-    (indent-rigidly (first region) (second region) indent-amount)))
+         (indent-amount (if should-promote -2 2))
+         (is-collapsed-subtree (overlays-at (second region))))
+    (if is-collapsed-subtree
+        (progn
+          (outline-show-subtree)
+          (markdown-perform-promote-subtree should-promote)
+          (outline-hide-subtree))
+      (indent-rigidly (first region) (second region) indent-amount))))
 
 (defun markdown-perform-promote-subtree (should-promote)
-  "Promotes hte list under under the cursor, and also promotes all subtrees."
-  ;; This show-subtree call is important because this indentation code does not work with collapsed subtrees.
-  ;; They are converted into raw ellipses characters, and so their contents would otherwise b elost.
-  (show-subtree)
+  "Promotes thes list under under the cursor, and also promotes all subtrees."
+  ;; This show-subtree call is important because this indentation code does not work with collapsed subtrees,
+  ;; which are represented as overlays. The hidden overlays get lost upon indention.
+  (outline-show-subtree)
   (let* ((line (util/get-current-line))
          (start-level (util/line-indentation-level line))
          (indent-amount (if should-promote -2 2))
