@@ -168,6 +168,11 @@
 (defun markdown-promote-subtree () (interactive) (markdown-perform-promote-subtree t))
 (defun markdown-demote-subtree () (interactive) (markdown-perform-promote-subtree nil))
 
+(defun markdown-up-heading ()
+  (interactive)
+  (outline-up-heading 1)
+  (back-to-indentation)) ; Move the cursor to the first non-whitespace character.
+
 (defun bounds-of-space-delimitted-word ()
   "Returns a cons list of coordinates of the boundary of the word under the cursor, where 'word' is defined
    as any sequence of non-whitespace characters."
@@ -258,7 +263,8 @@
     (kbd "C-S-L") 'markdown-demote
     (kbd "C-S-H") 'markdown-promote
     (kbd "C-S-A-L") 'markdown-demote-subtree
-    (kbd "C-S-A-H") 'markdown-promote-subtree)
+    (kbd "C-S-A-H") 'markdown-promote-subtree
+    "gu" 'markdown-up-heading)
 
   (evil-define-key 'insert markdown-lite-mode-map
     (kbd "C-S-H") 'markdown-promote
