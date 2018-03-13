@@ -349,8 +349,8 @@
 ; Create a few shorthand-aliases.
 
 (general-define-key
+ :keymaps '(normal visual)
  :prefix global-leader-prefix
- :keymaps 'normal
  "h" 'help
  "b" 'ido-switch-buffer
  "f" 'projectile-find-file
@@ -406,7 +406,7 @@
 ;; There are also some window switching keybindings set in osx-keys-minor-mode-map, below.
 (general-define-key
  :prefix global-leader-prefix
- :keymaps 'normal
+ :keymaps '(normal visual)
  "wn" 'create-new-column
  "wv" 'split-window-horizontally-and-focus
  "wh" 'split-window-vertically-and-focus
