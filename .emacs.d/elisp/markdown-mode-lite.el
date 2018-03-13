@@ -467,6 +467,7 @@ increase the indentation by one level."
 (defun markdown-move-list-item-up ()
   "Move the current list item up in the list when possible."
   (interactive)
+  (outline-show-subtree) ; When moving list items, expand any collaped subtrees to avoid corruption.
   (let (cur prev old)
     (when (setq cur (markdown-cur-list-item-bounds))
       (setq old (point))
@@ -476,6 +477,7 @@ increase the indentation by one level."
             (setq prev (markdown-cur-list-item-bounds))
             (condition-case nil
                 (progn
+                  (outline-show-subtree)
                   (transpose-regions (nth 0 prev) (nth 1 prev)
                                      (nth 0 cur) (nth 1 cur) t)
                   (goto-char (+ (nth 0 prev) (- old (nth 0 cur)))))
@@ -486,11 +488,13 @@ increase the indentation by one level."
 (defun markdown-move-list-item-down ()
   "Move the current list item down in the list when possible."
   (interactive)
+  (outline-show-subtree) ; When moving list items, expand any collaped subtrees to avoid corruption.
   (let (cur next old)
     (when (setq cur (markdown-cur-list-item-bounds))
       (setq old (point))
       (if (markdown-next-list-item (nth 3 cur))
           (progn
+            (outline-show-subtree)
             (setq next (markdown-cur-list-item-bounds))
             (condition-case nil
                 (progn
