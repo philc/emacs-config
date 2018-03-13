@@ -248,31 +248,20 @@
 (defun setup-markdown-mode ()
   (interactive)
 
-  (evil-define-key 'normal markdown-lite-mode-map
-    (kbd "<S-tab>") 'outline-hide-sublevels
-    ";l" 'markdown-create-link
-    ";re" (lambda ()
-            (interactive)
-            (let ((markdown-stylesheet "gmail"))
-              (call-interactively 'preview-markdown)))
-    ";rd" (lambda ()
-            (interactive)
-            (let ((markdown-stylesheet "google-docs"))
-              (call-interactively 'preview-markdown)))
-    ";rr" 'preview-markdown)
+  (define-leader-keys 'markdown-lite-mode-map
+    "l" 'markdown-create-link
+    "re" (lambda ()
+           (interactive)
+           (let ((markdown-stylesheet "gmail"))
+             (call-interactively 'preview-markdown)))
+    "rd" (lambda ()
+           (interactive)
+           (let ((markdown-stylesheet "google-docs"))
+             (call-interactively 'preview-markdown)))
+    "rr" 'preview-markdown)
 
   (evil-define-key 'visual markdown-lite-mode-map
-    (kbd "M-b") 'markdown-bold
-    ";l" 'markdown-create-link
-    ";re" (lambda ()
-            (interactive)
-            (let ((markdown-stylesheet "gmail"))
-              (call-interactively 'preview-markdown)))
-    ";rd" (lambda ()
-            (interactive)
-            (let ((markdown-stylesheet "google-docs"))
-              (call-interactively 'preview-markdown)))
-    ";rr" 'preview-markdown)
+    (kbd "M-b") 'markdown-bold)
 
   (evil-define-key 'normal markdown-lite-mode-map
     ;; Autocomplete setext headers by typing "==" or "--" on the header's line in normal mode.
