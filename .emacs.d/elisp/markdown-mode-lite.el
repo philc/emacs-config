@@ -60,12 +60,31 @@
 (add-to-list 'auto-mode-alist '("\\.markdown$" . markdown-lite-mode))
 (add-to-list 'auto-mode-alist '("\\.md$" . markdown-lite-mode))
 
-(defun markdown-insert-list-item-below ()
-  "Inserts a new list item under the current one. markdown-insert-list-item inserts above, by default."
+(defun mml-get-next-list-marker (list-marker)
+  "When appending a new item to an existing list, this returns the character to be used for that list item. If
+   we're appending to a numbered list, increment the list-marker by one."
+  (cond
+   ;; Ordered list
+   ((string-match "[0-9]" list-marker)
+    (concat (int-to-string (+ 1 (string-to-number list-marker))) "."))
+   ;; Unordered list
+   ((string-match "[\\*\\+-]" list-marker)
+    (concat (s-trim-right list-marker)))))
+
+(defun mml-insert-list-item-below ()
+  "Inserts a new list item under the current one."
   (interactive)
-  (end-of-line)
-  (call-interactively 'markdown-insert-list-item)
-  (evil-append nil))
+  (let* ((bounds (markdown-cur-list-item-bounds))
+         (indent (nth 2 bounds))
+         (marker (nth 4 bounds))
+         (new-marker (mml-get-next-list-marker marker))
+         (space-char 32)
+         (new-indent (make-string indent space-char))
+         (is-collapsed (overlays-at (second bounds))))
+    (goto-char (+ (second bounds) (if is-collapsed 1 0)))
+    (newline)
+    (insert new-indent new-marker " ")
+    (evil-append nil)))
 
 (defun markdown-create-list-item ()
   "Takes the current visualize line and makes it into a list item."
@@ -277,8 +296,8 @@
             ;; Note for this C-S-I keybinding to work, you must (define-key input-decode-map [?\C-i] [C-i])
             ;; https://emacs.stackexchange.com/a/221
             (kbd "C-S-I") 'markdown-create-list-item
-            ;; M-return creates a new todo item and enters insert mode.
-            (kbd "<C-return>") 'markdown-insert-list-item-below))
+            ;; M-return creates a new list item and enters insert mode.
+            (kbd "<C-return>") 'mml-insert-list-item-below))
         '(normal insert)))
 
 (setup-markdown-mode)
@@ -388,6 +407,7 @@ fragment is not a backquote.")
 ;;   "[^ \n\t][ \t]*\\(  \\)$"
 ;;   "Regular expression for matching line breaks.")
 
+;; TODO(philc): This has been replaced with mml-insert-list-item-below.
 (defun markdown-insert-list-item (&optional arg)
   "Insert a new list item.
 If the point is inside unordered list, insert a bullet mark.  If
