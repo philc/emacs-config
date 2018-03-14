@@ -81,7 +81,7 @@
          (new-marker (mml-get-next-list-marker marker))
          (space-char 32)
          (new-indent (make-string indent space-char))
-         (is-collapsed (overlays-at (second bounds))))
+         (is-collapsed (invisible-p (second bounds))))
     (goto-char (+ (second bounds) (if is-collapsed 1 0)))
     (newline)
     (insert new-indent new-marker " ")
@@ -155,7 +155,7 @@
   "Promotes the list item under the cursor, excluding subtrees"
   (let* ((region (markdown-get-list-item-region))
          (indent-amount (if should-promote -2 2))
-         (is-collapsed-subtree (overlays-at (second region))))
+         (is-collapsed-subtree (invisible-p (second region))))
     (if is-collapsed-subtree
         (progn
           (outline-show-subtree)
