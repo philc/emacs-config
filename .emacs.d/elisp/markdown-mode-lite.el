@@ -250,6 +250,12 @@
   (interactive)
 
   (define-leader-keys 'markdown-lite-mode-map
+    "0" 'outline-show-all
+    "1" '(lambda () (interactive) (mml-show-level 1))
+    "2" '(lambda () (interactive) (mml-show-level 2))
+    "3" '(lambda () (interactive) (mml-show-level 3))
+    "4" '(lambda () (interactive) (mml-show-level 4))
+    "5" '(lambda () (interactive) (mml-show-level 5))
     "l" 'markdown-create-link
     "re" (lambda ()
            (interactive)
@@ -268,7 +274,12 @@
     ;; Autocomplete setext headers by typing "==" or "--" on the header's line in normal mode.
     (kbd "==") '(lambda () (interactive) (insert-markdown-setext-header "=="))
     (kbd "--") '(lambda () (interactive) (insert-markdown-setext-header "--"))
+    (kbd "A-k") 'mml-backward-same-level
+    (kbd "A-j") 'mml-forward-same-level
+    (kbd "A-h") 'outline-previous-visible-heading
+    (kbd "A-l") 'outline-next-visible-heading
     (kbd "TAB") 'markdown-cycle
+    (kbd "A-o") 'markdown-cycle
     (kbd "C-S-L") 'markdown-demote
     (kbd "C-S-H") 'markdown-promote
     (kbd "C-S-A-L") 'markdown-demote-subtree
@@ -292,10 +303,25 @@
 
 (setup-markdown-mode)
 
+(defun mml-show-level (indent-level)
+  "Show all list items which are less than or equal to `indent-level`."
+  (outline-hide-sublevels (* indent-level 2)))
+
 (defun markdown-cycle ()
   "Cycle the visibility of the list under the cursor."
   (interactive)
   (save-excursion (outline-cycle)))
+
+(defun mml-forward-same-level ()
+  (interactive)
+  (condition-case nil (outline-forward-same-level 1)
+    (error (outline-next-visible-heading 1))))
+
+(defun mml-backward-same-level ()
+  (interactive)
+  (condition-case nil (outline-backward-same-level 1)
+    (error (outline-previous-visible-heading 1))))
+
 
 ;;
 ;; Much of this code is taken from markdown-mode.el.
