@@ -1319,6 +1319,15 @@
   (lexical-let ((has-makefile (file-exists-p (concat (projectile-project-root) "Makefile"))))
     (save-buffer)
     (message command)
+    ;; If a previous compile/run command is still running, you will get prompted to kill the other process.
+    ;; This avoids that prompt by killing any still-running compile process.
+    ;; https://stackoverflow.com/a/14404821/46237
+    (ignore-errors
+        (process-kill-without-query
+          (get-buffer-process
+            (get-buffer "*compilation*"))))
+      (ignore-errors
+        (kill-buffer "*compilation*"))
     (util/without-confirmation
      (lambda () (compile (concat "cd " (projectile-project-root) " && " command))))))
 
