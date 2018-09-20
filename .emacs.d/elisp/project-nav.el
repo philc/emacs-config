@@ -10,7 +10,7 @@
 
 ;; This is set to 600 by default. It shouldn't be the case, but for some reason, the filter-files-in-directory
 ;; function hits this limit.
-(setq max-lisp-eval-depth 1200)
+(setq max-lisp-eval-depth 1600)
 
 (defun project-nav/filter-files-in-directory (directory filter-fn include-subdirectories)
   "Filters the files in the given directory and subdirectories using filter-fn. Excludes .git subdirectories."
