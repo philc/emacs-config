@@ -1288,7 +1288,19 @@
 (with-eval-after-load "go-mode"
   (evil-define-key 'normal go-mode-map
     "gf" 'godef-jump
-    "K" 'godef-describe))
+    "K" 'godef-describe
+    ; Uses "go doc" rather than "godoc".
+    (kbd "A-k") 'go-doc-at-point))
+
+(defun go-doc-at-point ()
+  (interactive)
+  (let* ((query (thing-at-point 'filename t))
+         (_ (message (concat "go doc " query)))
+         (status-and-stdout (util/call-process-with-exit-status "go" nil "doc" query)))
+    (util/preserve-selected-window
+     (lambda ()
+       (with-help-window "*Help*"
+         (princ (second status-and-stdout)))))))
 
 (defun go-save-and-compile-fn (command)
   "Returns a function for the purpose of binding to a key which saves the current buffer and then
