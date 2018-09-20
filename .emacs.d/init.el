@@ -223,8 +223,8 @@
                 (untabify (point-min) (point-max)))
             nil))
 
-;; Allow <C-i> to be bindable as keybinding. In terminal's, C-i is translated to Tab, and that's how it works
-;; in Emacs. This workaround came from https://emacs.stackexchange.com/a/221.
+;; Allow <C-i> to be bindable as keybinding. In terminals, C-i is translated to Tab, and that's how it works
+;; in Emacs. This workaround came from https://emacs.stackexchange.com/a/221
 (define-key input-decode-map [?\C-i] [C-i])
 
 (defun backward-delete-word ()
@@ -323,10 +323,12 @@
 (define-key evil-insert-state-map (kbd "RET") 'newline-and-indent)
 
 ;; When jumping back and forth between marks, recenter the screen on the cursor.
-(define-key evil-normal-state-map (kbd "C-o")
+(define-key evil-normal-state-map (kbd "<C-o>")
   (lambda () (interactive) (evil-jump-backward) (recenter-no-redraw)))
-(define-key evil-normal-state-map (kbd "C-i")
+(define-key evil-normal-state-map (kbd "<C-i>")
   (lambda () (interactive) (evil-jump-forward) (recenter-no-redraw)))
+;; (global-set-key (kbd "<C-i>") (lambda () (interactive) (evil-jump-forward) (recenter-no-redraw)))
+
 
 ; These keybindings conflict with nothing else, which allows me to pull up help from within any mode.
 (global-set-key (kbd "C-A-M-h") 'help)
