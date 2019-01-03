@@ -688,6 +688,7 @@
   ;; dired overrides my global "other window" shorcut.
   (kbd "M-C-n") 'other-window
   (kbd "M-C-n") 'other-window
+  ";s" 'ag-project-in-current-window ; Dired overrides this too.
   "cd" 'dired-create-directory
   "cf" 'dired-create-file
   "x" 'dired-mark
