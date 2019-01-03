@@ -60,6 +60,7 @@
                       projectile ; Find file in project (ala Vim's CTRL-P or Textmate's Cmd-T)
                       rainbow-delimiters ; Highlight parentheses in rainbow colors.
                       ruby-electric ; Insert matching delimiters; unindent end blocks after you type them.
+                      s ; A strings library.
                       scss-mode ; For editing SCSS files.
                       smartparens ; For editing expressions in parentheses.
                       smex ; Makes the M-x command more useful by showing you recently used commands, etc.
@@ -858,7 +859,7 @@
                                        (->> (or (gethash i escreen-number->alias) "unnamed")
                                             (format template (+ i 1))))))
                  (tab-names (-map get-display-name (escreen-get-active-screen-numbers))))
-    (message (string/join tab-names ""))))
+    (message (s-join "" tab-names))))
 
 (defun escreen-tab-switcher ()
   "Shows a menu in the minibuffer of tab names and numbers. Type the tab number to switch to it."
@@ -1247,7 +1248,7 @@
                                   (substring 1 -1) ; Remove the enclosing braces.
                                   (split-string "; *")
                                   ((lambda (x) (-map 'chomp x)))
-                                  (string/join ";\n"))))
+                                  ((lambda (x) (s-join ";\n" x))))))
                 (concat "{\n" contents "}"))
             ;; else, collapse the CSS block into a single line.
             (-> (-map 'chomp lines)

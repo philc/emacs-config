@@ -1,8 +1,8 @@
 ;;
-;; Project navigation functions for opening project folders in dired-mode.
+;; Project navigation functions for jumping to different projects/workspaces.
 ;;
 (provide 'project-nav)
-(require 'lisp-utils) ; TODO(philc): Update this to use the s.el strings library.
+(require 's)
 
 ;; Customize this to include the paths of folders containing projects, and notes.
 (setq project-nav/project-folders '())
@@ -15,9 +15,9 @@
 (defun project-nav/filter-files-in-directory (directory filter-fn include-subdirectories)
   "Filters the files in the given directory and subdirectories using filter-fn. Excludes .git subdirectories."
   (->> (directory-files directory t)
-       (--remove (or (string/ends-with it ".")
-                     (string/ends-with it "..")
-                     (string/ends-with it ".git")))
+       (--remove (or (s-ends-with? "." it)
+                     (s-ends-with? ".." it)
+                     (s-ends-with? ".git" it)))
        (--map (if (and include-subdirectories (file-directory-p it))
                   (project-nav/filter-files-in-directory it filter-fn include-subdirectories)
                 it))
@@ -30,14 +30,14 @@
   "Prompts for the name of a notes file to open."
   (interactive)
   (let* ((file-matches-pattern? (lambda (file)
-                                  (some (lambda (ext) (string/ends-with file ext))
+                                  (some (lambda (ext) (s-ends-with? ext file))
                                         project-nav/notes-file-extensions)))
          (file-list (->> project-nav/notes-directories
                          (--map (project-nav/filter-files-in-directory it file-matches-pattern? t))
                          flatten)))
     (let ((file-to-open (ido-completing-read "Notes file: " (mapcar 'file-name-nondirectory file-list))))
       (->> file-list
-           (--filter (string/ends-with it (concat "/" file-to-open)))
+           (--filter (s-ends-with? (concat "/" file-to-open) it))
            first
            find-file))))
 
@@ -70,7 +70,7 @@
                                                (-map 'file-name-nondirectory all-project-folders)
                                                nil t))
          (project (->> all-project-folders
-                       (--filter (string/ends-with it (concat "/" project-to-open)))
+                       (--filter (s-ends-with? (concat "/" project-to-open) it))
                        first)))
     (project-nav/open-root-of-project project)
     ;; If we invoke this inside of a split, don't set the tab's title.

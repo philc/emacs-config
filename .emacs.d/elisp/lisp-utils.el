@@ -3,6 +3,7 @@
 ;;
 (provide 'lisp-utils)
 (require 'dash)
+(require 's)
 
 ;; Use Clojure's convention of `fn` for anonymous functions. It's shorter.
 (defalias 'fn 'lambda)
@@ -42,32 +43,8 @@
              `(if (null ,x) nil
                 ,(list form x))))))
 
-(defun string/ends-with (s ending)
-  "return non-nil if string S ends with ENDING."
-  (let ((elength (length ending)))
-    (if (> elength (length s))
-      nil
-      (string= (substring s (- 0 elength)) ending))))
-
-(defun string/starts-with (s start)
-  "returns non-nil if string S starts with ARG.  Else nil."
-  (if (> (length start) (length s))
-      nil
-    (string-equal (substring s 0 (length start)) start)))
-
-(defun string/join (strings separator)
-  (mapconcat 'identity strings separator))
-
 (defun string/blank? (s)
-  (string= (chomp s) ""))
-
-;; Taken from http://www.emacswiki.org/emacs/ElispCookbook
-;; Also called "strip" or "trim".
-(defun chomp (str)
-  "Chomp leading and tailing whitespace from str."
-  (while (string-match "\\`\n+\\|^\\s-+\\|\\s-+$\\|\n+\\'" str)
-    (setq str (replace-match "" t t str)))
-  str)
+  (string= (s-trim s) ""))
 
 ;; Taken from https://groups.google.com/forum/#!topic/gnu.emacs.help/_p2-GXAANgw. Requires CL.
 (defun partition (l n)
