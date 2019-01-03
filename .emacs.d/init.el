@@ -1544,3 +1544,19 @@
 
 ;; Ensure .mustache files are opened and edited using mustache mode.
 (add-to-list 'auto-mode-alist '("\\.mustache$" . mustache-mode))
+
+;; This is unbound and invoked with M-x.
+;; https://emacs.stackexchange.com/a/3446/2278
+(setq smart-chars-to-ascii
+      '(("\x201C" . "\"")
+        ("\x201D" . "\"")
+        ("\x2018" . "'")
+        ("\x2019" . "'")
+        ("\x2013" . "-") ; en-dash
+        ("\x2014" . "-"))) ; em-dash
+
+(defun replace-smart-quotes (beg end)
+  "Replace any fancy non-ascii quote characters with plain ones. You can get fancy quotes when copying text
+   from the web into Emacs."
+  (interactive "r")
+  (format-replace-strings smart-chars-to-ascii nil beg end))
