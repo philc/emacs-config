@@ -21,7 +21,7 @@
 ;; See http://orgmode.org/manual/Faces-for-TODO-keywords.html.
 (setq org-todo-keyword-faces '(("WAITING" . (:foreground "#999999"))
                                ("TODO" . (:foreground "orange")) ; The default red used for TODO is opressive
-                               ("INPROGRESS" .(:foreground "#85C7FF"))))
+                               ("IP" .(:foreground "#85C7FF"))))
 
 (defun init-org-mode-personal ()
   ;; This enables "clean mode", such that sublists use whitespace for indentation (ala markdown) instead of
@@ -174,6 +174,7 @@
                               (?j "Journal")
                               (?n "Entertainment")
                               (?m "Emacs")
+                              (?d "Dad")
                               (?p "Side projects")
                               (?v "Vimium")
                               (?d "PD"))))
@@ -188,7 +189,7 @@
   (interactive)
   "Prompts for the name of a top-level heading and jumps to there."
   ;; TODO(philc): Populate these completions with the top-level headers from the buffer.
-  (let* ((headings '("Liftoff" "Base" "Study" "PD" "Entertainment" "Emacs" "Journal" "Gumshoe" "Side projects"
+  (let* ((headings '("Liftoff" "Base" "Dad" "Study" "PD" "Entertainment" "Emacs" "Journal" "Gumshoe" "Side projects"
                      "Vimium" "Email"))
          (heading (ido-completing-read "Heading: " headings)))
     (goto-char 0)
