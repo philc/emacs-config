@@ -48,11 +48,14 @@
   ;; Customzie this to meet your needs if you want this functionality.
   (let* ((project-name (file-name-nondirectory project-path))
          (is-clojure (file-exists-p (concat project-path "/project.clj")))
-         (main-file (when is-clojure
-                      (->> ["core.clj" "handler.clj"]
-                           (--map (concat project-path "/src/" project-name "/" it))
-                           (remove-if-not 'file-exists-p)
-                           first))))
+         (main-files (-> (if is-clojure
+                             (->> ["core.clj" "handler.clj"]
+                                  (--map (concat project-path "/src/" project-name "/" it)))
+                           [])
+                         (append (list (concat project-path "/" "README.md")))))
+         (main-file (->> main-files
+                         (remove-if-not 'file-exists-p)
+                         first)))
     (if main-file
         (set-window-buffer (selected-window) (find-file main-file))
       (dired project-path))))
