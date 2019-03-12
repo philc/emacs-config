@@ -1,6 +1,6 @@
 ;; Functions for working with Javascript source and evaluating it in a REPL.
 (provide 'javascript-config)
-(require 'js-comint) ; For connecting to and evaluating code in Node REPLs.
+(require 'js-comint) ; For connecting to and evaluating code in a Node REPL.
 
 (defun js/get-repl-buffer ()
   ; TODO(philc): Make this fail if a REPL doesn't exist.
