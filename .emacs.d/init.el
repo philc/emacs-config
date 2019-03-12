@@ -213,6 +213,8 @@
 
 ;; Highlight the line the cursor is on. This is mostly to make it easier to tell which split is active.
 (global-hl-line-mode)
+;; Don't blink the cursor. I can easily see it, because the line the cursor is on is already highlighted.
+(blink-cursor-mode -1)
 
 ;; Indent with spaces instead of tabs by default. Modes that really need tabs should enable indent-tabs-mode
 ;; explicitly. Makefile-mode already does that, for example. If indent-tabs-mode is off, replace tabs with
