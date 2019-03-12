@@ -92,6 +92,11 @@
 ;; is visible. The default behavior in Emacs is to allow only resizing by whole character-columns and rows.
 (setq frame-resize-pixelwise t)
 
+;; Remove the titlebar on OSX, so that Emacs occupies the entire screen.
+;; (set-frame-parameter nil 'undecorated t) ; This prevents Emacs from being controlled by Hammerspoon on OSX.
+(add-to-list 'default-frame-alist '(ns-transparent-titlebar . t))
+(add-to-list 'default-frame-alist '(ns-appearance . dark))
+
 ;; Turn off graphical toolbars.
 (if (display-graphic-p) (menu-bar-mode 1) (menu-bar-mode -1))
 (when (and (fboundp 'tool-bar-mode) tool-bar-mode) (tool-bar-mode -1))
