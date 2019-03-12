@@ -116,23 +116,26 @@
 
 (defun preview-markdown (beg end)
   "Pipes the buffer's contents into a script which renders the markdown as HTML and opens in a browser.
-   If the `markdown-stylesheet` var is bound, then that stylesheet will be used (i.e. passed as an argument into
-   `markdown_page.rb`."
+   If the `markdown-stylesheet` var is bound, then that stylesheet will be used (i.e. passed as an argument
+   into `markdown_page.rb`."
   (interactive (if (use-region-p)
                    (list (region-beginning) (region-end))
                  (list nil nil)))
   (let* ((beg (or beg (point-min)))
          (end (or end (point-max)))
          (stylesheet (if (boundp 'markdown-stylesheet) markdown-stylesheet "github"))
+         (use-clipboard (not (string= markdown-stylesheet "google-docs")))
          ;; NOTE(philc): line-number-at-pos is 1-indexed.
-         (command (format "~/scripts/publishing/markdown_page.rb --css %s --scroll-to-line %s"
+         (command (format "~/scripts/publishing/markdown_page.rb %s --css %s --scroll-to-line %s"
+                          (if use-clipboard "--clipboard" "")
                           stylesheet
                           (- (line-number-at-pos) 1)))
          (markdown (buffer-substring-no-properties beg end))
          ;; This will throw an error if there's any issue with the mardkown->html conversion.
          (html (util/call-process-and-check "/bin/bash" markdown "-c" command)))
     ;; Show markdown in a browser
-    (util/call-process-and-check "browser" html)))
+    (when (not use-clipboard)
+      (util/call-process-and-check "browser" html))))
 
 (defun markdown-get-list-item-region ()
   "Returns '(start, end) for the markdown list item under the cursor, excluding subtrees."
@@ -141,7 +144,7 @@
     (let ((start (line-beginning-position))
           (end (line-end-position))
           (end-of-file nil))
-      ; NOTE(philc): (next-line) returns an error if we're at the end of the file.
+      ;; NOTE(philc): (next-line) returns an error if we're at the end of the file.
       (ignore-errors (next-line))
       ;; Stop the search at left-aligned text (which is an approximation for detecting headings).
       (while (not (or ; (string/blank? (util/get-current-line)) ; TODO(philc): Remove this.
@@ -237,7 +240,7 @@
 (defun markdown-create-link ()
   "Converts the currently selected text into a link, using what's the clipboard as the URL."
   (interactive)
-  (let ((url (chomp (util/call-process-and-check "pbpaste" nil))))
+  (let ((url (s-trim (util/call-process-and-check "pbpaste" nil))))
     (replace-region-with-contents (lambda (existing-text)
                                     (concat "[" existing-text "](" url ")")))))
 
