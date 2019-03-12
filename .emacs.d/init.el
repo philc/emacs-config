@@ -1248,11 +1248,11 @@
               (let ((contents (-> text
                                   (substring 1 -1) ; Remove the enclosing braces.
                                   (split-string "; *")
-                                  ((lambda (x) (-map 'chomp x)))
+                                  ((lambda (x) (-map 's-trim x)))
                                   ((lambda (x) (s-join ";\n" x))))))
                 (concat "{\n" contents "}"))
             ;; else, collapse the CSS block into a single line.
-            (-> (-map 'chomp lines)
+            (-> (-map 's-trim lines)
                 (string/join " ")))))
     (util/delete-thing-at-point 'brace-block)
     (insert new-text)

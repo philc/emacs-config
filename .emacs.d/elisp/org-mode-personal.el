@@ -5,6 +5,7 @@
 
 (require 'evil)
 (require 'org)
+(require 's)
 
 (provide 'org-mode-personal)
 
@@ -137,7 +138,7 @@
 
 (defun org-get-current-heading ()
   "Assumes the cursor is currently on a heading. TODO: return nil if the cursor isn't on a heading."
-  (-> (text-of-current-line) chomp (split-string "* ") second))
+  (-> (text-of-current-line) s-trim (split-string "* ") second))
 
 (defun org-move-to-heading (heading-name)
   (lexical-let ((heading-has-changed nil)
