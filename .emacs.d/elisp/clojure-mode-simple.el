@@ -112,8 +112,7 @@
 (defun clj/show-doc-for-symbol-at-point ()
   (interactive)
   (-if-let (s (thing-at-point 'symbol))
-      ;; inf-clojure-show-var-documentation will interactively prompt you for the variable.
-      (inf-clojure-show-var-documentation s)
+      (clj/eval-in-current-ns (format "(clojure.repl/doc %s)" s))
     (message "There's no symbol under the cursor to look up documentation for.")))
 
 (defun clj/open-clojure-docs-for-symbol-at-point ()
