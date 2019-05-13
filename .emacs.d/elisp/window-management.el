@@ -284,36 +284,3 @@
               (condition-case nil (delete-window window) (error nil))))))
     (when (interactive-p)
       (error "Cannot kill buffer.  Not a live buffer: `%s'" buffer))))
-
-;;
-;; Activate the previously focused frame and window when switching to the Emacs app.
-;;
-;; This logic ensures that when the Emacs app is raised/activated (e.g. by switching to it using Cmd-Tab in
-;; OSX), the last focused frame and window are focused again. This is unnecessary if you have just a single
-;; Emacs frame open. However, if you're using multiple frames, OSX will always focus a specific Emacs frame
-;; and window, and so it's really annoying to have to restore your cursor position every time you switch out
-;; of and back into Emacs.
-;; NOTE(philc): This current implementation has a somewhat severe bug in that if you use your mouse to click
-;; on a frame to switch frames, it will not work (the previously focused frame will snatch back focus). This
-;; doesn't affect me because I rarely use the mouse.
-
-(setq previously-focused-window nil)
-
-(add-hook 'focus-in-hook 'on-focus-in)
-
-(defun on-focus-in ()
-  (when (and previously-focused-window
-             (window-live-p previously-focused-window))
-    (select-frame-set-input-focus (window-frame previously-focused-window))))
-
-;; Everytime we change windows via a keystroke, treat that as the new explicitly focused window.
-(defun on-windmove (&optional ARG)
-  (setq previously-focused-window (selected-window)))
-
-(defun on-window-deleted (&optional window)
-  (setq previously-focused-window (selected-window)))
-
-(advice-add 'delete-window :after 'on-window-deleted)
-
-(dolist (f '(windmove-up windmove-right windmove-down windmove-left))
-  (advice-add f :after 'on-windmove))
