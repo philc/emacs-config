@@ -466,7 +466,7 @@
 ;; Incremental search (isearch)
 ;;
 ;; Make highlighting during incremental search feel snappier.
-(setq case-fold-search t) ; Make searches case insensitive.
+(setq case-fold-search t) ; Make Emac searches case insensitive.
 (setq lazy-highlight-initial-delay 0)
 (setq lazy-highlight-max-at-a-time nil)
 ;; Hitting esacpe aborts the search, restoring your cursor to the original position, as it does in Vim.
