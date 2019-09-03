@@ -76,6 +76,11 @@
 (defun mml-insert-list-item-below ()
   "Inserts a new list item under the current one."
   (interactive)
+  ;; When the current list item has a trailing space at the end of the current line, the end of the list item
+  ;; is not properly calculated, and so ultimately an exception is thrown. This is disruptive. It was more
+  ;; expedient to just trim the current line than to change the way list items are detected, which proved
+  ;; involved.
+  (delete-trailing-whitespace (line-beginning-position) (line-end-position))
   (let* ((bounds (markdown-cur-list-item-bounds))
          (indent (nth 2 bounds))
          (marker (nth 4 bounds))
