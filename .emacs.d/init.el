@@ -1062,6 +1062,13 @@
   ;; NOTE(philc): This is a script I've written to perform this transformation.
   (replace-region-with-command-output "~/scripts/publishing/format_outline_into_sections.rb"))
 
+(defun markdown-strip-bullets ()
+  "Removes any bullet point markers and indentation from lines.
+   This is useful for converting a list into plain lines, for pasting into CSVs, emails, spreadsheets."
+  (interactive)
+  ;; NOTE(philc): This is a script I've written to perform this transformation.
+  (replace-region-with-command-output "~/scripts/publishing/strip_bullets.rb"))
+
 (defun markdown-convert-to-org ()
   (interactive)
   (replace-region-with-command-output "~/scripts/publishing/convert_markdown_to_org.rb"))
