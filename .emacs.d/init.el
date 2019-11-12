@@ -1254,26 +1254,30 @@
   "Toggles whether a CSS rule is one line or multiple lines."
   ;; This is a transformation I do all the time, and so wrote a helper for it.
   (interactive)
-  (let* ((text (util/thing-at-point-no-properties 'brace-block))
-         (lines (split-string text "\n"))
-         (should-expand (= (length lines) 1))
-         (new-text
-          (if should-expand
-              (let ((contents (-> text
-                                  (substring 1 -1) ; Remove the enclosing braces.
-                                  (split-string "; *")
-                                  ((lambda (x) (-map 's-trim x)))
-                                  ((lambda (x) (s-join ";\n" x))))))
-                (concat "{\n" contents "}"))
-            ;; else, collapse the CSS block into a single line.
-            (-> (-map 's-trim lines)
-                (string/join " ")))))
-    (util/delete-thing-at-point 'brace-block)
-    (insert new-text)
-    (when should-expand
-      ;; When expanding the CSS to multiple lines, we didn't preserve line indentation, so as a workaround,
-      ;; here we just re-indent the paragraph around the cursor.
-      (evil-indent-inside-paragraph))))
+  (let* ((text (util/thing-at-point-no-properties 'brace-block)))
+    (when text
+      (let* ((lines (split-string text "\n"))
+             (should-expand (= (length lines) 1))
+             (new-text
+              (if should-expand
+                  (let ((contents (-> text
+                                      (substring 1 -1) ; Remove the enclosing braces.
+                                      (split-string "; *")
+                                      ((lambda (x) (-map 's-trim x)))
+                                      ((lambda (x) (s-join ";\n" x))))))
+                    (concat "{\n" contents "}"))
+                ;; else, collapse the CSS block into a single line.
+                (->> (-map 's-trim lines)
+                     (s-join " ")))))
+        (util/delete-thing-at-point 'brace-block)
+        (insert new-text)
+        (when should-expand
+          ;; When expanding the CSS to multiple lines, we didn't preserve line indentation, so as a
+          ;; workaround, here we just re-indent the paragraph around the cursor.
+          (evil-ext/indent-inside-paragraph)
+          ; Put cursor on the line prior to the brace, so you can immediately begin typing in new styles.
+          (previous-line)
+          (end-of-line))))))
 
 (evil-define-key 'normal css-mode-map
   (kbd "A-C-f") 'toggle-fold-css-block)
