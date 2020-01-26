@@ -922,7 +922,7 @@
 ;; https://github.com/tlikonen/wcheck-mode
 ;;
 ;; * FlySpell is the default choice for spellchecking, but I found it slow, even using every flyspell perf
-;;   improvement I could find. Speck, as an alternative, doesn't slow down your typing.
+;;   improvement I could find online. Speck, as one alternative, didn't slow down my typing.
 ;; * I suspect speck mode is the culrprit of periodic emacs crashes. It's also poorly documented and doesn't
 ;;   support binding "add to personal dictionary" as a keybinding.
 ;; * wcheck-mode is hard to configure because of its genericism, but at least it's documented and performs
@@ -1196,6 +1196,7 @@
   "Pipe the current buffer into `html-beautify`, and replace the current buffer's contents."
   (interactive)
   ;; I don't know why, but save-excursion does not maintain the cursor position.
+  ;; This beautifier is https://github.com/beautify-web/js-beautify.
   (let ((p (point))
         (scroll-y (window-start)))
     (call-process-region (point-min) (point-max) "html-beautify" t (buffer-name) t
@@ -1227,6 +1228,9 @@
   (util/save-buffer-if-dirty)
   (util/call-process-with-exit-status "bash"
                                       (expand-file-name "~/scripts/reload_chrome_extensions_and_tab.sh")))
+
+;; Disable spell check in HTML buffers. There are too many false-positives in the markup.
+(add-hook 'html-mode-hook (lambda () (wcheck-mode -1)))
 
 ;;
 ;; CSS, LESS mode
