@@ -47,7 +47,7 @@
  ;; - green :      "#6ac214"
  ;; - orange/red : "tomato"
  ;; Source Code Pro gets me 3 more lines on screen than Monaco.
- `(default ((t (:family "Source Code Pro" :foundry "unknown" :width normal :height 140 :weight normal :slant normal :underline nil :overline nil :strike-through nil :box nil :inverse-video nil :foreground "#eeeeec" :background "#202424" :stipple nil :inherit nil))))
+ `(default ((t (:family "Source Code Pro" :foundry "unknown" :width normal :height 140 :weight normal :slant normal :underline nil :overline nil :strike-through nil :box nil :inverse-video nil :foreground "#eeeeec" :background "#1C2020" :stipple nil :inherit nil))))
  `(cursor ((t (:foreground "#222222" :background "#fce94f"))))
  `(fixed-pitch ((t (:inherit (default)))))
  `(variable-pitch ((t (:family "Sans Serif"))))
