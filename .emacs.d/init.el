@@ -1229,6 +1229,12 @@
   (util/call-process-with-exit-status "bash"
                                       (expand-file-name "~/scripts/reload_chrome_extensions_and_tab.sh")))
 
+(defun open-file-in-browser ()
+  "Opens the current file in Google Chrome."
+  (interactive)
+  (util/save-buffer-if-dirty)
+  (util/call-process-with-exit-status "open" nil "-a" "Google Chrome" (buffer-file-name)))
+
 ;; Disable spell check in HTML buffers. There are too many false-positives in the markup.
 (add-hook 'html-mode-hook (lambda () (wcheck-mode -1)))
 
