@@ -356,7 +356,12 @@
 
 (setq general-default-keymaps 'evil-normal-state-map)
 
-; Create a few shorthand-aliases.
+;; Ensure every mode starts in Evil's normal state. Some modes, like *help*, start in the "motion" state, and
+;; it's unintuitive to define keybindings for those states.
+;; This obviates the need to specify this setting per-mode via `(evil-set-initial-state 'help-mode 'normal)`
+(setq evil-emacs-state-modes nil)
+(setq evil-insert-state-modes nil)
+(setq evil-motion-state-modes nil)
 
 (general-define-key
  :keymaps '(normal visual)
@@ -743,8 +748,6 @@
            ;; window. Inspired from help-fns.el.
            (with-help-window "*Help*"
              (describe-function (intern (current-word))))))))
-
-(evil-set-initial-state 'debugger-mode 'normal) ; Elisp debugger mode, used by the *backtrace* buffer.
 
 (defun current-sexp ()
   "Returns the text content of the sexp list around the cursor."
@@ -1476,6 +1479,7 @@
   "ek" 'js-comint-clear
   "en" 'js/restart-repl
   "rc" 'reload-chrome-extensions-and-active-tab)
+
 ;;
 ;; Ag (silver searcher)
 ;;
@@ -1525,8 +1529,6 @@
 ;; Emacs' package manager. Invoke it via "M-x package-list-packages".
 ;;
 
-(evil-set-initial-state 'package-mode 'normal)
-
 (evil-define-key 'normal package-menu-mode-map
   (kbd "d") 'package-menu-mark-delete
   (kbd "r") 'package-menu-refresh
@@ -1554,7 +1556,6 @@
     (call-process-region (point-min) (point-max) "lua_indent.pl" t (buffer-name) t)
     (set-window-start (selected-window) scroll-y)
     (goto-char p)))
-
 
 (define-leader-keys 'lua-mode-map
   "i" 'indent-lua-buffer)

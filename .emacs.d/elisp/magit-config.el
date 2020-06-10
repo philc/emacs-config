@@ -98,14 +98,6 @@ Date: %ad
   ";wk" 'with-editor-cancel
   "ZZ" 'with-editor-finish)
 
-(-each '(magit-mode
-         magit-status-mode
-         magit-log-mode
-         magit-diff-mode
-         git-rebase-mode
-         magit-revision-mode)
-  (lambda (mode) (evil-set-initial-state mode 'normal)))
-
 ;; NOTE(philc): I'm setting the key bindings for these magit modes when their buffers load, because for
 ;; some reason, the evil bindings on these modes conflict (i.e. when a new mode loads, it redefines the key
 ;; for the other modes). This was needed the last time I checked, but may be unnecessary in later versions of
