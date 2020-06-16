@@ -133,6 +133,9 @@
 (defun set-exec-path-from-shell-PATH ()
   "Use the same PATH within Emacs as your shell."
   ;; From http://clojure-doc.org/articles/tutorials/emacs.html
+  ;; NOTE(philc): For some reason, /usr/bin is not on the PATH when launching emacs in OSX. As a result,
+  ;; zsh will fail to start up because my .zshrc calls a few basic programs. So add it, before calling zsh.
+  (setenv "PATH" (concat (getenv "PATH") ":/usr/bin"))
   (let* ((shell "zsh") ;; NOTE(philc): Change to your desired shell. You could also use the $SHELL env var.
          (path-from-shell (shell-command-to-string (concat shell " -i -c 'echo $PATH'"))))
     (setenv "PATH" path-from-shell)
