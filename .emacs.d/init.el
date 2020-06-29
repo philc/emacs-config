@@ -1068,6 +1068,11 @@
   ;; NOTE(philc): This is a script I've written to perform this transformation.
   (replace-region-with-command-output "~/scripts/publishing/format_outline_into_sections.rb"))
 
+(defun markdown-format-outline-into-bold-sections ()
+  "See markdown-format-outline-into-sections. This uses bolded text as headings, rather than h2s."
+  (interactive)
+  (replace-region-with-command-output "~/scripts/publishing/format_outline_into_sections.rb --bold"))
+
 (defun markdown-strip-bullets ()
   "Removes any bullet point markers and indentation from lines.
    This is useful for converting a list into plain lines, for pasting into CSVs, emails, spreadsheets."
