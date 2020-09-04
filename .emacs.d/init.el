@@ -905,7 +905,11 @@
 (setq yas-snippet-dirs '("~/.emacs.d/snippets"))
 (require 'yasnippet)
 (yas-global-mode 1)
-(define-key yas-keymap (kbd "ESC") 'yas-abort-snippet)
+(define-key yas-keymap (kbd "M-v") 'clipboard-yank)
+(define-key yas-keymap (kbd "<escape>") (lambda ()
+                                          (interactive)
+                                          (yas-abort-snippet)
+                                          (switch-to-evil-normal-state)))
 ;; By default, you can't delete selected text using backspace when tabbing through a snippet.
 ;; Filed as a bug here: https://github.com/capitaomorte/yasnippet/issues/408
 (define-key yas-keymap (kbd "C-h") 'yas-skip-and-clear-or-delete-backward-char)
