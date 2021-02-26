@@ -194,6 +194,9 @@
         (move-to-column col)
         (recenter)))))
 
+;; The default inf-clojure program is "lein repl". At Liftoff, we don't use lein.
+(customize-set-variable 'inf-clojure-program "clj -A:liftoff:dev:nrepl")
+
 (defun clj/restart-repl ()
   "Starts the REPL if it's not running; otherwise resetarts it by killing and recreating the REPL buffer."
   (interactive)
