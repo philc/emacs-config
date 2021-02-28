@@ -197,6 +197,13 @@
 ;; The default inf-clojure program is "lein repl". At Liftoff, we don't use lein.
 (customize-set-variable 'inf-clojure-program "clj -A:liftoff:dev:nrepl")
 
+;; The REPL defined by `inf-clojure-program` is run in the directory "inf-clojure-project-root". This tries to
+;; detect the closest ancestor directory of the current buffer that has a project.clj. Our projects don't have
+;; project.clj files, so here I'm hardcoding where to start the REPL.
+(defun inf-clojure-project-root ()
+  ; NOTE(philc): Consider using our mono repl.
+  "/Users/phil/src/liftoff/workbench")
+
 (defun clj/restart-repl ()
   "Starts the REPL if it's not running; otherwise resetarts it by killing and recreating the REPL buffer."
   (interactive)
