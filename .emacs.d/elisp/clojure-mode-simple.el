@@ -195,7 +195,8 @@
         (recenter)))))
 
 ;; The default inf-clojure program is "lein repl". At Liftoff, we don't use lein.
-(customize-set-variable 'inf-clojure-program "clj -A:liftoff:dev:nrepl")
+;; NOTE(philc): don't invoke an nrepl here; just a repl. When I used an nrepl, all output was buffered.
+(customize-set-variable 'inf-clojure-program "clojure -A:liftoff:dev")
 
 ;; The REPL defined by `inf-clojure-program` is run in the directory "inf-clojure-project-root". This tries to
 ;; detect the closest ancestor directory of the current buffer that has a project.clj. Our projects don't have
