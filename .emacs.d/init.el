@@ -354,6 +354,11 @@
 
 (define-key evil-outer-text-objects-map "p" 'evil-paragraph-from-newlines)
 
+;; Emacs 27 bug: switching the cursor from block cursor (command mode) to bar cursor (insert mode) does not
+;; visually clear the block cursor. Caling `redisplay` resolves this. Documented here:
+;; https://github.com/emacs-evil/evil/issues/1412
+(add-hook 'evil-insert-state-entry-hook #'redisplay)
+
 (defun count-chars-region (beg end)
   "Prints the character count of the selected region."
   (interactive "r")
