@@ -7,10 +7,10 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(cider-repl-pop-to-buffer-on-connect nil)
- '(org-agenda-files (quote ("~/test.org")))
+ '(org-agenda-files '("~/test.org"))
  '(package-selected-packages
-   (quote
-    (evil general js-comint indium browse-at-remote parinfer zoom-frm yasnippet yaml-mode web-mode wcheck-mode tree-mode swift-mode spinner smex smartparens slamhound seq scss-mode ruby-electric rainbow-delimiters queue projectile powerline outline-magic org notmuch mustache-mode multi-term mu4e-maildirs-extension maxframe markdown-mode magit lua-mode less-css-mode inf-clojure ido-vertical-mode ido-ubiquitous ht hiwin gradle-mode go-mode framemove flx-ido fiplr fill-column-indicator f eyebrowse evil-surround evil-nerd-commenter evil-anzu escreen edit-server dired-details+ dired+ diminish dash-functional dash-at-point column-marker color-theme-solarized color-theme-sanityinc-tomorrow coffee-mode autopair auto-complete align-cljlet ag ace-jump-mode))))
+   '(spell-fu evil general js-comint indium browse-at-remote parinfer zoom-frm yasnippet yaml-mode web-mode wcheck-mode tree-mode swift-mode spinner smex smartparens slamhound seq scss-mode ruby-electric rainbow-delimiters queue projectile powerline outline-magic org notmuch mustache-mode multi-term mu4e-maildirs-extension maxframe markdown-mode magit lua-mode less-css-mode inf-clojure ido-vertical-mode ido-ubiquitous ht hiwin gradle-mode go-mode framemove flx-ido fiplr fill-column-indicator f eyebrowse evil-surround evil-nerd-commenter evil-anzu escreen edit-server dired-details+ dired+ diminish dash-functional dash-at-point column-marker color-theme-solarized color-theme-sanityinc-tomorrow coffee-mode autopair auto-complete align-cljlet ag ace-jump-mode))
+ '(spell-fu-idle-delay 1.5))
 
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
