@@ -998,7 +998,6 @@
 (diminish 'projectile-mode " p")
 (diminish 'yas-minor-mode "yas")
 (diminish 'osx-keys-minor-mode "")
-(diminish 'undo-tree-mode "")
 
 ;;
 ;; Powerline: improve the appearance & density of the Emacs status bar (mode line).
