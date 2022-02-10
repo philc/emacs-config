@@ -266,6 +266,7 @@
     "4" '(lambda () (interactive) (mml-show-level 4))
     "5" '(lambda () (interactive) (mml-show-level 5))
     "l" 'markdown-create-link
+    "ad" 'markdown-insert-date
     "re" (lambda ()
            (interactive)
            (let ((markdown-stylesheet "gmail"))

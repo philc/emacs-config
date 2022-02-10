@@ -1103,7 +1103,8 @@
 (defun markdown-insert-date ()
   (interactive)
   ;; I insert this type of time string into my markdown docs often.
-  (insert (format-time-string "(%b %d %Y)"))) ; Apr 17 2017
+  (forward-char)
+  (insert (format-time-string " (%b %d %Y)"))) ; E.g. "Apr 17 2017"
 
 (defun swap-female-pronouns ()
   (interactive)
