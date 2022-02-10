@@ -1501,6 +1501,44 @@
   "en" 'js/restart-repl
   "rc" 'reload-chrome-extensions-and-active-tab)
 
+
+;; Detect files in the Deno backtrace format in the compilation buffer, so that files and line numbers can
+;; be navigated to when the compilation buffer is showing compile or runtime backtraces from Deno.
+;;
+;; References:
+;; Recognizing node.js backtraces in the compile buffer:
+;;   https://benhollis.net/blog/2015/12/20/nodejs-stack-traces-in-emacs-compilation-mode/
+;; See how emacs-typescript matches both regular output and pretty-printed output.
+;;   https://github.com/emacs-typescript/typescript.el/blob/master/typescript-mode.el
+;;
+;; Here's an example Deno backtrace:
+;;
+;;   at theFunction (file:///tmp/main.js:184:1)
+;;   at file:///tmp/main.js:195:1
+;;
+;; You can see code exited outside of a function (the second line) has a different structure than code
+;; executed inside a function (the first line). We use two different regexps to match each line type, so that
+;; the regexps remain simple.
+;; To quickly and easily develop this, get a deno backtrace in a buffer, and use re-builder.
+(setq deno-error-regexp1
+      '(deno-error-1
+        "[ ]+at file://\\([^:]+\\):\\([0-9+\\):\\([0-9]+\\)$"
+        ;; These are match group indices which extract the file, line, and column, respectively.
+        1 2 3))
+
+(setq deno-error-regexp2
+      '(deno-error-2
+        "[ ]+at [^ ]+ \(file://\\([^:]+\\):\\([0-9+\\):\\([0-9]+\\)\)$"
+        ;; These are match group indices which extract the file, line, and column, respectively.
+        1 2 3))
+
+;; When interactively developing this regexp, note that add-to-list is idempotent if deno is already in the
+;; list.
+(add-to-list 'compilation-error-regexp-alist-alist deno-error-regexp1)
+(add-to-list 'compilation-error-regexp-alist 'deno-error-1)
+(add-to-list 'compilation-error-regexp-alist-alist deno-error-regexp2)
+(add-to-list 'compilation-error-regexp-alist 'deno-error-2)
+
 ;;
 ;; Ag (silver searcher)
 ;;
