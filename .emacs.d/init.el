@@ -42,7 +42,6 @@
                       dash-functional ; Useful combinators for Emacs Lisp.
                       dired-details+ ; Hides all of the unnecessary file details in dired mode.
                       diminish ; For hiding and shortening minor modes in the modeline
-                      escreen ; For a tab-like UI in Emacs.
                       evil ; Evil mode implements Vim's modal bindings and text object manipulation.
                       evil-nerd-commenter
                       general ; Functions for defining keybindings and leader keys. Complements Evil.
@@ -379,7 +378,7 @@
  "h" 'help
  "b" 'ido-switch-buffer
  "f" 'projectile-find-file
- "T" 'escreen-tab-switcher ; "T" for tab (I use lowercase "t" for shortcuts related to tests)
+ "T" 'show-tab-switcher ; "T" for tab (I use lowercase "t" for shortcuts related to tests)
  "SPC" 'evil-ext/fill-inside-paragraph ; Shortcut for Vim's gqip
  "i" 'evil-ext/indent-inside-paragraph ; Shortcut to Vim's =ip
  "d" 'projectile-dired
@@ -601,7 +600,7 @@
                   (kbd "M-=") 'text-zoom-in
                   (kbd "M-0") 'text-zoom-reset
                   (kbd "M-t") 'open-current-buffer-in-new-tab
-                  (kbd "M-i") 'escreen-set-tab-alias
+                  (kbd "M-i") 'set-tab-alias
                   ;; These aren't specifically replicating OSX shortcuts, but they manipulate the window, so I
                   ;; want them to take precedence over everything else.
                   (kbd "A-f") (lambda () (interactive) (ignore-errors (windmove-right)))
@@ -639,24 +638,25 @@
   "Vimlike ':q' behavior: close current window if there are split windows;
    otherwise, close current tab (elscreen)."
   (interactive)
-  (let ((one-escreen (= 1 (length (escreen-get-active-screen-numbers))))
-        (one-window (one-window-p)))
-    (cond
-     ; if current tab has split windows in it, close the current live window
-     ((not one-window)
-      (delete-window) ; delete the current window
-      (balance-windows) ; balance remaining windows
-      nil)
-     ; if there are multiple escreens (tabs), close the current escreen
-     ((not one-escreen)
-      (escreen-kill-screen)
-      nil)
-     ; if there is only one elscreen, just try to quit (calling elscreen-kill
-     ; will not work, because elscreen-kill fails if there is only one
-     ; elscreen)
-     (one-escreen
-      (evil-quit)
-      nil))))
+  (let ((one-tab (= 1 (length (tab-bar-tabs))))
+         (one-window (one-window-p)))
+    (progn
+      (cond
+       ;; If the current tab has multiple windows in it, close the current window.
+       ((not one-window)
+        (delete-window)
+        (balance-windows)
+        nil)
+       ;; If there are multiple tabs, close the current tab.
+       ((not one-tab)
+        (tab-bar-close-tab)
+        (show-tab-names)
+        nil)
+       ;; If there is only one tab remaining, just try to quit Emacs.
+       ;; Calling tab-bar-close-tab will fail when there's only one tab in the frame.
+       (one-tab
+        (evil-quit)
+        nil)))))
 
 ;;
 ;; Filename completions (i.e. CTRL-P or CMD-T in other editors)
@@ -844,64 +844,63 @@
     (add-hook 'post-command-hook 'restart-projectile-find-file-hook)
     (minibuffer-keyboard-quit)))
 
-;;
-;; escreen (tabs)
-;;
-;; I use one tab per "workspace" (i.e. open project). All of my tab-related config is geared towards that use
-;; case. I previously used elscreen for this, but it has two major bugs: its tab bar UI would get rendered on
-;; random windows, and Emacs's redraws would begin flashing if you changed monitors or font size.
-(require 'escreen)
-(escreen-install)
+;; Tab-bar-mode (built into Emacs)
+;; I use one tab per "workspace" -- a set of Emacs windows representing a project. The list of tabs is local
+;; to each Emacs frame. I previously used escreen, and elscreen before that. They are messier and do not work
+;; cleanly with multiple frames.
+;; https://github.com/emacs-mirror/emacs/blob/master/lisp/tab-bar.el
 
-;; I have KeyRemap4Macbook configured to translate M-j and M-k to these keys.
+;; (setq tab-bar-show t) ; This is not yet implemented in Cocoa Emacs 27.
+(tab-bar-mode)
+
+(defun show-tab-names ()
+  (interactive)
+  (let ((i 0)
+        (msg ""))
+    (dolist (tab (tab-bar-tabs))
+      (let* ((is-current (eq 'current-tab (car tab)))
+             (formatter (if is-current
+                            "[%d.%s]"
+                          " %d.%s ")))
+        (setq msg (concat msg (format formatter i (alist-get 'name tab)))))
+      (setq i (inc i))
+      (message msg)))
+  nil)
+
+;; I have KarabinerElements configured to translate M-j and M-k to these keys.
 (global-set-key (kbd "<A-M-left>") (lambda () (interactive)
-                                     (call-interactively 'escreen-goto-prev-screen)
+                                     (call-interactively 'tab-bar-switch-to-prev-tab)
                                      (switch-to-evil-normal-state)
-                                     (escreen-show-selected-tab)))
+                                     (show-tab-names)))
 
 (global-set-key (kbd "<A-M-right>") (lambda () (interactive)
-                                     (call-interactively 'escreen-goto-next-screen)
+                                     (call-interactively 'tab-bar-switch-to-next-tab)
                                      (switch-to-evil-normal-state)
-                                     (escreen-show-selected-tab)))
+                                     (show-tab-names)))
 
-;; I alias/nickname each of my tabs (escreen's numbered screens) for easier reference.
-(setq escreen-number->alias (make-hash-table))
-
-(defun escreen-set-tab-alias (alias)
-  "Give the current tab an alias. This alias is shown by escreen-tab-switcher."
+(defun set-tab-alias (alias)
+  "Give the current tab an alias. This alias is shown by show-tab-switcher."
   (interactive "sTab alias: ")
   (when (> (length alias) 0)
-    (puthash (escreen-get-current-screen-number) alias escreen-number->alias)))
+    (tab-bar-rename-tab alias)))
 
-(defun escreen-show-selected-tab ()
-  "In the echo area, shows the name of tab, and which is currently selected."
-  (lexical-let* ((get-display-name (lambda (i)
-                                     (let ((template (if (= i (escreen-get-current-screen-number))
-                                                         "[%d.%s]"
-                                                       " %d.%s ")))
-                                       (->> (or (gethash i escreen-number->alias) "unnamed")
-                                            (format template (+ i 1))))))
-                 (tab-names (-map get-display-name (escreen-get-active-screen-numbers))))
-    (message (s-join "" tab-names))))
-
-(defun escreen-tab-switcher ()
+(defun show-tab-switcher ()
   "Shows a menu in the minibuffer of tab names and numbers. Type the tab number to switch to it."
   (interactive)
-  (escreen-show-selected-tab)
+  (show-tab-names)
   (lexical-let* ((input (string (read-char)))
                  (is-digit (string= (number-to-string (string-to-number input)) input)))
     (when is-digit
-      (escreen-goto-screen (- (string-to-number input) 1)))))
+      (tab-bar-select-tab (+ (string-to-number input) 1)))))
 
 (defun open-current-buffer-in-new-tab ()
   (interactive)
   ;; Exit out of insert mode when opening a new tab.
   (evil-change-to-initial-state)
   ;; I'm using the current buffer in the new tab so that the current directory is set as it was previously,
-  ;; which lets me begin using projectile immediately.
-  (let ((buffer (current-buffer)))
-    (escreen-create-screen)
-    (set-window-buffer (get-buffer-window) buffer)))
+  ;; which lets me begin using projectile immediately. This is the default behavior of tab-bar-mode.
+  (tab-bar-new-tab)
+  (show-tab-names))
 
 ;;
 ;; Snippets - yassnippet

@@ -67,7 +67,7 @@
 (defun project-nav/navigate-to-project ()
   "Prompts for the name of a project which exists in your common project folders and opens a dired window in
    the root of the project folder. This is a fast way to open a new project and be able to run
-   projectile-file-file.
+   projectile-find-file.
    Once a project is chosen, the current elscreen-tab is set to be the name of that project."
   (interactive)
   (let* ((all-project-folders (->> project-nav/project-folders
@@ -82,4 +82,4 @@
     (project-nav/open-root-of-project project)
     ;; If we invoke this inside of a split, don't set the tab's title.
     (when (= 1 (length (window-list)))
-      (escreen-set-tab-alias (file-name-nondirectory project)))))
+      (tab-bar-rename-tab (file-name-nondirectory project)))))
