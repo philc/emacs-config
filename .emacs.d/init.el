@@ -1370,6 +1370,7 @@
 ;; which requires that the go project have a .projectile file in it or that it be at the root of a git repo.
 (defun go-save-and-compile (command)
   "Saves the current buffer before invoking the given command."
+  ;; I could also configure "compilation-ask-about-save", which saves all modified buffers if set to false.
   (lexical-let ((has-makefile (file-exists-p (concat (projectile-project-root) "Makefile"))))
     (save-buffer)
     (message command)
@@ -1553,6 +1554,7 @@
   ;; By default, ag's search results buffer opens in random windows. This also happens when opening one of the
   ;; files in the search results. Instead, use "o" to open the search result in the same buffer and "O" to
   ;; open in a new buffer. This mirrors Vim's convention of o and O.
+  ;; There is a setting called `ag-reuse-window` which is related.
   (kbd "RET") 'ag/open-search-result-in-same-window
   "o" 'ag/open-search-result-in-same-window
   "O" 'ag/open-search-result-in-window-to-right
