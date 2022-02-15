@@ -590,7 +590,7 @@
                   (kbd "M-~") '(lambda () (interactive) (other-frame -1))
                   (kbd "M-w") 'vimlike-quit
                   (kbd "M-q") 'save-buffers-kill-terminal
-                  (kbd "M-n") 'new-frame
+                  (kbd "M-n") 'make-frame
                   (kbd "M-a") 'mark-whole-buffer
                   (kbd "M-h") 'ns-do-hide-emacs
                   (kbd "M-v") 'clipboard-yank
