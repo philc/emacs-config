@@ -1545,6 +1545,10 @@
 ;;
 (require 'ag)
 
+;; Also search in hidden files and directories (dot files). Files in .gitignore and .agignore will still be
+;; ignored. https://github.com/ggreer/the_silver_searcher/issues/24
+(setq ag-arguments '("--hidden"))
+
 ;; Use Projectile to determine what the current project is when invoking ag-project. Normally, AG will simply
 ;; find the surrounding .git directory and use that as the project.
 (setq ag-project-root-function (lambda (f) (projectile-project-root)))
