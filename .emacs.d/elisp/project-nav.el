@@ -43,7 +43,10 @@
       (->> file-list
            (--filter (s-ends-with? (concat "/" file-to-open) it))
            first
-           find-file))))
+           find-file))
+    ;; When that file is shown, ensure it's in normal mode. If the file is open in another window in insert
+    ;; mode, then it will remain in insert mode in this current window.
+    (switch-to-evil-normal-state)))
 
 (defun project-nav/open-root-of-project (project-path)
   "Opens the project at path. If it's a clojure project, find the project's 'main' file and open that.
