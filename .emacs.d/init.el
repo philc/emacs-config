@@ -882,7 +882,8 @@
   "Give the current tab an alias. This alias is shown by show-tab-switcher."
   (interactive "sTab alias: ")
   (when (> (length alias) 0)
-    (tab-bar-rename-tab alias)))
+    (tab-bar-rename-tab alias))
+  (show-tab-switcher)) ; Show the new tab configuration with the new name
 
 (defun show-tab-switcher ()
   "Shows a menu in the minibuffer of tab names and numbers. Type the tab number to switch to it."
@@ -980,7 +981,7 @@
           (insert word) (newline)
           (append-to-file (point-min) (point-max) custom-dictionary-file))
         (message "Added word \"%s\" to %s" word custom-dictionary-file)
-        ; This is a hack to toggle the mode on and then off, to rescane the buffer and remove the mispelt
+        ; This is a hack to toggle the mode on and then off, to rescan the buffer and remove the misspelt
         ; marker for the word that was just added to the dict.
         (wcheck-mode)
         (wcheck-mode)))))
