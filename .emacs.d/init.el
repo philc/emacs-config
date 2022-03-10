@@ -1502,6 +1502,11 @@
   "en" 'js/restart-repl
   "rc" 'reload-chrome-extensions-and-active-tab)
 
+(define-leader-keys 'js-mode-map
+  ;; "cc" (go-save-and-compile-fn "NO_COLOR=1 deno run --allow-write --allow-read --allow-net --unstable main.js")
+  "cc" (go-save-and-compile-fn "make")
+  "cn" 'next-error
+  "cp" 'previous-error)
 
 ;; Detect files in the Deno backtrace format in the compilation buffer, so that files and line numbers can
 ;; be navigated to when the compilation buffer is showing compile or runtime backtraces from Deno.
