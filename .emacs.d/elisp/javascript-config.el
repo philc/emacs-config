@@ -3,7 +3,8 @@
 (require 'js-comint) ; For connecting to and evaluating code in a Node REPL.
 
 (setq js-comint-program-command "deno")
-(setq js-comint-program-arguments nil)
+;; Some of my projects require the unstable flag, so ensure the REPL is started with that.
+(setq js-comint-program-arguments '("--unstable"))
 
 (defun js/get-repl-buffer ()
   ; TODO(philc): Make this fail if a REPL doesn't exist.
@@ -49,11 +50,12 @@
                                  (window-width) js-comint-prompt repl-mode))
          (js-comint-code "")
          ;; Launch the REPL process in the directory of this project's root (containing a .git file),
-         ;; rather than starting the rePL from the directory of the current buffer's file.
+         ;; rather than starting the REPL from the directory of the current buffer's file.
          (default-directory (or (locate-dominating-file (buffer-file-name) ".git")
                                 default-directory)))
     (pop-to-buffer
-     (apply 'make-comint js-comint-buffer js-comint-program-command nil nil))
+     (apply 'make-comint js-comint-buffer js-comint-program-command nil
+            js-comint-program-arguments))
     (js-comint-mode)))
 
 (setq js/load-file-counter 1)
