@@ -39,6 +39,8 @@
 (deftheme tangotango
   "A color theme based on the Tango Palette colors.")
 
+;; NOTE(philc): After modifying this file, eval (load-theme 'tangotango t) to see live changes.
+
 (custom-theme-set-faces
  'tangotango
  ;; Color codes :
@@ -79,11 +81,11 @@
  `(fringe ((t (:background "grey10"))))
  `(header-line ((default (:inherit (mode-line))) (((type tty)) (:underline (:color foreground-color :style line) :inverse-video nil)) (((class color grayscale) (background light)) (:box nil :foreground "grey20" :background "grey90")) (((class color grayscale) (background dark)) (:box nil :foreground "grey90" :background "grey20")) (((class mono) (background light)) (:underline (:color foreground-color :style line) :box nil :inverse-video nil :foreground "black" :background "white")) (((class mono) (background dark)) (:underline (:color foreground-color :style line) :box nil :inverse-video nil :foreground "white" :background "black"))))
  `(tooltip ((t (:background "lightyellow" :foreground "black" :inherit (quote variable-pitch)))))
- `(mode-line ((t (:box (:line-width 1 :color nil :style released-button) :background "#222222" :foreground "#bbbbbc"))))
- `(mode-line-buffer-id ((t (:weight bold :foreground "orange"))))
- `(mode-line-emphasis ((t (:weight bold))))
+ `(mode-line ((t (:box (:line-width 1 :color nil :style released-button) :background "#323636" :foreground "#ccccca"))))
+ `(mode-line-inactive ((t (:background "#222222" :inherit (mode-line)))))
+ `(mode-line-buffer ((t (:weight bold :foreground "orange" :inherit (mode-line)))))
+ `(mode-line-emphasis ((t (:weight bold :inherit (mode-line)))))
  `(mode-line-highlight ((((class color) (min-colors 88)) (:box (:line-width 2 :color "grey40" :style released-button))) (t (:inherit (highlight)))))
- `(mode-line-inactive ((t (:background "#555753" :foreground "#bbbbbc"))))
  `(isearch ((t (:foreground "#2e3436" :background "#f57900"))))
  `(isearch-fail ((((class color) (min-colors 88) (background light)) (:background "RosyBrown1")) (((class color) (min-colors 88) (background dark)) (:background "red4")) (((class color) (min-colors 16)) (:background "red")) (((class color) (min-colors 8)) (:background "red")) (((class color grayscale)) (:foreground "grey")) (t (:inverse-video t))))
  `(lazy-highlight ((t (:foreground "#2e3436" :background "#e9b96e"))))
