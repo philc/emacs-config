@@ -1004,61 +1004,62 @@
 (diminish 'osx-keys-minor-mode "")
 
 ;;
-;; Powerline: improve the appearance & density of the Emacs status bar (mode line).
+;; Powerline: improve the appearance and density of the Emacs mode line (status bar).
 ;;
 (require 'powerline)
 
-(defface powerline-white-face
-  '((t (:background "#e0e0e0" :foreground "black" :inherit mode-line)))
-    "Face for powerline")
-(defface powerline-black-face
-  '((t (:background "#191919" :inherit mode-line)))
-  "Face for powerline")
+;; The faces mode-line and mode-line-inactive are customized in my theme file.
+(defface powerline-active-buffer-id
+  '((t (:foreground "orange" :weight bold :inherit mode-line)))
+  "Powerline face")
 
-;; TODO(philc): Can this be deleted? It may be the source of my crashing issues with powerline.
-(defun powerline-projectile-project-name (&optional face padding)
-  "Returns a string describing the projectile project for the current buffer. Takes the same arguments as
-   powerline-raw."
-  (powerline-raw (concat "(" (projectile-project-name) ")") face padding))
+(defface powerline-inactive-buffer-id
+  '((t (:foreground "orange" :weight bold :inherit mode-line-inactive)))
+  "Powerline face")
 
 (defun powerline-personal-theme ()
   "My customized powerline, copied and slightly modified from the default theme in powerline.el."
   (interactive)
-  (setq-default mode-line-format
+  ;; These powerline-raw codes are the same codes expected by Emacs' native mode-line.
+  ;; Here, I'm setting header-line-format, which is the bar at the top of each Emacs window.
+  (setq-default header-line-format
                 '("%e"
                   (:eval
                    (let* ((active (powerline-selected-window-active))
-                          (mode-line (if active 'mode-line 'mode-line-inactive))
-                          (face1 (if active 'powerline-active1 'powerline-inactive1))
-                          (face2 (if active 'powerline-active2 'powerline-inactive2))
-                          (separator-left (intern (format "powerline-%s-%s"
-                                                          powerline-default-separator
-                                                          (car powerline-default-separator-dir))))
-                          (separator-right (intern (format "powerline-%s-%s"
-                                                           powerline-default-separator
-                                                           (cdr powerline-default-separator-dir))))
-                          (lhs (list (powerline-raw "%*" 'powerline-black-face 'l)
-                                     (powerline-buffer-id 'powerline-black-face 'l)
-                                     (powerline-raw " " 'powerline-black-face)
-                                     ;; (powerline-projectile-project-name 'powerline-black-face 'l)
-                                     (powerline-raw " " 'powerline-black-face)
-                                     (powerline-major-mode face1 'l)
-                                     (powerline-process face1)
-                                     (powerline-minor-modes face1 'l)
-                                     (powerline-narrow face1 'l)
-                                     (powerline-raw " " face1)))
-                          (rhs (list (powerline-raw global-mode-string face2 'r)
-                                     ;; "Version control" - show the modeline of any active VC mode.
-                                     (powerline-vc face1 'r)
-                                     (powerline-raw "%4l" face1 'l) ; Current line number
-                                     (powerline-raw ":" face1 'l)
-                                     (powerline-raw "%3c" face1 'r) ; Current column number
-                                     (powerline-raw " " face1))))
+                          (face1 (if active 'mode-line 'mode-line-inactive))
+                          (buffer-name-face (if active 'powerline-active-buffer-id
+                                              'powerline-inactive-buffer-id))
+                          (lhs (list
+                                ;; The current buffer name
+                                (powerline-raw " %b " buffer-name-face)
+                                ;; If the file is modified, show an asterisk.
+                                (powerline-raw (if (buffer-modified-p) "*" " ") face1)
+                                (powerline-raw " " face1)
+                                ;; I don't need to see the major mode.
+                                ;; (powerline-major-mode face1 'l)
+                                ;; (powerline-process face1) ; TODO(philc): What was this for?
+                                ;; I don't need to see minor modes
+                                ;; (powerline-minor-modes face1 'l)
+                                (powerline-narrow face1 'l)
+                                (powerline-raw " " face1)))
+                          (rhs (list
+                                (powerline-raw global-mode-string face1 'r) ; TODO(philc): What is this?
+                                ;; "Version control" - show the modeline of any active VC mode.
+                                ;; (powerline-vc face1 'r)
+                                (powerline-raw "%4l" face1 'l) ; Current line number
+                                (powerline-raw ":" face1 'l)
+                                (powerline-raw "%3c" face1 'r) ; Current column number
+                                (powerline-raw " " face1))))
                      (concat (powerline-render lhs)
                              (powerline-fill face1 (powerline-width rhs))
                              (powerline-render rhs)))))))
 
 (powerline-personal-theme)
+
+;; Disable the mode line at the bottom of the Emacs window. Most people show their file names and other
+;; information in the mode line, and I did for ~10 years, but I don't think it's better to show it at the top
+;; of windows, to be consistent with other apps. So now I show this info in the header line.
+(setq-default mode-line-format nil)
 
 ;;
 ;; Markdown
