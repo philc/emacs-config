@@ -849,8 +849,12 @@
 ;; to each Emacs frame. I previously used escreen, and elscreen before that. They are messier and do not work
 ;; cleanly with multiple frames.
 ;; https://github.com/emacs-mirror/emacs/blob/master/lisp/tab-bar.el
+;; Currently I only show a tab UI after doing a tab-related command.
+;; This package could be used to show the tab UI persistently, at the end of the echo area:
+;; https://github.com/qaiviq/echo-bar.el
 
-;; (setq tab-bar-show t) ; This is not yet implemented in Cocoa Emacs 27.
+;; Hide the tab mode UI. IMO having a persistent UI is not worth the extra line of space required.
+(setq tab-bar-show nil)
 (tab-bar-mode)
 
 (defun show-tab-names ()
