@@ -44,6 +44,10 @@
   "Start a new repl or switch to existing repl."
   (interactive)
   (setenv "NODE_NO_READLINE" "1")
+  ;; I'm setting NO_COLOR here because when "undefined" is the return value of a command, it pollutes the
+  ;; color used in the terminal from then on. I'm not sure why. This obviates the issue, but it would be nice
+  ;; to have color.
+  (setenv "NO_COLOR" "1")
   (js-comint-setup-module-paths)
   (let* ((repl-mode (or (getenv "NODE_REPL_MODE") "magic"))
          (js-comint-code (format js-comint-code-format
