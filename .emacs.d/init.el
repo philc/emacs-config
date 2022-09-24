@@ -1026,21 +1026,13 @@
                                               'powerline-inactive-buffer-id))
                           (lhs (list
                                 ;; The current buffer name
-                                (powerline-raw " %b " buffer-name-face)
+                                (powerline-raw " %b" buffer-name-face)
                                 ;; If the file is modified, show an asterisk.
                                 (powerline-raw (if (buffer-modified-p) "*" " ") face1)
-                                (powerline-raw " " face1)
-                                ;; I don't need to see the major mode.
-                                ;; (powerline-major-mode face1 'l)
-                                ;; (powerline-process face1) ; TODO(philc): What was this for?
-                                ;; I don't need to see minor modes
-                                ;; (powerline-minor-modes face1 'l)
-                                (powerline-narrow face1 'l)
-                                (powerline-raw " " face1)))
+                                ))
                           (rhs (list
                                 (powerline-raw global-mode-string face1 'r) ; TODO(philc): What is this?
                                 ;; "Version control" - show the modeline of any active VC mode.
-                                ;; (powerline-vc face1 'r)
                                 (powerline-raw "%4l" face1 'l) ; Current line number
                                 (powerline-raw ":" face1 'l)
                                 (powerline-raw "%3c" face1 'r) ; Current column number
