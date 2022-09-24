@@ -63,7 +63,8 @@
                       scss-mode ; For editing SCSS files.
                       smartparens ; For editing expressions in parentheses.
                       smex ; Makes the M-x command more useful by showing you recently used commands, etc.
-                      wcheck-mode ; Spell checking
+                      spell-fu ; Spell checking
+                      undo-fu ; Used for undo/redo in Evil mode. No longer needed in Emacs 28.
                       yaml-mode ; For editing YAML files
                       yasnippet)) ; Insert snippets using tab.
 
@@ -941,54 +942,48 @@
            (call-interactively 'delete-backward-char)))))
 
 ;;
-;; Spell checking
-;; https://github.com/tlikonen/wcheck-mode
+;; Spell checking.
 ;;
 ;; * FlySpell is the default choice for spellchecking, but I found it slow, even using every flyspell perf
 ;;   improvement I could find online. Speck, as one alternative, didn't slow down my typing.
-;; * I suspect speck mode is the culrprit of periodic emacs crashes. It's also poorly documented and doesn't
+;; * I suspect speck mode is the culprit of periodic emacs crashes. It's also poorly documented and doesn't
 ;;   support binding "add to personal dictionary" as a keybinding.
 ;; * wcheck-mode is hard to configure because of its genericism, but at least it's documented and performs
-;;   well once configured.
+;;   well once configured. It stopped working around 2022 and so I abandoned it. It also didn't reliably check
+;;   my buffers and offers no lisp function for manually invoking spellcheck on the current buffer.
+;; * 2022: So now I'm using spell-fu. This has some issues: it uses its own cache system which mirrors aspell
+;;   and my personal aspell dictionary, and so it becomes stale if I edit those files. The API contract for
+;;   many functions which should be user-facing is not ideal (they require somewhat elaborate data
+;;   structures).
+;;
+;; TODO(philc): Consider only checking spelling upon save. That will result in less noise as I type.
 ;;
 ;; You may need to install aspell and enchant (e.g. `brew install aspell enchant` on Mac).
-;; TODO(philc): Throw a helpful error if these programs aren't present.
-(require 'wcheck-mode)
-(setq-default wcheck-language "English")
-(setq-default wcheck-language-data
-              '(("English"
-                 (program . "/usr/local/bin/aspell")
-                 (args "list") ; -l: list only the mispellings.
-                 (face . hi-yellow)
-                 (connection . pty)
-                 ;; Note that I don't use this functionality of providing suggested spelling corrects, and
-                 ;; this config is untested. I just like to highlight mispelled words.
-                 (action-program . "/usr/local/bin/aspell")
-                 (action-args "-a") ; -a: lists alternatives.
-                 (action-parser . wcheck-parser-ispell-suggestions))))
 
-(add-hook 'text-mode-hook 'wcheck-mode)
+(require 'spell-fu)
 
-(define-key evil-normal-state-map (kbd "zg") 'wcheck-add-to-dictionary)
+(setq ispell-personal-dictionary "~/.aspell.en.pws")
 
-(defvar custom-dictionary-file "~/.aspell.en.pws")
+(add-hook 'text-mode-hook 'spell-fu-mode)
 
-(defun wcheck-add-to-dictionary ()
+(define-key evil-normal-state-map (kbd "zg") 'add-word-to-dictionary)
+
+(defun add-word-to-dictionary ()
   "Adds the word under the cursor to your personal dictionary. Also re-spellchecks the buffer to clear any
    stale highlights."
   (interactive)
   (let ((word (thing-at-point 'word)))
-    (if (not (and custom-dictionary-file (file-writable-p custom-dictionary-file)))
-        (message "Couldn't locate your custom dictionary file '%s'" custom-dictionary-file)
+    (if (not (and ispell-personal-dictionary (file-writable-p ispell-personal-dictionary)))
+        (message "Couldn't locate your custom dictionary file '%s'" ispell-personal-dictionary)
       (progn
         (with-temp-buffer
           (insert word) (newline)
-          (append-to-file (point-min) (point-max) custom-dictionary-file))
-        (message "Added word \"%s\" to %s" word custom-dictionary-file)
-        ; This is a hack to toggle the mode on and then off, to rescan the buffer and remove the misspelt
-        ; marker for the word that was just added to the dict.
-        (wcheck-mode)
-        (wcheck-mode)))))
+          (append-to-file (point-min) (point-max) ispell-personal-dictionary))
+        (message "Added word \"%s\" to %s" word ispell-personal-dictionary)
+        ;; NOTE(philc): spell-fu does not pick up the change to the custom dictionary file, even after
+        ;; restarting emacs. I'll need to fix this eventually.
+        ;; https://codeberg.org/ideasman42/emacs-spell-fu/issues/31
+        ))))
 
 ;;
 ;; Diminish - hide or shorten the names of minor modes in your modeline.
