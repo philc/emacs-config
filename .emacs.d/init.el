@@ -297,6 +297,7 @@
 ;;
 (setq evil-want-C-u-scroll t)
 (setq evil-want-Y-yank-to-eol t) ; Map "Y" to copy to the end of line (y$ in Vim).
+(setq evil-undo-system 'undo-fu) ; In emacs 28, this can be removed, as undo-redo.
 (require 'evil)
 (require 'evil-ext)
 (require 'evil-nerd-commenter)
