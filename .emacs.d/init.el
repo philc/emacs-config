@@ -1371,12 +1371,14 @@
     ;; This avoids that prompt by killing any still-running compile process.
     ;; https://stackoverflow.com/a/14404821/46237
     (ignore-errors
-        (process-kill-without-query
-          (get-buffer-process
-            (get-buffer "*compilation*"))))
-      (ignore-errors
-        (kill-buffer "*compilation*"))
+      (process-kill-without-query
+       (get-buffer-process
+        (get-buffer "*compilation*"))))
+    (ignore-errors
+      (kill-buffer "*compilation*"))
     (util/without-confirmation
+     ;; `compile` will use the current file's directory to execute the command, rather than the project's
+     ;; root, so override that.
      (lambda () (compile (concat "cd " (projectile-project-root) " && " command))))))
 
 (define-leader-keys 'go-mode-map
