@@ -985,6 +985,19 @@
         ;; restarting emacs. I'll need to fix this eventually.
         ;; https://codeberg.org/ideasman42/emacs-spell-fu/issues/31
         ))))
+;; This is a bugfix patch to ensure that spell-fu picks up changes to my custom dictionary when that dict
+;; is a symlink. Delete this once this gets fixed: https://codeberg.org/ideasman42/emacs-spell-fu/issues/31
+(defun spell-fu--file-is-older-list (file-test file-list)
+  "Return t when FILE-TEST is older than any files in FILE-LIST."
+  (catch 'result
+    (let ((file-test-time (file-attribute-modification-time (file-attributes (file-chase-links file-test 10)))))
+      (dolist (file-new file-list)
+        (when
+          (time-less-p
+            file-test-time
+            (file-attribute-modification-time (file-attributes (file-chase-links file-new))))
+          (throw 'result t)))
+      nil)))
 
 ;;
 ;; Diminish - hide or shorten the names of minor modes in your modeline.
