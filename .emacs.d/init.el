@@ -981,10 +981,10 @@
           (insert word) (newline)
           (append-to-file (point-min) (point-max) ispell-personal-dictionary))
         (message "Added word \"%s\" to %s" word ispell-personal-dictionary)
-        ;; NOTE(philc): spell-fu does not pick up the change to the custom dictionary file, even after
-        ;; restarting emacs. I'll need to fix this eventually.
-        ;; https://codeberg.org/ideasman42/emacs-spell-fu/issues/31
-        ))))
+        ;; Toggle spell-fu to rebuild its cache of my personal dictionary.
+        (spell-fu-mode)
+        (spell-fu-mode)))))
+
 ;; This is a bugfix patch to ensure that spell-fu picks up changes to my custom dictionary when that dict
 ;; is a symlink. Delete this once this gets fixed: https://codeberg.org/ideasman42/emacs-spell-fu/issues/31
 (defun spell-fu--file-is-older-list (file-test file-list)
