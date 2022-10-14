@@ -47,6 +47,7 @@
                       general ; Functions for defining keybindings and leader keys. Complements Evil.
                       flx-ido ; Fuzzy matching for ido, which improves the UX of Projectile.
                       go-mode ; For editing Go files.
+                      gumshoe ; Implements Vim-style jump commands better than Evil mode.
                       hiwin ; For highlighting the active pane/window in Emacs.
                       js-comint ; For evaluating javascript code to a REPL.
                       less-css-mode ; Syntax highlighting for LESS CSS files.
@@ -336,13 +337,34 @@
 ;; By default, Emacs will not indent when you hit enter/return within a comment.
 (define-key evil-insert-state-map (kbd "RET") 'newline-and-indent)
 
-;; When jumping back and forth between marks, recenter the screen on the cursor.
-(define-key evil-normal-state-map (kbd "<C-o>")
-  (lambda () (interactive) (evil-jump-backward) (recenter-no-redraw)))
-(define-key evil-normal-state-map (kbd "<C-i>")
-  (lambda () (interactive) (evil-jump-forward) (recenter-no-redraw)))
-;; (global-set-key (kbd "<C-i>") (lambda () (interactive) (evil-jump-forward) (recenter-no-redraw)))
+;;
+;; Jumping
+;;
+;; Evil has Vim-style jumping support built-in. However, this implementation is buggy and incomplete.
+;; When moving forward in the jump list, if the jump crosses buffers, the jumplist gets truncated at that
+;; moment and one can't continue navigating forward. This is as of 2022-10-13.
+;; See here for discussion on how this implementation needs to be rewritten.
+;; https://github.com/emacs-evil/evil/issues/732#issuecomment-454289474
+;; So, I'm using gumshoe, which is fancier: it observes the cursor and saves position when the cursor moves
+;; great distances, rather than saving a jump when a subset of Vim commands are issued. I also tried
+;; better-jumper and dogears but could not get either package to work correctly when jumping across buffers.
 
+(require 'gumshoe)
+(global-gumshoe-mode 1)
+(setq gumshoe-prefer-same-window t)
+(setq gumshoe-show-footprints-p nil)
+
+;; When jumping back and forth between marks, recenter the screen on the cursor.
+(define-key evil-normal-state-map (kbd "C-o")
+  (lambda () (interactive)
+    (gumshoe-win-backtrack-back)
+    (recenter-no-redraw)))
+
+;; Note that "<C-i>" is a special annotation for binding "i". See <C-i> elsewhere in this file for details.
+(define-key evil-normal-state-map (kbd "<C-i>")
+  (lambda () (interactive)
+    (gumshoe-win-backtrack-forward)
+    (recenter-no-redraw)))
 
 ; These keybindings conflict with nothing else, which allows me to pull up help from within any mode.
 (global-set-key (kbd "C-A-M-h") 'help)
