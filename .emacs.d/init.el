@@ -969,6 +969,9 @@
 
 (define-key evil-normal-state-map (kbd "zg") 'add-word-to-dictionary)
 
+;; Use a less distracting color when underlining mispelled words.
+(set-face-attribute 'spell-fu-incorrect-face nil :underline '(:color "#E99265" :style wave))
+
 (defun add-word-to-dictionary ()
   "Adds the word under the cursor to your personal dictionary. Also re-spellchecks the buffer to clear any
    stale highlights."
