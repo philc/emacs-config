@@ -337,6 +337,10 @@
 ;; By default, Emacs will not indent when you hit enter/return within a comment.
 (define-key evil-insert-state-map (kbd "RET") 'newline-and-indent)
 
+;; The default implementation is evil-goto-first-line, which jumps to the first line but not the first
+;; character in that line. This doesn't match Vim's default behavior, AFAIK.
+(define-key evil-motion-state-map "gg" 'beginning-of-buffer)
+
 ;;
 ;; Jumping
 ;;
@@ -729,7 +733,7 @@
   (kbd "<return>") 'dired-find-alternate-file
   "o" 'dired-find-alternate-file
   "O" 'dired-open-file-in-window-to-the-right
-  "gg" 'evil-goto-first-line
+  "gg" 'beginning-of-buffer
   "G" 'evil-goto-line
   ;; dired overrides my global "other window" shorcut.
   (kbd "M-C-n") 'other-window
@@ -1601,7 +1605,7 @@
   (kbd "RET") 'ag/open-search-result-in-same-window
   "o" 'ag/open-search-result-in-same-window
   "O" 'ag/open-search-result-in-window-to-right
-  "gg" 'evil-goto-first-line)
+  "gg" 'beginning-of-buffer)
 
 (defun ag/open-search-result-in-same-window ()
   (interactive)
