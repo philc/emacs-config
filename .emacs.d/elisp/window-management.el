@@ -33,7 +33,7 @@
                                      ;; Mu4e (email)
                                      "*mu4e-update*" ; Note this doesn't work; it shows wherever it wants.
                                      "*Completions*"))
-(setq special-display-regexps '("*cider.*" "*magit-process.*" "*magit-revision.*"))
+(setq special-display-regexps '("*cider.*" "magit-process.*" "magit-revision.*"))
 (setq special-display-function 'show-ephemeral-buffer-in-a-sensible-window)
 
 ;; A list of "special" (ephemeral) buffer names which should be focused after they are shown. Used by
