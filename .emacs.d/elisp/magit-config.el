@@ -136,7 +136,7 @@ Date: %ad
   "If the magit-revision buffer is showing in the current frame, scroll it using fn."
   (let* ((windows-in-visible-frames (-mapcat 'window-list (visible-frame-list)))
          (window (-find (lambda (w)
-                          (->> w window-buffer buffer-name (s-starts-with? "*magit-revision:")))
+                          (->> w window-buffer buffer-name (s-starts-with? "magit-revision:")))
                         windows-in-visible-frames)))
     (when window
       (with-selected-window window (funcall fn)))))
