@@ -34,11 +34,13 @@
 
 ;; Magit is causing empty lines in the git status diff view to be highlighted with "whitespace-trailing", even
 ;; though those lines are not trailing whitespace, so it's distracting. To fix, I've disabled the font face
-;; used to show such errors. Another approach is to disable whitespace-mode in all magit-* buffers, but that
-;; is not straightforward because whitespace-mode is activated globally via `global-whitespace-mode`.
-(defun my-magit-status-mode-hook ()
+;; used to show such errors. Another approach is to disable whitespace-mode (which is activated via
+;; `global-whitespace-mode`) in all magit-* buffers. However, I was unable to get that to work, even by
+;; setting (whitespace-mode -1) in the hook for every Magit mode I could find. There is some Magit mode used
+;; in the Magit diff view that is enabling whitespace-mode, and I couldn't find it.
+(defun magit-disable-whitespace-mode ()
   (setq-local whitespace-trailing nil))
-(add-hook 'magit-status-mode-hook #'my-magit-status-mode-hook)
+(add-hook 'magit-mode-hook 'magit-disable-whitespace-mode)
 
 ;; Don't show the stashes in the status view. In my repos over time I accumulate a huge list of stashes,
 ;; and it clutters the UI to see them every time when reviewing diffs.
