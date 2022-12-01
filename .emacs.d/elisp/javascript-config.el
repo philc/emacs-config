@@ -53,10 +53,17 @@
          (js-comint-code (format js-comint-code-format
                                  (window-width) js-comint-prompt repl-mode))
          (js-comint-code "")
-         ;; Launch the REPL process in the directory of this project's root (containing a .git file),
-         ;; rather than starting the REPL from the directory of the current buffer's file.
-         (default-directory (or (locate-dominating-file (buffer-file-name) ".git")
-                                default-directory)))
+         ;; Launch the REPL process in the directory of this project's root, rather than starting the REPL
+         ;; from the directory of the current buffer's file.
+         ;; Here I'm using projectfile to determine what is the project's root.
+         (the-default-directory
+          ;; (locate-dominating-file (buffer-file-name) ".git")
+          (projectile-project-root)))
+    ;; Set the buffer-local variable default-directory in the js-comint buffer. This is the directory the Deno
+    ;; process will get run from. This variable gets set by make-comint, but the directory is not overridden
+    ;; on subsequent invocations, i.e. when the REPL is restarted.
+    (with-current-buffer (get-buffer-create (js-comint-get-buffer-name))
+      (setq default-directory the-default-directory))
     (pop-to-buffer
      (apply 'make-comint js-comint-buffer js-comint-program-command nil
             js-comint-program-arguments))
