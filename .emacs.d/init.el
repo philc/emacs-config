@@ -393,13 +393,6 @@
 
 (setq general-default-keymaps 'evil-normal-state-map)
 
-;; Ensure every mode starts in Evil's normal state. Some modes, like *help*, start in the "motion" state, and
-;; it's unintuitive to define keybindings for those states.
-;; This obviates the need to specify this setting per-mode via `(evil-set-initial-state 'help-mode 'normal)`
-(setq evil-emacs-state-modes nil)
-(setq evil-insert-state-modes nil)
-(setq evil-motion-state-modes nil)
-
 (general-define-key
  :keymaps '(normal visual)
  :prefix global-leader-prefix
@@ -1597,7 +1590,7 @@
 (setq ag-project-root-function (lambda (f) (projectile-project-root)))
 
 ;; Note that ag mode configures itself to start in Evil's "motion" state.
-(evil-define-key 'motion ag-mode-map
+(evil-define-key 'normal ag-mode-map
   ;; By default, ag's search results buffer opens in random windows. This also happens when opening one of the
   ;; files in the search results. Instead, use "o" to open the search result in the same buffer and "O" to
   ;; open in a new buffer. This mirrors Vim's convention of o and O.
@@ -1671,6 +1664,14 @@
 ;;
 ;; Misc
 ;;
+
+;; Ensure every mode starts in Evil's normal state. Some modes, like *help*, start in the "motion" state, and
+;; it's unintuitive to define keybindings for those states.
+;; This obviates the need to specify this setting per-mode via `(evil-set-initial-state 'help-mode 'normal)`
+;; This needs to be done after the other modes have been loaded, because they can modify these variables.
+(setq evil-emacs-state-modes nil)
+(setq evil-insert-state-modes nil)
+(setq evil-motion-state-modes nil)
 
 ;; This is unbound; I invoke it using M-x.
 (defun prompt-to-open-info-page ()
