@@ -21,9 +21,14 @@
    (lambda ()
      (when (js-comint-get-process)
        (process-send-string (js-comint-get-process) "close()\n")
-       ;; wait the process to be killed
+       ;; Wait for the process to be killed
        (sit-for 1))
      (js-comint-start-or-switch-to-repl))))
+
+(defun js/ensure-repl-is-running ()
+  (interactive)
+  (when (not (js-comint-get-process))
+    (util/preserve-selected-window 'js-comint-start-or-switch-to-repl)))
 
 ;; (defun js-comint-reset-repl ()
 ;;   "Kill existing REPL process if possible.
@@ -74,10 +79,12 @@
 (defun js/load-file ()
   (interactive)
   (util/save-buffer-if-dirty)
+  (js/ensure-repl-is-running)
   (let ((file (expand-file-name (buffer-file-name)))
         ;; For Deno, append a random query string to the path so that Deno loads the latest version of the
-        ;; file.
-        (cmd-str "import * as main from \"file://%s?q=%s\"")
+        ;; file. Add a bar after the query string so it doesn't visually look like a line number in
+        ;; backtraces.
+        (cmd-str "import * as main from \"file://%s?v=%s|\"")
         ;; For Node.js, delete any previous versions of this file in the require cache.
         ;; (cmd-str "if (true) { let f = \"%s\"; delete require.cache[require.resolve(f)]; require(f) }\n")
         )
