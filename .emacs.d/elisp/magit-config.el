@@ -160,7 +160,7 @@ Date: %ad
    "s" 'magit-stage
    "S" (lambda () (interactive) (util/without-confirmation 'magit-stage-all))
    "d" 'magit-discard
-   "u" 'magit-unstage-item
+   "u" 'magit-unstage
    "U" (lambda () (interactive (util/without-confirmation 'magit-unstage-all)))
    "-" 'magit-diff-smaller-hunks
    "+" 'magit-diff-larger-hunks
