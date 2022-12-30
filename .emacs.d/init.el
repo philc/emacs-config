@@ -67,6 +67,7 @@
                       spell-fu ; Spell checking
                       undo-fu ; Used for undo/redo in Evil mode. No longer needed in Emacs 28.
                       yaml-mode ; For editing YAML files
+                      yascroll ; For rendering scroll bars in the right fringe
                       yasnippet)) ; Insert snippets using tab.
 
 ;; Ensure that every package above is installed. This is helpful when setting up Emacs on a new machine.
@@ -292,6 +293,17 @@
 
 ;; Exit insert mode when unfocusing Emacs, so when we return to Emacs, we're in normal mode.
 (add-hook 'focus-out-hook 'switch-to-evil-normal-state)
+
+;;
+;; Scrollbars, in the right fringe. Provided by yascroll mode.
+;; I use this to as an indicator to indicate where I am in the file.
+;;
+(global-yascroll-bar-mode 1)
+;; By default, the scroll bar only shows when you're scrolling the buffer. Show it all the tiem.
+;; Note: some report performance issues in some modes. https://github.com/emacsorphanage/yascroll/issues/38
+(setq-default yascroll:delay-to-hide nil)
+(set-face-attribute 'yascroll:thumb-fringe nil :background "#666666")
+(set-face-attribute 'yascroll:thumb-fringe nil :foreground "#666666")
 
 ;;
 ;; Evil mode -- Vim keybindings for Emacs.
