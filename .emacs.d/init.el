@@ -299,9 +299,11 @@
 ;; I use this to as an indicator to indicate where I am in the file.
 ;;
 (global-yascroll-bar-mode 1)
-;; By default, the scroll bar only shows when you're scrolling the buffer. Show it all the tiem.
+;; By default, the scroll bar only shows when you're scrolling the buffer. Show it all the time.
 ;; Note: some report performance issues in some modes. https://github.com/emacsorphanage/yascroll/issues/38
 (setq-default yascroll:delay-to-hide nil)
+;; magit-log-mode is slow due to yascroll:delay-to-hide. Magit doesn't need scrollbars, so exclude it.
+(setq yascroll:disabled-modes '(magit-log-mode))
 (set-face-attribute 'yascroll:thumb-fringe nil :background "#666666")
 (set-face-attribute 'yascroll:thumb-fringe nil :foreground "#666666")
 
