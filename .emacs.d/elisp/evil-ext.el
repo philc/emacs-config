@@ -36,6 +36,59 @@
                   (not (string/blank? (util/get-current-line))))
         (forward-line -1))))))
 
+(defun evil-ext/preserve-cursor-after-fill (f)
+  "Estimates where the cursor position should be after a fill operation is executed, and puts it there."
+  ;; When we line wrap (fill) the paragraph, the default behavior is to put your cursor at the end of the
+  ;; newly-wrapped paragraph. Better would be to keep your cursor where it was when you triggered this
+  ;; command, so you don't need to navigate back there if you want to continue typing. This tries to estimate
+  ;; where your cursor should be after lines get wrapped.
+  (lexical-let* ((estimated-col (mod (current-column) fill-column))
+                 (estimated-line (+ (line-number-at-pos)
+                                    (/ (current-column) fill-column))))
+    (funcall f)
+    (goto-line estimated-line)
+    (move-to-column estimated-col)))
+
+;; This regexp matches lines starting with these chars:
+;; ["//", ";;", "/*", "* ", "*/"].
+(setq evil-ext/comment-regexp "^\\\s*\\(\/\/\\|;;\\|\\/\\*\\|\\*\\/\\|\\* \\).*$")
+
+;; I couldn't get "comment block" working as a first-class evil text object. The code below didn't work as
+;; intended when writing this in a similar style to forward-evil-paragraph-from-newlines. Probably because I
+;; don't understand how evil-motion-loop is working. However, for my purposes, writing this as a regular
+;; function is sufficient, and it's easier to understand because it has no interaction with Evil.
+(defun evil-ext/get-comment-block-region ()
+  "Returns a list containing the start and end of the comment block surrounding the cursor."
+  (let* ((start nil)
+         (end nil))
+    (util/preserve-line-and-column
+     (lambda ()
+       ;; Expand the selection forward
+       (while (and (not (eobp))
+                   (string-match comment-regexp (util/get-current-line)))
+         (forward-line 1))
+       (when (not (eobp))
+         (forward-line -1)
+         (end-of-line))
+       (setq end (point))
+       ;; Expand the selection backward
+       (while (and (not (bobp))
+                   (string-match comment-regexp (util/get-current-line)))
+         (forward-line -1))
+       ;; If we didn't hit the beginning of the buffer, then the previous loop went one line too far.
+       (when (not (bobp))
+         (forward-line 1)
+         (beginning-of-line))
+       (setq start (point))
+       (list start end)))))
+
+(defun evil-ext/fill-comment-block ()
+  (interactive)
+  (lexical-let ((region (evil-ext/get-comment-block-region)))
+    (evil-ext/preserve-cursor-after-fill
+     (lambda ()
+       (evil-fill (first region) (second region))))))
+
 (defun evil-ext/fill-inside-string ()
   "Fills the current quote surrounded string. Equivalent to gqi\"."
   (interactive)
@@ -45,21 +98,21 @@
 (defun evil-ext/fill-inside-paragraph ()
   "Fills (reflows/linewraps) the current paragraph. Equivalent to gqip in vim."
   (interactive)
-  ;; When we line wrap (fill) the paragraph, the default behavior is to put your cursor at the end of the
-  ;; newly-wrapped paragraph. Better would be to keep your cursor where it was when you triggered this
-  ;; command, so you don't need ot navigate back there if you want to continue typing.
-  ;; This tries to estimate where your cursor should be after lines get wrapped.
-  (lexical-let* ((estimated-col (mod (current-column) fill-column))
-                 (estimated-line (+ (line-number-at-pos)
-                                    (/ (current-column) fill-column))))
-    (util/preserve-line-and-column
+  (lexical-let ((region (if (use-region-p)
+                            (list (region-beginning) (region-end))
+                          (util/preserve-line-and-column 'evil-inner-paragraph))))
+    (evil-ext/preserve-cursor-after-fill
      (lambda ()
-       (let ((region (if (use-region-p)
-                         (list (region-beginning) (region-end))
-                       (evil-inner-paragraph))))
-         (evil-fill (first region) (second region)))))
-    (goto-line estimated-line)
-    (move-to-column estimated-col)))
+       (evil-fill (first region) (second region))))))
+
+(defun evil-ext/fill-inside-paragraph-or-comment-block ()
+  "If the cursor is inside a comment block in a programming mode, fill the surrounding comment. Otherwise,
+   fill the paragraph. If a region is selected, fill the text inside the region."
+  (interactive)
+  (if (or (use-region-p)
+          (not (string-match comment-regexp (util/get-current-line))))
+      (call-interactively 'evil-ext/fill-inside-paragraph)
+    (call-interactively 'evil-ext/fill-comment-block)))
 
 (defun evil-ext/indent-inside-paragraph ()
   "Indents the current paragraph. Equivalent to =ip in vim."

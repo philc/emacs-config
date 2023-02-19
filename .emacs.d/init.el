@@ -414,7 +414,7 @@
  "b" 'ido-switch-buffer
  "f" 'projectile-find-file
  "T" 'show-tab-switcher ; "T" for tab (I use lowercase "t" for shortcuts related to tests)
- "SPC" 'evil-ext/fill-inside-paragraph ; Shortcut for Vim's gqip
+ "SPC" 'evil-ext/fill-inside-paragraph-or-comment-block ; Shortcut for Vim's gqip
  "i" 'evil-ext/indent-inside-paragraph ; Shortcut to Vim's =ip
  "d" 'projectile-dired
  "D" (lambda () (interactive) (-> (buffer-file-name) file-name-directory dired))
@@ -823,7 +823,6 @@
      (read-only-mode 1))))
 
 (define-leader-keys 'emacs-lisp-mode-map
-  "SPC" 'evil-ext/fill-inside-string
   ;; Note that I'm saving the buffer before each eval because otherwise, the buffer gets saved after the eval,
   ;; (due to save-when-switching-windows setup) and the output from the buffer save overwrites the eval results
   ;; in the minibuffer.

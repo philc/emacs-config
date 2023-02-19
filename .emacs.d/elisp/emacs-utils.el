@@ -219,3 +219,8 @@
     (when w
       (with-selected-window w
         (View-scroll-to-buffer-end)))))
+
+(defun util/select-region (start end)
+  (set-mark start)
+  (goto-char end)
+  (activate-mark))
