@@ -1,6 +1,6 @@
 ;; Functions for working with Javascript source and evaluating it in a REPL.
-(provide 'javascript-config)
-(require 'js-comint) ; For connecting to and evaluating code in a Node REPL.
+(provide 'javascript-repl)
+(require 'js-comint) ; For connecting to and evaluating code in a Node or Deno REPL.
 
 (setq js-comint-program-command "deno")
 ;; Some of my projects require the unstable flag, so ensure the REPL is started with that.

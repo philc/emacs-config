@@ -1535,7 +1535,7 @@
 ;; Javascript
 ;;
 
-(require 'javascript-config)
+(require 'javascript-repl)
 
 (setq js-indent-level 2)
 
