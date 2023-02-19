@@ -1270,22 +1270,14 @@
   (interactive)
   (call-process-region (point-min) (point-max) "/bin/bash" nil nil nil "-c" "browser"))
 
-(defun indent-html-buffer ()
-  "Pipe the current buffer into `html-beautify`, and replace the current buffer's contents."
+(defun format-html-buffer ()
+  "Format and replace the current buffer's contents with `html-beautify`."
   (interactive)
-  ;; I don't know why, but save-excursion does not maintain the cursor position.
   ;; This beautifier is https://github.com/beautify-web/js-beautify.
-  (let ((p (point))
-        (scroll-y (window-start)))
-    (call-process-region (point-min) (point-max) "html-beautify" t (buffer-name) t
-                         "-f" "-" ; Use STDIN as the input file.
-                         "--indent-size" "2"
-                         "--wrap-line-length" "110")
-    (set-window-start (selected-window) scroll-y)
-    (goto-char p)))
+  (replace-region-with-command-output "html-beautify -f - --indent-size 2 --wrap-line-length 110"))
 
 (define-leader-keys 'html-mode-map
-  "i" 'indent-html-buffer
+  "i" 'format-html-buffer
   "rr" 'reload-active-chrome-tab
   "vv" 'preview-html)
 
