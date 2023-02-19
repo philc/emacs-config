@@ -1,1 +1,3 @@
 elpa
+# spell-fu uses this dir for cached intermediates -- huge files which we want to exclude from code search.
+spell-fu/
