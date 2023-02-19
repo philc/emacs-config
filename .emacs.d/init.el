@@ -1107,11 +1107,22 @@
   (let* ((input (if (region-active-p)
                     (buffer-substring-no-properties (region-beginning) (region-end))
                   (buffer-substring-no-properties (point-min) (point-max))))
-         ;; This will throw an error if there's any issue with the mardkown->html conversion.
-         (out (util/call-process-and-check "/bin/bash" input "-c" command-string)))
-    (if (region-active-p)
-        (util/replace-region out)
-      (util/replace-buffer-text out))))
+         (original-point (point))
+         (scroll-y (window-start)))
+    (condition-case err
+        ;; This will throw an error if the command exits with an error status.
+        (let ((out (util/call-process-and-check "/bin/bash" input "-c" command-string)))
+          (if (region-active-p)
+              (util/replace-region out)
+            (util/replace-buffer-text out))
+          ;; save-excursion doesn't restore the scroll and cursor positions when the whole buffer is replaced,
+          ;; so restore those manually.
+          (set-window-start (selected-window) scroll-y)
+          (goto-char original-point))
+      (error
+       (message "%s failed: %s"
+                (first (s-split " " command-string))
+                (error-message-string err))))))
 
 (defun markdown-format-outline-into-sections ()
   "In a document formatted as an outline of nested lists, convert the top-level list items into section
