@@ -303,7 +303,7 @@
 ;; Note: some report performance issues in some modes. https://github.com/emacsorphanage/yascroll/issues/38
 (setq-default yascroll:delay-to-hide nil)
 ;; magit-log-mode is slow due to yascroll:delay-to-hide. Magit doesn't need scrollbars, so exclude it.
-(setq yascroll:disabled-modes '(magit-log-mode))
+(setq yascroll:disabled-modes '(magit-log-mode magit-status-mode))
 (set-face-attribute 'yascroll:thumb-fringe nil :background "#666666")
 (set-face-attribute 'yascroll:thumb-fringe nil :foreground "#666666")
 
