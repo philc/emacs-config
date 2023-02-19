@@ -1542,12 +1542,18 @@
 
 (setq js-indent-level 2)
 
+(defun format-js-buffer ()
+  "Format and replace the current buffer's contents with `deno fmt`."
+  (interactive)
+  (replace-region-with-command-output "deno fmt -"))
+
 (define-leader-keys 'js-mode-map
   "rr" 'reload-active-chrome-tab
   "eb" 'js/load-file
   "ee" 'js/show-repl
   "ek" 'js-comint-clear
   "en" 'js/restart-repl
+  "i" 'format-js-buffer
   "rc" 'reload-chrome-extensions-and-active-tab)
 
 (define-leader-keys 'js-mode-map
