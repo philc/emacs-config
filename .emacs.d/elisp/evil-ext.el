@@ -110,6 +110,7 @@
    fill the paragraph. If a region is selected, fill the text inside the region."
   (interactive)
   (if (or (use-region-p)
+          (not (derived-mode-p 'prog-mode))
           (not (string-match comment-regexp (util/get-current-line))))
       (call-interactively 'evil-ext/fill-inside-paragraph)
     (call-interactively 'evil-ext/fill-comment-block)))
