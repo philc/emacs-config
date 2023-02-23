@@ -58,6 +58,14 @@
    (delete-region (region-beginning) (region-end))
    (insert new-text)))
 
+(defun util/get-line (offset)
+  "Returns the text (without string properties) of the line offset by `offset` from the current.
+   This has the same behavior as `forward-line`, so if offset is larger than the buffer, the
+   buffer's last line of text will be returned."
+  (save-excursion
+    (forward-line offset)
+    (buffer-substring-no-properties (line-beginning-position) (line-end-position))))
+
 (defun util/get-current-line ()
   "Returns the text (without string properties) of the current line."
   (buffer-substring-no-properties (line-beginning-position) (line-end-position)))

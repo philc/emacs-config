@@ -64,21 +64,17 @@
     (util/preserve-line-and-column
      (lambda ()
        ;; Expand the selection forward
+       (end-of-line)
        (while (and (not (eobp))
-                   (string-match comment-regexp (util/get-current-line)))
-         (forward-line 1))
-       (when (not (eobp))
-         (forward-line -1)
+                   (string-match evil-ext/comment-regexp (util/get-line 1)))
+         (forward-line 1)
          (end-of-line))
        (setq end (point))
        ;; Expand the selection backward
+       (beginning-of-line)
        (while (and (not (bobp))
-                   (string-match comment-regexp (util/get-current-line)))
+                   (string-match evil-ext/comment-regexp (util/get-line -1)))
          (forward-line -1))
-       ;; If we didn't hit the beginning of the buffer, then the previous loop went one line too far.
-       (when (not (bobp))
-         (forward-line 1)
-         (beginning-of-line))
        (setq start (point))
        (list start end)))))
 
@@ -111,7 +107,7 @@
   (interactive)
   (if (or (use-region-p)
           (not (derived-mode-p 'prog-mode))
-          (not (string-match comment-regexp (util/get-current-line))))
+          (not (string-match evil-ext/comment-regexp (util/get-current-line))))
       (call-interactively 'evil-ext/fill-inside-paragraph)
     (call-interactively 'evil-ext/fill-comment-block)))
 
