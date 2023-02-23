@@ -214,7 +214,7 @@
 (setq-default css-indent-offset 2)
 
 (setq sentence-end-double-space nil) ; Don't add double spaces after periods when filling strings in quotes.
-(setq-default fill-column 110) ; When wrapping with the Emacs fill commands, wrap at 110 chars.
+(setq-default fill-column 100) ; When wrapping with the Emacs fill commands, wrap at this many characters.
 (auto-fill-mode t) ; When typing across the fill-column, hard-wrap the line as you type.
 (add-hook 'text-mode-hook 'turn-on-auto-fill) ; Some modes, like markdown, turn off autofill. Force it!
 
@@ -1100,7 +1100,14 @@
 ;;
 ;; Markdown
 ;;
-(require 'markdown-mode-lite)
+(require 'markdown-lite-mode)
+
+(defun my-markdown-lite-mode-hook ()
+  (message "my-markdown-lite-mode-hook exec")
+  (let ((inhibit-message t))
+    (set-fill-column 110)))
+
+(add-hook 'markdown-lite-mode-hook 'my-markdown-lite-mode-hook)
 
 (defun replace-region-with-command-output (command-string)
   (let* ((input (if (region-active-p)
@@ -1273,7 +1280,8 @@
   "Format and replace the current buffer's contents with `html-beautify`."
   (interactive)
   ;; This beautifier is https://github.com/beautify-web/js-beautify.
-  (replace-region-with-command-output "html-beautify -f - --indent-size 2 --wrap-line-length 110"))
+  (replace-region-with-command-output (format "html-beautify -f - --indent-size 2 --wrap-line-length %s"
+                                              fill-column)))
 
 (define-leader-keys 'html-mode-map
   "i" 'format-html-buffer
@@ -1314,13 +1322,12 @@
   "Pipe the current buffer into `css-beautify`, and replace the current buffer's contents."
   (interactive)
   ;; I don't know why, but save-excursion does not maintain the cursor position.
-  ;; (save-excursion
   (let ((p (point))
         (scroll-y (window-start)))
     (call-process-region (point-min) (point-max) "css-beautify" t (buffer-name) t
                          "--file" "-" ; STDIN
                          "--indent-size" "2"
-                         "--wrap-line-length" "110")
+                         "--wrap-line-length" (number-to-string fill-column))
     (set-window-start (selected-window) scroll-y)
     (goto-char p)))
 
