@@ -1188,8 +1188,8 @@
 (setq coffee-tab-width 2)
 (define-leader-keys 'coffee-mode-map
   "c" nil ; Establishes "c" as a "prefix key". I found this trick here: http://www.emacswiki.org/emacs/Evil
-  ;; This compiles the file and jumps to the first error, if there is one.
   "rr" 'reload-active-chrome-tab
+  ;; This compiles the file and jumps to the first error, if there is one.
   "cc" (lambda () (interactive) (save-buffer) (coffee-compile-without-side-effect))
   ;; The mnemonic for this is "compile & preview". It shows the javascript output in a new buffer.
   "cp" 'coffee-compile-buffer)
@@ -1548,18 +1548,24 @@
 
 (setq js-indent-level 2)
 
-(defun format-js-buffer ()
+(defun js/format-buffer ()
   "Format and replace the current buffer's contents with `deno fmt`."
   (interactive)
   (replace-region-with-command-output "deno fmt -"))
+
+(defun js/lint ()
+  (interactive)
+  (save-buffer)
+  (compile (format "deno lint %s" (buffer-file-name))))
 
 (define-leader-keys 'js-mode-map
   "rr" 'reload-active-chrome-tab
   "eb" 'js/load-file
   "ee" 'js/show-repl
   "ek" 'js-comint-clear
+  "cl" 'js/lint
   "en" 'js/restart-repl
-  "i" 'format-js-buffer
+  "i" 'js/format-buffer
   "rc" 'reload-chrome-extensions-and-active-tab)
 
 (define-leader-keys 'js-mode-map
