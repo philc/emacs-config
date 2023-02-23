@@ -1,9 +1,9 @@
 ;;
-;; Markdown mode lite
+;; Markdown lite mode
 ;; TODO(philc): Document what this mode does.
 ;;
 
-(provide 'markdown-mode-lite)
+(provide 'markdown-lite-mode)
 ;; I use markdown heavily for outlining. outline-magic provides handy functions for cycling the visibility
 ;; of subtrees, the same way org mode does it.
 (require 'outline-magic)
