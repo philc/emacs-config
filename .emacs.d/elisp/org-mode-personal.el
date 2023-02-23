@@ -63,11 +63,7 @@
 
 
 (define-leader-keys 'org-mode-map
-  "a" '(lambda () (interactive)
-         (org-archive-subtree)
-         ;; For some reason org-archive-subtree aggressively scrolls the window down. Re-center the window on
-         ;; the cursor.
-         (call-interactively 'evil-scroll-line-to-center))
+  "a" 'org-archive-subtree
   "c" 'org-capture-item-and-prepend-to-subtree
   "vv" 'preview-org)
 
