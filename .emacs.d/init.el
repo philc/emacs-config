@@ -1505,14 +1505,14 @@
 ;;
 ;; JSON
 ;;
+;; TODO(philc): bind json-format to "leader-i"
+;; TODO(philc): I think I can remove this in favor of deno fmt.
 (defun json-format ()
   "Pipe the current buffer into `jq .`, and replace the current buffer's contents."
   (interactive)
   ;; TODO(philc): Try to replace this with **json-pretty-print' and 'json-pretty-print-buffer' from Emacs 25.
   (save-excursion
     (call-process-region (point-min) (point-max) "jq" t (buffer-name) t ".")))
-
-;; TODO(philc): bind json-format to "leader-i"
 
 ;;
 ;; Java
@@ -1551,7 +1551,8 @@
 (defun js/format-buffer ()
   "Format and replace the current buffer's contents with `deno fmt`."
   (interactive)
-  (replace-region-with-command-output "deno fmt -"))
+  (let ((ext (-> (buffer-file-name) (file-name-extension))))
+    (replace-region-with-command-output (format "deno fmt --ext %s -" ext))))
 
 (defun js/lint ()
   (interactive)
