@@ -69,7 +69,7 @@
                             (s-join "|")
                             (s-prepend "|")))
          )
-    (progn (print ">>>> rows") (prin1 rows t))
+    ;; (progn (print ">>>> rows") (prin1 rows t))
     (->> rows
          (-map (lambda (row)
                  (let* ((lines (--map (s-split "\n" it) row))
@@ -89,17 +89,18 @@
          )))
 
 
-(->> (concat "|a |b\n"
-             "|--|-\n"
-             "|1 |5 \n"
-             "|2 |6"
-             "|--|-\n"
-             )
-     tables/parse-table
-     tables/reflow-table
-     ;; (-take 2)
-     ;; (-map 'tables/parse-columns)
-     )
+;; NOTE(philc): WIP; for debugging purposes.
+;; (->> (concat "|a |b\n"
+;;              "|--|-\n"
+;;              "|1 |5 \n"
+;;              "|2 |6"
+;;              "|--|-\n"
+;;              )
+;;      tables/parse-table
+;;      tables/reflow-table
+;;      ;; (-take 2)
+;;      ;; (-map 'tables/parse-columns)
+;;      )
 
 (defun tables/reflow ()
   (interactive)
