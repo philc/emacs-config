@@ -1338,6 +1338,29 @@
   (util/call-process-with-exit-status "osascript"
                                       "tell app \"Chrome\" to reload active tab of window 1"))
 
+(defun reload-chrome-extensions ()
+  "Reloads all extensions in Chrome in tandem with the Extensions Reloader extension."
+  (interactive)
+  (util/save-buffer-if-dirty)
+  ;; If we're currently viewing the Errors page for an extension (i.e.
+  ;; chrome://extensions/?errors=extension-id) clear the list of errors before reloading the
+  ;; extensions.
+  (let ((script (->> (list "document.querySelector('extensions-manager').shadowRoot"
+                           ".querySelector('#viewManager extensions-error-page').shadowRoot"
+                           ".querySelector('cr-button')"
+                           ".click()")
+                     (s-join ""))))
+    (util/call-process-with-exit-status "chrome-cli"
+                                        nil
+                                        "execute"
+                                        script))
+  (util/call-process-with-exit-status "chrome-cli"
+                                      nil
+                                      "open"
+                                      "http://reload.extensions"
+                                      "-n" ; open in a new window
+                                      ))
+
 (defun reload-chrome-extensions-and-active-tab ()
   "Reloads the current tab in Chrome and the code for any developer-mode extensions. This is useful for
    Chrome extension development."
@@ -1601,6 +1624,7 @@
 
 (define-leader-keys 'js-mode-map
   "rr" 'reload-active-chrome-tab
+  "re" 'reload-chrome-extensions
   "eb" 'js/load-file
   "ee" 'js/show-repl
   "ek" 'js-comint-clear
