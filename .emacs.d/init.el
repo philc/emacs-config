@@ -301,8 +301,27 @@
 ;; By default, the scroll bar only shows when you're scrolling the buffer. Show it all the time.
 ;; Note: some report performance issues in some modes. https://github.com/emacsorphanage/yascroll/issues/38
 (setq-default yascroll:delay-to-hide nil)
-;; magit-log-mode is slow due to yascroll:delay-to-hide. Magit doesn't need scrollbars, so exclude it.
-(setq yascroll:disabled-modes '(magit-log-mode magit-status-mode))
+;; magit-log-mode and others are slow due to yascroll:delay-to-hide. I don't need scrollbars when
+;; using Magit, so hide them.
+(setq yascroll:disabled-modes '(magit-log-mode
+                                magit-mode
+                                magit-log-select-mode
+                                magit-blob-mode
+                                magit-refs-mode
+                                magit-blame-mode
+                                magit-section-mode
+                                magit-reflog-mode
+                                magit-rev-mode
+                                magit-revision-mode
+                                magit-stash-mode
+                                magit-stashes-mode
+                                magit-status-mode
+                                magit-process-mode
+                                magit-diff-mode
+                                magit-status-mode
+                                git-rebase-mode
+                                ;; Some of the complicated help pages become slow
+                                help-mode))
 (set-face-attribute 'yascroll:thumb-fringe nil :background "#666666")
 (set-face-attribute 'yascroll:thumb-fringe nil :foreground "#666666")
 
@@ -433,6 +452,7 @@
  "h" 'help
  "b" 'ido-switch-buffer
  "f" 'projectile-find-file
+ "t" (lambda () (interactive) (message (buffer-name)))
  "T" 'show-tab-switcher ; "T" for tab (I use lowercase "t" for shortcuts related to tests)
  "SPC" 'evil-ext/fill-inside-paragraph-or-comment-block ; Shortcut for Vim's gqip
  "i" 'evil-ext/indent-inside-paragraph ; Shortcut to Vim's =ip

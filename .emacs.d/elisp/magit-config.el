@@ -64,9 +64,21 @@ Date: %ad
 
 (defun show-commit-and-preserve-window ()
   (interactive)
-  ;; NOTE(philc): I'm not sure why magit-show-commit needs to be called interactively, but just invoking it
-  ;; directly gives an argument error.
-  (util/preserve-selected-window (lambda () (call-interactively 'magit-show-commit))))
+  (util/preserve-selected-window
+   (lambda ()
+     ;; I'm not sure why magit-show-commit needs to be called interactively, but just invoking it
+     ;; directly gives an argument error.
+     (call-interactively 'magit-show-commit)
+     ;; After a delay, scroll the window opened by magit-show-commit to the top. While
+     ;; magit-show-commit is supposed to sccroll the window to the top, if the diff being shown is
+     ;; large, that doesn't always work for some reason.
+     (lexical-let ((w (selected-window)))
+       (run-with-timer 0.01 0
+                       (lambda ()
+                         (util/preserve-selected-window
+                          (lambda ()
+                            (select-window w)
+                            (beginning-of-buffer)))))))))
 
 ;; Magit mode feels twitchy because every key has a binding, and some are very destructive or disorienting.
 ;; I'm defining a whitelist of keys that I actually use, so this mode feels less error-prone.
