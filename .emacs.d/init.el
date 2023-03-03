@@ -1608,7 +1608,9 @@
 (defun js/format-buffer ()
   "Format and replace the current buffer's contents with `deno fmt`."
   (interactive)
-  (let ((ext (-> (buffer-file-name) (file-name-extension))))
+  (let ((ext (or (-> (buffer-file-name) (file-name-extension))
+                 ;; The file might not have an extension. Assume javascript.
+                 "js")))
     (replace-region-with-command-output (format "deno fmt --ext %s -" ext))))
 
 (defun js/lint ()
