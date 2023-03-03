@@ -21,8 +21,11 @@
    (lambda ()
      (when (js-comint-get-process)
        (process-send-string (js-comint-get-process) "close()\n")
-       ;; Wait for the process to be killed
-       (sit-for 1))
+       ;; We could wait for the process to clean up, but restart it immediately so we can begin
+       ;; starting the next repl.
+       ;; (sit-for 0.5)
+       (-?> (ignore-errors (js-comint-get-process)) delete-process)
+       (-?> (get-buffer (js-comint-get-buffer-name)) kill-buffer))
      (js-comint-start-or-switch-to-repl))))
 
 (defun js/ensure-repl-is-running ()
