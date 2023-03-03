@@ -1150,21 +1150,15 @@
 (add-hook 'markdown-lite-mode-hook 'my-markdown-lite-mode-hook)
 
 (defun replace-region-with-command-output (command-string)
-  (let* ((input (if (region-active-p)
-                    (buffer-substring-no-properties (region-beginning) (region-end))
-                  (buffer-substring-no-properties (point-min) (point-max))))
-         (original-point (point))
-         (scroll-y (window-start)))
+  (let ((input (if (region-active-p)
+                   (buffer-substring-no-properties (region-beginning) (region-end))
+                 (buffer-substring-no-properties (point-min) (point-max)))))
     (condition-case err
         ;; This will throw an error if the command exits with an error status.
         (let ((out (util/call-process-and-check "/bin/bash" input "-c" command-string)))
           (if (region-active-p)
               (util/replace-region out)
-            (util/replace-buffer-text out))
-          ;; save-excursion doesn't restore the scroll and cursor positions when the whole buffer is replaced,
-          ;; so restore those manually.
-          (set-window-start (selected-window) scroll-y)
-          (goto-char original-point))
+            (util/replace-buffer-text out)))
       (error
        (message "%s failed: %s"
                 (first (s-split " " command-string))

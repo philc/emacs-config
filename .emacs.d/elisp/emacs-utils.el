@@ -49,8 +49,13 @@
 (defun util/replace-buffer-text (new-text)
   "Replaces the entire buffer with the new text."
   (save-excursion
-   (delete-region (point-min) (point-max))
-   (insert new-text)))
+    ;; We're using replace-buffer-contents because it very helpfully preserves the scroll positions
+    ;; of all windows displaying this buffer.
+    ;; https://emacs.stackexchange.com/a/47889/2278
+    (let ((tmp-buf (generate-new-buffer " *temp*")))
+      (with-current-buffer tmp-buf (insert new-text))
+      (replace-buffer-contents tmp-buf)
+      (kill-buffer tmp-buf))))
 
 (defun util/replace-region (new-text)
   "Replaces the entire buffer with the new text."
