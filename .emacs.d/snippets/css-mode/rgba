@@ -1,4 +1,0 @@
-# name: rgba
-# key: rgba
-# --
-rgba($1, $2, $3, $4);

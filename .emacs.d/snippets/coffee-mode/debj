@@ -1,4 +1,0 @@
-# name: debj
-# key: debj
-# --
-console.log ">>>> $1:", JSON.stringify($1)

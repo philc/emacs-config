@@ -1,4 +1,0 @@
-# name: deb
-# key: deb
-# --
-console.log ">>>> $1:", $1

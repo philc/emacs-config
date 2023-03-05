@@ -1,6 +1,0 @@
-# name: for
-# key: for
-# --
-for (let i = 0; i < $1; i++) {
-  $2
-}

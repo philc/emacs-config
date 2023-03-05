@@ -1,4 +1,0 @@
-# name: img
-# key: img
-# --
-<img src="$1" ${2: id="${3:some_id}"}${4: class="${5:some_class}"} />

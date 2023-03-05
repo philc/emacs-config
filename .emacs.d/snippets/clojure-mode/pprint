@@ -1,4 +1,0 @@
-# name: pprint
-# key: pprint
-# --
-(clojure.pprint/pprint $1)

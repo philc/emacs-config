@@ -1,4 +1,0 @@
-# name: span
-# key: span
-# --
-<span${1: class="${2:some_class}"}>$0</span>

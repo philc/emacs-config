@@ -1,4 +1,0 @@
-# name: deb
-# key: deb
-# --
-fmt.Println(">>>> $1", $1)

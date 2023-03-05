@@ -1,6 +1,0 @@
-# name: err
-# key: err
-# --
-if err != nil {
-  ${1:panic(err)}
-}

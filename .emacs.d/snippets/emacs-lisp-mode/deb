@@ -1,4 +1,0 @@
-# name: deb
-# key: deb
-# --
-(progn (print ">>>> $1") (prin1 $1 t))

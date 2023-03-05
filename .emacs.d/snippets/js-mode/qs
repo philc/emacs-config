@@ -1,4 +1,0 @@
-# name: qs
-# key: qs
-# --
-document.querySelector("$1");

@@ -1,4 +1,0 @@
-# name: class
-# key: class
-# --
-class="${1}"
