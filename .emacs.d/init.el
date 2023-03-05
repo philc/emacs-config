@@ -1609,13 +1609,19 @@
   (save-buffer)
   (compile (format "deno lint %s" (buffer-file-name))))
 
+
 (define-leader-keys 'js-mode-map
   "rr" 'reload-active-chrome-tab
   "re" 'reload-chrome-extensions
   "eb" 'js/load-file
+  "eB" (lambda ()
+         (interactive)
+         (js/restart-repl)
+         (js/load-file))
   "ee" 'js/show-repl
   "ek" 'js-comint-clear
   "cl" 'js/lint
+  "tf" 'js/run-file-as-shoulda-test
   "en" 'js/restart-repl
   "i" 'js/format-buffer
   "rc" 'reload-chrome-extensions-and-active-tab)

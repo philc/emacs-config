@@ -96,7 +96,20 @@
     (-> (format cmd-str file js/load-file-counter)
         js/eval-str))
   (setq js/load-file-counter (inc js/load-file-counter))
-  (util/scroll-to-buffer-end (js/get-repl-buffer )))
+  (util/scroll-to-buffer-end (js/get-repl-buffer)))
+
+(defun js/run-file-as-shoulda-test ()
+  (interactive)
+  (js/ensure-repl-is-running)
+  ;; Here we call shoulda.reset to clear any previous tests which have been run.
+  ;; shoulda may not yet be defined if the file hasn't imported it yet.
+  (js/eval-str "import * as shoulda from \"./resources/vendor/shoulda.js\"; shoulda.reset()")
+  (js/load-file)
+  (js/eval-str "shoulda.run(); null")
+  (util/scroll-to-buffer-end (js/get-repl-buffer)))
 
 (defun js/eval-str (str)
+  ;; NOTE(philc): I would like to add an option to optionally ignore the output, so I can send the
+  ;; REPL setup commands and not have it pollute the REPL output with a newline, and "undefined".
+  ;; `js-comint-drop-regexp` may be helpful if I decide to do this.
   (js-comint-send-string str))
