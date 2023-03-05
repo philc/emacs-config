@@ -321,7 +321,9 @@
                                 magit-status-mode
                                 git-rebase-mode
                                 ;; Some of the complicated help pages become slow
-                                help-mode))
+                                help-mode
+                                ;; Package mode (package-list-packages command) completely hangs Emacs
+                                package-menu-mode))
 (set-face-attribute 'yascroll:thumb-fringe nil :background "#666666")
 (set-face-attribute 'yascroll:thumb-fringe nil :foreground "#666666")
 
