@@ -64,10 +64,11 @@
                       smartparens ; For editing expressions in parentheses.
                       smex ; Makes the M-x command more useful by showing you recently used commands, etc.
                       spell-fu ; Spell checking
+                      tempel ;; Insert snippets
                       undo-fu ; Used for undo/redo in Evil mode. No longer needed in Emacs 28.
                       yaml-mode ; For editing YAML files
                       yascroll ; For rendering scroll bars in the right fringe
-                      yasnippet)) ; Insert snippets using tab.
+                      ))
 
 ;; Ensure that every package above is installed. This is helpful when setting up Emacs on a new machine.
 (dolist (p my-packages)
@@ -984,37 +985,25 @@
   (show-tab-names))
 
 ;;
-;; Snippets - yassnippet
+;; Tempel - snippets
 ;;
-;; Ignore the default snippets that come with yasnippet. I only need my own, and don't want any conflicts.
-(setq yas-snippet-dirs '("~/.emacs.d/snippets"))
-(require 'yasnippet)
-(yas-global-mode 1)
-(define-key yas-keymap (kbd "M-v") 'clipboard-yank)
-(define-key yas-keymap (kbd "<escape>") (lambda ()
-                                          (interactive)
-                                          (yas-abort-snippet)
-                                          (switch-to-evil-normal-state)))
-;; By default, you can't delete selected text using backspace when tabbing through a snippet.
-;; Filed as a bug here: https://github.com/capitaomorte/yasnippet/issues/408
-(define-key yas-keymap (kbd "C-h") 'yas-skip-and-clear-or-delete-backward-char)
-;; (define-key yas-keymap (kbd "backspace") 'yas-skip-and-clear-or-delete-backward-char)
+;; I switched to Tempel from yasnippet, because I could never get paste to work while in
+;; yasnippet mode, and getting backspace to work required some gynmastics. yasippet is also a much
+;; more complicated mode.
+;;
+;; For the default suggested keymap, see tempel-map. I use the default M-ret to exit the template.
+;;
+(require 'tempel)
+(setq tempel-path "~/.emacs.d/tempel-snippets.el")
 
-;; This function is based on yas-skip-and-clear-or-delete-char from yassnippet.el.
-(defun yas-skip-and-clear-or-delete-backward-char (&optional field)
-  "Clears unmodified field if at field start, skips to next tab. Otherwise deletes backward."
+(defun tempel-expand-or-next ()
   (interactive)
-  (let ((field (or field
-                   (and yas--active-field-overlay
-                        (overlay-buffer yas--active-field-overlay)
-                        (overlay-get yas--active-field-overlay 'yas--field)))))
-    (cond ((and field
-                (not (yas--field-modified-p field))
-                (eq (point) (marker-position (yas--field-start field))))
-           (yas--skip-and-clear field)
-           (yas-next-field 1))
-          (t
-           (call-interactively 'delete-backward-char)))))
+  (if tempel--active
+      (tempel-next 1)
+    (tempel-expand t)))
+
+;; TAB was originally bound to 'indent-for-tab-command.
+(define-key evil-insert-state-map (kbd "TAB") 'tempel-expand-or-next)
 
 ;;
 ;; Spell checking.
