@@ -34,6 +34,8 @@ go-mode
 
 html-mode
 
+(html "<!DOCTYPE html>" n "<html>" n "<head>" n> "<title>" p "</title>" n "</head>"
+      n n "<body>" n> q n "</body>" n " </html>")
 (body "<body>" n> q n "</body>")
 (br "<br>")
 (code "<code>" n> q n "</code>")
