@@ -1075,7 +1075,6 @@
 ;; (diminish 'global-visual-line-mode "")
 (diminish 'auto-fill-function "")
 (diminish 'projectile-mode " p")
-(diminish 'yas-minor-mode "yas")
 (diminish 'osx-keys-minor-mode "")
 
 ;;
