@@ -2,6 +2,7 @@
 (provide 'javascript-repl)
 (require 'js-comint) ; For connecting to and evaluating code in a Node or Deno REPL.
 
+;; Note that comint-mode supports command being a (HOST . SERVICE) pair, for TCP connections.
 (setq js-comint-program-command "deno")
 ;; Some of my projects require the unstable flag, so ensure the REPL is started with that.
 (setq js-comint-program-arguments '("--unstable"))
@@ -66,7 +67,9 @@
          ;; Here I'm using projectfile to determine what is the project's root.
          (the-default-directory
           ;; (locate-dominating-file (buffer-file-name) ".git")
-          (projectile-project-root)))
+          (if (projectile-project-p)
+              (projectile-project-root)
+            "./")))
     ;; Set the buffer-local variable default-directory in the js-comint buffer. This is the directory the Deno
     ;; process will get run from. This variable gets set by make-comint, but the directory is not overridden
     ;; on subsequent invocations, i.e. when the REPL is restarted.
@@ -83,14 +86,23 @@
   (interactive)
   (util/save-buffer-if-dirty)
   (js/ensure-repl-is-running)
-  (let ((file (expand-file-name (buffer-file-name)))
-        ;; For Deno, append a random query string to the path so that Deno loads the latest version of the
-        ;; file. Add a bar after the query string so it doesn't visually look like a line number in
-        ;; backtraces.
-        (cmd-str "import * as main from \"file://%s?v=%s|\"")
-        ;; For Node.js, delete any previous versions of this file in the require cache.
-        ;; (cmd-str "if (true) { let f = \"%s\"; delete require.cache[require.resolve(f)]; require(f) }\n")
-        )
+  (let* (;; Since Deno treats files required with relative paths as separate from files required via
+         ;; absolute paths, and doesn't deduplicate them, we first resolve any symlinks in the
+         ;; file's path, and then make the path relative to the project's root, if we're loading a
+         ;; file in a Projectile project.
+         (file (file-truename (buffer-file-name)))
+         (file (if (projectile-project-p)
+                   (->> file
+                        (s-chop-prefix (projectile-project-root))
+                        (concat "./"))
+                 file))
+         ;; For Deno, append a random query string to the path so that Deno loads the latest version
+         ;; of the file. Add a bar after the query string so it doesn't visually look like a line
+         ;; number in backtraces.
+         (cmd-str "import * as main from \"%s?v=%s|\"")
+         ;; For Node.js, delete any previous versions of this file in the require cache.
+         ;; (cmd-str "if (true) { let f = \"%s\"; delete require.cache[require.resolve(f)]; require(f) }\n")
+         )
     ;; For Deno
     ;; https://stackoverflow.com/questions/61903993/how-to-delete-runtime-import-cache-in-deno
     (-> (format cmd-str file js/load-file-counter)
@@ -101,12 +113,25 @@
 (defun js/run-file-as-shoulda-test ()
   (interactive)
   (js/ensure-repl-is-running)
-  ;; Here we call shoulda.reset to clear any previous tests which have been run.
-  ;; shoulda may not yet be defined if the file hasn't imported it yet.
-  (js/eval-str "import * as shoulda from \"./resources/vendor/shoulda.js\"; shoulda.reset()")
-  (js/load-file)
-  (js/eval-str "shoulda.run(); null")
-  (util/scroll-to-buffer-end (js/get-repl-buffer)))
+  ;; This whole approach doesn'really work; I need a different one. It is tricky to determine how
+  ;; "shoulda" can be imported such that it's not imported twice by Deno as different modules.
+  ;; shoulda may be imported from the current file via a URL, via an import map, or a symlinked
+  ;; file, none of which this Emacs function can easily distinguish between.
+  ;;
+  ;; Also, projectile-current-project-files can have a stale cache and provide the wrong result
+  ;; here!
+  (let ((shoulda-js-path (-?>> (projectile-current-project-files)
+                               (-find (lambda (path) (s-ends-with? "shoulda.js" path))))))
+    (if (not shoulda-js-path)
+        (message "Could not find shoulda.js in current project.")
+      ;; Here we call shoulda.reset to clear any previous tests which have been run. We're importing
+      ;; shoulda because it shoulda may not yet be defined if the file hasn't imported it yet.
+      (js/eval-str
+       (format "import * as shoulda from \"./%s\"; shoulda.reset()" shoulda-js-path))
+      ;; (js/eval-str "import * as shoulda from \"./resources/vendor/shoulda.js\"; shoulda.reset()")
+      (js/load-file)
+      (js/eval-str "shoulda.run(); null")
+      (util/scroll-to-buffer-end (js/get-repl-buffer)))))
 
 (defun js/eval-str (str)
   ;; NOTE(philc): I would like to add an option to optionally ignore the output, so I can send the
