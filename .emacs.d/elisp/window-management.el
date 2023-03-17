@@ -30,6 +30,7 @@
                                      "*Compile-Log*" "*Gofmt Errors*"
                                      ;; Javascript
                                      "*Javascript REPL*"
+                                     "*REPL*"
                                      ;; Mu4e (email)
                                      "*mu4e-update*" ; Note this doesn't work; it shows wherever it wants.
                                      "*Completions*"))
