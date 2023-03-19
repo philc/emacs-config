@@ -109,7 +109,7 @@
       (js/eval-str
        (format "import * as shoulda from \"./%s\"; shoulda.reset()" shoulda-js-path))
       (js/load-file)
-      (js/eval-str "shoulda.run(); undefined")
+      (js/eval-str "await shoulda.run(); undefined")
       (util/scroll-to-buffer-end (js/get-repl-buffer)))))
 
 (defun js/eval-str (str)
