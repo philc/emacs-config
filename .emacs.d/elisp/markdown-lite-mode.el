@@ -558,7 +558,7 @@ upon failure."
   (let (bounds indent prev)
     (setq prev (point))
     (forward-line -1)
-    (setq indent (markdown-cur-line-indent))
+    (setq indent (current-indentation))
     (while
         (cond
          ;; Stop at beginning of buffer
@@ -593,7 +593,7 @@ upon failure."
          ;; Otherwise, continue.
          (t t))
       (forward-line -1)
-      (setq indent (markdown-cur-line-indent)))
+      (setq indent (current-indentation)))
     prev))
 
 (defun markdown-next-line-blank-p ()
@@ -611,7 +611,7 @@ upon failure."
   (let (bounds indent prev next)
     (setq next (point))
     (forward-line)
-    (setq indent (markdown-cur-line-indent))
+    (setq indent (current-indentation))
     (while
         (cond
          ;; Stop at end of the buffer.
@@ -646,7 +646,7 @@ upon failure."
          ;; Otherwise, continue.
          (t t))
       (forward-line)
-      (setq indent (markdown-cur-line-indent)))
+      (setq indent (current-indentation)))
     next))
 
 (defun markdown-cur-list-item-bounds ()
@@ -678,7 +678,7 @@ Leave match data intact for `markdown-regex-list'."
 If the point is not in a list item, do nothing."
   (let (indent)
     (forward-line)
-    (setq indent (markdown-cur-line-indent))
+    (setq indent (current-indentation))
     (while
         (cond
          ;; Stop at end of the buffer.
@@ -701,7 +701,7 @@ If the point is not in a list item, do nothing."
          ;; Otherwise, continue.
          (t t))
       (forward-line)
-      (setq indent (markdown-cur-line-indent)))
+      (setq indent (current-indentation)))
     ;; Don't skip over whitespace for empty list items (marker and
     ;; whitespace only), just move to end of whitespace.
     (if (looking-back (concat markdown-regex-list "\\s-*"))
@@ -743,14 +743,6 @@ extension support.")
 (defvar markdown-lite-mode-map
   "Keymap for Markdown lite major mode."
   (mark-keymap))
-
-(defun markdown-cur-line-indent ()
-  "Return the number of leading whitespace characters in the current line."
-  (save-match-data
-    (save-excursion
-      (goto-char (line-beginning-position))
-      (re-search-forward "^[ \t]+" (line-end-position) t)
-      (current-column))))
 
 (defun markdown-prev-line-blank-p ()
   "Return t if the previous line is blank and nil otherwise.
@@ -1131,13 +1123,13 @@ If we are at the first line, then consider the previous line to be blank."
        ;; If current line has a list marker, update levels, move to end of block
        ((looking-at markdown-regex-list)
         (setq levels (markdown-update-list-levels
-                      (match-string 2) (markdown-cur-line-indent) levels))
+                      (match-string 2) (current-indentation) levels))
         (markdown-end-of-block-element))
        ;; If this is the end of the indentation level, adjust levels accordingly.
        ;; Only match end of indentation level if levels is not the empty list.
        ((and (car levels) (looking-at end-regexp))
         (setq levels (markdown-update-list-levels
-                      nil (markdown-cur-line-indent) levels))
+                      nil (current-indentation) levels))
         (markdown-end-of-block-element))
        (t (markdown-end-of-block-element))))
 
@@ -1186,7 +1178,7 @@ immediately  after a list item, return nil."
          ((looking-at pre-regexp))
          ;; If not, then update levels
          (t
-          (setq indent (markdown-cur-line-indent))
+          (setq indent (current-indentation))
           (setq levels (markdown-update-list-levels (match-string 2)
                                                     indent levels))))
         (end-of-line))
@@ -1245,7 +1237,7 @@ it means we are at baseline (not inside of a nested list)."
       (or (looking-at markdown-regex-header)
           ;; (looking-at markdown-regex-hr)
           (and (null (markdown-cur-non-list-indent))
-               (= (markdown-cur-line-indent) 0)
+               (= (current-indentation) 0)
                (markdown-prev-line-blank-p))))))
 
 (defun markdown-cur-non-list-indent ()
