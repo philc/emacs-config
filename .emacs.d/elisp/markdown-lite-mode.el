@@ -2,6 +2,12 @@
 ;; Markdown lite mode
 ;; TODO(philc): Document what this mode does.
 ;;
+;; Performance notes:
+;; This mode becomes surprisingly slow due to font locking on some operations, like indenting a block of text
+;; in a large file, when some list items are collapsed.
+;; There are many functions that can be made more efficient by reducing features that I don't personally use.
+;; markdown-search-backward-baseline for instance can be made more efficient.
+;;
 
 (provide 'markdown-lite-mode)
 ;; I use markdown heavily for outlining. outline-magic provides handy functions for cycling the visibility
