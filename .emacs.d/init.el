@@ -1753,6 +1753,17 @@
   "i" 'indent-lua-buffer)
 
 ;;
+;; Emacs built-in profiler mode
+;;
+
+(evil-define-key 'normal profiler-report-mode-map
+  (kbd "TAB") 'profiler-report-toggle-entry
+  (kbd "o") (lambda ()
+              (interactive)
+              ;; The default is to expand the top node. Pass t to expand the full subtree.
+              (profiler-report-expand-entry t)))
+
+;;
 ;; Misc
 ;;
 
