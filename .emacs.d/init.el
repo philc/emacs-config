@@ -57,7 +57,6 @@
                       powerline ; Improve the appearance & density of the Emacs status bar.
                       projectile ; Find file in project (ala Vim's CTRL-P or Textmate's Cmd-T)
                       rainbow-delimiters ; Highlight parentheses in rainbow colors.
-                      ruby-electric ; Insert matching delimiters; unindent end blocks after you type them.
                       s ; A strings library.
                       scss-mode ; For editing SCSS files.
                       smartparens ; For editing expressions in parentheses.
