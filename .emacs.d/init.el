@@ -1204,7 +1204,7 @@
 (setq coffee-tab-width 2)
 (define-leader-keys 'coffee-mode-map
   "c" nil ; Establishes "c" as a "prefix key". I found this trick here: http://www.emacswiki.org/emacs/Evil
-  "rr" 'reload-active-chrome-tab
+  "rr" 'reload-active-browser-tab
   ;; This compiles the file and jumps to the first error, if there is one.
   "cc" (lambda () (interactive) (save-buffer) (coffee-compile-without-side-effect))
   ;; The mnemonic for this is "compile & preview". It shows the javascript output in a new buffer.
@@ -1301,21 +1301,25 @@
 
 (define-leader-keys 'html-mode-map
   "i" 'format-html-buffer
-  "rr" 'reload-active-chrome-tab
+  "rr" 'reload-active-browser-tab
   "vv" 'preview-html)
 
 (define-leader-keys 'mustache-mode-map
-  "rr" 'reload-active-chrome-tab)
+  "rr" 'reload-active-browser-tab)
 
-(defun reload-active-chrome-tab ()
+(setq browser-app "Google Chrome")
+(setq browser-cli "chrome-cli")
+
+(defun reload-active-browser-tab ()
   "Reloads the current tab in Chrome. This works on OSX only, using Applescript."
   (interactive)
   (util/save-buffer-if-dirty)
   (util/call-process-with-exit-status "osascript"
-                                      "tell app \"Chrome\" to reload active tab of window 1"))
+                                      (format "tell app \"%s\" to reload active tab of window 1"
+                                              browser-app)))
 
-(defun reload-chrome-extensions ()
-  "Reloads all extensions in Chrome in tandem with the Extensions Reloader extension."
+(defun reload-browser-extensions ()
+  "Reloads all extensions in the browser in tandem with the Extensions Reloader extension."
   (interactive)
   (util/save-buffer-if-dirty)
   ;; If we're currently viewing the Errors page for an extension (i.e.
@@ -1326,30 +1330,23 @@
                            ".querySelector('cr-button')"
                            ".click()")
                      (s-join ""))))
-    (util/call-process-with-exit-status "chrome-cli"
+    (util/call-process-with-exit-status browser-cli
                                         nil
                                         "execute"
-                                        script))
-  (util/call-process-with-exit-status "chrome-cli"
-                                      nil
-                                      "open"
-                                      "http://reload.extensions"
-                                      "-n" ; open in a new window
-                                      ))
-
-(defun reload-chrome-extensions-and-active-tab ()
-  "Reloads the current tab in Chrome and the code for any developer-mode extensions. This is useful for
-   Chrome extension development."
-  (interactive)
-  (util/save-buffer-if-dirty)
-  (util/call-process-with-exit-status "bash"
-                                      (expand-file-name "~/scripts/reload_chrome_extensions_and_tab.sh")))
+                                        script)
+    (util/call-process-with-exit-status browser-cli
+                                        nil
+                                        "open"
+                                        "http://reload.extensions"
+                                        "-n" ; open in a new window
+                                        )))
 
 (defun open-file-in-browser ()
-  "Opens the current file in Google Chrome."
+  "Opens the current file in the browser."
   (interactive)
   (util/save-buffer-if-dirty)
-  (util/call-process-with-exit-status "open" nil "-a" "Google Chrome" (buffer-file-name)))
+  ;; TODO(philc): Make this use a variable
+  (util/call-process-with-exit-status "open" nil "-a" browser-app (buffer-file-name)))
 
 ;; Disable spell check in HTML buffers. There are too many false-positives in the markup.
 (add-hook 'html-mode-hook (lambda () (wcheck-mode -1)))
@@ -1409,7 +1406,7 @@
 
 
 (define-leader-keys '(css-mode-map less-css-mode-map)
-  "rr" 'reload-active-chrome-tab)
+  "rr" 'reload-active-browser-tab)
 
 ;;
 ;; SCSS mode, for editing SCSS files.
@@ -1602,8 +1599,8 @@
 
 
 (define-leader-keys 'js-mode-map
-  "rr" 'reload-active-chrome-tab
-  "re" 'reload-chrome-extensions
+  "rr" 'reload-active-browser-tab
+  "re" 'reload-browser-extensions
   "eb" 'js/load-file
   "eB" (lambda ()
          (interactive)
@@ -1614,8 +1611,7 @@
   "cl" 'js/lint
   "tf" 'js/run-file-as-shoulda-test
   "en" 'js/restart-repl
-  "i" 'js/format-buffer
-  "rc" 'reload-chrome-extensions-and-active-tab)
+  "i" 'js/format-buffer)
 
 (define-leader-keys 'js-mode-map
   ;; "cc" (go-save-and-compile-fn "NO_COLOR=1 deno run --allow-write --allow-read --allow-net --unstable main.js")
