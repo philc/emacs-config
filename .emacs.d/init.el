@@ -202,7 +202,7 @@
 ;; Whitespace & line wrapping.
 (global-whitespace-mode t)
 (with-eval-after-load "whitespace"
-  (setq whitespace-line-column 110) ; When text flows past 110 chars, highlight it.
+  (setq whitespace-line-column 100) ; When text flows past 110 chars, highlight it.
   ;; whitespace-mode by default highlights all whitespace. Show only tabs and trailing spaces.
   (setq whitespace-style '(face trailing lines-tail)))
 (add-hook 'before-save-hook 'delete-trailing-whitespace)
@@ -1130,13 +1130,6 @@
 ;; Markdown
 ;;
 (require 'markdown-lite-mode)
-
-(defun my-markdown-lite-mode-hook ()
-  (message "my-markdown-lite-mode-hook exec")
-  (let ((inhibit-message t))
-    (set-fill-column 110)))
-
-(add-hook 'markdown-lite-mode-hook 'my-markdown-lite-mode-hook)
 
 (defun replace-region-with-command-output (command-string)
   (let ((input (if (region-active-p)
