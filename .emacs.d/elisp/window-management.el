@@ -210,17 +210,12 @@
   (interactive)
   (lexical-let* ((w (selected-window))
                  (b (current-buffer)))
-    (let ((framemove-hook-into-windmove nil)) ; Don't jump across frames.
-      (while (ignore-errors (windmove-right 1))))
-    (if (not (window-splittable-p (selected-window)))
-        (select-window w)
-      (progn
-        (split-window-horizontally-and-focus)
-        ;; Ensure that no matter where the window is created, it has the same buffer as the window prior to
-        ;; creating the new one. Otherwise, the new window could have some random buffer in it, making it
-        ;; difficult to use commands like open-in-project, for instance.
-        (set-window-buffer (selected-window) b)
-        (balance-windows)))))
+    (split-window-horizontally-and-focus)
+    ;; Ensure that no matter where the window is created, it has the same buffer as the window prior to
+    ;; creating the new one. Otherwise, the new window could have some random buffer in it, making it
+    ;; difficult to use commands like open-in-project, for instance.
+    (set-window-buffer (selected-window) b)
+    (balance-windows)))
 
 (defun create-window-in-next-logical-spot ()
   "Creates a window in the next slot in my standard 2x2 configuration. So for instance, if I have only 1
