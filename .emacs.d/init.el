@@ -1,13 +1,13 @@
 ;;
-;; I try to keep this file well-documented so new and veteran users can easily understand the parts of my
-;; setup they may want to use.
+;; I try to keep this file well-documented so new and veteran users can easily understand the parts
+;; of my setup they may want to use.
 ;;
-;; I often extend existing Emacs modes with new functions, and those are typically kept in separate files
-;; (e.g. see elisp/magit-mode-ext.el). However, I try to keep all of the configuration for those modes (like
-;; keybindings) here in init.el.
+;; I often extend existing Emacs modes with new functions, and those are typically kept in separate
+;; files (e.g. see elisp/magit-mode-ext.el). However, I try to keep all of the configuration for
+;; those modes (like keybindings) here in init.el.
 
-;; Launch a debugger with a stactrace if there's any error in Emacs lisp. This is especially helpful on
-;; startup, when your init.el has an error.
+;; Launch a debugger with a stactrace if there's any error in Emacs lisp. This is especially helpful
+;; on startup, when your init.el has an error.
 (setq debug-on-error t)
 
 ;;
@@ -32,10 +32,10 @@
 (when (not package-archive-contents)
   (package-refresh-contents))
 
-(defvar my-packages '(ace-jump-mode ; Jump to any text on screen in a few keystrokes. Like Vim's EasyMotion.
+(defvar my-packages '(ace-jump-mode ; Jump to any text on screen in a few keystrokes.
                       ag ; Silver searcher integration for Emacs
                       autopair ; Insert matching delimiters, e.g. insert closing braces.
-                      browse-at-remote ; Jump to the Github page for a given line in a git-tracked file.
+                      browse-at-remote ; Jump to the Github page for a given line in a file.
                       clojure-mode ; For editing Clojure files.
                       coffee-mode ; For syntax highlighting coffeescript.
                       dash ; Dash provides modern functions for working with lists in Emacs Lisp.
@@ -44,7 +44,7 @@
                       diminish ; For hiding and shortening minor modes in the modeline
                       evil ; Evil mode implements Vim's modal bindings and text object manipulation.
                       evil-nerd-commenter
-                      general ; Functions for defining keybindings and leader keys. Complements Evil.
+                      general ; Functions for defining keybindings and leader keys. Complements Evil
                       flx-ido ; Fuzzy matching for ido, which improves the UX of Projectile.
                       go-mode ; For editing Go files.
                       hiwin ; For highlighting the active pane/window in Emacs.
@@ -52,15 +52,15 @@
                       ido-ubiquitous ; Make ido completions work everywhere.
                       ido-vertical-mode ; Show ido results vertically.
                       magit ; A mode for committing to git repositories and viewing Git history.
-                      org ; For outlining. This is bundled with Emacs, but I'm using the latest version.
-                      outline-magic ; Extensions to ouline mode, which I use heavily in markdown mode.
+                      org ; For outlining. It's bundled with Emacs, but I'm using the latest version
+                      outline-magic ; Extensions to ouline mode, which I use in markdown mode.
                       powerline ; Improve the appearance & density of the Emacs status bar.
                       projectile ; Find file in project (ala Vim's CTRL-P or Textmate's Cmd-T)
                       rainbow-delimiters ; Highlight parentheses in rainbow colors.
                       s ; A strings library.
                       scss-mode ; For editing SCSS files.
                       smartparens ; For editing expressions in parentheses.
-                      smex ; Makes the M-x command more useful by showing you recently used commands, etc.
+                      smex ; Makes M-x more useful by showing you recently used commands.
                       spell-fu ; Spell checking
                       tempel ;; Insert snippets
                       undo-fu ; Used for undo/redo in Evil mode. No longer needed in Emacs 28.
@@ -68,7 +68,8 @@
                       yascroll ; For rendering scroll bars in the right fringe
                       ))
 
-;; Ensure that every package above is installed. This is helpful when setting up Emacs on a new machine.
+;; Ensure that every package above is installed. This is helpful when setting up Emacs on a new
+;; machine.
 (dolist (p my-packages)
   (when (not (package-installed-p p))
     (package-install p)))
@@ -85,15 +86,16 @@
 ;; The prefix key to use when defining Vim style leader keys. See the Evil section below.
 (setq global-leader-prefix ";")
 
-;; Based on my anecdotal observations, this reduces the amount of display flicker during Emacs startup.
+;; Based on my anecdotal observations, this reduces the amount of display flicker during Emacs
+;; startup.
 (setq redisplay-dont-pause t)
 
-;; This allows Emacs to occupy the full screen width and height, so that nothing below it (e.g. the desktop)
-;; is visible. The default behavior in Emacs is to allow only resizing by whole character-columns and rows.
+;; This allows Emacs to occupy the full screen width and height, so that nothing below it (e.g. the
+;; desktop) is visible. The default behavior in Emacs is to allow only resizing by whole
+;; character-columns and rows.
 (setq frame-resize-pixelwise t)
 
 ;; Remove the titlebar on OSX, so that Emacs occupies the entire screen.
-;; (set-frame-parameter nil 'undecorated t) ; This prevents Emacs from being controlled by Hammerspoon on OSX.
 (add-to-list 'default-frame-alist '(ns-transparent-titlebar . t))
 (add-to-list 'default-frame-alist '(ns-appearance . dark))
 
@@ -102,14 +104,15 @@
 (when (and (fboundp 'tool-bar-mode) tool-bar-mode) (tool-bar-mode -1))
 (when (and (fboundp 'scroll-bar-mode) scroll-bar-mode) (scroll-bar-mode -1))
 
-;; Disable Eldoc mode, which is enabled by default in Emacs. I've found that it makes navigating Elisp files
-;; slow, and I don't use it.
+;; Disable Eldoc mode, which is enabled by default in Emacs. I've found that it makes navigating
+;; Elisp files slow, and I don't use it.
 (global-eldoc-mode -1)
 
 ;; Make it possible to open files via the command line in this Emacs using `emacsclient`.
 (require 'server)
 (if (not (or (server-running-p)
-             ;; I use two Emacs apps, one dedicated to Org mode. Don't start the server in that Emacs.
+             ;; I use two Emacs apps, one dedicated to Org mode. Don't start the server in that
+             ;; Emacs.
              (string-match "Org\\.app" (car command-line-args))))
     (server-start))
 
@@ -117,14 +120,15 @@
 (setq initial-major-mode 'markdown-lite-mode)
 
 (defun set-env-vars-from-shell ()
-  "This fetches a list of env vars exported in the interactive shell, and sets them as env vars within Emacs
-   so that subshells run from Emacs have the same environment vars as if they were executed from a shell."
-  ;; NOTE(philc): Doing this is necessary because if you launch Emacs.app on OSX not from a terminal, Emacs
-  ;; not have the same environment as my user shell. I have many env vars (e.g. Ansible's env) which are
-  ;; critical for executing my REPLs from within Emacs.
-  (let* ((shell "zsh") ;; NOTE(philc): Change to your desired shell. You could also use the $SHELL env var.
-         ;; NOTE(philc): Starting an interactive shell "-i" takes 1s on my machine, so this delays the startup
-         ;; time of Emacs by that much.
+  "This fetches a list of env vars exported in the interactive shell, and sets them as env vars
+   within Emacs so that subshells run from Emacs have the same environment vars as if they were
+   executed from a shell."
+  ;; NOTE(philc): Doing this is necessary because if you launch Emacs.app on OSX not from a
+  ;; terminal, Emacs not have the same environment as my user shell. I have many env vars (e.g.
+  ;; Ansible's env) which are critical for executing my REPLs from within Emacs.
+  (let* ((shell "zsh")
+         ;; NOTE(philc): Starting an interactive shell "-i" takes 1 second on my machine, so this
+         ;; delays the startup time of Emacs by that much.
          (env-vars (->> (util/call-process-and-check shell nil "-ic" "env")
                         (s-split "\n")
                         (-map (lambda (line) (s-split "=" line 1))))))
@@ -135,10 +139,11 @@
 (defun set-exec-path-from-shell-PATH ()
   "Use the same PATH within Emacs as your shell."
   ;; From http://clojure-doc.org/articles/tutorials/emacs.html
-  ;; NOTE(philc): For some reason, /usr/bin is not on the PATH when launching emacs in OSX. As a result,
-  ;; zsh will fail to start up because my .zshrc calls a few basic programs. So add it, before calling zsh.
+  ;; NOTE(philc): For some reason, /usr/bin is not on the PATH when launching emacs in OSX. As a
+  ;; result, zsh will fail to start up because my .zshrc calls a few basic programs. So add it,
+  ;; before calling zsh.
   (setenv "PATH" (concat (getenv "PATH") ":/usr/bin"))
-  (let* ((shell "zsh") ;; NOTE(philc): Change to your desired shell. You could also use the $SHELL env var.
+  (let* ((shell "zsh")
          (path-from-shell (shell-command-to-string (concat shell " -i -c 'echo $PATH'"))))
     (setenv "PATH" path-from-shell)
     (setq exec-path (split-string path-from-shell path-separator))))
@@ -158,7 +163,8 @@
 (setq mac-option-modifier 'alt)
 (setq mac-command-modifier 'meta)
 
-;; By default, you must type "yes" when confirming destructive actions. Change that so only "y" is required.
+;; By default, you must type "yes" when confirming destructive actions. Change that so only "y" is
+;; required.
 (defalias 'yes-or-no-p 'y-or-n-p)
 
 ;; Increase the maximum stack depth (the default is 1000).
@@ -166,23 +172,24 @@
 ;; project-nav/project-nav/open-file-from-notes-folder) trigger a stack overflow exception.
 (setq max-specpdl-size 2000)
 
-;; Turn off backups and autosaves so we don't have ~ and # files strewn about the working directory. I've
-;; tried storing backups in my home directory as suggested by http://stackoverflow.com/q/151945/46237, but
-;; still I see the occasional backup file in the working directory for some reason.
+;; Turn off backups and autosaves so we don't have ~ and # files strewn about the working directory.
+;; I've tried storing backups in my home directory as suggested by
+;; http://stackoverflow.com/q/151945/46237, but still I see the occasional backup file in the
+;; working directory for some reason.
 (setq make-backup-files nil)
 (setq auto-save-file-name-transforms
       `((".*" ,temporary-file-directory t)))
 (setq auto-save-default nil)
 
-;; Disable Emacs' write-lock, which creates temporary .#files when saving. This crashes coffeescript --watch.
-;; https://github.com/jashkenas/coffeescript/issues/985
+;; Disable Emacs' write-lock, which creates temporary .#files when saving.
 (setq create-lockfiles nil)
 
 (setq vc-follow-symlinks t) ; Don't ask confirmation to follow symlinks to edit files.
 
 (savehist-mode t) ; Save your minibuffer history across Emacs sessions.
 
-;; Include the path when displaying buffer names which have the same filename open (e.g. a/foo.txt b/foo.txt)
+;; Include the path when displaying buffer names which have the same filename open (e.g. a/foo.txt
+;; b/foo.txt)
 (setq uniquify-buffer-name-style 'forward)
 
 ;; Start scrolling the window when the cursor reaches its edge.
@@ -211,21 +218,22 @@
 ;; Some modes have their own tab-width variables which need to be overridden.
 (setq-default css-indent-offset 2)
 
-(setq sentence-end-double-space nil) ; Don't add double spaces after periods when filling strings in quotes.
-(setq-default fill-column 100) ; When wrapping with the Emacs fill commands, wrap at this many characters.
+(setq sentence-end-double-space nil) ; Don't add double spaces after periods when filling strings.
+(setq-default fill-column 100) ; Wrap at 110 chars when using the Emacs fill commands.
 (auto-fill-mode t) ; When typing across the fill-column, hard-wrap the line as you type.
-(add-hook 'text-mode-hook 'turn-on-auto-fill) ; Some modes, like markdown, turn off autofill. Force it!
+(add-hook 'text-mode-hook 'turn-on-auto-fill) ; Some modes, like markdown, turn off autofill.
 
 (set-default 'truncate-lines t)
 
-;; Highlight the line the cursor is on. This is mostly to make it easier to tell which split is active.
+;; Highlight the line the cursor is on. This is mostly to make it easier to tell which split is
+;; active.
 (global-hl-line-mode)
-;; Don't blink the cursor. I can easily see it, because the line the cursor is on is already highlighted.
+;; Don't blink the cursor; I can see it because the line the cursor is on is already highlighted.
 (blink-cursor-mode -1)
 
-;; Indent with spaces instead of tabs by default. Modes that really need tabs should enable indent-tabs-mode
-;; explicitly. Makefile-mode already does that, for example. If indent-tabs-mode is off, replace tabs with
-;; spaces before saving the file.
+;; Indent with spaces instead of tabs by default. Modes that really need tabs should enable
+;; indent-tabs-mode explicitly. Makefile-mode already does that, for example. If indent-tabs-mode is
+;; off, replace tabs with spaces before saving the file.
 (setq-default indent-tabs-mode nil)
 (add-hook 'write-file-hooks
           (lambda ()
@@ -233,8 +241,8 @@
                 (untabify (point-min) (point-max)))
             nil))
 
-;; Allow <C-i> to be bindable as keybinding. In terminals, C-i is translated to Tab, and that's how it works
-;; in Emacs. This workaround came from https://emacs.stackexchange.com/a/221
+;; Allow <C-i> to be bindable as keybinding. In terminals, C-i is translated to Tab, and that's how
+;; it works in Emacs. This workaround came from https://emacs.stackexchange.com/a/221
 (define-key input-decode-map [?\C-i] [C-i])
 
 (defun backward-delete-word ()
@@ -251,14 +259,16 @@
                   (kbd "C-d") 'delete-char
                   (kbd "C-w") 'backward-delete-word)
 
-;; Emacs modes universally bind C-h to "help", but I use C-h for backspace. It's very difficult to redefine
-;; C-h in many modes, like minibuffer-mode. This instead translates C-h to C-?. It's unclear to me exactly how
-;; this works. See https://github.com/emacs-helm/helm/issues/24 for discussion.
+;; Emacs modes universally bind C-h to "help", but I use C-h for backspace. It's very difficult to
+;; redefine C-h in many modes, like minibuffer-mode. This instead translates C-h to C-?. It's
+;; unclear to me exactly how this works. See https://github.com/emacs-helm/helm/issues/24 for
+;; discussion.
 (define-key key-translation-map [?\C-h] [?\C-?])
 
-;; Disable the prompt we get when killing a buffer with a process. This affects clojure mode in particular,
-;; when we want to restart the nrepl process.
-(setq kill-buffer-query-functions (remq 'process-kill-buffer-query-function kill-buffer-query-functions))
+;; Disable the prompt we get when killing a buffer with a process. This affects clojure mode in
+;; particular, when we want to restart the nrepl process.
+(setq kill-buffer-query-functions
+      (remq 'process-kill-buffer-query-function kill-buffer-query-functions))
 
 ;; Use smex to show the M-x command prompt. It has better completion support than the default M-x.
 (require 'smex)
@@ -268,12 +278,12 @@
 (require 'recentf)
 (define-key recentf-mode-map (kbd "C-w") 'backward-delete-word)
 
-;; The poorly-named winner mode saves the history of your window splits, so you can undo and redo changes to
-;; your window configuration.
+;; The poorly-named winner mode saves the history of your window splits, so you can undo and redo
+;; changes to your window configuration.
 (winner-mode t)
 
-;; Save buffers whenever they lose focus.
-;; This obviates the need to hit the Save key thousands of times a day. Inspired by http://goo.gl/2z0g5O.
+;; Save buffers whenever they lose focus. This obviates the need to hit the Save key thousands of
+;; times a day. Inspired by http://goo.gl/2z0g5O.
 (dolist (f '(windmove-up windmove-right windmove-down windmove-left))
   (advice-add f :before (lambda (&optional args) (util/save-buffer-if-dirty))))
 
@@ -281,8 +291,8 @@
 (add-hook 'focus-out-hook 'util/save-buffer-if-dirty)
 
 (defun switch-to-evil-normal-state ()
-  ;; Don't switch to the normal state in a minibuffer. In the minibuffer we should always be in insert mode.
-  ;; Otheriwse the UX becomes confusing.
+  ;; Don't switch to the normal state in a minibuffer. In the minibuffer we should always be in
+  ;; insert mode. Otheriwse the UX becomes confusing.
   (when (not (window-minibuffer-p))
     (evil-normal-state)))
 
@@ -295,7 +305,8 @@
 ;;
 (global-yascroll-bar-mode 1)
 ;; By default, the scroll bar only shows when you're scrolling the buffer. Show it all the time.
-;; Note: some report performance issues in some modes. https://github.com/emacsorphanage/yascroll/issues/38
+;; Note: some report performance issues in some modes.
+;; https://github.com/emacsorphanage/yascroll/issues/38
 (setq-default yascroll:delay-to-hide nil)
 ;; magit-log-mode and others are slow due to yascroll:delay-to-hide. I don't need scrollbars when
 ;; using Magit, so hide them.
@@ -318,7 +329,6 @@
                                 git-rebase-mode
                                 ;; Some of the complicated help pages become slow
                                 help-mode
-                                ;; Package mode (package-list-packages command) completely hangs Emacs
                                 package-menu-mode))
 (set-face-attribute 'yascroll:thumb-fringe nil :background "#666666")
 (set-face-attribute 'yascroll:thumb-fringe nil :foreground "#666666")
@@ -341,10 +351,11 @@
 ;; description of the motivation here: http://emacs.stackexchange.com/a/15054
 (fset 'evil-visual-update-x-selection 'ignore)
 
-;; Unbind "q" so it doesn't record macros. I activate this mistakenly all the time and then wreak havoc.
+;; Unbind "q" so it doesn't record macros. I activate this mistakenly often and it wreaks havoc.
 (define-key evil-normal-state-map (kbd "q") nil)
 
-(define-key evil-normal-state-map (kbd "C-*") 'evil-search-word-backward) ; This is also mapped to "#".
+; ; This is also mapped to "#".
+(define-key evil-normal-state-map (kbd "C-*") 'evil-search-word-backward)
 
 (define-key evil-normal-state-map (kbd "M-s") 'util/save-buffer-silently)
 (define-key evil-insert-state-map (kbd "M-s") 'util/save-buffer-silently)
@@ -367,8 +378,8 @@
 ;; By default, Emacs will not indent when you hit enter/return within a comment.
 (define-key evil-insert-state-map (kbd "RET") 'newline-and-indent)
 
-;; The default implementation is evil-goto-first-line, which jumps to the first line but not the first
-;; character in that line. This doesn't match Vim's default behavior, AFAIK.
+;; The default implementation is evil-goto-first-line, which jumps to the first line but not the
+;; first character in that line. This doesn't match Vim's default behavior, AFAIK.
 (define-key evil-motion-state-map "gg"
   (lambda () (interactive)
     (evil-goto-first-line)
@@ -378,8 +389,8 @@
 ;; Jumping
 ;;
 ;; Evil has Vim-style jumping support built-in. However, the implementation is buggy and incomplete.
-;; When moving forward in the jump list, if the jump crosses buffers, the jumplist gets truncated at that
-;; moment and one can't continue navigating forward.
+;; When moving forward in the jump list, if the jump crosses buffers, the jumplist gets truncated at
+;; that moment and one can't continue navigating forward.
 ;; See here for discussion on how its implementation needs to be rewritten.
 ;; https://github.com/emacs-evil/evil/issues/732#issuecomment-454289474
 ;; I'm using better-jump-mode which was written in response to some of Evil's jump defects.
@@ -397,7 +408,8 @@
     ;; (recenter-no-redraw)
     ))
 
-;; ;; Note that "<C-i>" is a special annotation for binding "i". See <C-i> elsewhere in this file for details.
+;; Note that "<C-i>" is a special annotation for binding "i". See <C-i> elsewhere in this file for
+;; details.
 (define-key evil-normal-state-map (kbd "<C-i>")
   (lambda () (interactive)
     (better-jumper-jump-forward)
@@ -425,15 +437,15 @@
 (global-set-key (kbd "C-A-M-h") 'help)
 (global-set-key (kbd "C-A-M-b") 'describe-bindings)
 
-;; By default gq is bound to evil-fill-and-move, but when I reflow a paragraph, I like the cursor to remain
-;; where it was.
+;; By default gq is bound to evil-fill-and-move, but when I reflow a paragraph, I like the cursor to
+;; remain where it was.
 (define-key evil-normal-state-map "gq" 'evil-fill)
 (define-key evil-normal-state-map "-" 'evil-ext/indent-without-move)
 
 (define-key evil-outer-text-objects-map "p" 'evil-paragraph-from-newlines)
 
-;; Emacs 27 bug: switching the cursor from block cursor (command mode) to bar cursor (insert mode) does not
-;; visually clear the block cursor. Caling `redisplay` resolves this. Documented here:
+;; Emacs 27 bug: switching the cursor from block cursor (command mode) to bar cursor (insert mode)
+;; does not visually clear the block cursor. Caling `redisplay` resolves this. Documented here:
 ;; https://github.com/emacs-evil/evil/issues/1412
 (add-hook 'evil-insert-state-entry-hook #'redisplay)
 
@@ -462,7 +474,8 @@
  "gl" 'magit-log-current
  "o" 'util/open-file-at-cursor
  "wc" 'count-chars-region
- "s" 'ag-project-in-current-window ; Grep (using the "ag" command) for files in the current directory.
+ ;; Grep (using the "ag" command) for files in the current directory.
+ "s" 'ag-project-in-current-window
  ;; "v" is a mnemonic prefix for "view X".
  ;; "vv" will be a natural choice as a mode-specific shortcut for previewing the current file.
  "vu" 'notmuch-go-to-inbox
@@ -494,9 +507,9 @@
 ;;
 (require 'window-management)
 
-;; Don't use the native OSX full screen support, because it uses OSX Spaces which don't play well with
-;; CMD-tabbing to applications which are behind Emacs. With this set to nil, if you want to invoke fullscreen,
-;; do so the emacs command `toggle-frame-fullscreen`.
+;; Don't use the native OSX full screen support, because it uses OSX Spaces which don't play well
+;; with CMD-tabbing to applications which are behind Emacs. With this set to nil, if you want to
+;; invoke fullscreen, do so the emacs command `toggle-frame-fullscreen`.
 (setq ns-use-native-fullscreen nil)
 
 ;; Window-management keybindings. "w" is the namespace I use.
@@ -521,8 +534,8 @@
 
 ;; Make it so Esc means quit, no matter the context.
 ;; http://stackoverflow.com/a/10166400/46237
-;; Note that when Emacs becomes unresponsive (e.g. because I accidentally grepped through qmy home directory),
-;; I might still need to hold C-g (the Emacs esc/cancel key) to bring it back.
+;; Note that when Emacs becomes unresponsive (e.g. because I accidentally grepped through qmy home
+;; directory), I might still need to hold C-g (the Emacs esc/cancel key) to bring it back.
 (defun minibuffer-keyboard-quit ()
   "Abort recursive edit. In Delete Selection mode, if the mark is active, just deactivate it;
    then it takes a second \\[keyboard-quit] to abort the minibuffer."
@@ -545,8 +558,8 @@
 ;;
 (require 'ace-jump-mode)
 (define-key evil-normal-state-map (kbd "SPC") 'ace-jump-word-mode)
-;; Note that Evil mode's ace-jump integration is supposed to add this motion keybinding automatically for you,
-;; but it doesn't work. So I've defined it here explicitly.
+;; Note that Evil mode's ace-jump integration is supposed to add this motion keybinding
+;; automatically for you, but it doesn't work. So I've defined it here explicitly.
 (define-key evil-motion-state-map (kbd "SPC") 'evil-ace-jump-word-mode)
 
 ;;
@@ -556,7 +569,7 @@
 (setq case-fold-search t) ; Make Emac searches case insensitive.
 (setq lazy-highlight-initial-delay 0)
 (setq lazy-highlight-max-at-a-time nil)
-;; Hitting esacpe aborts the search, restoring your cursor to the original position, as it does in Vim.
+;; Hitting escape aborts the search, restoring your cursor to the original position, as in Vim.
 (define-key isearch-mode-map (kbd "<escape>") 'isearch-abort)
 ;; Make C-h act the same as backspace, as it does in readline.
 (define-key isearch-mode-map (kbd "C-h") 'isearch-delete-char)
@@ -565,8 +578,8 @@
 (define-key isearch-mode-map (kbd "C-w") 'isearch-del-word)
 
 (defun trim-last-word-of-string (string)
-  "Removes the last word from the given string. Word separators are -, _ and spaces. This is designed to
-  perform the same function as kill-word, but on a string argument."
+  "Removes the last word from the given string. Word separators are -, _ and spaces. This is
+  designed to perform the same function as kill-word, but on a string argument."
   (lexical-let ((i 0))
     (while (and (< i (length string))
                 (string-match "[-_ ]+" string i))
@@ -598,9 +611,9 @@
   (let ((recenter-redisplay nil))
     (recenter arg)))
 
-;; When pressing enter to confirm a search, or jumping to the next result, scroll the result into the center
-;; of the window. This removes the UX problem of the result appearing at the bottom of the screen with little
-;; context around it.
+;; When pressing enter to confirm a search, or jumping to the next result, scroll the result into
+;; the center of the window. This removes the UX problem of the result appearing at the bottom of
+;; the screen with little context around it.
 (defadvice evil-search-next (after isearch-recenter activate)
   (recenter-no-redraw))
 
@@ -613,17 +626,17 @@
 ;;
 ;; Changing font sizes - text-scale-mode
 ;;
-;; These functions support changing text sizes across all open buffers, rather than on a per-buffer basis.
-;; zoom-frm.el does this as well. However, it causeses the Emacs frame to resize itself which means every time
-;; change your font size, you also need to resize Emacs, which is a pain.
+;; These functions support changing text sizes across all open buffers, rather than on a per-buffer
+;; basis. zoom-frm.el does this as well. However, it causeses the Emacs frame to resize itself which
+;; means every time change your font size, you also need to resize Emacs, which is a pain.
 ;;
 (require 'face-remap) ; This loads "text-scale-mode".
 
 (setq text-scale-mode-step 1.1) ; When changing font size, do so in small increments.
 (setq current-text-zoom-level 0) ; The global text zoom level which should apply to all buffers.
 
-;; Here we define a global minor mode which runs on all buffers. This is needed because we must set the text
-;; zoom level for newly created buffers, since text-scale-set works on a per-buffer basis.
+;; Here we define a global minor mode which runs on all buffers. This is needed because we must set
+;; the text zoom level for newly created buffers, since text-scale-set works on a per-buffer basis.
 (define-globalized-minor-mode global-text-scale-mode text-scale-mode
   (lambda () (text-scale-set current-text-zoom-level)))
 
@@ -633,8 +646,8 @@
   "Sets the text zoom to the given level in every open buffer."
   (setq current-text-zoom-level level)
   (dolist (buffer (buffer-list))
-    ;; Avoid resizing the echo area. Otherwise, the Emacs status bar will move up and down to make room for
-    ;; echo area whenever a message is printed. This is annoying.
+    ;; Avoid resizing the echo area. Otherwise, the Emacs status bar will move up and down to make
+    ;; room for echo area whenever a message is printed. This is annoying.
     (when (not (string-match "*Echo Area.+" (buffer-name buffer)))
       (with-current-buffer buffer
         (text-scale-set current-text-zoom-level)))))
@@ -674,8 +687,8 @@
                   (kbd "M-0") 'text-zoom-reset
                   (kbd "M-t") 'open-current-buffer-in-new-tab
                   (kbd "M-i") 'set-tab-alias
-                  ;; These aren't specifically replicating OSX shortcuts, but they manipulate the window, so I
-                  ;; want them to take precedence over everything else.
+                  ;; These aren't specifically replicating OSX shortcuts, but they manipulate the
+                  ;; window, so I want them to take precedence over everything else.
                   (kbd "A-f") (lambda () (interactive) (ignore-errors (windmove-right)))
                   (kbd "A-d") (lambda () (interactive) (ignore-errors (windmove-down)))
                   (kbd "A-s") (lambda () (interactive) (ignore-errors (windmove-left)))
@@ -739,8 +752,9 @@
 (ido-vertical-mode t)
 (setq ido-vertical-define-keys 'C-n-C-p-up-down-left-right)
 
-;; By default, ido-switch-buffer will move your focus to another frame if the buffer is open there. I instead
-;; want the desired buffer to open again within my current frame, even if it's already open in another frame.
+;; By default, ido-switch-buffer will move your focus to another frame if the buffer is open there.
+;; I instead want the desired buffer to open again within my current frame, even if it's already
+;; open in another frame.
 (setq ido-default-buffer-method 'selected-window)
 (with-eval-after-load "ido"
   (setq ido-enable-flex-matching t)
@@ -757,10 +771,12 @@
 (setq dired-recursive-copies (quote always))
 (setq dired-recursive-deletes (quote top))
 
-(put 'dired-find-alternate-file 'disabled nil) ; By default, the dired-find-alternative-file fn is disabled.
+;; By default, the dired-find-alternative-file fn is disabled.
+(put 'dired-find-alternate-file 'disabled nil)
 
-;; "go to dired, then call split-window-vertically, then go to another dired dir. Now, when you press C to
-;; copy, the other dir in the split pane will be default destination. Same for R (rename; move)."
+;; "go to dired, then call split-window-vertically, then go to another dired dir. Now, when you
+;; press C to copy, the other dir in the split pane will be default destination. Same for R (rename;
+;; move)."
 (setq dired-dwim-target t)
 
 (defun dired-open-file-in-window-to-the-right ()
@@ -841,7 +857,8 @@
   (message "%s" (eval (read (current-sexp)))))
 
 (defun view-echo-area-messages-and-scroll ()
-  "Opens the echo area messages buffer and scrolls to the bottom of it. That's where the latest messages are."
+  "Opens the echo area messages buffer and scrolls to the bottom of it. That's where the latest
+  messages are."
   (interactive)
   (view-echo-area-messages)
   (util/preserve-selected-window
@@ -850,7 +867,8 @@
      (goto-char (point-max)))))
 
 (defun erase-messages-buffer ()
-  "Clears the messages buffer. Useful when you want to clear and reset the output from your Elisp code."
+  "Clears the messages buffer. Useful when you want to clear and reset the output from your Elisp
+  code."
   (interactive)
   (util/preserve-selected-window
    (lambda ()
@@ -861,9 +879,9 @@
      (read-only-mode 1))))
 
 (define-leader-keys 'emacs-lisp-mode-map
-  ;; Note that I'm saving the buffer before each eval because otherwise, the buffer gets saved after the eval,
-  ;; (due to save-when-switching-windows setup) and the output from the buffer save overwrites the eval results
-  ;; in the minibuffer.
+  ;; Note that I'm saving the buffer before each eval because otherwise, the buffer gets saved after
+  ;; the eval, (due to save-when-switching-windows setup) and the output from the buffer save
+  ;; overwrites the eval results in the minibuffer.
   "e b" (lambda() (interactive) (util/save-buffer-if-dirty) (eval-buffer))
   "e s" (lambda () (interactive) (util/save-buffer-if-dirty) (elisp-eval-current-sexp))
   "e x" (lambda () (interactive) (util/save-buffer-if-dirty) (call-interactively 'eval-defun))
@@ -883,9 +901,9 @@
 ;; Projectile (find file from the root of the current project).
 ;;
 (projectile-global-mode)
-;; NOTE(philc): Using this cache is annoying because it gets stale if files appear on disk after a git pull.
-;; However, in my large repos, without it, projectile-find-file takes about 1s to open, which is an
-;; unacceptable delay.
+;; NOTE(philc): Using this cache is annoying because it gets stale if files appear on disk after a
+;; git pull. However, in my large repos, without it, projectile-find-file takes about 1s to open,
+;; which is an unacceptable delay.
 (setq projectile-enable-caching t)
 
 (defun restart-projectile-find-file-hook ()
@@ -902,24 +920,26 @@
       (find-file (expand-file-name file (projectile-project-root)))
       (run-hooks 'projectile-find-file-hook)))
 
-;; Bind "M-r" when the find-files minibuffer is open to refresh Projectile's cache. This is a common need when
-;; you open a find files dialog and realize a newly added file is not there due to a stale cache.
-;; NOTE(philc): Ideally we would bind this key in ido-file-completion-map, but minibuffer-local-map has M-r
-;; bound already. Also, minor note: for some reason, typing this keybinding recursively fails with "Error in
-;; post-command hook..."
+;; Bind "M-r" when the find-files minibuffer is open to refresh Projectile's cache. This is a common
+;; need when you open a find files dialog and realize a newly added file is not there due to a stale
+;; cache.
+;; NOTE(philc): Ideally we would bind this key in ido-file-completion-map, but minibuffer-local-map
+;; has M-r bound already. Also, minor note: for some reason, typing this keybinding recursively
+;; fails with "Error in post-command hook..."
 (define-key minibuffer-local-map (kbd "M-r")
   (lambda ()
     (interactive)
     (setq previous-projectile-input (minibuffer-contents))
     (projectile-invalidate-cache nil)
-    ;; Reference for running code after `minibuffer-keyboard-quit`: http://stackoverflow.com/q/21000540/46237
+    ;; Reference for running code after `minibuffer-keyboard-quit`:
+    ;; http://stackoverflow.com/q/21000540/46237
     (add-hook 'post-command-hook 'restart-projectile-find-file-hook)
     (minibuffer-keyboard-quit)))
 
 ;; Tab-bar-mode (built into Emacs)
-;; I use one tab per "workspace" -- a set of Emacs windows representing a project. The list of tabs is local
-;; to each Emacs frame. I previously used escreen, and elscreen before that. They are messier and do not work
-;; cleanly with multiple frames.
+;; I use one tab per "workspace" -- a set of Emacs windows representing a project. The list of tabs
+;; is local to each Emacs frame. I previously used escreen, and elscreen before that. They are
+;; messier and do not work cleanly with multiple frames.
 ;; https://github.com/emacs-mirror/emacs/blob/master/lisp/tab-bar.el
 ;; Currently I only show a tab UI after doing a tab-related command.
 ;; This package could be used to show the tab UI persistently, at the end of the echo area:
@@ -974,8 +994,9 @@
   (interactive)
   ;; Exit out of insert mode when opening a new tab.
   (evil-change-to-initial-state)
-  ;; I'm using the current buffer in the new tab so that the current directory is set as it was previously,
-  ;; which lets me begin using projectile immediately. This is the default behavior of tab-bar-mode.
+  ;; I'm using the current buffer in the new tab so that the current directory is set as it was
+  ;; previously, which lets me begin using projectile immediately. This is the default behavior of
+  ;; tab-bar-mode.
   (tab-bar-new-tab)
   (show-tab-names))
 
@@ -1003,17 +1024,19 @@
 ;;
 ;; Spell checking.
 ;;
-;; * FlySpell is the default choice for spellchecking, but I found it slow, even using every flyspell perf
-;;   improvement I could find online. Speck, as one alternative, didn't slow down my typing.
-;; * I suspect speck mode is the culprit of periodic emacs crashes. It's also poorly documented and doesn't
-;;   support binding "add to personal dictionary" as a keybinding.
-;; * wcheck-mode is hard to configure because of its genericism, but at least it's documented and performs
-;;   well once configured. It stopped working around 2022 and so I abandoned it. It also didn't reliably check
-;;   my buffers and offers no lisp function for manually invoking spellcheck on the current buffer.
-;; * 2022: So now I'm using spell-fu. This has some issues: it uses its own cache system which mirrors aspell
-;;   and my personal aspell dictionary, and so it becomes stale if I edit those files. The API contract for
-;;   many functions which should be user-facing is not ideal (they require somewhat elaborate data
-;;   structures).
+;; * FlySpell is the default choice for spellchecking, but I found it slow, even using every
+;;   flyspell perf improvement I could find online. Speck, as one alternative, didn't slow down my
+;;   typing.
+;; * I suspect speck mode is the culprit of periodic emacs crashes. It's also poorly documented and
+;;   doesn't support binding "add to personal dictionary" as a keybinding.
+;; * wcheck-mode is hard to configure because of its genericism, but at least it's documented and
+;;   performs well once configured. It stopped working around 2022 and so I abandoned it. It also
+;;   didn't reliably check my buffers and offers no lisp function for manually invoking spellcheck
+;;   on the current buffer.
+;; * 2022: So now I'm using spell-fu. This has some issues: it uses its own cache system which
+;;   mirrors aspell and my personal aspell dictionary, and so it becomes stale if I edit those
+;;   files. The API contract for many functions which should be user-facing is not ideal (they
+;;   require somewhat elaborate data structures).
 ;;
 ;; TODO(philc): Consider only checking spelling upon save. That will result in less noise as I type.
 ;;
@@ -1031,8 +1054,8 @@
 (set-face-attribute 'spell-fu-incorrect-face nil :underline '(:color "#E99265" :style wave))
 
 (defun add-word-to-dictionary ()
-  "Adds the word under the cursor to your personal dictionary. Also re-spellchecks the buffer to clear any
-   stale highlights."
+  "Adds the word under the cursor to your personal dictionary. Also re-spellchecks the buffer to
+   clear any stale highlights."
   (interactive)
   (let ((word (thing-at-point 'word)))
     (if (not (and ispell-personal-dictionary (file-writable-p ispell-personal-dictionary)))
@@ -1046,8 +1069,9 @@
         (spell-fu-mode)
         (spell-fu-mode)))))
 
-;; This is a bugfix patch to ensure that spell-fu picks up changes to my custom dictionary when that dict
-;; is a symlink. Delete this once this gets fixed: https://codeberg.org/ideasman42/emacs-spell-fu/issues/31
+;; This is a bugfix patch to ensure that spell-fu picks up changes to my custom dictionary when that
+;; dict is a symlink. Delete this once this gets fixed:
+;; https://codeberg.org/ideasman42/emacs-spell-fu/issues/31
 (defun spell-fu--file-is-older-list (file-test file-list)
   "Return t when FILE-TEST is older than any files in FILE-LIST."
   (catch 'result
@@ -1062,7 +1086,8 @@
 
 ;;
 ;; Diminish - hide or shorten the names of minor modes in your modeline.
-;; To see which minor modes you have loaded and what their modeline strings are: (message minor-mode-alist)
+;; To see which minor modes you have loaded and what their modeline strings are: (message
+;; minor-mode-alist)
 ;;
 (require 'diminish)
 (diminish 'visual-line-mode "")
@@ -1105,7 +1130,8 @@
                                 (powerline-raw (if (buffer-modified-p) "*" " ") face1)
                                 ))
                           (rhs (list
-                                (powerline-raw global-mode-string face1 'r) ; TODO(philc): What is this?
+                                ;; TODO(philc): What is this?
+                                (powerline-raw global-mode-string face1 'r)
                                 ;; "Version control" - show the modeline of any active VC mode.
                                 (powerline-raw "%4l" face1 'l) ; Current line number
                                 (powerline-raw ":" face1 'l)
@@ -1117,9 +1143,10 @@
 
 (powerline-personal-theme)
 
-;; Disable the mode line at the bottom of the Emacs window. Most people show their file names and other
-;; information in the mode line, and I did for ~10 years, but I don't think it's better to show it at the top
-;; of windows, to be consistent with other apps. So now I show this info in the header line.
+;; Disable the mode line at the bottom of the Emacs window. Most people show their file names and
+;; other information in the mode line, and I did for ~10 years, but I don't think it's better to
+;; show it at the top of windows, to be consistent with other apps. So now I show this info in the
+;; header line.
 (setq-default mode-line-format nil)
 
 ;;
@@ -1143,10 +1170,10 @@
                 (error-message-string err))))))
 
 (defun markdown-format-outline-into-sections ()
-  "In a document formatted as an outline of nested lists, convert the top-level list items into section
-   headers. When writing a doc, it's nicer to organize it as one big list/outline. But when formatting that
-   doc for reading, it's nicer to format the top-level list items into headers, so the doc is divided into
-   clear sections."
+  "In a document formatted as an outline of nested lists, convert the top-level list items into
+   section headers. When writing a doc, it's nicer to organize it as one big list/outline. But when
+   formatting that doc for reading, it's nicer to format the top-level list items into headers, so
+   the doc is divided into clear sections."
   (interactive)
   ;; NOTE(philc): This is a script I've written to perform this transformation.
   (replace-region-with-command-output "~/scripts/publishing/format_outline_into_sections.rb"))
@@ -1158,7 +1185,8 @@
 
 (defun markdown-strip-bullets ()
   "Removes any bullet point markers and indentation from lines.
-   This is useful for converting a list into plain lines, for pasting into CSVs, emails, spreadsheets."
+   This is useful for converting a list into plain lines, for pasting into CSVs, emails,
+   spreadsheets."
   (interactive)
   ;; NOTE(philc): This is a script I've written to perform this transformation.
   (replace-region-with-command-output "~/scripts/publishing/strip_bullets.rb"))
@@ -1271,7 +1299,8 @@
 ;;
 ;; (require 'clojure-mode-personal)
 ;; (require 'cider-test-personal)
-;; NOTE(philc): My Clojure setup is a work-in-progress. I'm progressively rewriting Cider for my own use case.
+;; NOTE(philc): My Clojure setup is a work-in-progress. I'm progressively rewriting Cider for my own
+;; use case.
 
 (require 'clojure-mode-simple)
 
@@ -1292,8 +1321,9 @@
   "Format and replace the current buffer's contents with `html-beautify`."
   (interactive)
   ;; This beautifier is https://github.com/beautify-web/js-beautify.
-  (replace-region-with-command-output (format "html-beautify -f - --indent-size 2 --wrap-line-length %s"
-                                              fill-column)))
+  (replace-region-with-command-output
+   (format "html-beautify -f - --indent-size 2 --wrap-line-length %s"
+           fill-column)))
 
 (define-leader-keys 'html-mode-map
   "i" 'format-html-buffer
@@ -1363,8 +1393,9 @@
     (set-window-start (selected-window) scroll-y)
     (goto-char p)))
 
-;; `brace-block` is a text object which can be operated on by `thing-at-point`. (thing-at-point 'brace-block)
-;; will return all text between and including the set of curly braces surrounding the cursor.
+;; `brace-block` is a text object which can be operated on by `thing-at-point`. (thing-at-point
+;; 'brace-block) will return all text between and including the set of curly braces surrounding the
+;; cursor.
 (put 'brace-block 'beginning-op (lambda () (re-search-backward "{")))
 (put 'brace-block 'end-op (lambda () (re-search-forward "}")))
 
@@ -1393,8 +1424,8 @@
           ;; When expanding the CSS to multiple lines, we didn't preserve line indentation, so as a
           ;; workaround, here we just re-indent the paragraph around the cursor.
           (evil-ext/indent-inside-paragraph)
-          ; Put cursor on the line prior to the brace, so you can immediately begin typing in new styles.
-          (previous-line)
+          ; Put cursor on the line prior to the brace, so you can immediately begin typing in new
+          styles. (previous-line)
           (end-of-line))))))
 
 (evil-define-key 'normal css-mode-map
@@ -1450,16 +1481,18 @@
         (interactive)
         (go-save-and-compile command))))
 
-;; Note that this function uses (projectile-project-root) to determine the directory to run `go` commands,
-;; which requires that the go project have a .projectile file in it or that it be at the root of a git repo.
+;; Note that this function uses (projectile-project-root) to determine the directory to run `go`
+;; commands, which requires that the go project have a .projectile file in it or that it be at the
+;; root of a git repo.
 (defun go-save-and-compile (command)
   "Saves the current buffer before invoking the given command."
-  ;; I could also configure "compilation-ask-about-save", which saves all modified buffers if set to false.
+  ;; I could also configure "compilation-ask-about-save", which saves all modified buffers if set to
+  ;; false.
   (lexical-let ((has-makefile (file-exists-p (concat (projectile-project-root) "Makefile"))))
     (save-buffer)
     (message command)
-    ;; If a previous compile/run command is still running, you will get prompted to kill the other process.
-    ;; This avoids that prompt by killing any still-running compile process.
+    ;; If a previous compile/run command is still running, you will get prompted to kill the other
+    ;; process. This avoids that prompt by killing any still-running compile process.
     ;; https://stackoverflow.com/a/14404821/46237
     (ignore-errors
       (process-kill-without-query
@@ -1468,8 +1501,8 @@
     (ignore-errors
       (kill-buffer "*compilation*"))
     (util/without-confirmation
-     ;; `compile` will use the current file's directory to execute the command, rather than the project's
-     ;; root, so override that.
+     ;; `compile` will use the current file's directory to execute the command, rather than the
+     ;; project's root, so override that.
      (lambda () (compile (concat "cd " (projectile-project-root) " && " command))))))
 
 (define-leader-keys 'go-mode-map
@@ -1487,8 +1520,8 @@
   ;; "cc" (go-save-and-compile-fn "go build")
   "ai" 'go-import-add)
 
-;; goimports formats your code and also adds or removes imports as needed.
-;; goimports needs to be on your path. See https://godoc.org/code.google.com/p/go.tools/cmd/goimports
+;; goimports formats your code and also adds or removes imports as needed. goimports needs to be on
+;; your path. See https://godoc.org/code.google.com/p/go.tools/cmd/goimports
 (setq gofmt-command "goimports")
 
 (setq gofmt-in-progress nil)
@@ -1496,8 +1529,8 @@
 (defun gofmt-before-save-ignoring-errors ()
   "Don't pop up syntax errors in a new window when running gofmt-before-save."
   (interactive)
-  ;; Note that `gofmt-before-save` triggers this save-hook for some reason, so we lock on gofmt-in-progress to
-  ;; to protect from infinite recurision.
+  ;; Note that `gofmt-before-save` triggers this save-hook for some reason, so we lock on
+  ;; gofmt-in-progress to to protect from infinite recurision.
   (when (not gofmt-in-progress)
     (setq gofmt-in-progress 't)
     (cl-letf (((symbol-function #'gofmt--process-errors) (lambda (&rest args) t)))
@@ -1505,17 +1538,18 @@
     (setq gofmt-in-progress nil)))
 
 (defun init-go-buffer-settings ()
-  ;; I have Emacs configured to save when switching buffers, so popping up errors when I switch buffers is
-  ;; really jarring.
+  ;; I have Emacs configured to save when switching buffers, so popping up errors when I switch
+  ;; buffers is really jarring.
   (add-hook 'before-save-hook 'gofmt-before-save-ignoring-errors nil t)
-  ;; Make it so comments are line-wrapped properly when filling. It's an oversight that this is missing from
-  ;; go-mode.
+  ;; Make it so comments are line-wrapped properly when filling. It's an oversight that this is
+  ;; missing from go-mode.
   (setq-local fill-prefix "// "))
 
 (add-hook 'go-mode-hook 'init-go-buffer-settings)
 
 (defun go-package-of-current-buffer ()
-  "Returns the go package name defined in the current buffer. Returns nil if no package has been defined."
+  "Returns the go package name defined in the current buffer. Returns nil if no package has been
+   defined."
   (let ((file-contents (buffer-string)))
     (let ((match-exists (string-match "^package \\(.+\\)\w*" file-contents)))
       (when match-exists
@@ -1542,7 +1576,8 @@
 (defun json-format ()
   "Pipe the current buffer into `jq .`, and replace the current buffer's contents."
   (interactive)
-  ;; TODO(philc): Try to replace this with **json-pretty-print' and 'json-pretty-print-buffer' from Emacs 25.
+  ;; TODO(philc): Try to replace this with **json-pretty-print' and 'json-pretty-print-buffer' from
+  ;; Emacs 25.
   (save-excursion
     (call-process-region (point-min) (point-max) "jq" t (buffer-name) t ".")))
 
@@ -1551,7 +1586,8 @@
 ;;
 (add-hook 'java-mode-hook (lambda () (setq c-basic-offset 2)))
 
-;; TODO(philc): It would be nice to parameterize this further and combine it with go-save-and-compile-fn.
+;; TODO(philc): It would be nice to parameterize this further and combine it with
+;; go-save-and-compile-fn.
 (defun java-save-and-compile-fn (command-name)
   "Returns a function for the purpose of binding to a key which saves the current buffer and then
    runs the given command in the root of the go project."
@@ -1615,8 +1651,9 @@
   "cn" 'next-error
   "cp" 'previous-error)
 
-;; Detect files in the Deno backtrace format in the compilation buffer, so that files and line numbers can
-;; be navigated to when the compilation buffer is showing compile or runtime backtraces from Deno.
+;; Detect files in the Deno backtrace format in the compilation buffer, so that files and line
+;; numbers can be navigated to when the compilation buffer is showing compile or runtime backtraces
+;; from Deno.
 ;;
 ;; References:
 ;; Recognizing node.js backtraces in the compile buffer:
@@ -1629,9 +1666,9 @@
 ;;   at theFunction (file:///tmp/main.js:184:1)
 ;;   at file:///tmp/main.js:195:1
 ;;
-;; You can see code exited outside of a function (the second line) has a different structure than code
-;; executed inside a function (the first line). We use two different regexps to match each line type, so that
-;; the regexps remain simple.
+;; You can see code exited outside of a function (the second line) has a different structure than
+;; code executed inside a function (the first line). We use two different regexps to match each line
+;; type, so that the regexps remain simple.
 ;; To quickly and easily develop this, get a deno backtrace in a buffer, and use re-builder.
 (setq deno-error-regexp1
       '(deno-error-1
@@ -1645,8 +1682,8 @@
         ;; These are match group indices which extract the file, line, and column, respectively.
         1 2 3))
 
-;; When interactively developing this regexp, note that add-to-list is idempotent if deno is already in the
-;; list.
+;; When interactively developing this regexp, note that add-to-list is idempotent if deno is already
+;; in the list.
 (add-to-list 'compilation-error-regexp-alist-alist deno-error-regexp1)
 (add-to-list 'compilation-error-regexp-alist 'deno-error-1)
 (add-to-list 'compilation-error-regexp-alist-alist deno-error-regexp2)
@@ -1657,20 +1694,20 @@
 ;;
 (require 'ag)
 
-;; Also search in hidden files and directories (dot files). Files in .gitignore and .agignore will still be
-;; ignored. https://github.com/ggreer/the_silver_searcher/issues/24
+;; Also search in hidden files and directories (dot files). Files in .gitignore and .agignore will
+;; still be ignored. https://github.com/ggreer/the_silver_searcher/issues/24
 (setq ag-arguments '("--hidden"))
 
-;; Use Projectile to determine what the current project is when invoking ag-project. Normally, AG will simply
-;; find the surrounding .git directory and use that as the project.
+;; Use Projectile to determine what the current project is when invoking ag-project. Normally, AG
+;; will simply find the surrounding .git directory and use that as the project.
 (setq ag-project-root-function (lambda (f) (projectile-project-root)))
 
 ;; Note that ag mode configures itself to start in Evil's "motion" state.
 (evil-define-key 'normal ag-mode-map
-  ;; By default, ag's search results buffer opens in random windows. This also happens when opening one of the
-  ;; files in the search results. Instead, use "o" to open the search result in the same buffer and "O" to
-  ;; open in a new buffer. This mirrors Vim's convention of o and O.
-  ;; There is a setting called `ag-reuse-window` which is related.
+  ;; By default, ag's search results buffer opens in random windows. This also happens when opening
+  ;; one of the files in the search results. Instead, use "o" to open the search result in the same
+  ;; buffer and "O" to open in a new buffer. This mirrors Vim's convention of o and O. There is a
+  ;; setting called `ag-reuse-window` which is related.
   (kbd "RET") 'ag/open-search-result-in-same-window
   "o" 'ag/open-search-result-in-same-window
   "O" 'ag/open-search-result-in-window-to-right
@@ -1691,8 +1728,8 @@
      (compile-goto-error))))
 
 (defun ag-project-in-current-window ()
-  "Like `ag-project`, but shows the search output in the current window. If a selection is highlighted, use
-   that as the search string rather than prompting."
+  "Like `ag-project`, but shows the search output in the current window. If a selection is
+   highlighted, use that as the search string rather than prompting."
   (interactive)
   (let* ((project-dir (ag/project-root default-directory))
          (search-string (if (region-active-p)
@@ -1720,8 +1757,8 @@
 
 (setq lua-indent-level 2) ; The default is 3 for some reason.
 
-;; I'm using this Perl script to indent lua code because the default indenter for Emacs is really strange. See
-;; discussion about it here: https://stackoverflow.com/q/4643206
+;; I'm using this Perl script to indent lua code because the default indenter for Emacs is really
+;; strange. See discussion about it here: https://stackoverflow.com/q/4643206
 ;; The formatter script comes from here:
 ;; http://notebook.kulchenko.com/programming/lua-beautifier-in-55-lines-of-perl
 (defun indent-lua-buffer ()
@@ -1752,18 +1789,19 @@
 ;; Misc
 ;;
 
-;; Ensure every mode starts in Evil's normal state. Some modes, like *help*, start in the "motion" state, and
-;; it's unintuitive to define keybindings for those states.
-;; This obviates the need to specify this setting per-mode via `(evil-set-initial-state 'help-mode 'normal)`
-;; This needs to be done after the other modes have been loaded, because they can modify these variables.
+;; Ensure every mode starts in Evil's normal state. Some modes, like *help*, start in the "motion"
+;; state, and it's unintuitive to define keybindings for those states.
+;; This obviates the need to specify this setting per-mode via `(evil-set-initial-state 'help-mode
+;; 'normal)`. This needs to be done after the other modes have been loaded, because they can modify
+;; these variables.
 (setq evil-emacs-state-modes nil)
 (setq evil-insert-state-modes nil)
 (setq evil-motion-state-modes nil)
 
 ;; This is unbound; I invoke it using M-x.
 (defun prompt-to-open-info-page ()
-  "Prompts you for the name of an info page to view. It's the same as calling info with a prefix argument
-   ala C-u C-h i using the regular Emacs key bindings."
+  "Prompts you for the name of an info page to view. It's the same as calling info with a prefix
+   argument ala C-u C-h i using the regular Emacs key bindings."
   (interactive)
   (setq current-prefix-arg '(4)) ; Sets the prefix to C-u
   (call-interactively 'info))
@@ -1782,7 +1820,7 @@
         ("\x2014" . "-"))) ; em-dash
 
 (defun replace-smart-quotes (beg end)
-  "Replace any fancy non-ascii quote characters with plain ones. You can get fancy quotes when copying text
-   from the web into Emacs."
+  "Replace any fancy non-ascii quote characters with plain ones. You can get fancy quotes when
+   copying text from the web into Emacs."
   (interactive "r")
   (format-replace-strings smart-chars-to-ascii nil beg end))
