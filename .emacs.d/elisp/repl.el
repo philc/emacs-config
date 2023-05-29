@@ -1,11 +1,13 @@
 ;; This provides functions for interacting with an external REPL: starting and restarting the REPL program,
 ;; and sending and receiving text.
 
-;; It's similar to Emacs' comint mode. But unlike comint mode, this does does not provide an
-;; interactive readline-style REPL UI within Emacs. Instead, lines and paragraphs from any buffer
-;; can be sent to the REPL process, and the output is shown in the *REPL* buffer. As a result, this
-;; implementation is vastly simpler and easier to debug than comint mode. As an example, see the
-;; complexity of comint-send-input, comint-output-filter, and associated functions.
+;; It's similar to Emacs' comint mode. But unlike comint mode, this does not provide an interactive
+;; readline-style REPL UI within Emacs. Instead, lines and paragraphs from any buffer can be sent to
+;; the REPL process, and the output is shown in the *REPL* buffer. As a result, this implementation
+;; is vastly simpler and easier to debug than comint mode. To illustrate, see the complexity of
+;; comint-send-input, comint-output-filter, and their associated functions.
+
+(define-derived-mode repl-mode fundamental-mode "REPL")
 
 (defvar repl/buffer-name "*REPL*"
   "The name of the buffer that's associated with the REPL process")
@@ -27,6 +29,7 @@
     ;; don't unnecessarily always have blank lines at the bottom of the buffer. This is reasonable
     ;; to do on buffers which are always showing the bottom of the file, as is the case here.
     (with-current-buffer (get-buffer repl/buffer-name)
+      (repl-mode)
       (setq-local scroll-margin 0))
     (set-process-filter process 'repl/handle-process-output)))
 
