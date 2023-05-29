@@ -1609,7 +1609,7 @@
   "cp" 'previous-error)
 
 ;;
-;; Javascript
+;; Javascript and Javascript REPL configuration.
 ;;
 
 (require 'javascript-repl)
@@ -1628,7 +1628,6 @@
   (interactive)
   (save-buffer)
   (compile (format "deno lint %s" (buffer-file-name))))
-
 
 (define-leader-keys 'js-mode-map
   "rr" 'reload-active-browser-tab
@@ -1650,6 +1649,11 @@
   "cc" (go-save-and-compile-fn "make")
   "cn" 'next-error
   "cp" 'previous-error)
+
+(defun my-repl-mode-init ()
+  (visual-line-mode))
+
+(add-hook 'repl-mode-hook 'my-repl-mode-init)
 
 ;; Detect files in the Deno backtrace format in the compilation buffer, so that files and line
 ;; numbers can be navigated to when the compilation buffer is showing compile or runtime backtraces
