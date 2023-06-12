@@ -13,6 +13,8 @@ js-mode
 (fn "(" p ") => {" n> q n "};")
 (log "console.log(" q ");")
 (qs "document.querySelector(\"" q "\");")
+(context "context(\"" p "\", () => {" n> q n "});")
+(should "should(\"" p "\", () => {" n> q n "});")
 
 emacs-lisp-mode
 
