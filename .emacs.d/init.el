@@ -1065,6 +1065,10 @@
 
 (setq ispell-personal-dictionary "~/.aspell.en.pws")
 
+;; Don't spell check code blocks in Markdown.
+;; This is used by spell-fu as a buffer-local variable, so we set a default value for it.
+(setq-default spell-fu-faces-exclude '(markdown-pre-face))
+
 (add-hook 'text-mode-hook 'spell-fu-mode)
 
 (define-key evil-normal-state-map (kbd "zg") 'add-word-to-dictionary)
