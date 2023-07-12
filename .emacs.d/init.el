@@ -1390,6 +1390,18 @@
                                         "-n" ; open in a new window
                                         )))
 
+(defun reload-vimium-extension-firefox ()
+  "Reloads the Vimium extension in Firefox."
+  (interactive)
+  (util/save-buffer-if-dirty)
+  ;; This URL is specific to the Vimium Firefox extension.
+  ;; Sometimes this internal extension ID can change as the extension's manifest.json changes.
+  (let* ((extension-id "fa3ed418-8041-4999-93ed-bc52ff8a4c92")
+         (url (format "moz-extension://%s/pages/reload.html" extension-id)))
+    (util/call-process-with-exit-status "/Applications/Firefox.app/Contents/MacOS/firefox"
+                                        nil
+                                        url)))
+
 (defun open-file-in-browser ()
   "Opens the current file in the browser."
   (interactive)
