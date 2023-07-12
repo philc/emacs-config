@@ -41,6 +41,7 @@ html-mode
 (body "<body>" n> q n "</body>")
 (br "<br>")
 (code "<code>" n> q n "</code>")
+(script "<script>" n> q n "</script>")
 (div "<div>" n> q n "</div>")
 
 (form "<form>" n> q n "</div>")
