@@ -1665,6 +1665,7 @@
   (compile (format "deno lint %s" (buffer-file-name))))
 
 (define-leader-keys 'js-mode-map
+  "l" 'log-word-under-cursor
   "rr" 'reload-active-browser-tab
   "re" 'reload-browser-extensions
   "eb" 'js/load-file
@@ -1677,16 +1678,35 @@
   "cl" 'js/lint
   "tf" 'js/run-file-as-shoulda-test
   "en" 'js/restart-repl
-  "i" 'js/format-buffer)
-
-(define-leader-keys 'js-mode-map
-  ;; "cc" (go-save-and-compile-fn "NO_COLOR=1 deno run --allow-write --allow-read --allow-net --unstable main.js")
+  "i" 'js/format-buffer
   "cc" (go-save-and-compile-fn "make")
   "cn" 'next-error
   "cp" 'previous-error)
 
 (defun my-repl-mode-init ()
   (visual-line-mode))
+
+(defun log-word-under-cursor ()
+  "Inserts a logging statement for the word under the cursor, or the current selection.
+   TODO: This assumes the current file is JavaScript; adapt to support other languages."
+  (interactive)
+  (let* ((word
+          (if (region-active-p)
+              (buffer-substring-no-properties (region-beginning) (region-end))
+            (thing-at-point 'word t)))
+         (word (->> word
+                    s-trim
+                    (s-replace "\n" "")
+                    (s-chop-suffix ";")))
+         (statement (format "console.log(\"%s:\", %s);"
+                            ;; Escape quotes
+                            (s-replace "\"" "\\\"" word)
+                            word)))
+    (progn (print ">>> statement") (prin1 statement t))
+    (end-of-line)
+    (insert "\n")
+    (indent-according-to-mode)
+    (insert statement)))
 
 (add-hook 'repl-mode-hook 'my-repl-mode-init)
 
