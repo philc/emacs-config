@@ -736,15 +736,15 @@
   (interactive)
   (call-process-region nil nil "/usr/bin/open" nil nil nil "."))
 
-;; Closes the current escreen, or if there's only one screen, use the ":q" Evil
-;; command. This simulates the ":q" behavior of Vim when used with tabs.
+;; Closes the current tab, or if there's only one tab, use the ":q" Evil command. This simulates the
+;; ":q" behavior of Vim when used with tabs.
 ;; http://zuttobenkyou.wordpress.com/2012/06/15/emacs-vimlike-tabwindow-navigation/
 (defun vimlike-quit ()
   "Vimlike ':q' behavior: close current window if there are split windows;
    otherwise, close current tab (elscreen)."
   (interactive)
   (let ((one-tab (= 1 (length (tab-bar-tabs))))
-         (one-window (one-window-p)))
+        (one-window (one-window-p)))
     (progn
       (cond
        ;; If the current tab has multiple windows in it, close the current window.
