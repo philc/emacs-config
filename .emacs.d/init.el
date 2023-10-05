@@ -898,8 +898,9 @@
      (read-only-mode 1))))
 
 (define-leader-keys 'emacs-lisp-mode-map
+  "l" 'log-word-under-cursor
   ;; Note that I'm saving the buffer before each eval because otherwise, the buffer gets saved after
-  ;; the eval, (due to save-when-switching-windows setup) and the output from the buffer save
+  ;; the eval (due to save-when-switching-windows setup) and the output from the buffer save
   ;; overwrites the eval results in the minibuffer.
   "e b" (lambda() (interactive) (util/save-buffer-if-dirty) (eval-buffer))
   "e s" (lambda () (interactive) (util/save-buffer-if-dirty) (elisp-eval-current-sexp))
@@ -1722,11 +1723,15 @@
                     s-trim
                     (s-replace "\n" "")
                     (s-chop-suffix ";")))
-         (statement (format "console.log(\"%s:\", %s);"
-                            ;; Escape quotes
-                            (s-replace "\"" "\\\"" word)
-                            word)))
-    (progn (print ">>> statement") (prin1 statement t))
+         (format-str (pcase major-mode
+                       ('js-mode "console.log(\"%s:\", %s);")
+                       ('rust-mode "println!(\"%s: {:?}\", %s);")
+                       ('emacs-lisp-mode "(progn (print \"%s\") (prin1 %s t))")))
+         (statement
+          (format format-str
+                  ;; Escape quotes
+                  (s-replace "\"" "\\\"" word)
+                  word)))
     (end-of-line)
     (insert "\n")
     (indent-according-to-mode)
