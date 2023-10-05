@@ -86,3 +86,7 @@ clojure-mode
 
 (deb "(println \">>> " (s text) "\" " text ")" q)
 (ns "(ns " q n> "(:require [chesire.core :as json])")
+
+rust-mode
+
+(deb "println!(\">>> " (s text) " {:?}\", " text ");" q)

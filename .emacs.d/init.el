@@ -1489,6 +1489,25 @@
 (add-to-list 'auto-mode-alist '("\\.yml$" . yaml-mode))
 
 ;;
+;; Rust mode
+;;
+
+(define-leader-keys 'rust-mode-map
+  "cc" (lambda () (interactive) (save-and-compile 'rust-compile))
+  "rr" (lambda () (interactive) (save-then 'rust-run))
+  "l" 'log-word-under-cursor
+  "i" 'rust/format-buffer)
+
+(defun rust/format-buffer ()
+  "Format and replace the current buffer's contents with `rustfmt`."
+  (interactive)
+  (save-buffer)
+  (let ((ext (or (-> (buffer-file-name) (file-name-extension))
+                 ;; The file might not have an extension. Assume javascript.
+                 "js")))
+    (replace-region-with-command-output "rustfmt")))
+
+;;
 ;; Go mode, for writing Golang code
 ;;
 (with-eval-after-load "go-mode"
@@ -1508,6 +1527,19 @@
        (with-help-window "*Help*"
          (princ (second status-and-stdout)))))))
 
+(defun save-and-compile (f)
+  (save-buffer)
+  ;; If a previous compile/run command is still running, you will get prompted to kill the other
+  ;; process. This avoids that prompt by killing any still-running compile process.
+  ;; https://stackoverflow.com/a/14404821/46237
+  (ignore-errors
+    (process-kill-without-query
+     (get-buffer-process
+      (get-buffer "*compilation*"))))
+  (ignore-errors
+    (kill-buffer "*compilation*"))
+  (funcall f))
+
 (defun go-save-and-compile-fn (command)
   "Returns a function for the purpose of binding to a key which saves the current buffer and then
    runs the given command in the root of the go project."
@@ -1524,21 +1556,13 @@
   ;; I could also configure "compilation-ask-about-save", which saves all modified buffers if set to
   ;; false.
   (lexical-let ((has-makefile (file-exists-p (concat (projectile-project-root) "Makefile"))))
-    (save-buffer)
-    (message command)
-    ;; If a previous compile/run command is still running, you will get prompted to kill the other
-    ;; process. This avoids that prompt by killing any still-running compile process.
-    ;; https://stackoverflow.com/a/14404821/46237
-    (ignore-errors
-      (process-kill-without-query
-       (get-buffer-process
-        (get-buffer "*compilation*"))))
-    (ignore-errors
-      (kill-buffer "*compilation*"))
-    (util/without-confirmation
-     ;; `compile` will use the current file's directory to execute the command, rather than the
-     ;; project's root, so override that.
-     (lambda () (compile (concat "cd " (projectile-project-root) " && " command))))))
+    (save-and-compile
+     (lambda ()
+       (message command)
+       (util/without-confirmation
+        ;; `compile` will use the current file's directory to execute the command, rather than the
+        ;; project's root, so override that.
+        (lambda () (compile (concat "cd " (projectile-project-root) " && " command))))))))
 
 (define-leader-keys 'go-mode-map
   ;; "r" is a namespace for run-related commands.
