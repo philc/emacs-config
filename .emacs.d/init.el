@@ -1932,3 +1932,21 @@
    copying text from the web into Emacs."
   (interactive "r")
   (format-replace-strings smart-chars-to-ascii nil beg end))
+
+
+;;
+;; Restore the buffers and tabs from the previous Emacs session.
+;; By default the desktop file is saved as .emacs.d/.emacs.desktop
+;;
+
+;; Note that I have two Emacs apps running on MacOS: one for editing files, and the other as my TODO
+;; list (org mode). I only want to save and restore desktop configurations in the Emacs app I use
+;; for editing.
+(let* ((emacs-app-path (expand-file-name invocation-name invocation-directory))
+       (is-org-emacs (s-contains? "Org.app" emacs-app-path)))
+  (when (not is-org-emacs)
+    (setq desktop-save t) ; Always save without prompting.
+    ;; Limit the number of buffers that get restored, to reduce startup time. I haven't verified whether
+    ;; this is a material performance win given my usage patterns.
+    (setq desktop-restore-eager 15)
+    (desktop-save-mode 1)))
