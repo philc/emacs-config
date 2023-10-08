@@ -1363,10 +1363,13 @@
 (defun reload-active-browser-tab ()
   "Reloads the current tab in Chrome. This works on OSX only, using Applescript."
   (interactive)
-  (util/save-buffer-if-dirty)
-  (util/call-process-with-exit-status "osascript"
-                                      (format "tell app \"%s\" to reload active tab of window 1"
-                                              browser-app)))
+  (if nil
+      (reload-vimium-extension-firefox)
+    (progn
+      (util/save-buffer-if-dirty)
+      (util/call-process-with-exit-status "osascript"
+                                          (format "tell app \"%s\" to reload active tab of window 1"
+                                                  browser-app)))))
 
 (defun reload-browser-extensions ()
   "Reloads all extensions in the browser in tandem with the Extensions Reloader extension."
@@ -1397,7 +1400,7 @@
   (util/save-buffer-if-dirty)
   ;; This URL is specific to the Vimium Firefox extension.
   ;; Sometimes this internal extension ID can change as the extension's manifest.json changes.
-  (let* ((extension-id "fa3ed418-8041-4999-93ed-bc52ff8a4c92")
+  (let* ((extension-id "0b817fbe-e25a-4644-b918-230b9d15b3c9")
          (url (format "moz-extension://%s/pages/reload.html" extension-id)))
     (util/call-process-with-exit-status "/Applications/Firefox.app/Contents/MacOS/firefox"
                                         nil
