@@ -663,10 +663,10 @@ but doesn't treat single semicolons as right-hand-side comments."
         clj/eval-in-current-ns)))
 
 ;;
-;; cljfmt -- automatic formatting of Clojure code. This configuration is Liftoff-specific.
+;; cljfmt -- automatic formatting of Clojure code.
 ;;
 
-(load "/Users/phil/src/liftoff/exp/emacs/cljfmt.el")
+(load "/Users/phil/.emacs.d/elisp/cljfmt.el")
 
 (setq cljfmt-show-errors nil)
 
