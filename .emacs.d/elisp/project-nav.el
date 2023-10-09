@@ -15,18 +15,18 @@
 ;; temporarily.
 (setq max-specpdl-size 13000)
 
-
 (defun project-nav/filter-files-in-directory (directory filter-fn include-subdirectories)
   "Filters the files in the given directory and subdirectories using filter-fn. Excludes .git subdirectories."
-  (->> (directory-files directory t)
-       (--remove (or (s-ends-with? "." it)
-                     (s-ends-with? ".." it)
-                     (s-ends-with? ".git" it)))
-       (--map (if (and include-subdirectories (file-directory-p it))
-                  (project-nav/filter-files-in-directory it filter-fn include-subdirectories)
-                it))
-       flatten
-       (-filter filter-fn)))
+  (when (file-exists-p directory)
+    (->> (directory-files directory t)
+         (--remove (or (s-ends-with? "." it)
+                       (s-ends-with? ".." it)
+                       (s-ends-with? ".git" it)))
+         (--map (if (and include-subdirectories (file-directory-p it))
+                    (project-nav/filter-files-in-directory it filter-fn include-subdirectories)
+                  it))
+         flatten
+         (-filter filter-fn))))
 
 (setq project-nav/notes-file-extensions '(".md" ".sql" ".txt"))
 
