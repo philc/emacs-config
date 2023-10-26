@@ -90,27 +90,42 @@
   (setq js/load-file-counter (inc js/load-file-counter))
   (util/scroll-to-buffer-end (js/get-repl-buffer)))
 
+(defun js/extract-shoulda-js-import-path-from-buffer ()
+  "Returns the file path of the shoulda.js file being imported by the source file in the current
+   buffer, or nil if there is no such import."
+  (save-excursion
+    (let ((result nil))
+      (goto-char (point-min))
+      (while (and (not result)
+                  (re-search-forward "^import .+ from \"\\([^\"]+\\)/shoulda.js\";" nil t))
+        (setq result (concat (match-string 1) "/shoulda.js")))
+      result)))
+
 (defun js/run-file-as-shoulda-test ()
   (interactive)
   (js/ensure-repl-is-running)
-  ;; This whole approach doesn'really work; I need a different one. It is tricky to determine how
-  ;; "shoulda" can be imported such that it's not imported twice by Deno as different modules.
-  ;; shoulda may be imported from the current file via a URL, via an import map, or a symlinked
-  ;; file, none of which this Emacs function can easily distinguish between.
-  ;;
-  ;; Also, projectile-current-project-files can have a stale cache and provide the wrong result
-  ;; here!
-  (let ((shoulda-js-path (-?>> (projectile-current-project-files)
-                               (-find (lambda (path) (s-ends-with? "shoulda.js" path))))))
-    (if (not shoulda-js-path)
-        (message "Could not find shoulda.js in current project.")
-      ;; Here we call shoulda.reset to clear any previous tests which have been run. We're importing
-      ;; shoulda because it shoulda may not yet be defined if the file hasn't imported it yet.
-      (js/eval-str
-       (format "import * as shoulda from \"./%s\"; shoulda.reset()" shoulda-js-path))
-      (js/load-file)
-      (js/eval-str "await shoulda.run(); undefined")
-      (util/scroll-to-buffer-end (js/get-repl-buffer)))))
+  ;; This whole approach is greant. It's tricky to determine how "shoulda" can be imported here by
+  ;; this helper such that it's not imported twice by Deno as different modules. shoulda may be
+  ;; imported from the current file via a URL, via an import map, or a symlinked file, none of which
+  ;; this Emacs function can easily distinguish between.
+  (util/save-buffer-if-dirty)
+  (let ((shoulda-import-path (js/extract-shoulda-js-import-path-from-buffer)))
+    ;; If shoulda is imported directly by the file, then use that same path to import it into
+    ;; an anonymous module and run shoulda.reset() and shoulda.test().
+    ;; If shoulda is not imported directly by this file, assume it has been added to globalThis
+    ;; by a testing helper (as is the case in Vimium's tests).
+    ;; We run shoulda.reset() to clear any previous tests that have been defined.
+    (if shoulda-import-path
+        (let* ((file-dir (-> (buffer-file-name) file-truename file-name-directory))
+               (shoulda-is-url (s-starts-with? "https://" shoulda-import-path))
+               (shoulda-js-path (if shoulda-is-url
+                                    shoulda-import-path
+                                  (expand-file-name shoulda-import-path file-dir))))
+          (js/eval-str (format "import * as shoulda from \"%s\"; shoulda.reset()" shoulda-js-path)))
+      (js/eval-str "shoulda.reset()"))
+    (js/load-file)
+    (js/eval-str "await shoulda.run(); undefined")
+    (util/scroll-to-buffer-end (js/get-repl-buffer))))
 
 (defun js/eval-str (str)
   (repl/send-command str))
