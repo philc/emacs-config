@@ -22,6 +22,7 @@ emacs-lisp-mode
 
 css-mode
 
+(out "outline: 1px solid blue;")
 (bb "border: 1px solid blue;")
 (br "border: 1px solid red;")
 (bc "background-color: ")
