@@ -1176,6 +1176,14 @@
 (setq-default mode-line-format nil)
 
 ;;
+;; Compile mode
+;;
+
+;; Enable rendering of color output from programs which output to the *compilation* buffer.
+(require 'ansi-color)
+(add-hook 'compilation-filter-hook 'ansi-color-compilation-filter)
+
+;;
 ;; Markdown
 ;;
 (require 'markdown-lite-mode)
