@@ -1697,10 +1697,15 @@
                  "js")))
     (replace-region-with-command-output (format "deno fmt --ext %s -" ext))))
 
-(defun js/lint ()
+(defun js/lint-file ()
   (interactive)
   (save-buffer)
   (compile (format "deno lint %s" (buffer-file-name))))
+
+(defun js/lint-project ()
+  (interactive)
+  (save-buffer)
+  (compile (format "deno lint %s" (projectile-project-root))))
 
 (define-leader-keys 'js-mode-map
   "l" 'log-word-under-cursor
@@ -1713,7 +1718,8 @@
          (js/load-file))
   "ee" 'js/show-repl
   "ek" 'js/clear
-  "cl" 'js/lint
+  "clf" 'js/lint-file
+  "clp" 'js/lint-project
   "tf" 'js/run-file-as-shoulda-test
   "en" 'js/restart-repl
   "i" 'js/format-buffer
@@ -1783,12 +1789,20 @@
         ;; These are match group indices which extract the file, line, and column, respectively.
         1 2 3))
 
+(setq deno-lint-regexp
+      '(deno-lint-item
+        "[ ]+ at \\(/[^:]+\\):\\([0-9]+\\):\\([0-9]+\\)$"
+        ;; These are match group indices which extract the file, line, and column, respectively.
+        1 2 3))
+
 ;; When interactively developing this regexp, note that add-to-list is idempotent if deno is already
 ;; in the list.
 (add-to-list 'compilation-error-regexp-alist-alist deno-error-regexp1)
 (add-to-list 'compilation-error-regexp-alist 'deno-error-1)
 (add-to-list 'compilation-error-regexp-alist-alist deno-error-regexp2)
 (add-to-list 'compilation-error-regexp-alist 'deno-error-2)
+(add-to-list 'compilation-error-regexp-alist-alist deno-lint-regexp)
+(add-to-list 'compilation-error-regexp-alist 'deno-lint-item)
 
 ;;
 ;; Ag (silver searcher)
