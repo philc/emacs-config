@@ -37,7 +37,8 @@ go-mode
 
 html-mode
 
-(html "<!DOCTYPE html>" n "<html>" n "<head>" n> "<title>" p "</title>" n "</head>"
+(html "<!DOCTYPE html>" n "<html>" n n "<head>" n> "<meta charset=\"UTF-8\">" n>
+      "<title>" p "</title>" n "</head>"
       n n "<body>" n> q n "</body>" n " </html>")
 (body "<body>" n> q n "</body>")
 (br "<br>")
