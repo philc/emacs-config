@@ -162,13 +162,21 @@
 (defun swap-window-down () (interactive) (swap-window-buffers 'windmove-down))
 (defun swap-window-up () (interactive) (swap-window-buffers 'windmove-up))
 
+;; When a window in a tab is maximized, we save its configuration per tab. Emacs doesn't give us an ID number
+;; to identify a tab, so we make due by storing the window configuration by tab name.
+(setq tab-name->window-config (make-hash-table))
+
 (defun toggle-window-maximize ()
   (interactive)
-  (if (= 1 (length (window-list)))
-      ;; winner-undo undoes the last change you made to the state of your widnows.
-      ;; This isn't an exact inverse of "delete-other-windows", but it works OK for me in practice.
-      (winner-undo)
-      (delete-other-windows)))
+  (let ((current-tab-name (->> (tab-bar--current-tab)
+                               (alist-get 'name))))
+    (if (= 1 (length (window-list)))
+        (when-let ((config (gethash current-tab-name tab-name->window-config)))
+          (set-window-configuration config t)
+          (remhash current-tab-name tab-name->window-config))
+      (progn
+        (puthash current-tab-name (current-window-configuration) tab-name->window-config)
+        (delete-other-windows)))))
 
 (defun split-window-vertically-and-focus ()
   (interactive)
