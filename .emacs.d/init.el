@@ -868,12 +868,13 @@
   (kbd "C-S-L") 'shift-sexp-forward
   "K" (lambda ()
         (interactive)
-        (util/preserve-selected-window
-         (lambda ()
-           ;; Run `describe-function` and show its output in a help
-           ;; window. Inspired from help-fns.el.
-           (with-help-window "*Help*"
-             (describe-function (intern (current-word))))))))
+        (let ((target-word (current-word)))
+          (util/preserve-selected-window
+           (lambda ()
+             ;; Run `describe-function` and show its output in a help
+             ;; window. Inspired from help-fns.el.
+             (with-help-window "*Help*"
+               (describe-function (intern target-word))))))))
 
 (defun current-sexp ()
   "Returns the text content of the sexp list around the cursor."
