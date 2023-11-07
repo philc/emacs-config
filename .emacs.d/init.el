@@ -13,7 +13,13 @@
 ;;
 ;; Color scheme
 ;;
-(load-theme 'tangotango t) ; A reasonable color scheme which lives in my .emacs.d.
+(defun reload-theme ()
+  (interactive)
+  ;; A reasonable color scheme which lives in my .emacs.d.
+  (load-theme 'tangotango t))
+
+(reload-theme)
+
 ;; Make the dividing line between window splits less bright. It's #EAEAEA in tangotango.
 (set-face-attribute 'vertical-border nil :foreground "#888888")
 

@@ -74,7 +74,6 @@
    ((((background dark)) (:foreground "cyan"))
     (((type pc)) (:foreground "magenta"))
     (t (:foreground "brown"))))
- `(minibuffer-prompt ((t (:weight bold :foreground "#729fcf"))))
  `(highlight ((t (:background "#323D3D"))))
  `(region ((t (:background "dark slate blue"))))
  `(shadow
@@ -296,6 +295,7 @@
  `(ediff-fine-diff-Ancestor ((t (:background "#222222"))))
  `(ediff-fine-diff-B ((t (:background "#222222"))))
  `(ediff-fine-diff-C ((t (:background "#222222"))))
+ ;; Note that this face's background doesn't extend across the whole width of the minibuffer.
  `(minibuffer-prompt ((t (:foreground "#729fcf" :bold t))))
  `(mumamo-background-chunk-major ((t (:background nil))))
  `(mumamo-background-chunk-submode1 ((t (:background "#2E3440"))))
@@ -311,7 +311,20 @@
  `(rpm-spec-tag-face ((t (:foreground "dodger blue" :weight bold))))
  `(rpm-spec-var-face ((t (:foreground "tomato")))))
 
+;; Modify the background color of the minibuffer.
+;;
+;; The minibuffer area uses the default face's background color. We don't want to change the color
+;; of other buffers, so we set it as a local face.
+(defun tangotango-minibuffer-setup ()
+  (setq-local
+   face-remapping-alist
+   '(;; A lighter version of the background color
+     (default (:background "#252828")))))
+
+(defun tangotango-minibuffer-exit ()
+  (kill-local-variable 'face-remapping-alist))
+
+(add-hook 'minibuffer-setup-hook 'tangotango-minibuffer-setup)
+(add-hook 'minibuffer-exit-hook 'tangotango-minibuffer-exit)
 
 (provide-theme 'tangotango)
-
-;;; tangotango-theme.el ends here
