@@ -286,10 +286,6 @@
 (require 'recentf)
 (define-key recentf-mode-map (kbd "C-w") 'backward-delete-word)
 
-;; The poorly-named winner mode saves the history of your window splits, so you can undo and redo
-;; changes to your window configuration.
-(winner-mode t)
-
 ;; Save buffers whenever they lose focus. This obviates the need to hit the Save key thousands of
 ;; times a day. Inspired by http://goo.gl/2z0g5O.
 (dolist (f '(windmove-up windmove-right windmove-down windmove-left))
@@ -533,8 +529,6 @@
  "wr" 'evil-window-rotate-downwards
  "wR" 'evil-window-rotate-upwards
  "wb" 'balance-windows
- ;; winner-undo will undo the last change you made to your window configuration.
- "wu" 'winner-undo
  "we" 'narrow-ephemeral-window
  "wE" 'toggle-maximize-lower-right-window
  "q" 'dismiss-ephemeral-windows
