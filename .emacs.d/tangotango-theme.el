@@ -49,24 +49,51 @@
  ;; - green :      "#6ac214"
  ;; - orange/red : "tomato"
  ;; Source Code Pro gets me 3 more lines on screen than Monaco.
- `(default ((t (:family "Source Code Pro" :foundry "unknown" :width normal :height 140 :weight normal :slant normal :underline nil :overline nil :strike-through nil :box nil :inverse-video nil :foreground "#eeeeec" :background "#1C2020" :stipple nil :inherit nil))))
+ `(default
+   ((t
+     (:family
+      "Source Code Pro"
+      :foundry "unknown"
+      :width normal
+      :height 140
+      :weight normal
+      :slant normal
+      :underline nil
+      :overline nil
+      :strike-through nil
+      :box nil
+      :inverse-video nil
+      :foreground "#eeeeec"
+      :background "#1C2020"
+      :stipple nil
+      :inherit nil))))
  `(cursor ((t (:foreground "#222222" :background "#fce94f"))))
  `(fixed-pitch ((t (:inherit (default)))))
  `(variable-pitch ((t (:family "Sans Serif"))))
- `(escape-glyph ((((background dark)) (:foreground "cyan")) (((type pc)) (:foreground "magenta")) (t (:foreground "brown"))))
+ `(escape-glyph
+   ((((background dark)) (:foreground "cyan"))
+    (((type pc)) (:foreground "magenta"))
+    (t (:foreground "brown"))))
  `(minibuffer-prompt ((t (:weight bold :foreground "#729fcf"))))
  `(highlight ((t (:background "#323D3D"))))
  `(region ((t (:background "dark slate blue"))))
- `(shadow ((((class color grayscale) (min-colors 88) (background light)) (:foreground "grey50")) (((class color grayscale) (min-colors 88) (background dark)) (:foreground "grey70")) (((class color) (min-colors 8) (background light)) (:foreground "green")) (((class color) (min-colors 8) (background dark)) (:foreground "yellow"))))
- `(secondary-selection ((((class color) (min-colors 88) (background light)) (:background "yellow1")) (((class color) (min-colors 88) (background dark)) (:background "SkyBlue4")) (((class color) (min-colors 16) (background light)) (:background "yellow")) (((class color) (min-colors 16) (background dark)) (:background "SkyBlue4")) (((class color) (min-colors 8)) (:foreground "black" :background "cyan")) (t (:inverse-video t))))
+ `(shadow
+   ((((class color grayscale) (min-colors 88) (background light)) (:foreground "grey50"))
+    (((class color grayscale) (min-colors 88) (background dark)) (:foreground "grey70"))
+    (((class color) (min-colors 8) (background light)) (:foreground "green"))
+    (((class color) (min-colors 8) (background dark)) (:foreground "yellow"))))
+ `(secondary-selection
+   ((((class color) (min-colors 88) (background light)) (:background "yellow1"))
+    (((class color) (min-colors 88) (background dark)) (:background "SkyBlue4"))
+    (((class color) (min-colors 16) (background light)) (:background "yellow"))
+    (((class color) (min-colors 16) (background dark)) (:background "SkyBlue4"))
+    (((class color) (min-colors 8))
+     (:foreground "black" :background "cyan"))
+    (t (:inverse-video t))))
  ;; Make trailing whitespace not so bright.
- `(whitespace-trailing ((((class color)
-                          (background light))
-                         (:background "#4F3122"))
-                        (((class color)
-                          (background dark))
-                         (:background "#4F3122"))
-                        (t (:inverse-video t))))
+ `(whitespace-trailing
+   ((((class color) (background light)) (:background "#4F3122"))
+    (((class color) (background dark)) (:background "#4F3122")) (t (:inverse-video t))))
  `(font-lock-builtin-face ((t (:foreground "#729fcf"))))
  `(font-lock-comment-delimiter-face ((default (:inherit (font-lock-comment-face)))))
  `(font-lock-comment-face ((t (:foreground "#888a85"))))
@@ -84,17 +111,53 @@
  `(font-lock-warning-face ((t (:weight normal :foreground "#f57900")))) ; was previously bold
  `(button ((t (:inherit (link)))))
  `(link ((t (:foreground "dodger blue" :underline (:color foreground-color :style line)))))
- `(link-visited ((default (:inherit (link))) (((class color) (background light)) (:foreground "magenta4")) (((class color) (background dark)) (:foreground "violet"))))
+ `(link-visited
+   ((default (:inherit (link)))
+    (((class color) (background light)) (:foreground "magenta4"))
+    (((class color) (background dark)) (:foreground "violet"))))
  `(fringe ((t (:background "grey10"))))
- `(header-line ((default (:inherit (mode-line))) (((type tty)) (:underline (:color foreground-color :style line) :inverse-video nil)) (((class color grayscale) (background light)) (:box nil :foreground "grey20" :background "grey90")) (((class color grayscale) (background dark)) (:box nil :foreground "grey90" :background "grey20")) (((class mono) (background light)) (:underline (:color foreground-color :style line) :box nil :inverse-video nil :foreground "black" :background "white")) (((class mono) (background dark)) (:underline (:color foreground-color :style line) :box nil :inverse-video nil :foreground "white" :background "black"))))
+ `(header-line
+   ((default (:inherit (mode-line)))
+    (((type tty)) (:underline (:color foreground-color :style line) :inverse-video nil))
+    (((class color grayscale) (background light))
+     (:box nil :foreground "grey20" :background "grey90"))
+    (((class color grayscale) (background dark))
+     (:box nil :foreground "grey90" :background "grey20"))
+    (((class mono) (background light))
+     (:underline
+      (:color foreground-color :style line)
+      :box nil
+      :inverse-video nil
+      :foreground "black"
+      :background "white"))
+    (((class mono) (background dark))
+     (:underline
+      (:color foreground-color :style line)
+      :box nil
+      :inverse-video nil
+      :foreground "white"
+      :background "black"))))
  `(tooltip ((t (:background "lightyellow" :foreground "black" :inherit (quote variable-pitch)))))
- `(mode-line ((t (:box (:line-width 1 :color nil :style released-button) :background "#323636" :foreground "#ccccca"))))
+ `(mode-line
+   ((t
+     (:box
+      (:line-width 1 :color nil :style released-button)
+      :background "#323636"
+      :foreground "#ccccca"))))
  `(mode-line-inactive ((t (:background "#222222" :inherit (mode-line)))))
  `(mode-line-buffer ((t (:weight bold :foreground "orange" :inherit (mode-line)))))
  `(mode-line-emphasis ((t (:weight bold :inherit (mode-line)))))
- `(mode-line-highlight ((((class color) (min-colors 88)) (:box (:line-width 2 :color "grey40" :style released-button))) (t (:inherit (highlight)))))
+ `(mode-line-highlight
+   ((((class color) (min-colors 88)) (:box (:line-width 2 :color "grey40" :style released-button)))
+    (t (:inherit (highlight)))))
  `(isearch ((t (:foreground "#2e3436" :background "#f57900"))))
- `(isearch-fail ((((class color) (min-colors 88) (background light)) (:background "RosyBrown1")) (((class color) (min-colors 88) (background dark)) (:background "red4")) (((class color) (min-colors 16)) (:background "red")) (((class color) (min-colors 8)) (:background "red")) (((class color grayscale)) (:foreground "grey")) (t (:inverse-video t))))
+ `(isearch-fail
+   ((((class color) (min-colors 88) (background light)) (:background "RosyBrown1"))
+    (((class color) (min-colors 88) (background dark)) (:background "red4"))
+    (((class color) (min-colors 16)) (:background "red"))
+    (((class color) (min-colors 8)) (:background "red"))
+    (((class color grayscale)) (:foreground "grey"))
+    (t (:inverse-video t))))
  `(lazy-highlight ((t (:foreground "#2e3436" :background "#e9b96e"))))
  `(match ((t (:weight bold :foreground "#2e3436" :background "#e9b96e"))))
  `(next-error ((t (:inherit (region)))))
@@ -117,59 +180,61 @@
  `(custom-variable-tag ((t (:bold t :foreground "#edd400" :height 1.1))))
  `(custom-face-tag ((t (:bold t :foreground "#edd400" :height 1.1))))
  `(custom-state-face ((t (:foreground "#729fcf"))))
- `(custom-button  ((t (:box (:line-width 1 :style released-button) :background "grey50" :foreground "black"))))
+ `(custom-button
+   ((t (:box (:line-width 1 :style released-button) :background "grey50" :foreground "black"))))
  `(custom-variable-button ((t (:inherit 'custom-button))))
- `(custom-button-mouse  ((t (:inherit 'custom-button :background "grey60"))))
- `(custom-button-unraised  ((t (:background "grey50" :foreground "black"))))
- `(custom-button-mouse-unraised  ((t (:inherit 'custom-button-unraised :background "grey60"))))
- `(custom-button-pressed  ((t (:inherit 'custom-button :box (:style pressed-button)))))
- `(custom-button-mouse-pressed-unraised  ((t (:inherit 'custom-button-unraised :background "grey60"))))
+ `(custom-button-mouse ((t (:inherit 'custom-button :background "grey60"))))
+ `(custom-button-unraised ((t (:background "grey50" :foreground "black"))))
+ `(custom-button-mouse-unraised ((t (:inherit 'custom-button-unraised :background "grey60"))))
+ `(custom-button-pressed ((t (:inherit 'custom-button :box (:style pressed-button)))))
+ `(custom-button-mouse-pressed-unraised
+   ((t (:inherit 'custom-button-unraised :background "grey60"))))
  `(custom-documentation ((t (:italic f))))
  `(message-cited-text ((t (:foreground "#edd400"))))
  `(gnus-cite-face-1 ((t (:foreground "#ad7fa8"))))
  `(gnus-cite-face-2 ((t (:foreground "sienna4"))))
  `(gnus-cite-face-3 ((t (:foreground "khaki4"))))
  `(gnus-cite-face-4 ((t (:foreground "PaleTurquoise4"))))
- `(gnus-group-mail-1-empty((t (:foreground "light cyan"))))
- `(gnus-group-mail-1((t (:bold t :foreground "light cyan"))))
- `(gnus-group-mail-2-empty((t (:foreground "turquoise"))))
- `(gnus-group-mail-2((t (:bold t :foreground "turquoise"))))
- `(gnus-group-mail-3-empty((t (:foreground "#729fcf"))))
- `(gnus-group-mail-3((t (:bold t :foreground "#edd400"))))
- `(gnus-group-mail-low-empty((t (:foreground "dodger blue"))))
- `(gnus-group-mail-low((t (:bold t :foreground "dodger blue"))))
- `(gnus-group-news-1-empty((t (:foreground "light cyan"))))
- `(gnus-group-news-1((t (:bold t :foreground "light cyan"))))
- `(gnus-group-news-2-empty((t (:foreground "turquoise"))))
- `(gnus-group-news-2((t (:bold t :foreground "turquoise"))))
- `(gnus-group-news-3-empty((t (:foreground "#729fcf"))))
- `(gnus-group-news-3((t (:bold t :foreground "#edd400"))))
- `(gnus-group-news-low-empty((t (:foreground "dodger blue"))))
- `(gnus-group-news-low((t (:bold t :foreground "dodger blue"))))
+ `(gnus-group-mail-1-empty ((t (:foreground "light cyan"))))
+ `(gnus-group-mail-1 ((t (:bold t :foreground "light cyan"))))
+ `(gnus-group-mail-2-empty ((t (:foreground "turquoise"))))
+ `(gnus-group-mail-2 ((t (:bold t :foreground "turquoise"))))
+ `(gnus-group-mail-3-empty ((t (:foreground "#729fcf"))))
+ `(gnus-group-mail-3 ((t (:bold t :foreground "#edd400"))))
+ `(gnus-group-mail-low-empty ((t (:foreground "dodger blue"))))
+ `(gnus-group-mail-low ((t (:bold t :foreground "dodger blue"))))
+ `(gnus-group-news-1-empty ((t (:foreground "light cyan"))))
+ `(gnus-group-news-1 ((t (:bold t :foreground "light cyan"))))
+ `(gnus-group-news-2-empty ((t (:foreground "turquoise"))))
+ `(gnus-group-news-2 ((t (:bold t :foreground "turquoise"))))
+ `(gnus-group-news-3-empty ((t (:foreground "#729fcf"))))
+ `(gnus-group-news-3 ((t (:bold t :foreground "#edd400"))))
+ `(gnus-group-news-low-empty ((t (:foreground "dodger blue"))))
+ `(gnus-group-news-low ((t (:bold t :foreground "dodger blue"))))
  `(gnus-header-name ((t (:bold t :foreground "#729fcf"))))
  `(gnus-header-from ((t (:bold t :foreground "#edd400"))))
  `(gnus-header-subject ((t (:foreground "#edd400"))))
  `(gnus-header-content ((t (:italic t :foreground "#8ae234"))))
- `(gnus-header-newsgroups((t (:italic t :bold t :foreground "LightSkyBlue3"))))
- `(gnus-signature((t (:italic t :foreground "dark grey"))))
- `(gnus-summary-cancelled((t (:background "black" :foreground "yellow"))))
- `(gnus-summary-high-ancient((t (:bold t :foreground "rotal blue"))))
- `(gnus-summary-high-read((t (:bold t :foreground "lime green"))))
- `(gnus-summary-high-ticked((t (:bold t :foreground "tomato"))))
- `(gnus-summary-high-unread((t (:bold t :foreground "white"))))
- `(gnus-summary-low-ancient((t (:italic t :foreground "lime green"))))
- `(gnus-summary-low-read((t (:italic t :foreground "royal blue"))))
- `(gnus-summary-low-ticked((t (:italic t :foreground "dark red"))))
- `(gnus-summary-low-unread((t (:italic t :foreground "white"))))
- `(gnus-summary-normal-ancient((t (:foreground "royal blue"))))
- `(gnus-summary-normal-read((t (:foreground "lime green"))))
- `(gnus-summary-normal-ticked((t (:foreground "indian red"))))
- `(gnus-summary-normal-unread((t (:foreground "white"))))
+ `(gnus-header-newsgroups ((t (:italic t :bold t :foreground "LightSkyBlue3"))))
+ `(gnus-signature ((t (:italic t :foreground "dark grey"))))
+ `(gnus-summary-cancelled ((t (:background "black" :foreground "yellow"))))
+ `(gnus-summary-high-ancient ((t (:bold t :foreground "rotal blue"))))
+ `(gnus-summary-high-read ((t (:bold t :foreground "lime green"))))
+ `(gnus-summary-high-ticked ((t (:bold t :foreground "tomato"))))
+ `(gnus-summary-high-unread ((t (:bold t :foreground "white"))))
+ `(gnus-summary-low-ancient ((t (:italic t :foreground "lime green"))))
+ `(gnus-summary-low-read ((t (:italic t :foreground "royal blue"))))
+ `(gnus-summary-low-ticked ((t (:italic t :foreground "dark red"))))
+ `(gnus-summary-low-unread ((t (:italic t :foreground "white"))))
+ `(gnus-summary-normal-ancient ((t (:foreground "royal blue"))))
+ `(gnus-summary-normal-read ((t (:foreground "lime green"))))
+ `(gnus-summary-normal-ticked ((t (:foreground "indian red"))))
+ `(gnus-summary-normal-unread ((t (:foreground "white"))))
  `(gnus-summary-selected ((t (:background "brown4" :foreground "white"))))
- `(message-header-name((t (:foreground "tomato"))))
- `(message-header-newsgroups((t (:italic t :bold t :foreground "LightSkyBlue3"))))
- `(message-header-other((t (:foreground "LightSkyBlue3"))))
- `(message-header-xheader((t (:foreground "DodgerBlue3"))))
+ `(message-header-name ((t (:foreground "tomato"))))
+ `(message-header-newsgroups ((t (:italic t :bold t :foreground "LightSkyBlue3"))))
+ `(message-header-other ((t (:foreground "LightSkyBlue3"))))
+ `(message-header-xheader ((t (:foreground "DodgerBlue3"))))
  `(message-header-subject ((t (:foreground "white"))))
  `(message-header-to ((t (:foreground "white"))))
  `(message-header-cc ((t (:foreground "white"))))
@@ -179,7 +244,7 @@
  `(org-level-3 ((t (:bold nil :foreground "#6ac214"))))
  `(org-level-4 ((t (:bold nil :foreground "tomato"))))
  `(org-date ((t (:underline t :foreground "magenta3"))))
- `(org-footnote  ((t (:underline t :foreground "magenta3"))))
+ `(org-footnote ((t (:underline t :foreground "magenta3"))))
  `(org-link ((t (:foreground "skyblue2" :background "#2e3436" :underline nil))))
  `(org-special-keyword ((t (:foreground "brown"))))
  `(org-verbatim ((t (:foreground "#eeeeec" :underline t :slant italic))))
@@ -192,9 +257,9 @@
  `(org-agenda-date ((t (:foreground "#6ac214"))))
  `(org-agenda-date-weekend ((t (:weight normal :foreground "dodger blue"))))
  `(org-agenda-date-today ((t (:weight bold :foreground "#edd400"))))
- `(org-block-begin-line ((t ( :foreground "#888a85" :background "#252b2b"))))
+ `(org-block-begin-line ((t (:foreground "#888a85" :background "#252b2b"))))
  `(org-block-background ((t (:background "#252b2b"))))
- `(org-block-end-line ((t ( :foreground "#888a85" :background "#252b2b"))))
+ `(org-block-end-line ((t (:foreground "#888a85" :background "#252b2b"))))
  `(anything-header ((t (:bold t :background "grey15" :foreground "#edd400"))))
  `(anything-candidate-number ((t (:background "#f57900" :foreground "black"))))
  `(ess-jb-comment-face ((t (:background "#2e3436" :foreground "#888a85"))))
@@ -244,8 +309,7 @@
  `(rpm-spec-package-face ((t (:foreground "tomato"))))
  `(rpm-spec-section-face ((t (:foreground "#8ae234" :underline t :weight bold))))
  `(rpm-spec-tag-face ((t (:foreground "dodger blue" :weight bold))))
- `(rpm-spec-var-face ((t (:foreground "tomato"))))
- )
+ `(rpm-spec-var-face ((t (:foreground "tomato")))))
 
 
 (provide-theme 'tangotango)
