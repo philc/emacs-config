@@ -1409,8 +1409,9 @@
   (interactive)
   (util/save-buffer-if-dirty)
   ;; This URL is specific to the Vimium Firefox extension.
+  ;; This corresponds to the "Internal UUID" field show in about:addons for the extension.
   ;; Sometimes this internal extension ID can change as the extension's manifest.json changes.
-  (let* ((extension-id "0b817fbe-e25a-4644-b918-230b9d15b3c9")
+  (let* ((extension-id "c0302493-084b-4a62-8b18-ed020c2325ee")
          (url (format "moz-extension://%s/pages/reload.html" extension-id)))
     (util/call-process-with-exit-status "/Applications/Firefox.app/Contents/MacOS/firefox"
                                         nil
@@ -1849,7 +1850,8 @@
   (let* ((project-dir (ag/project-root default-directory))
          (search-string (if (region-active-p)
                             (buffer-substring-no-properties (region-beginning) (region-end))
-                          (read-from-minibuffer "Search: " (ag/dwim-at-point))))) ; Taken from (ag) in ag.el.
+                          ;; Taken from (ag) in ag.el.
+                          (read-from-minibuffer "Search: " (ag/dwim-at-point)))))
     (util/with-patch-function
      'display-buffer (buffer &rest args) (progn (switch-to-buffer buffer) (selected-window))
      (ag/search search-string project-dir))))
@@ -1973,7 +1975,7 @@
        (is-org-emacs (s-contains? "Org.app" emacs-app-path)))
   (when (not is-org-emacs)
     (setq desktop-save t) ; Always save without prompting.
-    ;; Limit the number of buffers that get restored, to reduce startup time. I haven't verified whether
-    ;; this is a material performance win given my usage patterns.
+    ;; Limit the number of buffers that get restored, to reduce startup time. I haven't verified
+    ;; whether this is a material performance win given my usage patterns.
     (setq desktop-restore-eager 15)
     (desktop-save-mode 1)))
