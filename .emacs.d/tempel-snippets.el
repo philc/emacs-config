@@ -8,9 +8,9 @@ fundamental-mode
 
 js-mode
 
-;; Deb
 (deb "console.log(\">>> " (s text) "\", " text ");" q)
 (fn "(" p ") => {" n> q n "};")
+(function "function " p "(" p ") {" n> q n "};")
 (log "console.log(" q ");")
 (qs "document.querySelector(\"" q "\");")
 (context "context(\"" p "\", () => {" n> q n "});")
