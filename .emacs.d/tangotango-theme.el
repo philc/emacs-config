@@ -64,7 +64,9 @@
       :box nil
       :inverse-video nil
       :foreground "#eeeeec"
-      :background "#1C2020"
+      ;; :background "#1C2020" ;; Lighter gray. Green base hue.
+      ;; :background "#171819" ;; Almost black. Blue base hue.
+      :background "#1B1D1E" ;; Half-step in between them. Blue base hue.
       :stipple nil
       :inherit nil))))
  `(cursor ((t (:foreground "#222222" :background "#fce94f"))))
@@ -319,7 +321,7 @@
   (setq-local
    face-remapping-alist
    '(;; A lighter version of the background color
-     (default (:background "#252828")))))
+     (default (:background "#202325")))))
 
 (defun tangotango-minibuffer-exit ()
   (kill-local-variable 'face-remapping-alist))
