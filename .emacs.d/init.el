@@ -1612,24 +1612,26 @@
 
 (setq gofmt-in-progress nil)
 
+(defun gofmt-ignoring-errors ()
+  (interactive)
+  (cl-letf (((symbol-function #'gofmt--process-errors)
+             (lambda (&rest args)
+               (message "gofmt error in %s" (buffer-name)) t)))
+    (gofmt)))
+
 (defun gofmt-before-save-ignoring-errors ()
   "Don't pop up syntax errors in a new window when running gofmt-before-save."
-  (interactive)
   ;; Note that `gofmt-before-save` triggers this save-hook for some reason, so we lock on
   ;; gofmt-in-progress to to protect from infinite recurision.
   (when (not gofmt-in-progress)
     (setq gofmt-in-progress 't)
-    (cl-letf (((symbol-function #'gofmt--process-errors) (lambda (&rest args) t)))
-      (gofmt-before-save))
-    (setq gofmt-in-progress nil)))
+    (gofmt-ignoring-errors))
+  (setq gofmt-in-progress nil))
 
 (defun init-go-buffer-settings ()
   ;; I have Emacs configured to save when switching buffers, so popping up errors when I switch
   ;; buffers is really jarring.
-  (add-hook 'before-save-hook 'gofmt-before-save-ignoring-errors nil t)
-  ;; Make it so comments are line-wrapped properly when filling. It's an oversight that this is
-  ;; missing from go-mode.
-  (setq-local fill-prefix "// "))
+  (add-hook 'before-save-hook 'gofmt-before-save-ignoring-errors nil t))
 
 (add-hook 'go-mode-hook 'init-go-buffer-settings)
 
@@ -1744,8 +1746,7 @@
   (visual-line-mode))
 
 (defun log-word-under-cursor ()
-  "Inserts a logging statement for the word under the cursor, or the current selection.
-   TODO: This assumes the current file is JavaScript; adapt to support other languages."
+  "Inserts a logging statement for the word under the cursor, or the current selection."
   (interactive)
   (let* ((word
           (if (region-active-p)
