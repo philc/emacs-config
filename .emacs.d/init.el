@@ -1580,18 +1580,29 @@
         ;; project's root, so override that.
         (lambda () (compile (concat "cd " (projectile-project-root) " && " command))))))))
 
+(defun go-test-file ()
+  "Runs go test with the path of the current buffer's file."
+  (interactive)
+  (let ((path (file-relative-name
+               (file-truename (buffer-file-name))
+               (projectile-project-root))))
+    (go-save-and-compile (concat "go test " path))))
+
 (define-leader-keys 'go-mode-map
+  "l" 'log-word-under-cursor
   ;; "r" is a namespace for run-related commands.
-  "rr" (go-save-and-compile-fn "make run")
+  "rr" (go-save-and-compile-fn "go run .") ;; make run
   "rb" (go-save-and-compile-fn "make synthetic-benchmark")
-  "rt" (go-save-and-compile-fn "make test")
+  ;; "t" is a namespace for test-related commands.
+  "tf" 'go-test-file
   "rw" (go-save-and-compile-fn "make run-web")
   ;; "c" is a namespace for compile-related commands.
+  "i" 'gofmt-ignoring-errors
   "cn" 'next-error
   "cp" 'previous-error
   "cw" (go-save-and-compile-fn "make web")
   "cb" (go-save-and-compile-fn "make benchmark")
-  "cc" (go-save-and-compile-fn "make compile")
+  "cc" (go-save-and-compile-fn "go build") ;; make compile
   ;; "cc" (go-save-and-compile-fn "go build")
   "ai" 'go-import-add)
 
