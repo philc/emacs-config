@@ -1758,6 +1758,7 @@
                     (s-chop-suffix ";")))
          (format-str (pcase major-mode
                        ('js-mode "console.log(\"%s:\", %s);")
+                       ('go-mode "fmt.Println(\"%s:\", %s);")
                        ('rust-mode "println!(\"%s: {:?}\", %s);")
                        ('emacs-lisp-mode "(progn (print \"%s\") (prin1 %s t))")))
          (statement
