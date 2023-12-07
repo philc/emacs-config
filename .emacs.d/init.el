@@ -1583,10 +1583,11 @@
 (defun go-test-file ()
   "Runs go test with the path of the current buffer's file."
   (interactive)
-  (let ((path (file-relative-name
-               (file-truename (buffer-file-name))
-               (projectile-project-root))))
-    (go-save-and-compile (concat "go test " path))))
+  (let* ((path (file-relative-name
+                (file-truename (buffer-file-name))
+                (projectile-project-root)))
+         (package-dir (concat "./" (file-name-directory path))))
+    (go-save-and-compile (concat "go test " package-dir))))
 
 (define-leader-keys 'go-mode-map
   "l" 'log-word-under-cursor
@@ -1595,6 +1596,7 @@
   "rb" (go-save-and-compile-fn "make synthetic-benchmark")
   ;; "t" is a namespace for test-related commands.
   "tf" 'go-test-file
+  "ta" (go-save-and-compile-fn "go test")
   "rw" (go-save-and-compile-fn "make run-web")
   ;; "c" is a namespace for compile-related commands.
   "i" 'gofmt-ignoring-errors
