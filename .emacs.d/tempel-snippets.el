@@ -47,6 +47,9 @@ html-mode
 (script "<script>" n> q n "</script>")
 (div "<div>" n> q n "</div>")
 
+;; An empty, transparent favicon
+(icon "<link rel=\"icon\" href=\"data:;base64,iVBORw0KGgo=\">")
+(favicon "<link rel=\"icon\" href=\"data:;base64,iVBORw0KGgo=\">")
 (form "<form>" n> q n "</div>")
 (head "<head>" n> q n "</head>")
 (h1 "<h1>" q "</h1>")
