@@ -783,8 +783,7 @@
   (setq ido-use-virtual-buffers t)
   (setq ido-everywhere t)
   ;; Kill (unload) the highlighted buffer in the matches list.
-  (define-key ido-file-completion-map (kbd "C-w") 'backward-delete-word)
-  (define-key ido-buffer-completion-map (kbd "M-d") 'ido-kill-buffer-at-head))
+  (define-key ido-file-completion-map (kbd "C-w") 'backward-delete-word))
 
 ;;
 ;; Dired mode - using the Emacs file browser.
