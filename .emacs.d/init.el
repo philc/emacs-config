@@ -86,6 +86,7 @@
 (require 'cl)
 (require 's)
 (add-to-list 'load-path "~/.emacs.d/elisp")
+(add-to-list 'load-path "~/.emacs.d/ghelp")
 (require 'lisp-utils)
 (require 'emacs-utils)
 
@@ -1937,6 +1938,27 @@
                  ;; The file might not have an extension. Assume javascript.
                  "js")))
     (replace-region-with-command-output "swift-format format --ignore-unparsable-files")))
+
+;;
+;; eglot - Emacs LSP
+;;
+
+;; Don't show documentation in the echo area as you move your cursor.
+(setq eglot-ignored-server-capabilities '(:hoverProvider))
+
+;;
+;; ghelp - a replacement for Emacs help system.
+;; I'm using this because it can fetch documentation from the major mode's language server (via
+;; eglot) and show it. eglot can show documentation as well by invoking eldoc-doc-buffer, but not if
+;; you've disabled eglot from showing documentation on hover >.<
+;; See https://www.reddit.com/r/emacs/comments/11mv5ky/eglot_documentation/
+;;
+(require 'ghelp)
+;; Use default font rather than a variable-width font.
+(copy-face 'default 'ghelp-entry-title)
+;; Turn off the annoying back and forward buttons in ghelp's window title.
+(setq-default ghelp-enable-header-line nil)
+
 
 ;;
 ;; Misc
