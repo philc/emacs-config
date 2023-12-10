@@ -5,7 +5,8 @@
 (require 'dash)
 (require 'framemove)
 
-;; When switching between windows using windmove, also jump across frames if there are multiple frames.
+;; When switching between windows using windmove, also jump across frames if there are multiple
+;; frames.
 (setq framemove-hook-into-windmove t)
 
 ;; Settings for window splits.
@@ -19,34 +20,33 @@
 
 ;; I manage my windows in a 4x4 grid. I want ephemeral or status-based buffers to always show in the
 ;; lower-right or right window, in that order of preference.
-(setq special-display-buffer-names '("*Help*" "*compilation*" "COMMIT_EDITMSG" "*Messages*"
-                                     ;; Clojure
-                                     "*clojure-simple*" "*inf-clojure*" "*Cljfmt Errors*"
-                                     ;; Emacs lisp
-                                     "*Backtrace*"
-                                     ;; Coffeescript
-                                     "*coffee-compiled*"
-                                     ;; Go
-                                     "*Compile-Log*" "*Gofmt Errors*"
-                                     ;; Javascript
-                                     "*Javascript REPL*"
-                                     "*REPL*"
-                                     "*eldoc*"
-                                     ;; Mu4e (email)
-                                     "*mu4e-update*" ; Note this doesn't work; it shows wherever it wants.
-                                     "*Completions*"))
+(setq special-display-buffer-names
+      '("*Help*" "*compilation*" "COMMIT_EDITMSG" "*Messages*"
+        ;; Clojure
+        "*clojure-simple*" "*inf-clojure*" "*Cljfmt Errors*"
+        ;; Emacs lisp
+        "*Backtrace*"
+        ;; Coffeescript
+        "*coffee-compiled*"
+        ;; Go
+        "*Compile-Log*" "*Gofmt Errors*"
+        ;; Javascript
+        "*Javascript REPL*"
+        "*REPL*"
+        "*eldoc*"
+        "*Completions*"))
 (setq special-display-regexps '("*cider.*"
                                 "magit-process.*"
                                 "magit-revision.*"
                                 "*ghelp.*"))
 (setq special-display-function 'show-ephemeral-buffer-in-a-sensible-window)
 
-;; A list of "special" (ephemeral) buffer names which should be focused after they are shown. Used by
-;; show-ephemeral-buffer-in-a-sensible-window
+;; A list of "special" (ephemeral) buffer names which should be focused after they are shown. Used
+;; by show-ephemeral-buffer-in-a-sensible-window
 (setq special-display-auto-focused-buffers '())
 
-;; Whether we can show an ephemeral buffer in other frames, if, say, another frame already contains another
-;; ephemeral buffer that we want to replace with a new one.
+;; Whether we can show an ephemeral buffer in other frames, if, say, another frame already contains
+;; another ephemeral buffer that we want to replace with a new one.
 (setq show-ephemeral-buffer-in-other-frames t)
 
 (defun ephemeral-window-p (w)
@@ -68,11 +68,11 @@
 ;; http://stackoverflow.com/questions/1002091/how-to-force-emacs-not-to-display-buffer-in-a-specific-window
 ;; The implementation of this function is based on `special-display-popup-frame` in window.el.
 (defun show-ephemeral-buffer-in-a-sensible-window (buffer &optional buffer-data)
-  "Given a buffer, shows the window in a split on the right side of the frame. If the buffer is already
-   showing in some window, do nothing. If there's another ephemeral buffer already showing in a window,
-   show this new one on top of that one."
-  ;; NOTE(philc): Be careful about invoking `print` statements in this function when debugging it. For some
-  ;; reason it interferes with Emacs' window switching behavior.
+  "Given a buffer, shows the window in a split on the right side of the frame. If the buffer is
+   already showing in some window, do nothing. If there's another ephemeral buffer already showing
+   in a window, show this new one on top of that one."
+  ;; NOTE(philc): Be careful about invoking `print` statements in this function when debugging it.
+  ;; For some reason it interferes with Emacs' window switching behavior.
   (let* ((original-window (selected-window))
          (window-showing-buffer (get-buffer-window buffer show-ephemeral-buffer-in-other-frames))
          (ephemeral-window (first (get-ephemeral-windows)))
@@ -93,8 +93,8 @@
     window))
 
 (defun dismiss-ephemeral-windows ()
-  "Dismisses any visible windows in the current frame identifiedy by `special-display-buffer-names` and
-   `special-display-regexps`. I use this to quickly dismiss help windows, compile output, etc."
+  "Dismisses any visible windows in the current frame identifiedy by `special-display-buffer-names`
+   and `special-display-regexps`. I use this to quickly dismiss help windows, compile output, etc."
   (interactive)
   (save-excursion
     (let ((original-window (selected-window)))
@@ -103,8 +103,9 @@
       (select-window original-window))))
 
 (defun narrow-ephemeral-window ()
-  "Narrows the ephemeral window (usually a REPL) so that 3 vertical splits can fit on a Mac Thunderbolt
-   monitor: 2 splits which fit 110 chars without wrapping, and 1 narrower split with a REPL."
+  "Narrows the ephemeral window (usually a REPL) so that 3 vertical splits can fit on a Mac
+   Thunderbolt monitor: 2 splits which fit 110 chars without wrapping, and 1 narrower split with a
+   REPL."
   (interactive)
   (when (first (get-ephemeral-windows))
     (lexical-let* ((shrink-by-amt 12)
@@ -120,8 +121,8 @@
 (defun set-window-width (window width)
   "Resizes a window to be the given size.
    - horizontal: if true, resize the window horizontally, otherwise, vertically."
-  ;; NOTE(philc): I couldn't find an Emacs function which takes an absolute window size. shrink-window
-  ;; only takes deltas from the window's current width.
+  ;; NOTE(philc): I couldn't find an Emacs function which takes an absolute window size.
+  ;; shrink-window only takes deltas from the window's current width.
   (let ((delta (- (window-total-width window)
                   width)))
     (util/preserve-selected-window
@@ -132,10 +133,12 @@
 (setq buffer-underneath-maximized-ephemeral-window nil)
 
 (defun toggle-maximize-lower-right-window ()
-  "Toggles the vertical maximization of an ephemeral window, whereever it's showing. If there's a window above
-   or below it, that window will be saved and will be restored if maximization is toggled."
-  ;; I usually have a REPL or diff view showing in the lower right. Often I want to "maximize it" vertically,
-  ;; to view a long stacktrace etc., without having to switch to the upper right and close that window.
+  "Toggles the vertical maximization of an ephemeral window, whereever it's showing. If there's a
+   window above or below it, that window will be saved and will be restored if maximization is
+   toggled."
+  ;; I usually have a REPL or diff view showing in the lower right. Often I want to "maximize it"
+  ;; vertically, to view a long stacktrace etc., without having to switch to the upper right and
+  ;; close that window.
   (interactive)
   (window-in-direction 'above (get-buffer-window "*Messages*"))
   (let ((ephemeral-window (first (get-ephemeral-windows))))
@@ -151,7 +154,8 @@
              (lambda ()
                (select-window ephemeral-window)
                (split-window-vertically)
-               (set-window-buffer (selected-window) buffer-underneath-maximized-ephemeral-window)))))))))
+               (set-window-buffer (selected-window)
+                                  buffer-underneath-maximized-ephemeral-window)))))))))
 
 (defun swap-window-buffers (window-move-fn)
   "Swaps the current buffer with the buffer in the window active after invoking window-move-fn."
@@ -166,8 +170,8 @@
 (defun swap-window-down () (interactive) (swap-window-buffers 'windmove-down))
 (defun swap-window-up () (interactive) (swap-window-buffers 'windmove-up))
 
-;; When a window in a tab is maximized, we save its configuration per tab. Emacs doesn't give us an ID number
-;; to identify a tab, so we make due by storing the window configuration by tab name.
+;; When a window in a tab is maximized, we save its configuration per tab. Emacs doesn't give us an
+;; ID number to identify a tab, so we make due by storing the window configuration by tab name.
 (setq tab-name->window-config (make-hash-table))
 
 (defun toggle-window-maximize ()
@@ -203,11 +207,11 @@
        i))))
 
 (defun while-window-changes (f)
-  "Run the given function until the selected window stops changing after each invocation. This is useful
-   because the return value of `windmove-right` is not reliable when combined with framemove. It can return
-   false even though the selected window was successfully changed."
-  ;; TODO(philc): I think a better approach with less quirks is to remove framemove and to provide advice to
-  ;; windmove-* myself.
+  "Run the given function until the selected window stops changing after each invocation. This is
+   useful because the return value of `windmove-right` is not reliable when combined with framemove.
+   It can return false even though the selected window was successfully changed."
+  ;; TODO(philc): I think a better approach with less quirks is to remove framemove and to provide
+  ;; advice to windmove-* myself.
   (lexical-let ((window nil))
     (while (not (eq window (selected-window)))
       (setq window (selected-window))
@@ -218,20 +222,21 @@
   (while-window-changes (lambda () (ignore-errors (windmove-down 1)))))
 
 (defun create-new-column ()
-  "Creates a new column in my window layout by splitting the rightmost window and rebalancing windows."
+  "Creates a new column in my window layout by splitting the rightmost window and rebalancing
+windows."
   (interactive)
   (lexical-let* ((w (selected-window))
                  (b (current-buffer)))
     (split-window-horizontally-and-focus)
-    ;; Ensure that no matter where the window is created, it has the same buffer as the window prior to
-    ;; creating the new one. Otherwise, the new window could have some random buffer in it, making it
-    ;; difficult to use commands like open-in-project, for instance.
+    ;; Ensure that no matter where the window is created, it has the same buffer as the window prior
+    ;; to creating the new one. Otherwise, the new window could have some random buffer in it,
+    ;; making it difficult to use commands like open-in-project, for instance.
     (set-window-buffer (selected-window) b)
     (balance-windows)))
 
 (defun create-window-in-next-logical-spot ()
-  "Creates a window in the next slot in my standard 2x2 configuration. So for instance, if I have only 1
-   window open, it will split the screen into two vertical windows."
+  "Creates a window in the next slot in my standard 2x2 configuration. So for instance, if I have
+   only 1 window open, it will split the screen into two vertical windows."
   (interactive)
   (let ((window-count (length (window-list)))
         (buffer (current-buffer)))
@@ -247,9 +252,9 @@
                 (switch-to-upper-right)
                 (split-window-vertically-and-focus))
            (split-window-vertically-and-focus)))))
-    ;; Ensure that no matter where the window is created, it has the same buffer as the window prior to
-    ;; creating the new one. Otherwise, the new window could have some random buffer in it, making it
-    ;; difficult to use commands like open-in-project, for instance.
+    ;; Ensure that no matter where the window is created, it has the same buffer as the window prior
+    ;; to creating the new one. Otherwise, the new window could have some random buffer in it,
+    ;; making it difficult to use commands like open-in-project, for instance.
     (set-window-buffer (selected-window) buffer)))
 
 (defadvice windmove-do-window-select (after windowmove-change-to-normal-mode)
@@ -258,7 +263,8 @@
 (ad-activate 'windmove-do-window-select)
 
 (defun split-window-sensibly-reverse (&optional window)
-  "Identical to the built-in function split-window-sensibly, but prefers horizontal splits over vertical."
+  "Identical to the built-in function split-window-sensibly, but prefers horizontal splits over
+   vertical."
   (let ((window (or window (selected-window))))
     (or (and (window-splittable-p window t)
        ;; Split window horizontally.
@@ -270,9 +276,8 @@
          (split-window-below)))
   (and (eq window (frame-root-window (window-frame window)))
        (not (window-minibuffer-p window))
-       ;; If WINDOW is the only window on its frame and is not the
-       ;; minibuffer window, try to split it vertically disregarding
-       ;; the value of `split-height-threshold'.
+       ;; If WINDOW is the only window on its frame and is not the minibuffer window, try to split
+       ;; it vertically disregarding the value of `split-height-threshold'.
        (let ((split-height-threshold 0))
          (when (window-splittable-p window)
      (with-selected-window window
@@ -280,7 +285,8 @@
 
 ;; Taken from http://www.emacswiki.org/emacs/misc-cmds.el.
 (defun kill-buffer-and-its-windows (buffer)
-  "Kill BUFFER and delete its windows. Default is `current-buffer'. BUFFER may be either a buffer or its name"
+  "Kill BUFFER and delete its windows. Default is `current-buffer'. BUFFER may be either a buffer or
+   its name"
   (interactive (list (read-buffer "Kill buffer: " (current-buffer) 'existing)))
   (setq buffer (get-buffer buffer))
   (if (buffer-live-p buffer)
@@ -288,7 +294,8 @@
         (when (kill-buffer buffer)
           (dolist (window windows)
             (when (window-live-p window)
-              ;; Ignore error, in particular,;; "Attempt to delete the sole visible or iconified frame".
+              ;; Ignore error, in particular,
+              ;; "Attempt to delete the sole visible or iconified frame".
               (condition-case nil (delete-window window) (error nil))))))
     (when (interactive-p)
       (error "Cannot kill buffer.  Not a live buffer: `%s'" buffer))))
