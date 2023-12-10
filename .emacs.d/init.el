@@ -1528,20 +1528,8 @@
 ;;
 (with-eval-after-load "go-mode"
   (evil-define-key 'normal go-mode-map
-    "gf" 'godef-jump
-    "K" 'godef-describe
-    ; Uses "go doc" rather than "godoc".
-    (kbd "A-k") 'go-doc-at-point))
-
-(defun go-doc-at-point ()
-  (interactive)
-  (let* ((query (thing-at-point 'filename t))
-         (_ (message (concat "go doc " query)))
-         (status-and-stdout (util/call-process-with-exit-status "go" nil "doc" query)))
-    (util/preserve-selected-window
-     (lambda ()
-       (with-help-window "*Help*"
-         (princ (second status-and-stdout)))))))
+    "gf" 'xref-find-defintions
+    "K" 'ghelp-describe-at-point-no-focus))
 
 (defun save-and-compile (f)
   (save-buffer)
@@ -1633,6 +1621,8 @@
 (defun init-go-buffer-settings ()
   ;; I have Emacs configured to save when switching buffers, so popping up errors when I switch
   ;; buffers is really jarring.
+  ;; Eglot starts an LSP server to improve inline documentation.
+  (eglot-ensure)
   (add-hook 'before-save-hook 'gofmt-before-save-ignoring-errors nil t))
 
 (add-hook 'go-mode-hook 'init-go-buffer-settings)
@@ -1941,9 +1931,17 @@
 ;;
 ;; eglot - Emacs LSP
 ;;
+(setq eglot-ignored-server-capabilities
+      ;; Don't show documentation in the echo area as you move your cursor.
+      '(:hoverProvider))
 
-;; Don't show documentation in the echo area as you move your cursor.
-(setq eglot-ignored-server-capabilities '(:hoverProvider))
+;; eglot enables flymake, which shows compile errors as red underlines in the buffer as you type.
+;; I don't like this; it's distracting
+;; https://emacs.stackexchange.com/q/62416
+(defun on-eglot-managed-mode-hook ()
+  (flymake-mode -1))
+
+(add-hook 'eglot-managed-mode-hook 'on-eglot-managed-mode-hook)
 
 ;;
 ;; ghelp - a replacement for Emacs help system.
@@ -1951,13 +1949,22 @@
 ;; eglot) and show it. eglot can show documentation as well by invoking eldoc-doc-buffer, but not if
 ;; you've disabled eglot from showing documentation on hover >.<
 ;; See https://www.reddit.com/r/emacs/comments/11mv5ky/eglot_documentation/
-;;
 (require 'ghelp)
+
+(defun on-ghelp-page-mode-hook ()
+  ;; Turn on line wrapping for help pages.
+  (visual-line-mode 1))
+
+(add-hook 'ghelp-page-mode-hook 'on-ghelp-page-mode-hook)
+
 ;; Use default font rather than a variable-width font.
 (copy-face 'default 'ghelp-entry-title)
 ;; Turn off the annoying back and forward buttons in ghelp's window title.
 (setq-default ghelp-enable-header-line nil)
 
+(defun ghelp-describe-at-point-no-focus ()
+  (interactive)
+  (util/preserve-selected-window 'ghelp-describe-at-point))
 
 ;;
 ;; Misc
