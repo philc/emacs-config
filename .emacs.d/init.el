@@ -1235,7 +1235,7 @@
   (interactive)
   (replace-region-with-command-output "~/scripts/publishing/convert_org_to_markdown.rb"))
 
-(defun markdown-insert-date ()
+(defun mlm/markdown-insert-date ()
   (interactive)
   ;; I insert this type of time string into my markdown docs often.
   (forward-char)
