@@ -3,15 +3,16 @@
 ;; TODO(philc): Document what this mode does.
 ;;
 ;; Performance notes:
-;; This mode becomes surprisingly slow due to font locking on some operations, like indenting a block of text
-;; in a large file, when some list items are collapsed.
-;; There are many functions that can be made more efficient by reducing features that I don't personally use.
-;; markdown-search-backward-baseline for instance can be made more efficient.
+;;
+;; This mode becomes surprisingly slow due to font locking on some operations, like indenting a
+;; block of text in a large file, when some list items are collapsed.
+;; There are many functions that can be made more efficient by reducing features that I don't
+;; personally use. markdown-search-backward-baseline for instance can be made more efficient.
 ;;
 
 (provide 'markdown-lite-mode)
-;; I use markdown heavily for outlining. outline-magic provides handy functions for cycling the visibility
-;; of subtrees, the same way org mode does it.
+;; I use markdown heavily for outlining. outline-magic provides handy functions for cycling the
+;; visibility of subtrees, the same way org mode does it.
 (require 'outline-magic)
 (require 'evil)
 (require 's)
@@ -44,8 +45,8 @@
 
   ;; Outline mode
   (make-local-variable 'outline-regexp)
-  ;; markdown-mode has support for outline mode, but in that implementations, headings are folded. My
-  ;; preference is to instead fold subtrees in bulleted lists, akin to Org mode and Workflowly.
+  ;; markdown-mode has support for outline mode, but in that implementations, headings are folded.
+  ;; My preference is to instead fold subtrees in bulleted lists, akin to Org mode and Workflowly.
   (setq outline-regexp "[ ]*\\*") ; matches a leading bullet point
 
   (make-local-variable 'outline-level)
@@ -69,8 +70,8 @@
 (add-to-list 'auto-mode-alist '("\\.md$" . markdown-lite-mode))
 
 (defun mml-get-next-list-marker (list-marker)
-  "When appending a new item to an existing list, this returns the character to be used for that list item. If
-   we're appending to a numbered list, increment the list-marker by one."
+  "When appending a new item to an existing list, this returns the character to be used for that
+   list item. If we're appending to a numbered list, increment the list-marker by one."
   (cond
    ;; Ordered list
    ((string-match "[0-9]" list-marker)
@@ -82,10 +83,10 @@
 (defun mml-insert-list-item-below ()
   "Inserts a new list item under the current one."
   (interactive)
-  ;; When the current list item has a trailing space at the end of the current line, the end of the list item
-  ;; is not properly calculated, and so ultimately an exception is thrown. This is disruptive. It was more
-  ;; expedient to just trim the current line than to change the way list items are detected, which proved
-  ;; involved.
+  ;; When the current list item has a trailing space at the end of the current line, the end of the
+  ;; list item is not properly calculated, and so ultimately an exception is thrown. This is
+  ;; disruptive. It was more expedient to just trim the current line than to change the way list
+  ;; items are detected, which proved involved.
   (delete-trailing-whitespace (line-beginning-position) (line-end-position))
   (let* ((bounds (markdown-cur-list-item-bounds))
          (indent (nth 2 bounds))
@@ -114,8 +115,9 @@
          (line-length (length (funcall text-of-line)))
          (setext-str (make-string line-length (get-byte 0 setext-type)))
          (next-line (save-excursion (forward-line) (funcall text-of-line))))
-    ;; If there's already a setext header, delete it, so we don't add two. It's useful to support this because
-    ;; the existing setext header may be the incorrect length (i.e. not equal to line-length).
+    ;; If there's already a setext header, delete it, so we don't add two. It's useful to support
+    ;; this because the existing setext header may be the incorrect length (i.e. not equal to
+    ;; line-length).
     (when (or (s-starts-with? "--" next-line) (s-starts-with? "==" next-line))
       (save-excursion
         (next-line)
@@ -180,8 +182,8 @@
 
 (defun markdown-perform-promote-subtree (should-promote)
   "Promotes thes list under under the cursor, and also promotes all subtrees."
-  ;; This show-subtree call is important because this indentation code does not work with collapsed subtrees,
-  ;; which are represented as overlays. The hidden overlays get lost upon indention.
+  ;; This show-subtree call is important because this indentation code does not work with collapsed
+  ;; subtrees, which are represented as overlays. The hidden overlays get lost upon indention.
   (outline-show-subtree)
   (let* ((line (util/get-current-line))
          (start-level (util/line-indentation-level line))
@@ -209,8 +211,8 @@
   (back-to-indentation)) ; Move the cursor to the first non-whitespace character.
 
 (defun bounds-of-space-delimitted-word ()
-  "Returns a cons list of coordinates of the boundary of the word under the cursor, where 'word' is defined
-   as any sequence of non-whitespace characters."
+  "Returns a cons list of coordinates of the boundary of the word under the cursor, where 'word' is
+   defined as any sequence of non-whitespace characters."
   (let* ((start nil)
          (end nil))
     (save-excursion
@@ -227,18 +229,20 @@
     (cons start end)))
 
 (defun replace-region-with-contents (fn)
-  "Replace the currently selected region (or the current word if no region is selected) with the given
-   text. `fn` takes the currently selected text and returns the text it should be replaced with."
-  ; TODO(philc): I think a better approach is to change bounds-of-space-delimitted-word to ignore punctuation.
+  "Replace the currently selected region (or the current word if no region is selected) with the
+   given text. `fn` takes the currently selected text and returns the text it should be replaced
+   with."
+  ; TODO(philc): I think a better approach is to change bounds-of-space-delimitted-word to ignore
+  ; punctuation.
   (lexical-let* ((is-region (region-active-p))
                  (word-boundary (bounds-of-space-delimitted-word))
                  (start (if is-region (region-beginning) (car word-boundary)))
                  (end (if is-region (region-end) (cdr word-boundary)))
                  (last-char (buffer-substring-no-properties (- end 1) end))
-                 ;; Typical usage for e.g. markdown's bold markers is to surround the contents of the replaced
-                 ;; region before any punctuation characters, not after them. "\n" is here because it allows
-                 ;; you to visually select the whole line and surround it with text without having the
-                 ;; surrounded text appear on the next line.
+                 ;; Typical usage for e.g. markdown's bold markers is to surround the contents of
+                 ;; the replaced region before any punctuation characters, not after them. "\n" is
+                 ;; here because it allows you to visually select the whole line and surround it
+                 ;; with text without having the surrounded text appear on the next line.
                  (special-last-char? (-contains? '("\n" ":" "." "," ";") last-char))
                  (contents (buffer-substring-no-properties start end))
                  (contents (if special-last-char?
@@ -310,8 +314,8 @@
             (kbd "M-b") 'markdown-bold
             (kbd "C-S-K") 'markdown-move-list-item-up
             (kbd "C-S-J") 'markdown-move-list-item-down
-            ;; Note for this C-S-I keybinding to work, you must (define-key input-decode-map [?\C-i] [C-i])
-            ;; https://emacs.stackexchange.com/a/221
+            ;; Note for this C-S-I keybinding to work, you must (define-key input-decode-map [?\C-i]
+            ;; [C-i]) https://emacs.stackexchange.com/a/221
             (kbd "C-S-I") 'markdown-create-list-item
             ;; M-return creates a new list item and enters insert mode.
             (kbd "<C-return>") 'mml-insert-list-item-below))
