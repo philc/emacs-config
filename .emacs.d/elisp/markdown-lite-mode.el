@@ -69,7 +69,7 @@
 (add-to-list 'auto-mode-alist '("\\.markdown$" . markdown-lite-mode))
 (add-to-list 'auto-mode-alist '("\\.md$" . markdown-lite-mode))
 
-(defun mml-get-next-list-marker (list-marker)
+(defun mlm/get-next-list-marker (list-marker)
   "When appending a new item to an existing list, this returns the character to be used for that
    list item. If we're appending to a numbered list, increment the list-marker by one."
   (cond
@@ -80,7 +80,7 @@
    ((string-match "[\\*\\+-]" list-marker)
     (concat (s-trim-right list-marker)))))
 
-(defun mml-insert-list-item-below ()
+(defun mlm/insert-list-item-below ()
   "Inserts a new list item under the current one."
   (interactive)
   ;; When the current list item has a trailing space at the end of the current line, the end of the
@@ -91,7 +91,7 @@
   (let* ((bounds (markdown-cur-list-item-bounds))
          (indent (nth 2 bounds))
          (marker (nth 4 bounds))
-         (new-marker (mml-get-next-list-marker marker))
+         (new-marker (mlm/get-next-list-marker marker))
          (space-char 32)
          (new-indent (make-string indent space-char))
          (is-collapsed (invisible-p (second bounds))))
@@ -270,11 +270,11 @@
 
   (define-leader-keys 'markdown-lite-mode-map
     "0" 'outline-show-all
-    "1" '(lambda () (interactive) (mml-show-level 1))
-    "2" '(lambda () (interactive) (mml-show-level 2))
-    "3" '(lambda () (interactive) (mml-show-level 3))
-    "4" '(lambda () (interactive) (mml-show-level 4))
-    "5" '(lambda () (interactive) (mml-show-level 5))
+    "1" '(lambda () (interactive) (mlm/show-level 1))
+    "2" '(lambda () (interactive) (mlm/show-level 2))
+    "3" '(lambda () (interactive) (mlm/show-level 3))
+    "4" '(lambda () (interactive) (mlm/show-level 4))
+    "5" '(lambda () (interactive) (mlm/show-level 5))
     "l" 'markdown-create-link
     "ad" 'markdown-insert-date
     "re" (lambda ()
@@ -294,8 +294,8 @@
     ;; Autocomplete setext headers by typing "==" or "--" on the header's line in normal mode.
     (kbd "==") '(lambda () (interactive) (insert-markdown-setext-header "=="))
     (kbd "--") '(lambda () (interactive) (insert-markdown-setext-header "--"))
-    (kbd "A-k") 'mml-backward-same-level
-    (kbd "A-j") 'mml-forward-same-level
+    (kbd "A-k") 'mlm/backward-same-level
+    (kbd "A-j") 'mlm/forward-same-level
     (kbd "A-h") 'outline-previous-visible-heading
     (kbd "A-l") 'outline-next-visible-heading
     (kbd "TAB") 'markdown-cycle
@@ -318,12 +318,12 @@
             ;; [C-i]) https://emacs.stackexchange.com/a/221
             (kbd "C-S-I") 'markdown-create-list-item
             ;; M-return creates a new list item and enters insert mode.
-            (kbd "<C-return>") 'mml-insert-list-item-below))
+            (kbd "<C-return>") 'mlm/insert-list-item-below))
         '(normal insert)))
 
 (setup-markdown-mode)
 
-(defun mml-show-level (indent-level)
+(defun mlm/show-level (indent-level)
   "Show all list items which are less than or equal to `indent-level`."
   (outline-hide-sublevels (* indent-level 2)))
 
@@ -332,12 +332,12 @@
   (interactive)
   (save-excursion (outline-cycle)))
 
-(defun mml-forward-same-level ()
+(defun mlm/forward-same-level ()
   (interactive)
   (condition-case nil (outline-forward-same-level 1)
     (error (outline-next-visible-heading 1))))
 
-(defun mml-backward-same-level ()
+(defun mlm/backward-same-level ()
   (interactive)
   (condition-case nil (outline-backward-same-level 1)
     (error (outline-previous-visible-heading 1))))
@@ -443,7 +443,7 @@ fragment is not a backquote.")
 ;;   "[^ \n\t][ \t]*\\(  \\)$"
 ;;   "Regular expression for matching line breaks.")
 
-;; TODO(philc): This has been replaced with mml-insert-list-item-below.
+;; TODO(philc): This has been replaced with mlm/insert-list-item-below.
 (defun markdown-insert-list-item (&optional arg)
   "Insert a new list item.
 If the point is inside unordered list, insert a bullet mark.  If
