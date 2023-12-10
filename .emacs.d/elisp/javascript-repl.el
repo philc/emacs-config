@@ -104,7 +104,7 @@
 (defun js/run-file-as-shoulda-test ()
   (interactive)
   (js/ensure-repl-is-running)
-  ;; This whole approach is greant. It's tricky to determine how "shoulda" can be imported here by
+  ;; This whole approach is flawed. It's tricky to determine how "shoulda" can be imported here by
   ;; this helper such that it's not imported twice by Deno as different modules. shoulda may be
   ;; imported from the current file via a URL, via an import map, or a symlinked file, none of which
   ;; this Emacs function can easily distinguish between.
@@ -122,7 +122,7 @@
                                     shoulda-import-path
                                   (expand-file-name shoulda-import-path file-dir))))
           (js/eval-str (format "import * as shoulda from \"%s\"; shoulda.reset()" shoulda-js-path)))
-      (js/eval-str "shoulda.reset()"))
+      (js/eval-str "if (globalThis.shoulda) shoulda.reset()"))
     (js/load-file)
     (js/eval-str "await shoulda.run(); undefined")
     (util/scroll-to-buffer-end (js/get-repl-buffer))))
