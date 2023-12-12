@@ -472,9 +472,7 @@
  "i" 'evil-ext/indent-inside-paragraph ; Shortcut to Vim's =ip
  "d" 'projectile-dired
  "D" (lambda () (interactive) (-> (buffer-file-name) file-name-directory dired))
- "gs" (lambda() (interactive)
-        (util/save-buffer-if-dirty)
-        (magit-status-and-focus-unstaged))
+ "gs" 'show-git-status-in-left-column
  "gl" 'magit-log-current
  "o" 'util/open-file-at-cursor
  "wc" 'count-chars-region
@@ -487,6 +485,14 @@
  "vn" 'project-nav/open-file-from-notes-folder
  "vo" (lambda () (interactive) (find-file "~/Dropbox/tasks.org")) ; "View my task list in org mode"
  "ve" (lambda () (interactive) (find-file "~/.emacs.d/init.el"))) ; "View Emacs init.el"
+
+(defun show-git-status-in-left-column ()
+  (interactive)
+    (util/save-buffer-if-dirty)
+    (let ((dir (projectile-project-root)))
+      (switch-to-upper-left)
+      (magit-status dir)
+      (magit-status-and-focus-unstaged)))
 
 (defun backward-kill-line (arg)
   "Delete backward (Ctrl-u) as in Bash, and save the contents to the clipboard."

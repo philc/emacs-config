@@ -217,6 +217,10 @@
       (setq window (selected-window))
       (funcall f))))
 
+(defun switch-to-upper-left ()
+  (while-window-changes (lambda () (ignore-errors (windmove-left 1))))
+  (while-window-changes (lambda () (ignore-errors (windmove-up 1)))))
+
 (defun switch-to-lower-right ()
   (while-window-changes (lambda () (ignore-errors (windmove-right 1))))
   (while-window-changes (lambda () (ignore-errors (windmove-down 1)))))

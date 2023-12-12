@@ -162,8 +162,8 @@ Date: %ad
    ";gca" 'magit-commit-amend
    ";gpush" 'git-push
    ";gpull" 'git-pull
-   "o" 'magit-diff-visit-file
-   (kbd "RET") 'magit-diff-visit-file
+   "o" 'magit-diff-visit-file-other-window
+   (kbd "RET") 'magit-diff-visit-file-other-window
    "c" 'magit-commit
    ;; I have a git precommit hook which does style checks. Sometimes I want to disable it when committing.
    "C" (lambda() (interactive) (util/with-env-var "SKIP_GIT_STYLE_CHECK" "true" 'magit-commit))
