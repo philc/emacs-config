@@ -699,7 +699,8 @@
                   (kbd "A-e") (lambda () (interactive) (ignore-errors (windmove-up)))
                   (kbd "A-F") 'swap-window-right
                   (kbd "A-D") 'swap-window-down
-                  (kbd "A-S") 'swap-window-left
+                  ;; This is Alt-shift-s. I don't know why Emacs is receivivng "§" as the key.
+                  (kbd "§") 'swap-window-left
                   (kbd "A-E") 'swap-window-up)
 
 (defun clipboard-yank-and-remove-query-string ()
