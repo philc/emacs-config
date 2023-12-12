@@ -311,7 +311,19 @@
  `(rpm-spec-package-face ((t (:foreground "tomato"))))
  `(rpm-spec-section-face ((t (:foreground "#8ae234" :underline t :weight bold))))
  `(rpm-spec-tag-face ((t (:foreground "dodger blue" :weight bold))))
- `(rpm-spec-var-face ((t (:foreground "tomato")))))
+ `(rpm-spec-var-face ((t (:foreground "tomato"))))
+
+ ;; Tab bar settings
+ '(tab-bar ((t (:inherit mode-line
+                         ;; This face is used to show the tab-bar-separator.
+                         :foreground "#555"
+                         :background "1B1D1E"))))
+ '(tab-bar-tab ((t (:inherit tab-bar
+                             :foreground "#eee"
+                             :background "#4B4D4E"))))
+ '(tab-bar-tab-inactive ((t (:inherit tab-bar
+                                      :background "#323636"
+                                      :foreground "#999")))))
 
 ;; Modify the background color of the minibuffer.
 ;;
