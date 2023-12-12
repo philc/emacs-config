@@ -532,8 +532,7 @@
  "wb" 'balance-windows
  "we" 'narrow-ephemeral-window
  "wE" 'toggle-maximize-lower-right-window
- "q" 'dismiss-ephemeral-windows
- "wf" 'toggle-frame-fullscreen)
+ "q" 'dismiss-ephemeral-windows)
 
 ;; Make it so Esc means quit, no matter the context.
 ;; http://stackoverflow.com/a/10166400/46237
@@ -677,6 +676,7 @@
                   (kbd "M-`") 'other-frame
                   (kbd "M-~") '(lambda () (interactive) (other-frame -1))
                   (kbd "M-w") 'vimlike-quit
+                  (kbd "M-W") 'tab-close ; Close the current tab, including every window.
                   (kbd "M-q") 'save-buffers-kill-terminal
                   (kbd "M-n") 'make-frame
                   (kbd "M-a") 'mark-whole-buffer
@@ -685,11 +685,11 @@
                   (kbd "M-V") 'clipboard-yank-and-remove-query-string
                   (kbd "M-c") 'clipboard-kill-ring-save
                   (kbd "M-m") 'iconify-or-deiconify-frame
-                  (kbd "M-W") 'evil-quit ; Close all tabs in the current frame..
                   (kbd "M--") 'text-zoom-out
                   (kbd "M-=") 'text-zoom-in
                   (kbd "M-0") 'text-zoom-reset
                   (kbd "M-t") 'open-current-buffer-in-new-tab
+                  (kbd "M-T") 'clone-tab
                   (kbd "M-i") 'set-tab-alias
                   ;; These aren't specifically replicating OSX shortcuts, but they manipulate the
                   ;; window, so I want them to take precedence over everything else.
@@ -1022,6 +1022,13 @@
   ;; tab-bar-mode.
   (tab-bar-new-tab)
   (show-tab-names))
+
+(defun clone-tab ()
+  "Clone the current tab."
+  (interactive)
+  ;; Exit out of insert mode when opening a new tab.
+  (evil-change-to-initial-state)
+  (tab-bar-duplicate-tab))
 
 ;;
 ;; Tempel - snippets
