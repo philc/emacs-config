@@ -967,9 +967,26 @@
 ;; Currently I only show a tab UI after doing a tab-related command.
 ;; This package could be used to show the tab UI persistently, at the end of the echo area:
 ;; https://github.com/qaiviq/echo-bar.el
+;; TODO(philc): If I keep a persistent UI for tabs, then delete my echo area implementation.
 
-;; Hide the tab mode UI. IMO having a persistent UI is not worth the extra line of space required.
-(setq tab-bar-show nil)
+(setq tab-bar-show t)
+(setq tab-bar-tab-hints t)
+;; Show no gap between tabs. I notice that if this is set to nil, " " gets used.
+(setq tab-bar-separator "") ;
+(setq tab-bar-new-button-show nil)
+(setq tab-bar-close-button-show nil)
+
+;; Returns a caption for the tab in the form of " 1 tab-name ". The difference between this and the
+;; default tab formatter is that it has a space prefix so that the text isn't directly adjacent to
+;; the next tab. This is based on tab-bar-tab-name-format-default.
+(defun format-tab-name (tab i)
+  (propertize
+   (concat (if tab-bar-tab-hints (format " %d " i) "")
+           (alist-get 'name tab))
+   'face (funcall tab-bar-tab-face-function tab)))
+
+(setq tab-bar-tab-name-format-function 'format-tab-name)
+
 (tab-bar-mode)
 
 (defun show-tab-names ()
