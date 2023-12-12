@@ -327,7 +327,6 @@
                                 magit-revision-mode
                                 magit-stash-mode
                                 magit-stashes-mode
-                                magit-status-mode
                                 magit-process-mode
                                 magit-diff-mode
                                 magit-status-mode
@@ -973,7 +972,7 @@
 (setq tab-bar-show t)
 (setq tab-bar-tab-hints t)
 ;; Show no gap between tabs. I notice that if this is set to nil, " " gets used.
-(setq tab-bar-separator "") ;
+(setq tab-bar-separator "")
 (setq tab-bar-new-button-show nil)
 (setq tab-bar-close-button-show nil)
 
