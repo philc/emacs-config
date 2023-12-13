@@ -186,15 +186,15 @@
         (puthash current-tab-name (current-window-configuration) tab-name->window-config)
         (delete-other-windows)))))
 
-(defun split-window-vertically-and-focus ()
+(defun split-window-vertically-and-focus (&optional w)
   (interactive)
-  (split-window-vertically)
-  (other-window 1))
+  (let ((w (split-window-vertically nil (or w (selected-window)))))
+    (select-window w)))
 
-(defun split-window-horizontally-and-focus ()
+(defun split-window-horizontally-and-focus (&optional w)
   (interactive)
-  (split-window-horizontally)
-  (other-window 1))
+  (let ((w (split-window-horizontally nil (or w (selected-window)))))
+    (select-window w)))
 
 (defun vertical-split-count ()
   "Returns the number of vertical splits (or columns) in the current frame."
@@ -227,11 +227,14 @@
 
 (defun create-new-column ()
   "Creates a new column in my window layout by splitting the rightmost window and rebalancing
-windows."
+   windows."
   (interactive)
-  (lexical-let* ((w (selected-window))
+  (lexical-let* ((is-part-of-vertical-combination (window-combined-p))
+                 (window-to-split (if is-part-of-vertical-combination
+                                      (window-parent (selected-window))
+                                    (selected-window)))
                  (b (current-buffer)))
-    (split-window-horizontally-and-focus)
+    (split-window-horizontally-and-focus window-to-split)
     ;; Ensure that no matter where the window is created, it has the same buffer as the window prior
     ;; to creating the new one. Otherwise, the new window could have some random buffer in it,
     ;; making it difficult to use commands like open-in-project, for instance.
