@@ -63,6 +63,12 @@
   (->> (get-visible-windows)
        (-filter 'ephemeral-window-p)))
 
+(defun max-column-count-for-frame-width ()
+  "Returns the desired max number of columns for the current frame. This count depends on how wide
+   the frame is."
+  (let* ((column-width 100))
+    (/ (frame-width) column-width)))
+
 ;; References, for context:
 ;; http://snarfed.org/emacs_special-display-function_prefer-other-visible-frame
 ;; http://stackoverflow.com/questions/1002091/how-to-force-emacs-not-to-display-buffer-in-a-specific-window
@@ -78,11 +84,14 @@
          (ephemeral-window (first (get-ephemeral-windows)))
          (should-create-new-window (and (not window-showing-buffer)
                                         (not ephemeral-window)
-                                        (save-excursion (switch-to-lower-right) (one-window-p))))
+                                        (< (column-count)
+                                           (max-column-count-for-frame-width))))
          (window (or window-showing-buffer
                      ephemeral-window
                      (if should-create-new-window
-                         (split-window-sensibly-reverse)
+                         (progn
+                           (switch-to-lower-right)
+                           (create-new-column))
                        (save-excursion (switch-to-lower-right) (selected-window))))))
     (display-buffer-record-window (if should-create-new-window 'window 'reuse) window buffer)
     (set-window-buffer window buffer)
@@ -110,7 +119,7 @@
   (when (first (get-ephemeral-windows))
     (lexical-let* ((shrink-by-amt 12)
                    (total-width (-> (frame-root-window) window-total-width))
-                   (vertical-splits (vertical-split-count))
+                   (vertical-splits (column-count))
                    (ephemeral-width (- (/ total-width vertical-splits) shrink-by-amt))
                    ;; Split the width from `shrink-by-amt` evently between the non-ephemeral windows.
                    (non-ephemeral-width (-> (/ total-width vertical-splits)
@@ -196,7 +205,7 @@
   (let ((w (split-window-horizontally nil (or w (selected-window)))))
     (select-window w)))
 
-(defun vertical-split-count ()
+(defun column-count ()
   "Returns the number of vertical splits (or columns) in the current frame."
   (util/preserve-selected-window
    (lambda ()
@@ -227,19 +236,20 @@
 
 (defun create-new-column ()
   "Creates a new column in my window layout by splitting the rightmost window and rebalancing
-   windows."
+   windows. Returns the new window."
   (interactive)
   (lexical-let* ((is-part-of-vertical-combination (window-combined-p))
                  (window-to-split (if is-part-of-vertical-combination
                                       (window-parent (selected-window))
                                     (selected-window)))
-                 (b (current-buffer)))
-    (split-window-horizontally-and-focus window-to-split)
+                 (b (current-buffer))
+                 (new-window (split-window-horizontally-and-focus window-to-split)))
     ;; Ensure that no matter where the window is created, it has the same buffer as the window prior
     ;; to creating the new one. Otherwise, the new window could have some random buffer in it,
     ;; making it difficult to use commands like open-in-project, for instance.
     (set-window-buffer (selected-window) b)
-    (balance-windows)))
+    (balance-windows)
+    new-window))
 
 (defun create-window-in-next-logical-spot ()
   "Creates a window in the next slot in my standard 2x2 configuration. So for instance, if I have
