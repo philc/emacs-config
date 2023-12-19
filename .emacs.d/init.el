@@ -490,7 +490,7 @@
   (interactive)
     (util/save-buffer-if-dirty)
     (let ((dir (projectile-project-root)))
-      (switch-to-upper-left)
+      (wm/switch-to-upper-left)
       (magit-status dir)
       (magit-status-and-focus-unstaged)))
 
@@ -527,17 +527,17 @@
 (general-define-key
  :prefix global-leader-prefix
  :keymaps '(normal visual)
- "wn" 'create-new-column
- "wv" 'split-window-horizontally-and-focus
- "wh" 'split-window-vertically-and-focus
+ "wn" 'wm/create-new-column
+ "wv" 'wm/split-window-horizontally-and-focus
+ "wh" 'wm/split-window-vertically-and-focus
  "wk" (lambda () (interactive) (kill-buffer (current-buffer)))
- "wm" 'toggle-window-maximize
+ "wm" 'wm/toggle-window-maximize
  "wr" 'evil-window-rotate-downwards
  "wR" 'evil-window-rotate-upwards
  "wb" 'balance-windows
- "we" 'narrow-ephemeral-window
- "wE" 'toggle-maximize-lower-right-window
- "q" 'dismiss-ephemeral-windows)
+ "we" 'wm/narrow-ephemeral-window
+ "wE" 'wm/toggle-maximize-lower-right-window
+ "q" 'wm/dismiss-ephemeral-windows)
 
 ;; Make it so Esc means quit, no matter the context.
 ;; http://stackoverflow.com/a/10166400/46237
@@ -702,11 +702,11 @@
                   (kbd "A-d") (lambda () (interactive) (ignore-errors (windmove-down)))
                   (kbd "A-s") (lambda () (interactive) (ignore-errors (windmove-left)))
                   (kbd "A-e") (lambda () (interactive) (ignore-errors (windmove-up)))
-                  (kbd "A-F") 'swap-window-right
-                  (kbd "A-D") 'swap-window-down
+                  (kbd "A-F") 'wm/swap-window-right
+                  (kbd "A-D") 'wm/swap-window-down
                   ;; This is Alt-shift-s. I don't know why Emacs is receivivng "§" as the key.
-                  (kbd "§") 'swap-window-left
-                  (kbd "A-E") 'swap-window-up)
+                  (kbd "§") 'wm/swap-window-left
+                  (kbd "A-E") 'wm/swap-window-up)
 
 (defun clipboard-yank-and-remove-query-string ()
   "Assumes the clipboard contents are a URL, and strips everything after a query string and hash
