@@ -183,7 +183,10 @@ details."
                    (skip-chars-forward "^  \"\t\n'|()[]{}<>〔〕“”〈〉《》【】〖〗«»‹›·。\\'")
                    (setq p2 (point))
                    (goto-char p0)
-                   (buffer-substring-no-properties p1 p2)))))
+                   (buffer-substring-no-properties p1 p2))))
+        (open-file-fn (lambda (path)
+                        (let ((b (find-file-noselect path)))
+                          (wm/switch-to-buffer-other-window b)))))
     (if (string-match-p "\\`https?://" ξpath)
         (util/open-in-browser ξpath)
       (progn ; not starting “http://”
@@ -194,19 +197,19 @@ details."
                     (ξline-num (string-to-number (match-string 2 ξpath))))
                 (if (file-exists-p ξfpath)
                     (progn
-                      (find-file ξfpath)
+                      (funcall open-file-fn ξfpath)
                       (goto-char 1)
                       (forward-line (1- ξline-num)))
                   (progn
                     (when (y-or-n-p (format "file doesn't exist: 「%s」. Create?" ξfpath))
-                      (find-file ξfpath))))))
+                      (funcall open-file-fn ξfpath))))))
           (progn
             (if (file-exists-p ξpath)
-                (find-file ξpath)
+                (funcall open-file-fn ξfpath)
               (if (file-exists-p (concat ξpath ".el"))
-                  (find-file (concat ξpath ".el"))
+                  (funcall open-file-fn (conat ξfpath ".el"))
                 (when (y-or-n-p (format "file doesn't exist: 「%s」. Create?" ξpath))
-                  (find-file ξpath ))))))))))
+                  (funcall open-file-fn ξpath ))))))))))
 
 (defmacro util/with-patch-function (fun-name fun-args fun-body &rest body)
   "Temporarily override the definition of FUN-NAME whilst BODY is executed.
