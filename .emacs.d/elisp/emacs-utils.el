@@ -19,8 +19,8 @@
           (buffer-string))))
 
 (defun util/call-process-and-check (program stdin &rest args)
-  "Calls the given program and raises an error if the exist status is non-zero. The error's message is the
-   program's output."
+  "Calls the given program and raises an error if the exist status is non-zero. The error's message
+   is the program's output."
   (lexical-let* ((result (apply 'util/call-process-with-exit-status program stdin args))
                  (exit-code (first result))
                  (output (second result)))
@@ -32,7 +32,8 @@
 
 (defun util/open-in-browser (url)
   "On Mac, opens the given URL in a specific browser.
-   Just invoking `open the-url` will open the URL in a random open browser, rather than a deterministic one."
+   Just invoking `open the-url` will open the URL in a random open browser, rather than a
+   deterministic one."
   (call-process "open" nil nil nil url "-a" browser-mac-app-name))
 
 (defun util/line-indentation-level (line)
@@ -88,9 +89,9 @@
   "Saves the buffer while suppressing output to the *Messages* buffer. This avoids cluttering up the
    Messages buffer with lots of 'save' output."
   (interactive)
-  ;; NOTE(philc): Saving files generates messages in the *Messages* buffer of the form "Wrote file xyz".
-  ;; However, note that if there's an issue saving a file, it's possible the error will be masked/hidden
-  ;; because of this output supression.
+  ;; NOTE(philc): Saving files generates messages in the *Messages* buffer of the form "Wrote file
+  ;; xyz". However, note that if there's an issue saving a file, it's possible the error will be
+  ;; masked/hidden because of this output supression.
   (let* ((inhibit-message t) ; Don't show messages in the echo area.
          (message-log-max nil)) ; Don't show in the Messages buffer. http://stackoverflow.com/q/10164929
     (save-buffer)))
@@ -122,10 +123,10 @@
     result))
 
 (defun util/preserve-selected-window (f)
-  "Runs the given function and then restores focus to the original window. Useful when you want to invoke
-   a function (like showing documentation) but desire to keep your current window focused."
-  ;; Note that we must preserve the selected window of every frame, because the function being executed may
-  ;; change the focused frame, even if the current frame is in focus.
+  "Runs the given function and then restores focus to the original window. Useful when you want to
+   invoke a function (like showing documentation) but desire to keep your current window focused."
+  ;; Note that we must preserve the selected window of every frame, because the function being
+  ;; executed may change the focused frame, even if the current frame is in focus.
   (lexical-let* ((original-frame (selected-frame))
                  (frames->windows (util/get-frame->selected-window))
                  (result (funcall f)))
@@ -136,9 +137,10 @@
     result))
 
 (defun util/preserve-line-and-column (f)
-  "Runs the given function and restores the cursor to its former line and column. This is helpful when the
-   text in the buffer moves (e.g. as a result of indentation commands). This is different from save-excursion
-   which will restore the (point). This does not restore the cursor to the previous point."
+  "Runs the given function and restores the cursor to its former line and column. This is helpful
+   when the text in the buffer moves (e.g. as a result of indentation commands). This is different
+   from save-excursion which will restore the (point). This does not restore the cursor to the
+   previous point."
   (lexical-let* ((former-line (line-number-at-pos))
                  (former-col (current-column))
                  (return-val (funcall f)))
@@ -147,7 +149,8 @@
     return-val))
 
 (defun util/thing-at-point-no-properties (thing)
-  "Returns the text of the thing at point, but without properties. See `thing-at-point` for details."
+  "Returns the text of the thing at point, but without properties. See `thing-at-point` for
+details."
   (let ((bounds (bounds-of-thing-at-point thing)))
     (when bounds ; NOTE(philc): I'm not sure if bounds-of-thing-at-point ever returns nil.
       (buffer-substring-no-properties (car bounds) (cdr bounds)))))
