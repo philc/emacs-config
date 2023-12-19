@@ -1557,12 +1557,40 @@
     (replace-region-with-command-output "rustfmt")))
 
 ;;
-;; Go mode, for writing Golang code
+;; Go mode, for writing golang code
 ;;
 (with-eval-after-load "go-mode"
   (evil-define-key 'normal go-mode-map
     "gf" 'xref-find-defintions
-    "K" 'ghelp-describe-at-point-no-focus))
+    "K" 'go-show-doc-at-point))
+
+(defun go-show-doc-at-point ()
+  "Shows documentation for the symbol at point in the help window. This spins up a gopls server,
+   queries it, and shuts it down."
+  (interactive)
+  (let* (; file-string will be "file-path:line:column"
+         (file-string (format "%s:%d:%d"
+                              (buffer-file-name)
+                              ;; Line number is one-indexed, whereas the LSP expects it to be
+                              ;; zero-indexed.
+                              (- (line-number-at-pos) 1)
+                              ;; Column is zero-indexed.
+                              (current-column)))
+         (output (util/call-process-and-check
+                  "/Users/phil/projects/lsp-client/client.js"
+                  nil
+                  "doc"
+                  file-string)))
+    (with-help-window "*Help*"
+      ;; The help string will be formatted as Markdown, so enable Markdown syntax highlighting in
+      ;; the help window.
+      (gfm-view-mode)
+      ;; Allow text to wrap to the next line at word boundaries.
+      (visual-line-mode 1)
+      (word-wrap-whitespace-mode 1)
+      ;; Turn off spell checking.
+      (spell-fu-mode -1)
+      (princ output))))
 
 (defun save-and-compile (f)
   (save-buffer)
