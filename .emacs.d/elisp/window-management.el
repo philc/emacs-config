@@ -63,12 +63,6 @@
   (->> (get-visible-windows)
        (-filter 'ephemeral-window-p)))
 
-(defun max-column-count-for-frame-width ()
-  "Returns the desired max number of columns for the current frame. This count depends on how wide
-   the frame is."
-  (let* ((column-width 100))
-    (/ (frame-width) column-width)))
-
 ;; References, for context:
 ;; http://snarfed.org/emacs_special-display-function_prefer-other-visible-frame
 ;; http://stackoverflow.com/questions/1002091/how-to-force-emacs-not-to-display-buffer-in-a-specific-window
@@ -100,6 +94,26 @@
     (when (member (buffer-name buffer) special-display-auto-focused-buffers)
       (select-window window))
     window))
+
+(defun wm/switch-to-buffer-other-window (buffer)
+  "Switches to the given buffer if it's showing already. If not, shows it on column 1 or 2, creating
+   a new column (window) if there is only one column."
+  (let* ((original-window (selected-window))
+         (window-showing-buffer (get-buffer-window buffer show-ephemeral-buffer-in-other-frames))
+         (should-create-new-window (and (not window-showing-buffer)
+                                        (< (column-count) 2)))
+         (window (or window-showing-buffer
+                     (when should-create-new-window
+                         (create-new-column))
+                     ;; If we already have two columns, show the window in the column which is
+                     ;; opposite to the current window.
+                     (if (= (column-number) 1)
+                         (window-in-column 0)
+                         (window-in-column 1)))))
+    (display-buffer-record-window (if should-create-new-window 'window 'reuse) window buffer)
+    (set-window-buffer window buffer)
+    (when should-create-new-window (set-window-prev-buffers window nil))
+    (select-window window)))
 
 (defun dismiss-ephemeral-windows ()
   "Dismisses any visible windows in the current frame identifiedy by `special-display-buffer-names`
@@ -207,13 +221,35 @@
 
 (defun column-count ()
   "Returns the number of vertical splits (or columns) in the current frame."
-  (util/preserve-selected-window
-   (lambda ()
-     (select-window (frame-first-window))
-     (let ((i 1))
-       (while (ignore-errors (windmove-right 1))
-         (setq i (+ i 1)))
-       i))))
+  (let* ((w (frame-first-window))
+         (count 0))
+    (while (setq w (window-in-direction 'right w))
+      (setq count (1+ count)))
+    count))
+
+(defun window-in-column (n)
+  (let* ((w (frame-first-window))
+         (last-valid-window w)
+         (count 0))
+    (while (and (< count n)
+                (setq w (window-in-direction 'right w)))
+      (setq last-valid-window w)
+      (setq count (1+ count)))
+    w))
+
+(defun switch-to-column (n)
+  "Switches to the nth column. Does nothing if n >= the number of columns. Returns the window
+   switched to."
+  (-?> (window-in-column n) select-window))
+
+(defun column-number ()
+  "Returns which column number (zero-based) of the current window."
+  (interactive)
+  (let* ((w (selected-window))
+         (count 0))
+    (while (setq w (window-in-direction 'left w))
+      (setq count (1+ count)))
+    count))
 
 (defun while-window-changes (f)
   "Run the given function until the selected window stops changing after each invocation. This is
@@ -234,6 +270,12 @@
   (while-window-changes (lambda () (ignore-errors (windmove-right 1))))
   (while-window-changes (lambda () (ignore-errors (windmove-down 1)))))
 
+(defun max-column-count-for-frame-width ()
+  "Returns the desired max number of columns for the current frame. This count depends on how wide
+   the frame is."
+  (let* ((column-width 100))
+    (/ (frame-width) column-width)))
+
 (defun create-new-column ()
   "Creates a new column in my window layout by splitting the rightmost window and rebalancing
    windows. Returns the new window."
@@ -251,6 +293,7 @@
     (balance-windows)
     new-window))
 
+;; TODO(philc): This can be deleted.
 (defun create-window-in-next-logical-spot ()
   "Creates a window in the next slot in my standard 2x2 configuration. So for instance, if I have
    only 1 window open, it will split the screen into two vertical windows."
