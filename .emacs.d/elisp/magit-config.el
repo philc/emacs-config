@@ -95,8 +95,8 @@ Date: %ad
 (util/define-keys magit-revision-mode-map "q" 'bury-buffer)
 
 (evil-define-key 'normal magit-diff-mode-map
-  (kbd "RET") 'magit-diff-visit-file
-  "o" 'magit-diff-visit-file)
+  (kbd "RET") 'my-magit/diff-visit-file
+  "o" 'my-magit/diff-visit-file)
 
 (evil-define-key 'normal git-commit-mode-map
   ";wk" 'git-commit-abort
@@ -162,8 +162,8 @@ Date: %ad
    ";gca" 'magit-commit-amend
    ";gpush" 'git-push
    ";gpull" 'git-pull
-   "o" 'magit-diff-visit-file-other-window
-   (kbd "RET") 'magit-diff-visit-file-other-window
+   "o" 'my-magit/diff-visit-file
+   (kbd "RET") 'my-magit/diff-visit-file
    "c" 'magit-commit
    ;; I have a git precommit hook which does style checks. Sometimes I want to disable it when committing.
    "C" (lambda() (interactive) (util/with-env-var "SKIP_GIT_STYLE_CHECK" "true" 'magit-commit))
@@ -181,6 +181,12 @@ Date: %ad
    (kbd "TAB") 'magit-section-toggle
    "q" 'bury-buffer
    "r" 'magit-refresh))
+
+;; Works like magit-diff-visible-file, expet that it uses my custom function to select which window
+;; to show the visited file in.
+(defun my-magit/diff-visit-file (file)
+  (interactive (list (magit-file-at-point t t)))
+  (magit-diff-visit-file--internal file nil #'wm/switch-to-buffer-other-window))
 
 (add-hook 'git-commit-mode-hook 'init-git-commit-mode)
 (defun init-git-commit-mode ()
