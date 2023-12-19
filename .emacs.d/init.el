@@ -1214,6 +1214,10 @@
 (require 'ansi-color)
 (add-hook 'compilation-filter-hook 'ansi-color-compilation-filter)
 
+;; If a previous compile/run command is still running, you will get prompted to kill the other
+;; process. This avoids that prompt by killing any still-running compile process.
+(setq compilation-always-kill t)
+
 ;;
 ;; Markdown
 ;;
@@ -1563,15 +1567,6 @@
 
 (defun save-and-compile (f)
   (save-buffer)
-  ;; If a previous compile/run command is still running, you will get prompted to kill the other
-  ;; process. This avoids that prompt by killing any still-running compile process.
-  ;; https://stackoverflow.com/a/14404821/46237
-  (ignore-errors
-    (process-kill-without-query
-     (get-buffer-process
-      (get-buffer "*compilation*"))))
-  (ignore-errors
-    (kill-buffer "*compilation*"))
   (funcall f))
 
 (defun go-save-and-compile-fn (command)
