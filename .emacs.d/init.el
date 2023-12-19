@@ -1211,7 +1211,9 @@
 
 ;; Enable rendering of color output from programs which output to the *compilation* buffer.
 (require 'ansi-color)
-(add-hook 'compilation-filter-hook 'ansi-color-compilation-filter)
+;; NOTE(philc): This causes a stack overflow exception when viewing very long lines in a compile
+;; buffer.
+;; (add-hook 'compilation-filter-hook 'ansi-color-compilation-filter)
 
 ;; If a previous compile/run command is still running, you will get prompted to kill the other
 ;; process. This avoids that prompt by killing any still-running compile process.
@@ -1674,7 +1676,7 @@
   ;; I have Emacs configured to save when switching buffers, so popping up errors when I switch
   ;; buffers is really jarring.
   ;; Eglot starts an LSP server to improve inline documentation.
-  (eglot-ensure)
+  ;; (eglot-ensure)
   (add-hook 'before-save-hook 'gofmt-before-save-ignoring-errors nil t))
 
 (add-hook 'go-mode-hook 'init-go-buffer-settings)
