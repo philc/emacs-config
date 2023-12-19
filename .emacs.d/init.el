@@ -825,7 +825,6 @@
   "G" 'evil-goto-line
   ;; dired overrides my global "other window" shorcut.
   (kbd "M-C-n") 'other-window
-  (kbd "M-C-n") 'other-window
   ";s" 'ag-project-in-current-window ; Dired overrides this too.
   "cd" 'dired-create-directory
   "cf" 'dired-create-file
@@ -1898,7 +1897,6 @@
   (kbd "u") 'package-menu-mark-unmark
   (kbd "i") 'package-menu-mark-install)
 
-
 ;;
 ;; Lua mode
 ;;
@@ -1978,7 +1976,8 @@
 
 (defun on-ghelp-page-mode-hook ()
   ;; Turn on line wrapping for help pages.
-  (visual-line-mode 1))
+  (visual-line-mode 1)
+  (word-wrap-whitespace-mode 1))
 
 (add-hook 'ghelp-page-mode-hook 'on-ghelp-page-mode-hook)
 

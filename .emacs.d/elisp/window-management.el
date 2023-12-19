@@ -293,30 +293,6 @@
     (balance-windows)
     new-window))
 
-;; TODO(philc): This can be deleted.
-(defun create-window-in-next-logical-spot ()
-  "Creates a window in the next slot in my standard 2x2 configuration. So for instance, if I have
-   only 1 window open, it will split the screen into two vertical windows."
-  (interactive)
-  (let ((window-count (length (window-list)))
-        (buffer (current-buffer)))
-    (case window-count
-      (1 (split-window-horizontally-and-focus))
-      (2 (progn
-           (switch-to-upper-right)
-           (split-window-vertically-and-focus)))
-      (3 (progn
-           (switch-to-upper-left)
-           (if (window-in-direction 'below)
-               (progn
-                (switch-to-upper-right)
-                (split-window-vertically-and-focus))
-           (split-window-vertically-and-focus)))))
-    ;; Ensure that no matter where the window is created, it has the same buffer as the window prior
-    ;; to creating the new one. Otherwise, the new window could have some random buffer in it,
-    ;; making it difficult to use commands like open-in-project, for instance.
-    (set-window-buffer (selected-window) buffer)))
-
 (defadvice windmove-do-window-select (after windowmove-change-to-normal-mode)
   "Ensure we reset to Evil's normal mode when switching windows."
   (evil-change-to-initial-state))
@@ -342,20 +318,3 @@
          (when (window-splittable-p window)
      (with-selected-window window
        (split-window-below))))))))
-
-;; Taken from http://www.emacswiki.org/emacs/misc-cmds.el.
-(defun kill-buffer-and-its-windows (buffer)
-  "Kill BUFFER and delete its windows. Default is `current-buffer'. BUFFER may be either a buffer or
-   its name"
-  (interactive (list (read-buffer "Kill buffer: " (current-buffer) 'existing)))
-  (setq buffer (get-buffer buffer))
-  (if (buffer-live-p buffer)
-      (let ((windows (get-buffer-window-list buffer nil t)))
-        (when (kill-buffer buffer)
-          (dolist (window windows)
-            (when (window-live-p window)
-              ;; Ignore error, in particular,
-              ;; "Attempt to delete the sole visible or iconified frame".
-              (condition-case nil (delete-window window) (error nil))))))
-    (when (interactive-p)
-      (error "Cannot kill buffer.  Not a live buffer: `%s'" buffer))))
