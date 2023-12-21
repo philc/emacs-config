@@ -862,7 +862,7 @@
 ;;
 (add-hook 'emacs-lisp-mode-hook (lambda () (modify-syntax-entry ?- "w" emacs-lisp-mode-syntax-table)))
 (evil-define-key 'normal emacs-lisp-mode-map
-  "gf" 'find-function-at-point
+  "gf" 'find-function-at-point-same-window
   (kbd "C-S-H") 'shift-sexp-backward
   (kbd "C-S-L") 'shift-sexp-forward
   "K" (lambda ()
@@ -874,6 +874,13 @@
              ;; window. Inspired from help-fns.el.
              (with-help-window "*Help*"
                (describe-function (intern target-word))))))))
+
+(defun find-function-at-point-same-window ()
+  "Find directly the function at point in the other window."
+  (interactive)
+  (let ((f (function-called-at-point)))
+    (when f
+      (find-function f))))
 
 (defun current-sexp ()
   "Returns the text content of the sexp list around the cursor."
