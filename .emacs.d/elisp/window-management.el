@@ -222,7 +222,7 @@
 (defun wm/column-count ()
   "Returns the number of vertical splits (or columns) in the current frame."
   (let* ((w (frame-first-window))
-         (count 0))
+         (count 1))
     (while (setq w (window-in-direction 'right w))
       (setq count (1+ count)))
     count))
