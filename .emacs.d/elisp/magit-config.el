@@ -137,7 +137,7 @@ Date: %ad
    "o" 'show-commit-and-preserve-window
    (kbd "RET") 'show-commit-and-preserve-window
    "yy" 'magit-copy-section-value ; Copies the commit ID of the commit under the cursor.
-   "r" 'magit-refresh
+   "r" 'my-magit/magit-refresh-preserve-cursor
    "q" 'bury-buffer
    ;; I use C-d and C-u for scrolling the log view, and d and u for scrolling the diff view which shows the
    ;; diff of the currently-focused commit.
@@ -180,7 +180,11 @@ Date: %ad
    "K" 'magit-section-backward
    (kbd "TAB") 'magit-section-toggle
    "q" 'bury-buffer
-   "r" 'magit-refresh))
+   "r" 'my-magit/magit-refresh-preserve-cursor))
+
+(defun my-magit/magit-refresh-preserve-cursor ()
+  (interactive)
+  (util/preserve-line-and-column 'magit-refresh))
 
 ;; Works like magit-diff-visible-file, expet that it uses my custom function to select which window
 ;; to show the visited file in.
