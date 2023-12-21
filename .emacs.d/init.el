@@ -490,7 +490,7 @@
   (interactive)
     (util/save-buffer-if-dirty)
     (let ((dir (projectile-project-root)))
-      (wm/switch-to-upper-left)
+      (wm/switch-to-column 0)
       (magit-status dir)
       (magit-status-and-focus-unstaged)))
 
