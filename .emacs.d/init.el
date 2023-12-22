@@ -1642,6 +1642,10 @@
   "l" 'log-word-under-cursor
   ;; "r" is a namespace for run-related commands.
   "rr" (go-save-and-compile-fn "go run .") ;; make run
+  ;; Run file.
+  "rf" (lambda ()
+         (interactive)
+         (go-save-and-compile (format "go run \"%s\"" (buffer-file-name))))
   "rb" (go-save-and-compile-fn "make synthetic-benchmark")
   ;; "t" is a namespace for test-related commands.
   "tf" 'go-test-file
@@ -1654,6 +1658,9 @@
   "cw" (go-save-and-compile-fn "make web")
   "cb" (go-save-and-compile-fn "make benchmark")
   "cc" (go-save-and-compile-fn "go build") ;; make compile
+  "cf" (lambda ()
+         (interactive)
+         (go-save-and-compile (format "go build \"%s\"" (buffer-file-name))))
   ;; "cc" (go-save-and-compile-fn "go build")
   "ai" 'go-import-add)
 
