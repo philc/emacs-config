@@ -672,7 +672,7 @@
   (set-text-zoom (- current-text-zoom-level 1)))
 
 ;;
-;; Mac OS X keybindings minor mode.
+;; MacOS keybindings minor mode.
 ;; Make it so the OSX keybindings you're used to always work in every mode in Emacs.
 ;; http://stackoverflow.com/questions/683425/globally-override-key-binding-in-emacs
 ;;
@@ -1577,6 +1577,8 @@
   "Shows documentation for the symbol at point in the help window. This spins up a gopls server,
    queries it, and shuts it down."
   (interactive)
+  ;; Save the file first, because the external lsp-client I wrote will load it from disk.
+  (save-buffer)
   (let* (; file-string will be "file-path:line:column"
          (file-string (format "%s:%d:%d"
                               (buffer-file-name)
