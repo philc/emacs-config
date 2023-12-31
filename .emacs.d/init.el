@@ -1222,11 +1222,13 @@
 ;; Compile mode
 ;;
 
-;; Enable rendering of color output from programs which output to the *compilation* buffer.
-(require 'ansi-color)
 ;; NOTE(philc): This causes a stack overflow exception when viewing very long lines in a compile
 ;; buffer.
-;; (add-hook 'compilation-filter-hook 'ansi-color-compilation-filter)
+(defun init-compilation-mode ()
+  ;; golang in particular has long compile error messages which don't wrap.
+  (visual-line-mode 1))
+
+(add-hook 'compilation-filter-hook 'init-compilation-mode)
 
 ;; If a previous compile/run command is still running, you will get prompted to kill the other
 ;; process. This avoids that prompt by killing any still-running compile process.
