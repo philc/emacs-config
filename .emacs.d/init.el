@@ -467,7 +467,6 @@
  "b" 'ido-switch-buffer
  "f" 'projectile-find-file
  "t" (lambda () (interactive) (message (buffer-name)))
- "T" 'show-tab-switcher ; "T" for tab (I use lowercase "t" for shortcuts related to tests)
  "SPC" 'evil-ext/fill-inside-paragraph-or-comment-block ; Shortcut for Vim's gqip
  "i" 'evil-ext/indent-inside-paragraph ; Shortcut to Vim's =ip
  "d" 'projectile-dired
@@ -695,7 +694,7 @@
                   (kbd "M-0") 'text-zoom-reset
                   (kbd "M-t") 'open-current-buffer-in-new-tab
                   (kbd "M-T") 'clone-tab
-                  (kbd "M-i") 'set-tab-alias
+                  (kbd "M-i") 'tab-bar-rename-tab
                   ;; These aren't specifically replicating OSX shortcuts, but they manipulate the
                   ;; window, so I want them to take precedence over everything else.
                   (kbd "A-f") (lambda () (interactive) (ignore-errors (windmove-right)))
@@ -770,7 +769,6 @@
        ;; If there are multiple tabs, close the current tab.
        ((not one-tab)
         (tab-bar-close-tab)
-        (show-tab-names)
         nil)
        ;; If there is only one tab remaining, just try to quit Emacs.
        ;; Calling tab-bar-close-tab will fail when there's only one tab in the frame.
@@ -982,10 +980,6 @@
 ;; is local to each Emacs frame. I previously used escreen, and elscreen before that. They are
 ;; messier and do not work cleanly with multiple frames.
 ;; https://github.com/emacs-mirror/emacs/blob/master/lisp/tab-bar.el
-;; Currently I only show a tab UI after doing a tab-related command.
-;; This package could be used to show the tab UI persistently, at the end of the echo area:
-;; https://github.com/qaiviq/echo-bar.el
-;; TODO(philc): If I keep a persistent UI for tabs, then delete my echo area implementation.
 
 (setq tab-bar-show t)
 (setq tab-bar-tab-hints t)
@@ -1007,46 +1001,14 @@
 
 (tab-bar-mode)
 
-(defun show-tab-names ()
-  (interactive)
-  (let ((i 0)
-        (msg ""))
-    (dolist (tab (tab-bar-tabs))
-      (let* ((is-current (eq 'current-tab (car tab)))
-             (formatter (if is-current
-                            "[%d.%s]"
-                          " %d.%s ")))
-        (setq msg (concat msg (format formatter i (alist-get 'name tab)))))
-      (setq i (inc i))
-      (message msg)))
-  nil)
-
 ;; I have KarabinerElements configured to translate M-j and M-k to these keys.
 (global-set-key (kbd "<A-M-left>") (lambda () (interactive)
                                      (call-interactively 'tab-bar-switch-to-prev-tab)
-                                     (switch-to-evil-normal-state)
-                                     (show-tab-names)))
+                                     (switch-to-evil-normal-state)))
 
 (global-set-key (kbd "<A-M-right>") (lambda () (interactive)
                                      (call-interactively 'tab-bar-switch-to-next-tab)
-                                     (switch-to-evil-normal-state)
-                                     (show-tab-names)))
-
-(defun set-tab-alias (alias)
-  "Give the current tab an alias. This alias is shown by show-tab-switcher."
-  (interactive "sTab alias: ")
-  (when (> (length alias) 0)
-    (tab-bar-rename-tab alias))
-  (show-tab-switcher)) ; Show the new tab configuration with the new name
-
-(defun show-tab-switcher ()
-  "Shows a menu in the minibuffer of tab names and numbers. Type the tab number to switch to it."
-  (interactive)
-  (show-tab-names)
-  (lexical-let* ((input (string (read-char)))
-                 (is-digit (string= (number-to-string (string-to-number input)) input)))
-    (when is-digit
-      (tab-bar-select-tab (+ (string-to-number input) 1)))))
+                                     (switch-to-evil-normal-state)))
 
 (defun open-current-buffer-in-new-tab ()
   (interactive)
@@ -1055,8 +1017,7 @@
   ;; I'm using the current buffer in the new tab so that the current directory is set as it was
   ;; previously, which lets me begin using projectile immediately. This is the default behavior of
   ;; tab-bar-mode.
-  (tab-bar-new-tab)
-  (show-tab-names))
+  (tab-bar-new-tab))
 
 (defun clone-tab ()
   "Clone the current tab."
