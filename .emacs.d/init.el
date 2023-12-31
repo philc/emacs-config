@@ -752,6 +752,12 @@
   "Vimlike ':q' behavior: close current window if there are split windows;
    otherwise, close current tab (elscreen)."
   (interactive)
+  ;; I don't like to have unsaved buffers floating around. I save buffers when switching away from a
+  ;; window, and when closing the window.
+  (util/save-buffer-if-dirty)
+  ;; If we're in insert mode and we come back to this buffer again later, we want the buffer to be
+  ;; in normal mode.
+  (switch-to-evil-normal-state)
   (let ((one-tab (= 1 (length (tab-bar-tabs))))
         (one-window (one-window-p)))
     (progn
