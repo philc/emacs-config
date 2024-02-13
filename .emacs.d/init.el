@@ -1608,14 +1608,18 @@
                 (projectile-project-root)))
          (dir (file-name-directory (buffer-file-name)))
          (file-name (file-name-nondirectory (buffer-file-name)))
+         ;; If this command was run on x_test.go, run that test. If it was run from x.go, then run
+         ;; x_test.go
+         (test-file-name (if (s-ends-with? "_test.go" file-name)
+                             file-name
+                           (s-replace ".go" "_test.go" file-name)))
          (all-files (directory-files dir))
-         ;; If you want to run just the tests in a specific file, the `go test` command requires that you
-         ;; pass all source files for the pkg as arguments, in addition to the test that you want to
-         ;; run.
+         ;; To run only the tests in a specific file, the `go test` command requires that you pass
+         ;; all source files for the pkg as arguments, in addition to the test that you want to run.
          (files (->> all-files
                      (-filter (lambda (s) (s-ends-with? ".go" s)))
-                     (-remove (lambda (s) (and (not (string= s file-name))
-                                               (s-ends-with? "_test.go" s))))))
+                     (-remove (lambda (s) (s-ends-with? "_test.go" s)))
+                     (append (list test-file-name))))
          (command (concat "go test " (s-join " " files))))
     (save-and-compile
      (lambda ()
