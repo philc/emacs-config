@@ -1620,7 +1620,7 @@
   "rb" (go-save-and-compile-fn "make synthetic-benchmark")
   ;; "t" is a namespace for test-related commands.
   "tf" 'go-test-file
-  "ta" (go-save-and-compile-fn "go test")
+  "ta" (go-save-and-compile-fn "go test ./...")
   "rw" (go-save-and-compile-fn "make run-web")
   ;; "c" is a namespace for compile-related commands.
   "i" 'gofmt-ignoring-errors
@@ -1628,7 +1628,7 @@
   "cp" 'previous-error
   "cw" (go-save-and-compile-fn "make web")
   "cb" (go-save-and-compile-fn "make benchmark")
-  "cc" (go-save-and-compile-fn "go build") ;; make compile
+  "cc" (go-save-and-compile-fn "go build ./...") ;; make compile
   "cf" (lambda ()
          (interactive)
          (go-save-and-compile (format "go build \"%s\"" (buffer-file-name))))
