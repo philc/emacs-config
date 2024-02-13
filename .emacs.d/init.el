@@ -1606,8 +1606,24 @@
   (let* ((path (file-relative-name
                 (file-truename (buffer-file-name))
                 (projectile-project-root)))
-         (package-dir (concat "./" (file-name-directory path))))
-    (go-save-and-compile (concat "go test " package-dir))))
+         (dir (file-name-directory (buffer-file-name)))
+         (file-name (file-name-nondirectory (buffer-file-name)))
+         (all-files (directory-files dir))
+         ;; If you want to run just the tests in a specific file, the `go test` command requires that you
+         ;; pass all source files for the pkg as arguments, in addition to the test that you want to
+         ;; run.
+         (files (->> all-files
+                     (-filter (lambda (s) (s-ends-with? ".go" s)))
+                     (-remove (lambda (s) (and (not (string= s file-name))
+                                               (s-ends-with? "_test.go" s))))))
+         (command (concat "go test " (s-join " " files))))
+    (save-and-compile
+     (lambda ()
+       (message command)
+       (util/without-confirmation
+        ;; `compile` will use the current file's directory to execute the command, rather than the
+        ;; project's root, so override that.
+        (lambda () (compile (concat "cd " dir " && " command))))))))
 
 (define-leader-keys 'go-mode-map
   "l" 'log-word-under-cursor
