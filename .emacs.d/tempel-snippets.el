@@ -31,9 +31,9 @@ css-mode
 go-mode
 
 (deb "fmt.Println(\">>> " (s text) "\", " text ")" q)
-(log "fmt.Println(\">>> " (s text) "\", " text ")" q)
+(log "fmt.Println(" q ")")
 (err "if err != nil {" n> "panic(err)" q n "}" n)
-(print "fmt.Println(\"" q "\")")
+(print "fmt.Println(" q ")")
 (for "for " (s text) " := 0; " text " < " p "; " text "++ {" n> q n> "}")
 
 html-mode
