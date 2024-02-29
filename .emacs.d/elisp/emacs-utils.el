@@ -243,3 +243,21 @@ details."
   (set-mark start)
   (goto-char end)
   (activate-mark))
+
+;; Calling this interactively can be very helpful in determining why a key isn't getting bound
+;; by evil. Evil may be getting overriden by a keybinding on a text property.
+(defun util/keymaps-at-point ()
+  (interactive)
+  "List keymaps that are active at the current point."
+  (let ((keymaps (list)))
+    (if (get-char-property (point) 'keymap)
+        (push (get-char-property (point) 'keymap) keymaps))
+    (if (get-char-property (point) 'local-map)
+        (push (get-char-property (point) 'local-map) keymaps))
+    (dolist (overlay (overlays-at (point)))
+      (if (overlay-get overlay 'keymap)
+          (push (overlay-get overlay 'keymap) keymaps))
+      (if (overlay-get overlay 'local-map)
+          (push (overlay-get overlay 'local-map) keymaps)))
+    (progn (print "keymaps") (prin1 keymaps t))
+    keymaps))
