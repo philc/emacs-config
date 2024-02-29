@@ -1889,10 +1889,23 @@
   ;; one of the files in the search results. Instead, use "o" to open the search result in the same
   ;; buffer and "O" to open in a new buffer. This mirrors Vim's convention of o and O. There is a
   ;; setting called `ag-reuse-window` which is related.
-  (kbd "RET") 'ag/open-search-result-in-same-window
+  ;; Note that we cannot bind (kbd "RET") here, because compilation-button-map (which I think is
+  ;; added as a text property keymap on clickable sections of compile-buffers) overrides these
+  ;; bindings. RET is bound in `my-ag-mode-setup`.
   "o" 'ag/open-search-result-in-same-window
   "O" 'ag/open-search-result-in-window-to-right
   "gg" 'beginning-of-buffer)
+
+(defun my-ag-mode-setup ()
+  ;; ag-mode inherits from compile-mode. To bind "RET" when the cursor is over sections of text in
+  ;; the compile-mode buffer which are clickable, we must modify compilation-button-map. Make a
+  ;; buffer-local copy of it first so we don't affect the keybinding for other compile-mode buffers
+  ;; which aren't ag-mode.
+  (set (make-local-variable 'compilation-button-map)
+       (let ((map (copy-keymap compilation-button-map)))
+         (define-key compilation-button-map (kbd "RET") 'ag/open-search-result-in-same-window))))
+
+(add-hook 'ag-mode-hook 'my-ag-mode-setup)
 
 (defun ag/open-search-result-in-same-window ()
   (interactive)
