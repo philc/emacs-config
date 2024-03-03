@@ -317,7 +317,7 @@
  '(tab-bar ((t (:inherit mode-line
                          ;; This face is used to show the tab-bar-separator.
                          :foreground "#555"
-                         :background "1B1D1E"))))
+                         :background "#1B1D1E"))))
  '(tab-bar-tab ((t (:inherit tab-bar
                              :foreground "#eee"
                              :background "#4B4D4E"))))
