@@ -66,3 +66,11 @@
                   (ret-val ,form))
      (setq ,var old-val)
      ret-val))
+
+;; This is useful because `print` only prints its first arg. `message` accepts a formatter string
+;; and so can print multiple arguments, but it also prints to the echo area.
+(defun printall (&rest args)
+  (dolist (arg args)
+    (princ arg)
+    (princ " "))
+  (princ "\n"))

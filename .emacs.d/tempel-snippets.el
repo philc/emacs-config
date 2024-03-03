@@ -19,6 +19,7 @@ js-mode
 emacs-lisp-mode
 
 (deb "(progn (print \">>> " (s text) "\") (prin1 " text " t))" q)
+(print "(printall " q ")")
 
 css-mode
 
