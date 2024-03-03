@@ -52,7 +52,7 @@
 
 ;; This regexp matches lines starting with these chars:
 ;; ["//", ";;", "/*", "* ", "*/"].
-(setq evil-ext/comment-regexp "^\\\s*\\(\/\/\\|;;\\|\\/\\*\\|\\*\\/\\|\\* \\).*$")
+(setq evil-ext/comment-regexp "^[\t ]*\\(\/\/\\|;;\\|\\/\\*\\|\\*\\/\\|\\* \\).*$")
 
 ;; I couldn't get "comment block" working as a first-class evil text object. The code below didn't
 ;; work as intended when writing this in a similar style to forward-evil-paragraph-from-newlines.
@@ -82,7 +82,6 @@
 
 (defun evil-ext/fill-comment-block ()
   (interactive)
-  (print "fill-comment-block")
   (lexical-let ((region (evil-ext/get-comment-block-region)))
     (evil-ext/preserve-cursor-after-fill
      (lambda ()
