@@ -2095,3 +2095,19 @@
     ;; whether this is a material performance win given my usage patterns.
     (setq desktop-restore-eager 15)
     (desktop-save-mode 1)))
+
+;;
+;; evil-multiedit: multi cursor mode.
+;;
+;; 2024-03: there's evil-mc, and evil-multiedit (included in Doom Emacs). Initial observations:
+;; * evil-mc-make-all-cursors is case insensitive, so it selects strings in the file that shouldn't be.
+;; * evil-mc scrolls and then restores the buffer when exiting multi cursor mode. It's super janky.
+;; * evil-multiedit highlights all lines with the current visual selection when entering multi
+;;   cursor mode, which is great.
+;; * evil-multiedit seems to work without fuss.
+
+(require 'evil-multiedit)
+
+(define-key evil-visual-state-map "M" 'evil-multiedit-match-all)
+(define-key evil-multiedit-mode-map (kbd "C-n") 'evil-multiedit-next)
+(define-key evil-multiedit-mode-map (kbd "C-p") 'evil-multiedit-prev)
