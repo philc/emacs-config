@@ -261,3 +261,43 @@ details."
           (push (overlay-get overlay 'local-map) keymaps)))
     (progn (print "keymaps") (prin1 keymaps t))
     keymaps))
+
+;; I use this occasionally to garbage collect unused buffers, so that desktop.el doesn't restore
+;; them on Emacs startup.
+(defun util/kill-non-visible-buffers ()
+  "Kill all buffers that are not currently displayed in any window."
+  (interactive)
+  (let* ((exclusions '("*Messages*" "*scratch*"))
+         (visible-buffers (visible-buffers-in-all-tabs))
+         (to-delete (->> (buffer-list)
+                         (-remove (lambda (b)
+                                    (or (get-buffer-window b 'visible)
+                                        (-contains? visible-buffers b)
+                                        (-contains? exclusions (buffer-name b))))))))
+    (dolist (b to-delete)
+      (printall "Killing" (buffer-name b))
+      (kill-buffer b))))
+
+(defun visible-buffers-in-all-tabs ()
+  "Returns all visible buffers in all tabs."
+  (interactive)
+  (let* ((original-wc (current-window-configuration))
+         (visible-buffers '()))
+    ;; Iterate over all tabs
+    (dolist (tab (tab-bar-tabs))
+      (let* ((tab-buffers '())
+             (wc (alist-get 'wc tab)))
+        ;; NOTE(philc): I don't really understand this code, but from printing values, it seems `wc`
+        ;; is nil for whichever is the current tab in tab-bar-mode.
+        (when wc
+          (set-window-configuration wc)
+          (dolist (win (window-list))
+            (let ((buffer (window-buffer win)))
+              (unless (memq buffer tab-buffers)
+                (push buffer tab-buffers))))
+          ;; Combine buffers from all tabs, avoiding duplicates
+          (dolist (buf tab-buffers)
+            (unless (memq buf visible-buffers)
+              (push buf visible-buffers))))))
+    (set-window-configuration original-wc)
+    visible-buffers))
