@@ -3,8 +3,7 @@
 (require 'repl) ; For connecting to and evaluating code in a Deno REPL.
 
 (setq js/program-command "deno")
-;; Some of my projects require the unstable flag, so ensure the REPL is started with that.
-(setq js/program-arguments '("--unstable"))
+(setq js/program-arguments '())
 
 (defun js/get-repl-buffer ()
   ; TODO(philc): Make this fail if a REPL doesn't exist.
