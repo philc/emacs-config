@@ -161,7 +161,13 @@
   (set-exec-path-from-shell-PATH)
   (set-env-vars-from-shell))
 
-(global-auto-revert-mode 1) ; Reload an open file from disk if it is changed outside of Emacs.
+;; Auto revert mode
+;; Reload an open file from disk if it is changed outside of Emacs.
+(global-auto-revert-mode 1)
+;; Allow non-file buffers to auto-revert. This is necessary for dired mode to auto-refresh its
+;; listing when a file is created or removed.
+(setq global-auto-revert-non-file-buffers t)
+(add-hook 'dired-mode-hook 'auto-revert-mode)
 
 ;; Remove some of Emacs UI
 (setq initial-scratch-message "") ; When opening a new buffer, don't show the scratch message.
