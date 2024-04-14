@@ -90,14 +90,15 @@
   (util/scroll-to-buffer-end (js/get-repl-buffer)))
 
 (defun js/extract-shoulda-js-import-path-from-buffer ()
-  "Returns the file path of the shoulda.js file being imported by the source file in the current
-   buffer, or nil if there is no such import."
+  "Returns the URL of the shoulda.js file being imported by the source file in the current buffer,
+   or nil if there is no such import."
   (save-excursion
-    (let ((result nil))
+    (let* ((result nil)
+           (regexp "^import .+ from \"\\([^\"]+\\)/\\(shoulda\\(?:.js\\)?\\)\";"))
       (goto-char (point-min))
       (while (and (not result)
-                  (re-search-forward "^import .+ from \"\\([^\"]+\\)/shoulda.js\";" nil t))
-        (setq result (concat (match-string 1) "/shoulda.js")))
+                  (re-search-forward regexp nil t))
+        (setq result (concat (match-string 1) "/" (match-string 2))))
       result)))
 
 (defun js/run-file-as-shoulda-test ()
@@ -116,7 +117,9 @@
     ;; We run shoulda.reset() to clear any previous tests that have been defined.
     (if shoulda-import-path
         (let* ((file-dir (-> (buffer-file-name) file-truename file-name-directory))
-               (shoulda-is-url (s-starts-with? "https://" shoulda-import-path))
+               (shoulda-is-url (or (s-starts-with? "https://" shoulda-import-path)
+                                   ;; Support JSR imports.
+                                   (s-starts-with? "@" shoulda-import-path)))
                (shoulda-js-path (if shoulda-is-url
                                     shoulda-import-path
                                   (expand-file-name shoulda-import-path file-dir))))
