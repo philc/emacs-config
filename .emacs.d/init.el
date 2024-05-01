@@ -361,14 +361,20 @@
 ;; description of the motivation here: http://emacs.stackexchange.com/a/15054
 (fset 'evil-visual-update-x-selection 'ignore)
 
-;; Unbind "q" so it doesn't record macros. I activate this mistakenly often and it wreaks havoc.
+;; Unbind "q" so it doesn't record macros. I often activate this mistakenly, and it wreaks havoc.
 (define-key evil-normal-state-map (kbd "q") nil)
 
-; ; This is also mapped to "#".
+;; This is also mapped to "#".
 (define-key evil-normal-state-map (kbd "C-*") 'evil-search-word-backward)
 
 (define-key evil-normal-state-map (kbd "M-s") 'util/save-buffer-silently)
 (define-key evil-insert-state-map (kbd "M-s") 'util/save-buffer-silently)
+
+;; I often mistakenly hit parentheses when in normal mode (they're bound to my shift keys in
+;; Karabiner-Elements) and it's disorienting to have the cursor jump around when this happens.
+;; Binding these to nil seems to have no effect.
+(define-key evil-normal-state-map (kbd "(") (lambda () (interactive)))
+(define-key evil-normal-state-map (kbd ")") (lambda () (interactive)))
 
 ;; Move up and down through long, wrapped lines one visual line at a time.
 (define-key evil-normal-state-map (kbd "j") 'evil-next-visual-line)
@@ -1007,7 +1013,7 @@
 
 (tab-bar-mode)
 
-;; I have KarabinerElements configured to translate M-j and M-k to these keys.
+;; I have Karabiner-Elements configured to translate M-j and M-k to these keys.
 (global-set-key (kbd "<A-M-left>") (lambda () (interactive)
                                      (call-interactively 'tab-bar-switch-to-prev-tab)
                                      (switch-to-evil-normal-state)))
