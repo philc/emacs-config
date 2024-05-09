@@ -1717,7 +1717,8 @@
 ;;
 (require 'project-nav)
 (setq project-nav/project-folders '("~/p" "~/src" "~/src/liftoff" "~/src/liftoff/exp"))
-(setq project-nav/notes-directories '("~/Desktop" "~/Dropbox/scratch" "~/Dropbox/notes"))
+(setq project-nav/notes-directories
+      '("~/Desktop" "~/Dropbox/scratch" "~/Dropbox/notes" "~/projects/book-notes"))
 
 ;;
 ;; JSON
