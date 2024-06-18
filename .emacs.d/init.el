@@ -226,7 +226,13 @@
   (setq whitespace-line-column 110) ; When text flows past 110 chars, highlight it.
   ;; whitespace-mode by default highlights all whitespace. Show only tabs and trailing spaces.
   (setq whitespace-style '(face trailing lines-tail)))
-(add-hook 'before-save-hook 'delete-trailing-whitespace)
+(add-hook 'before-save-hook 'delete-trailing-whitespace-in-file)
+
+(defun delete-trailing-whitespace-in-file ()
+  ;; Don't do this in org mode, because doing so will annoyingly convert list items into plaintext
+  ;; when saving the buffer when "* " is typed.
+  (when (not (eq major-mode 'org-mode))
+    (delete-trailing-whitespace)))
 
 (setq-default tab-width 2)
 (setq-default evil-shift-width 2)
