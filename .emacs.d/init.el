@@ -229,8 +229,8 @@
 (add-hook 'before-save-hook 'delete-trailing-whitespace-in-file)
 
 (defun delete-trailing-whitespace-in-file ()
-  ;; Don't do this in org mode, because doing so will annoyingly convert list items into plaintext
-  ;; when saving the buffer when "* " is typed.
+  ;; Don't trim trailing whitespace in org mode, because doing so will annoyingly convert list items
+  ;; into plaintext when saving the buffer when "* " has been typed.
   (when (not (eq major-mode 'org-mode))
     (delete-trailing-whitespace)))
 
