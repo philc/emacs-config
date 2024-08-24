@@ -51,6 +51,10 @@
   "{" 'org-backward-heading-same-level
   "}" 'org-forward-heading-same-level
   (kbd "<C-tab>") 'org-expand-top-level-parent
+  ;; For some mode, org-mode maps TAB to org-cycle, and outline-mode maps <tab> to outline-cycle.
+  ;; <tab> supercedes and shadows <tab>. One difference between the two functions is that org-cycle
+  ;; retains the cursor position when cycling, which is desirable.
+  (kbd "<tab>") 'org-cycle
   (kbd "TAB") 'org-cycle)
 
 (defun preview-org ()
