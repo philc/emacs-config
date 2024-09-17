@@ -2130,6 +2130,6 @@
 
 (require 'evil-multiedit)
 
-(define-key evil-visual-state-map "M" 'evil-multiedit-match-all)
+(define-key evil-visual-state-map ";m" 'evil-multiedit-match-all)
 (define-key evil-multiedit-mode-map (kbd "C-n") 'evil-multiedit-next)
 (define-key evil-multiedit-mode-map (kbd "C-p") 'evil-multiedit-prev)
