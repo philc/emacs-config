@@ -303,7 +303,8 @@
     (kbd "C-S-H") 'mlm/markdown-promote
     (kbd "C-S-A-L") 'mlm/markdown-demote-subtree
     (kbd "C-S-A-H") 'mlm/markdown-promote-subtree
-    "gh" 'mlm/navigate-to-heading
+    "gh" 'mlm/navigate-to-top-level-heading
+    "gH" 'mlm/navigate-to-any-heading
     "gu" 'mlm/markdown-up-heading)
 
   (evil-define-key 'insert markdown-lite-mode-map
@@ -1272,46 +1273,54 @@ Return nil if the current line is not the beginning of a list item."
     (setq font-lock-defaults '(mlm/markdown-mode-font-lock-keywords-basic))
     (font-lock-refresh-defaults)))
 
-(defvar mlm/heading-prefix "* ")
-(defvar mlm/heading-regexp "^\\* ")
+(defvar mlm/heading-regexp "^\s*\\* ")
+(defvar mlm/top-heading-regexp "^\\* ")
 
-(defun mlm/get-top-level-headings ()
-  "Return a list of all top-level headings in the current buffer."
-  (interactive)
+(defun mlm/get-headings (regexp)
   (let ((headings '()))
     (save-excursion
       (goto-char (point-min))
-      (while (re-search-forward mlm/heading-regexp nil t)
+      (while (re-search-forward regexp nil t)
         (let ((heading-text (buffer-substring-no-properties
-                             (+ (line-beginning-position) (length mlm/heading-prefix))
+                             (line-beginning-position)
                              (line-end-position))))
           (push heading-text headings))))
     (nreverse headings)))
 
 (defun mlm/goto-heading (heading-text)
-  "Navigates to the given heading, if it exists. `heading` should exclude the list item
-   character."
+  "Navigates to the given heading, if it exists. `heading` should include the list item character."
   (let ((heading-line-number nil))
     (save-excursion
       (goto-char (point-min))
       (while (and (null heading-line-number)
                   (re-search-forward mlm/heading-regexp nil t))
         (let ((text (buffer-substring-no-properties
-                     (+ (line-beginning-position) (length mlm/heading-prefix))
-                     (line-end-position))))
+                     (line-beginning-position) (line-end-position))))
           (when (string= heading-text text)
             (setq heading-line-number (line-number-at-pos))))))
     (when heading-line-number
       (goto-line heading-line-number)
       (recenter))))
 
-(defun mlm/navigate-to-heading ()
+(defun mlm/navigate-to-heading (top-level)
   "Show a menu of headings and jump to the one selected."
   (interactive)
-  (let* ((headings (mlm/get-top-level-headings))
-         (selected (ido-completing-read "Heading: " headings)))
-    (mlm/goto-heading selected)))
+  (let* ((regexp (if top-level mlm/top-heading-regexp mlm/heading-regexp))
+         (headings (mlm/get-headings regexp))
+         (stripped (mapcar (lambda (s) (replace-regexp-in-string regexp "" s))
+                           headings))
+         (selected-string (ido-completing-read "Heading: " stripped nil t))
+         (selected-heading (-first (lambda (s) (s-ends-with? selected-string s))
+                                   headings)))
+    (mlm/goto-heading selected-heading)))
 
+(defun mlm/navigate-to-top-level-heading ()
+  (interactive)
+  (mlm/navigate-to-heading t))
+
+(defun mlm/navigate-to-any-heading ()
+  (interactive)
+  (mlm/navigate-to-heading nil))
 
 (defun mlm/testing ()
   (interactive)
