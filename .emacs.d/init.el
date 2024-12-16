@@ -2042,7 +2042,7 @@
 ;; eglot) and show it. eglot can show documentation as well by invoking eldoc-doc-buffer, but not if
 ;; you've disabled eglot from showing documentation on hover >.<
 ;; See https://www.reddit.com/r/emacs/comments/11mv5ky/eglot_documentation/
-(require 'ghelp)
+;; (require 'ghelp)
 
 (defun on-ghelp-page-mode-hook ()
   ;; Turn on line wrapping for help pages.
