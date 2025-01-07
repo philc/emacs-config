@@ -318,3 +318,9 @@
          (when (window-splittable-p window)
      (with-selected-window window
        (split-window-below))))))))
+
+(defun wm/quarter-height ()
+  "Set the current window to be a quarter of the frame height."
+  (interactive)
+   (let ((quarter-height (/ (frame-height) 4)))
+     (enlarge-window (- quarter-height (window-height)))))
