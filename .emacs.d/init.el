@@ -1441,10 +1441,15 @@
   ;; This URL is specific to the Vimium Firefox extension.
   ;; This corresponds to the "Internal UUID" field show in about:addons for the extension.
   ;; Sometimes this internal extension ID can change as the extension's manifest.json changes.
-  (let* ((extension-id "c0302493-084b-4a62-8b18-ed020c2325ee")
+  (let* ((extension-id "bad20953-1a54-4670-87e5-4ae35b54b8e4")
          (url (format "moz-extension://%s/pages/reload.html" extension-id)))
-    (util/call-process-with-exit-status "/Applications/Firefox.app/Contents/MacOS/firefox"
+    (util/call-process-with-exit-status "open"
                                         nil
+                                        ;; Which app to open
+                                        "-a"
+                                        "Firefox"
+                                        ;; -g means don't foreground the app.
+                                        "-g"
                                         url)))
 
 (defun open-file-in-browser ()
