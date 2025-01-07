@@ -1463,20 +1463,12 @@
 (add-hook 'html-mode-hook (lambda () (wcheck-mode -1)))
 
 ;;
-;; CSS, LESS mode
+;; CSS
 ;;
-(defun indent-css-buffer ()
-  "Pipe the current buffer into `css-beautify`, and replace the current buffer's contents."
+(defun css/format-buffer ()
+  "Format and replace the current buffer's contents using `prettier`."
   (interactive)
-  ;; I don't know why, but save-excursion does not maintain the cursor position.
-  (let ((p (point))
-        (scroll-y (window-start)))
-    (call-process-region (point-min) (point-max) "css-beautify" t (buffer-name) t
-                         "--file" "-" ; STDIN
-                         "--indent-size" "2"
-                         "--wrap-line-length" (number-to-string fill-column))
-    (set-window-start (selected-window) scroll-y)
-    (goto-char p)))
+  (replace-region-with-command-output "prettier --no-color --parser css"))
 
 ;; `brace-block` is a text object which can be operated on by `thing-at-point`. (thing-at-point
 ;; 'brace-block) will return all text between and including the set of curly braces surrounding the
@@ -1487,6 +1479,8 @@
 (defun toggle-fold-css-block ()
   "Toggles whether a CSS rule is one line or multiple lines."
   ;; This is a transformation I do all the time, and so wrote a helper for it.
+  ;; 2025-01-06: I don't use this anymore. Instead I use prettier to format the CSS, which doesn't
+  ;; allow single-line declarations.
   (interactive)
   (let* ((text (util/thing-at-point-no-properties 'brace-block)))
     (when text
@@ -1516,6 +1510,8 @@
 (evil-define-key 'normal css-mode-map
   (kbd "A-C-f") 'toggle-fold-css-block)
 
+(define-leader-keys 'css-mode-map
+  "i" 'css/format-buffer)
 
 (define-leader-keys '(css-mode-map less-css-mode-map)
   "rr" 'reload-active-browser-tab)
@@ -1783,7 +1779,7 @@
 (setq js-indent-level 2)
 
 (defun js/format-buffer ()
-  "Format and replace the current buffer's contents with `deno fmt`."
+  "Format and replace the current buffer's contents using `deno fmt`."
   (interactive)
   (let ((ext (or (-> (buffer-file-name) (file-name-extension))
                  ;; The file might not have an extension. Assume javascript.
