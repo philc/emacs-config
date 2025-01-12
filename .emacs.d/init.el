@@ -1466,6 +1466,17 @@
 ;; CSS
 ;;
 (defun css/format-buffer ()
+  "Format and replace the current buffer's contents using `deno fmt`."
+  (interactive)
+  (let ((ext (or (-> (buffer-file-name) (file-name-extension))
+                 ;; The file might not have an extension. Assume css.
+                 "css")))
+    (replace-region-with-command-output (format "deno fmt --ext %s -" ext))))
+
+;; prettier makes more aggressive changes than deno fmt, and generates files that deno fmt will make
+;; changes to. Since they're not compatible, and I use deno fmt for javascript, I'm not generally
+;; using prettier to format CSS.
+(defun css/format-buffer-with-prettier ()
   "Format and replace the current buffer's contents using `prettier`."
   (interactive)
   (replace-region-with-command-output "prettier --no-color --parser css"))
