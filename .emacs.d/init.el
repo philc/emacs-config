@@ -1376,6 +1376,12 @@
 ;; To install: cd ~; npm install js-beautify; add ~/node_modules/.bin to your PATH.
 (add-to-list 'auto-mode-alist '("\\.erb$" . html-mode))
 
+;; This is a list of tags that have special font treatment, and looks like this:
+;; '(("h1" bold underline) ...)
+;; It's defined in sgml-mode.el. Empty this list, beacuse I don't want some tags in my HTML docs to
+;; have bold and underline faces; it's distracting.
+(setq html-tag-face-alist '())
+
 (defun preview-html ()
   "Pipes the buffer's contents into a script which opens the HTML in a browser."
   (interactive)
