@@ -1381,13 +1381,13 @@
   (interactive)
   (call-process-region (point-min) (point-max) "/bin/bash" nil nil nil "-c" "browser"))
 
+(defun run-deno-fmt (ext)
+  (replace-region-with-command-output (format "deno fmt --ext %s -" ext)))
+
 (defun format-html-buffer ()
-  "Format and replace the current buffer's contents with `html-beautify`."
+  "Format and replace the current buffer's contents with `deno fmt`."
   (interactive)
-  ;; This beautifier is https://github.com/beautify-web/js-beautify.
-  (replace-region-with-command-output
-   (format "html-beautify -f - --indent-size 2 --wrap-line-length %s"
-           fill-column)))
+  (run-deno-fmt "html"))
 
 (define-leader-keys 'html-mode-map
   "i" 'format-html-buffer
@@ -1471,7 +1471,7 @@
   (let ((ext (or (-> (buffer-file-name) (file-name-extension))
                  ;; The file might not have an extension. Assume css.
                  "css")))
-    (replace-region-with-command-output (format "deno fmt --ext %s -" ext))))
+    (run-deno-fmt ext)))
 
 ;; prettier makes more aggressive changes than deno fmt, and generates files that deno fmt will make
 ;; changes to. Since they're not compatible, and I use deno fmt for javascript, I'm not generally
@@ -1795,7 +1795,7 @@
   (let ((ext (or (-> (buffer-file-name) (file-name-extension))
                  ;; The file might not have an extension. Assume javascript.
                  "js")))
-    (replace-region-with-command-output (format "deno fmt --ext %s -" ext))))
+    (run-deno-fmt ext)))
 
 (defun js/lint-file ()
   (interactive)
