@@ -6,9 +6,12 @@
 ;; files (e.g. see elisp/magit-mode-ext.el). However, I try to keep all of the configuration for
 ;; those modes (like keybindings) here in init.el.
 
-;; Launch a debugger with a stactrace if there's any error in Emacs lisp. This is especially helpful
-;; on startup, when your init.el has an error.
-(setq debug-on-error t)
+;; Launch debugger with stacktrace if there's any Emacs Lisp error.
+;; This is especially helpful on startup when init.el has an error. It's also useful when writing or
+;; debugging elisp.
+;; It's disruptive to have this on otherwise. E.g. using describe-function on a non-existent emacs
+;; function will cause a debugging popup window to be shown.
+;; (setq debug-on-error t)
 
 ;;
 ;; Color scheme
