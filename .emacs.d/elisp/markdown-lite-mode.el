@@ -81,7 +81,8 @@
     (concat (s-trim-right list-marker)))))
 
 (defun mlm/insert-list-item-below ()
-  "Inserts a new list item under the current one."
+  "Inserts a new list item under the current one. If the cursor is not in a list item, an error
+   message is shown."
   (interactive)
   ;; When the current list item has a trailing space at the end of the current line, the end of the
   ;; list item is not properly calculated, and so ultimately an exception is thrown. This is
@@ -91,14 +92,17 @@
   (let* ((bounds (mlm/markdown-cur-list-item-bounds))
          (indent (nth 2 bounds))
          (marker (nth 4 bounds))
-         (new-marker (mlm/get-next-list-marker marker))
-         (space-char 32)
-         (new-indent (make-string indent space-char))
-         (is-collapsed (invisible-p (second bounds))))
-    (goto-char (+ (second bounds) (if is-collapsed 1 0)))
-    (newline)
-    (insert new-indent new-marker " ")
-    (evil-append nil)))
+         (new-marker (-?> marker mlm/get-next-list-marker))
+         (inside-list-item (not (null new-marker))))
+    (if (not inside-list-item)
+        (message "Not currently inside a list item.")
+      (let* ((space-char 32)
+             (new-indent (make-string indent space-char))
+             (is-collapsed (invisible-p (second bounds))))
+        (goto-char (+ (second bounds) (if is-collapsed 1 0)))
+        (newline)
+        (insert new-indent new-marker " ")
+        (evil-append nil)))))
 
 (defun mlm/markdown-create-list-item ()
   "Takes the current visualize line and makes it into a list item."
