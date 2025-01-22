@@ -1471,6 +1471,11 @@
 ;;
 ;; CSS
 ;;
+
+;; css-mode will render the text of color values in their color. This is conceptually useful but
+;; very loud when reading the source code; disable it.
+(setq css-fontify-colors nil)
+
 (defun css/format-buffer ()
   "Format and replace the current buffer's contents using `deno fmt`."
   (interactive)
