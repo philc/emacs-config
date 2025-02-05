@@ -1,4 +1,4 @@
-;; The format of this file is document hered:
+;; The format of this file is document here:
 ;; https://github.com/minad/tempel/
 
 fundamental-mode
@@ -10,11 +10,14 @@ js-mode
 
 (deb "console.log(\">>> " (s text) "\", " text ");" q)
 (fn "(" p ") => {" n> q n "};")
+(if "if (" q ") {" n> n "}")
+(elif "else if (" q ") {" n> n "}")
+(else "else {" n> q n "}")
 (function "function " p "(" p ") {" n> q n "};")
 (log "console.log(" q ");")
 (qs "document.querySelector(\"" q "\");")
-(context "context(\"" p "\", () => {" n> q n "});")
-(should "should(\"" p "\", () => {" n> q n "});")
+(context "context(\"" q "\", () => {" n> n "});")
+(should "should(\"" q "\", () => {" n> n "});")
 
 emacs-lisp-mode
 
