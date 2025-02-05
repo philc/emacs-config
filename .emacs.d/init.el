@@ -1381,7 +1381,7 @@
 
 ;; This is a list of tags that have special font treatment, and looks like this:
 ;; '(("h1" bold underline) ...)
-;; It's defined in sgml-mode.el. Empty this list, beacuse I don't want some tags in my HTML docs to
+;; It's defined in sgml-mode.el. Empty this list, because I don't want some tags in my HTML docs to
 ;; have bold and underline faces; it's distracting.
 (setq html-tag-face-alist '())
 
