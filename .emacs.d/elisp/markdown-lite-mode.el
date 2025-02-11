@@ -1313,6 +1313,9 @@ Return nil if the current line is not the beginning of a list item."
          (headings (mlm/get-headings regexp))
          (stripped (mapcar (lambda (s) (replace-regexp-in-string regexp "" s))
                            headings))
+         ;; TODO(philc): I don't want to use ido-completing-read here because it has fuzzy matching,
+         ;; which isn't appropriate for this UX. I want strict substring matching, and
+         ;; ido-completing-read can't be configured to do that.
          (selected-string (ido-completing-read "Heading: " stripped nil t))
          (selected-heading (-first (lambda (s) (s-ends-with? selected-string s))
                                    headings)))
