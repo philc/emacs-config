@@ -726,7 +726,16 @@
                   (kbd "A-D") 'wm/swap-window-down
                   ;; This is Alt-shift-s. I don't know why Emacs is receivivng "§" as the key.
                   (kbd "§") 'wm/swap-window-left
-                  (kbd "A-E") 'wm/swap-window-up)
+                  (kbd "A-E") 'wm/swap-window-up
+                  (kbd "M-1") (lambda () (interactive) (switch-to-tab 1))
+                  (kbd "M-2") (lambda () (interactive) (switch-to-tab 2))
+                  (kbd "M-3") (lambda () (interactive) (switch-to-tab 3))
+                  (kbd "M-4") (lambda () (interactive) (switch-to-tab 4))
+                  (kbd "M-5") (lambda () (interactive) (switch-to-tab 5))
+                  (kbd "M-6") (lambda () (interactive) (switch-to-tab 6))
+                  (kbd "M-7") (lambda () (interactive) (switch-to-tab 7))
+                  (kbd "M-8") (lambda () (interactive) (switch-to-tab 8))
+                  (kbd "M-9") (lambda () (interactive) (switch-to-tab 9)))
 
 (defun clipboard-yank-and-remove-query-string ()
   "Assumes the clipboard contents are a URL, and strips everything after a query string and hash
@@ -1021,6 +1030,11 @@
 (setq tab-bar-tab-name-format-function 'format-tab-name)
 
 (tab-bar-mode)
+
+(defun switch-to-tab (n)
+  "Switch to the Nth tab in tab-bar-mode. N is 1-based index."
+  (tab-bar-select-tab n)
+  (switch-to-evil-normal-state))
 
 ;; I have Karabiner-Elements configured to translate M-j and M-k to these keys.
 (global-set-key (kbd "<A-M-left>") (lambda () (interactive)
