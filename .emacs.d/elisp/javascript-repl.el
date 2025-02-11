@@ -19,13 +19,21 @@
    (lambda ()
      (when (repl/is-running?)
        (repl/send-command "close()")
-       ;; We could wait for the process to clean up, but restart it immediately so we can begin
-       ;; starting the next repl.
-       ;; (sit-for 0.5)
-       (-?> (ignore-errors (repl/get-process))
-            delete-process)
-       (-?> (get-buffer repl/buffer-name)
-            kill-buffer))
+       (let ((repl-buffer (get-buffer repl/buffer-name)))
+         ;; We could wait for the process to clean up, but restart it immediately so we can begin
+         ;; starting the next repl.
+         ;; (sit-for 0.5)
+         (-?> (ignore-errors (repl/get-process))
+              delete-process)
+         ;; Erase what was previously in the buffer, so we get a new, blank REPL buffer.
+         (with-current-buffer repl-buffer
+           (erase-buffer))
+         ;; Don't kill the existing buffer: my window management functions will open
+         ;; a new buffer where the existing one is (if it's showing) and can't do this if
+         ;; the existing buffer is killed before restarting the REPL.
+         ;; (-?> (get-buffer repl/buffer-name)
+         ;;      kill-buffer)
+         ))
      (js/start-or-switch-to-repl))))
 
 (defun js/ensure-repl-is-running ()
