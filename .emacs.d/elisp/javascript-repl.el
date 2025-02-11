@@ -37,13 +37,13 @@
   "Start a new repl or switch to existing repl."
   (interactive)
   (setenv "NODE_NO_READLINE" "1")
-  ;; I'm setting NO_COLOR here because when "undefined" is the return value of a command, it pollutes the
-  ;; color used in the terminal from then on. I'm not sure why. This obviates the issue, but it would be nice
-  ;; to have color.
+  ;; I'm setting NO_COLOR here because when "undefined" is the return value of a command, it
+  ;; pollutes the color used in the terminal from then on. I'm not sure why. This obviates the
+  ;; issue, but it would be nice to have color.
   (setenv "NO_COLOR" "1")
-  (let* (;; Launch the REPL process in the directory of this project's root, rather than starting the REPL
-         ;; from the directory of the current buffer's file.
-         ;; Here I'm using projectfile to determine what is the project's root.
+  (let* (;; Launch the REPL process in the directory of this project's root, rather than starting
+         ;; the REPL from the directory of the current buffer's file. Here I'm using projectfile to
+         ;; determine what is the project's root.
          (the-default-directory
           ;; (locate-dominating-file (buffer-file-name) ".git")
           (if (projectile-project-p)

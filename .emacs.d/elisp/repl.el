@@ -1,5 +1,5 @@
-;; This provides functions for interacting with an external REPL: starting and restarting the REPL program,
-;; and sending and receiving text.
+;; This provides functions for interacting with an external REPL: starting and restarting the REPL
+;; program, and sending and receiving text.
 
 ;; It's similar to Emacs' comint mode. But unlike comint mode, this does not provide an interactive
 ;; readline-style REPL UI within Emacs. Instead, lines and paragraphs from any buffer can be sent to
@@ -61,8 +61,8 @@
         (re-undefined "^\\(> \\)?undefined\n")
         ;; We replace the naked prompt ("> ") with "-----", so it's easier to see the difference
         ;; between sections of output. It would be best if this was done only before output, rather
-        ;; than after the output. To do that, we'd need to insert a message to the *REPL* buffer before
-        ;; sending input to the REPL process.
+        ;; than after the output. To do that, we'd need to insert a message to the *REPL* buffer
+        ;; before sending input to the REPL process.
         (re-naked-prompt "^> $"))
     (->> str
          (replace-regexp-in-string re-naked-prompt "-----\n")
