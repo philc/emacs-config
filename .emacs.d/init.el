@@ -406,9 +406,9 @@
 ;; The default implementation is evil-goto-first-line, which jumps to the first line but not the
 ;; first character in that line. This doesn't match Vim's default behavior, AFAIK.
 (define-key evil-motion-state-map "gg"
-  (lambda () (interactive)
-    (evil-goto-first-line)
-    (beginning-of-line)))
+  (lambda ()
+    (interactive)
+    (goto-char (point-min))))
 
 ;;
 ;; Jumping
