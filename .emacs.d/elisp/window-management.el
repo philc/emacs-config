@@ -228,6 +228,7 @@
     count))
 
 (defun wm/window-in-column (n)
+  "Returns the topmost window in the nth column."
   (let* ((w (frame-first-window))
          (last-valid-window w)
          (count 0))
@@ -235,15 +236,31 @@
                 (setq w (window-in-direction 'right w)))
       (setq last-valid-window w)
       (setq count (1+ count)))
-    w))
+    (wm/topmost-window w)))
+
+(defun wm/topmost-window (w)
+  "Returns the topmost window in the direction above `w`, or `w` if it is the topmost."
+  (while-let ((above (window-in-direction 'above w)))
+    (setq w above))
+  w)
 
 (defun wm/switch-to-column (n)
   "Switches to the nth column. Does nothing if n >= the number of columns. Returns the window
    switched to."
   (-?> (wm/window-in-column n) select-window))
 
+(defun wm/switch-to-column-or-change-row (n)
+  "Switches to the nth column. If the current column is already the nth column, then switch to the
+   next split below the current split, wrapping to the top split if needed."
+  (interactive)
+  (if (/= n (wm/column-number))
+      (wm/switch-to-column n)
+    (if-let ((split-below (window-in-direction 'below (selected-window))))
+        (select-window split-below)
+      (select-window (wm/topmost-window (selected-window))))))
+
 (defun wm/column-number ()
-  "Returns which column number (zero-based) of the current window."
+  "Returns the column number (zero-based) of the current window."
   (interactive)
   (let* ((w (selected-window))
          (count 0))
