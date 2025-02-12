@@ -403,12 +403,21 @@
 ;; By default, Emacs will not indent when you hit enter/return within a comment.
 (define-key evil-insert-state-map (kbd "RET") 'newline-and-indent)
 
-;; The default implementation is evil-goto-first-line, which jumps to the first line but not the
+;; The default implementation of gg is evil-goto-first-line, which jumps to the first line but not the
 ;; first character in that line. This doesn't match Vim's default behavior, AFAIK.
-(define-key evil-motion-state-map "gg"
-  (lambda ()
-    (interactive)
-    (goto-char (point-min))))
+;;
+;; We're defining an evil motion function here, rather than a simple function which does (goto-char
+;; (point-min)) because the latter will do nothing in Evil's visual line mode, for
+;; reasons I don't understand.
+(evil-define-motion evil-goto-point-min (count)
+  "Go to the min point in the buffer."
+  ;; Adapted from the implementation of evil-goto-first-line.
+  :jump t
+  :type line
+  (evil-goto-line 1)
+  (evil-beginning-of-line))
+
+(define-key evil-motion-state-map "gg" 'evil-goto-point-min)
 
 ;;
 ;; Jumping
