@@ -1421,12 +1421,13 @@
   "rr" 'reload-active-browser-tab)
 
 (setq browser-app "Google Chrome")
+;; (setq browser-app "Google Chrome Beta")
 (setq browser-cli "chrome-cli")
 
 (defun reload-active-browser-tab ()
   "Reloads the current tab in Chrome. This works on OSX only, using Applescript."
   (interactive)
-  (if nil
+  (if t
       (reload-vimium-extension-firefox)
     (progn
       (util/save-buffer-if-dirty)
@@ -1464,7 +1465,7 @@
   ;; This URL is specific to the Vimium Firefox extension.
   ;; This corresponds to the "Internal UUID" field show in about:addons for the extension.
   ;; Sometimes this internal extension ID can change as the extension's manifest.json changes.
-  (let* ((extension-id "bad20953-1a54-4670-87e5-4ae35b54b8e4")
+  (let* ((extension-id "29be34e8-2dfe-4a75-96c1-e8b5a33aa23e")
          (url (format "moz-extension://%s/pages/reload.html" extension-id)))
     (util/call-process-with-exit-status "open"
                                         nil
