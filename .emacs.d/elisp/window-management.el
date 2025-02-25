@@ -253,6 +253,9 @@
   "Switches to the nth column. If the current column is already the nth column, then switch to the
    next split below the current split, wrapping to the top split if needed."
   (interactive)
+  ;; Before changing the active window, save the buffer. This isn't necessary, but I like having it
+  ;; in my workflow.
+  (util/save-buffer-if-dirty)
   (if (/= n (wm/column-number))
       (wm/switch-to-column n)
     (if-let ((split-below (window-in-direction 'below (selected-window))))
