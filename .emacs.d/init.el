@@ -1842,15 +1842,20 @@
   (save-buffer)
   (compile (format "deno lint %s" (projectile-project-root))))
 
+(require 'js)
+(util/define-keys js-mode-map
+                  (kbd "M-r") 'js/run-saved-command)
+
 (define-leader-keys 'js-mode-map
   "l" 'log-word-under-cursor
   "rr" 'reload-active-browser-tab
   "re" 'reload-browser-extensions
-  "eb" 'js/load-file
+  "rs" 'js/save-last-run-command
+  "eb" 'js/load-current-file
   "eB" (lambda ()
          (interactive)
          (js/restart-repl)
-         (js/load-file))
+         (js/load-current-file))
   "ee" 'js/show-repl
   "ek" 'js/clear
   "clf" 'js/lint-file

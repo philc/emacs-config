@@ -65,15 +65,19 @@
 
 (setq js/load-file-counter 1)
 
-(defun js/load-file ()
+(defun js/load-current-file ()
   (interactive)
   (util/save-buffer-if-dirty)
+  (setq js/last-run-command (list (current-buffer) 'js/load-current-file))
+  (js/load-file (buffer-file-name)))
+
+(defun js/load-file (file-name)
   (js/ensure-repl-is-running)
   (let* (;; Since Deno treats files required with relative paths as separate from files required via
          ;; absolute paths, and doesn't deduplicate them, we first resolve any symlinks in the
          ;; file's path, and then make the path relative to the project's root, if we're loading a
          ;; file in a Projectile project.
-         (file (file-truename (buffer-file-name)))
+         (file (file-truename file-name))
          (file (if (projectile-project-p)
                    (->> file
                         (s-chop-prefix (projectile-project-root))
@@ -109,8 +113,40 @@
         (setq result (concat (match-string 1) "/" (match-string 2))))
       result)))
 
-(defun js/run-file-as-shoulda-test ()
+
+;; The JS action that was last run. It's a tuple of (buffer, function-name).
+(setq js/last-run-command nil)
+
+;; The JS action that has been saved (via js/save-last-run-command) for invoking again in the
+;; future. It's a tuple of (buffer, function-name).
+(setq js/saved-run-command nil)
+
+(defun js/save-last-run-command ()
+  "Save the last high-level run command for future invocation."
   (interactive)
+  (when js/last-run-command
+    (let ((fn-name (nth 1 js/last-run-command))
+          (buf (first js/last-run-command)))
+      (message (format "Saving command: %s on %s" fn-name (buffer-name buf)))
+      (setq js/saved-run-command js/last-run-command))))
+
+(defun js/run-saved-command ()
+  "Execute the last saved runnable command, if any."
+  (interactive)
+  (util/save-buffer-if-dirty)
+  (if js/last-run-command
+      (let ((fn-name (nth 1 js/last-run-command))
+            (buf (first js/last-run-command)))
+        (with-current-buffer buf
+          (progn (print "fn-name") (prin1 fn-name t))
+          (progn (print "buf") (prin1 buf t))
+          (message (format "Running %s on %s" fn-name (buffer-name buf)))
+          (funcall fn-name)))
+    (message "No runnable command has yet been saved.")))
+
+(defun js/run-file-as-shoulda-test (&optional filename)
+  (interactive)
+  (setq js/last-run-command (list (current-buffer) 'js/run-file-as-shoulda-test))
   (js/ensure-repl-is-running)
   ;; This whole approach is flawed. It's tricky to determine how "shoulda" can be imported here by
   ;; this helper such that it's not imported twice by Deno as different modules. shoulda may be
@@ -133,7 +169,7 @@
                                   (expand-file-name shoulda-import-path file-dir))))
           (js/eval-str (format "import * as shoulda from \"%s\"; shoulda.reset()" shoulda-js-path)))
       (js/eval-str "if (globalThis.shoulda) shoulda.reset()"))
-    (js/load-file)
+    (js/load-file (buffer-file-name))
     (js/eval-str "await shoulda.run(); undefined")
     (util/scroll-to-buffer-end (js/get-repl-buffer))))
 
