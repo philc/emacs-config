@@ -134,9 +134,9 @@
   "Execute the last saved runnable command, if any."
   (interactive)
   (util/save-buffer-if-dirty)
-  (if js/last-run-command
-      (let ((fn-name (nth 1 js/last-run-command))
-            (buf (first js/last-run-command)))
+  (if js/saved-run-command
+      (let ((fn-name (nth 1 js/saved-run-command))
+            (buf (first js/saved-run-command)))
         (with-current-buffer buf
           (progn (print "fn-name") (prin1 fn-name t))
           (progn (print "buf") (prin1 buf t))
