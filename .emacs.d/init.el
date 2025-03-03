@@ -1421,6 +1421,7 @@
 (define-leader-keys 'html-mode-map
   "i" 'format-html-buffer
   "rr" 'reload-active-browser-tab
+  "re" 'reload-vimium-extension-firefox
   "vv" 'preview-html)
 
 (define-leader-keys 'mustache-mode-map
@@ -1433,15 +1434,14 @@
 (defun reload-active-browser-tab ()
   "Reloads the current tab in Chrome. This works on OSX only, using Applescript."
   (interactive)
-  (if t
-      (reload-vimium-extension-firefox)
-    (progn
-      (util/save-buffer-if-dirty)
-      (util/call-process-with-exit-status "osascript"
-                                          (format "tell app \"%s\" to reload active tab of window 1"
-                                                  browser-app)))))
+  (util/save-buffer-if-dirty)
+  (util/call-process-with-exit-status "osascript"
+                                      (format "tell app \"%s\" to reload active tab of window 1"
+                                              browser-app)))
 
-(defun reload-browser-extensions ()
+;; This is Chrome-centric. I'm not currently using this because I mostly develop extensions in
+;; Firefox, but if that changes, I could resume using this.
+(defun reload-browser-extensions-previous ()
   "Reloads all extensions in the browser in tandem with the Extensions Reloader extension."
   (interactive)
   (util/save-buffer-if-dirty)
@@ -1849,7 +1849,7 @@
 (define-leader-keys 'js-mode-map
   "l" 'log-word-under-cursor
   "rr" 'reload-active-browser-tab
-  "re" 'reload-browser-extensions
+  "re" 'reload-vimium-extension-firefox
   "rs" 'js/save-last-run-command
   "eb" 'js/load-current-file
   "eB" (lambda ()
