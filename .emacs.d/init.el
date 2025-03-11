@@ -1560,6 +1560,7 @@
   "i" 'css/format-buffer)
 
 (define-leader-keys '(css-mode-map less-css-mode-map)
+  "re" 'reload-vimium-extension-firefox
   "rr" 'reload-active-browser-tab)
 
 ;;
