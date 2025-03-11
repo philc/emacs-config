@@ -86,7 +86,7 @@
 ;;
 ;; General settings
 ;;
-(require 'cl)
+(require 'cl-lib)
 (require 's)
 (add-to-list 'load-path "~/.emacs.d/elisp")
 (add-to-list 'load-path "~/.emacs.d/ghelp")

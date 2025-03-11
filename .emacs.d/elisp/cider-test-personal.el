@@ -7,7 +7,7 @@
 ;;
 (provide 'cider-test-personal)
 (require 'cider)
-(require 'cl)
+(require 'cl-lib)
 
 (defun when-compile-successful (f)
   "Saves and loads the current buffer, and compiles it. Runs the given function if there are no compile

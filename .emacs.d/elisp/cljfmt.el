@@ -10,7 +10,7 @@
 ;; go-mode-LICENSE. See https://github.com/dominikh/go-mode.el for the full
 ;; source.
 
-(require 'cl)
+(require 'cl-lib)
 
 (defvar cljfmt-command "cljfmt"
   "The 'cljfmt' command.")
