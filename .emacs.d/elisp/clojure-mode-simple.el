@@ -1,3 +1,5 @@
+;;; -*- lexical-binding: t; -*-
+;;
 ;; My experiment ground for a product and simple-to-debug clojure mode.
 ;; I think where I'll eventually end up is using nrepl, so that I can keep track of asynchronous output from
 ;; commands and cleanly kill expensive commands.

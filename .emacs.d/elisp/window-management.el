@@ -1,3 +1,4 @@
+;;; -*- lexical-binding: t; -*-
 ;;
 ;; Functions and configuration for window manipulation, management, and switching.
 ;;

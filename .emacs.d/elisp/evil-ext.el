@@ -1,3 +1,4 @@
+;;; -*- lexical-binding: t; -*-
 ;;
 ;; Extensions to Evil mode, mostly to improve the usability of certain editing operations.
 ;;

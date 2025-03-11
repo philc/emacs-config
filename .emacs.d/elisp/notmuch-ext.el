@@ -1,3 +1,4 @@
+;;; -*- lexical-binding: t; -*-
 ;;
 ;; notmuch - email & gmail in Emacs.
 ;;

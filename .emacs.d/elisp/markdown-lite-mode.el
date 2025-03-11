@@ -1,3 +1,4 @@
+;;; -*- lexical-binding: t; -*-
 ;;
 ;; Markdown lite mode
 ;; TODO(philc): Document what this mode does.

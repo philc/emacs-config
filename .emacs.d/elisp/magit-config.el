@@ -1,3 +1,5 @@
+;;; -*- lexical-binding: t; -*-
+;;
 ;; My configuration and customizations of magit mode, for interacting with Git.
 ;;
 ;; Note that magit's keybindings are notoriously hard to rebind consistently. It would be better if there was

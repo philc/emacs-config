@@ -1,3 +1,5 @@
+;;; -*- lexical-binding: t; -*-
+;;
 ;;; My additions and customizations to org-mode.
 ;;; Based loosely on evil-org-mode as a starting point.
 ;;; Provides an evil-org-mode minor mode.

@@ -1,3 +1,4 @@
+;;; -*- lexical-binding: t; -*-
 ;;
 ;; Utility functions for writing Emacs lisp.
 ;;
