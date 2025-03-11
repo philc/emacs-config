@@ -17,6 +17,7 @@
 (require 's)
 (require 'ht)
 (require 'smartparens)
+(require 'browse-url)
 
 ;; Use clojure.pprint when printing data structures to the REPL.
 (setq use-pprint t)
@@ -120,7 +121,7 @@
   (-if-let (s (thing-at-point 'symbol))
       (let ((clojure-docs-url
              (concat "http://www.google.com/search?btnI=Im+Feeling+Lucky&q=site:clojuredocs.org+" s)))
-        (util/open-in-browser clojure-docs-url))
+        (browse-url-default-browser clojure-docs-url))
     (message "There's no symbol under the cursor to look up documentation for.")))
 
 ;;

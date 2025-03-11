@@ -3,6 +3,7 @@
 ;;
 (provide 'emacs-utils)
 (require 'lisp-utils)
+(require 'browse-url)
 
 (defmacro define-leader-keys (keymaps &rest keybindings)
   "A shorthand for defining leader keys using the `general` keybinding package.
@@ -27,14 +28,6 @@
     (if (= exit-code 0)
         output
       (error "%s" output))))
-
-(setq browser-mac-app-name "Google Chrome")
-
-(defun util/open-in-browser (url)
-  "On Mac, opens the given URL in a specific browser.
-   Just invoking `open the-url` will open the URL in a random open browser, rather than a
-   deterministic one."
-  (call-process "open" nil nil nil url "-a" browser-mac-app-name))
 
 (defun util/line-indentation-level (line)
   "The number of space characters prefixing a line."
@@ -188,7 +181,7 @@ details."
                         (let ((b (find-file-noselect path)))
                           (wm/switch-to-buffer-other-window b)))))
     (if (string-match-p "\\`https?://" ξpath)
-        (util/open-in-browser ξpath)
+        (browse-url-default-browser ξpath)
       (progn ; not starting “http://”
         (if (string-match "^\\`\\(.+?\\):\\([0-9]+\\)\\'" ξpath)
             (progn
