@@ -20,7 +20,7 @@
 (defun dec (i) (- i 1))
 
 (defun constantly (x)
-  (lexical-let ((x x))
+  (let ((x x))
     (lambda (&rest args) x)))
 
 ;;
@@ -62,9 +62,9 @@
 (defmacro setq-temporarily (var value form)
   "Uses setq to set the variable `var` temporarily for the duration of form, and then restores it to its
    former value. Returns the value that `form` returns."
-  `(lexical-let* ((old-val (symbol-value ',var))
-                  (_ (setq ,var ,value))
-                  (ret-val ,form))
+  `(let* ((old-val (symbol-value ',var))
+          (_ (setq ,var ,value))
+          (ret-val ,form))
      (setq ,var old-val)
      ret-val))
 

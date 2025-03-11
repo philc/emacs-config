@@ -95,7 +95,7 @@
 
 (defun clj/mark-current-buffer ()
   (interactive)
-  (lexical-let ((b (current-buffer)))
+  (let ((b (current-buffer)))
     (setq marked-function (lambda ()
                             (with-current-buffer b
                               (clj/load-buffer)))))
@@ -509,7 +509,7 @@
     (evil-normal-state)))
 
 (defun clj/repl-buffer ()
-  (lexical-let ((b (get-buffer-create "*clojure-simple*")))
+  (let ((b (get-buffer-create "*clojure-simple*")))
     (with-current-buffer b
       (setq-local scroll-margin 1)
     b)))

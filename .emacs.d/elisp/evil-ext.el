@@ -43,7 +43,7 @@
   ;; of the newly-wrapped paragraph. Better would be to keep your cursor where it was when you
   ;; triggered this command, so you don't need to navigate back there if you want to continue
   ;; typing. This tries to estimate where your cursor should be after lines get wrapped.
-  (lexical-let* ((estimated-col (mod (current-column) fill-column))
+  (let* ((estimated-col (mod (current-column) fill-column))
                  (estimated-line (+ (line-number-at-pos)
                                     (/ (current-column) fill-column))))
     (funcall f)
@@ -82,7 +82,7 @@
 
 (defun evil-ext/fill-comment-block ()
   (interactive)
-  (lexical-let ((region (evil-ext/get-comment-block-region)))
+  (let ((region (evil-ext/get-comment-block-region)))
     (evil-ext/preserve-cursor-after-fill
      (lambda ()
        (evil-fill (first region) (second region))))))
@@ -96,7 +96,7 @@
 (defun evil-ext/fill-inside-paragraph ()
   "Fills (reflows/linewraps) the current paragraph. Equivalent to gqip in vim."
   (interactive)
-  (lexical-let ((region (if (use-region-p)
+  (let ((region (if (use-region-p)
                             (list (region-beginning) (region-end))
                           (util/preserve-line-and-column 'evil-inner-paragraph))))
     (evil-ext/preserve-cursor-after-fill

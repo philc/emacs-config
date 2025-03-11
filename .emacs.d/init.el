@@ -1,3 +1,4 @@
+;;; -*- lexical-binding: t; -*-
 ;;
 ;; I try to keep this file well-documented so new and veteran users can easily understand the parts
 ;; of my setup they may want to use.

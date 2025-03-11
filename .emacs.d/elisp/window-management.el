@@ -131,13 +131,13 @@
    REPL."
   (interactive)
   (when (first (wm/get-ephemeral-windows))
-    (lexical-let* ((shrink-by-amt 12)
-                   (total-width (-> (frame-root-window) window-total-width))
-                   (vertical-splits (wm/column-count))
-                   (ephemeral-width (- (/ total-width vertical-splits) shrink-by-amt))
-                   ;; Split the width from `shrink-by-amt` evently between the non-ephemeral windows.
-                   (non-ephemeral-width (-> (/ total-width vertical-splits)
-                                            (+ (/ shrink-by-amt (- vertical-splits 1))))))
+    (let* ((shrink-by-amt 12)
+           (total-width (-> (frame-root-window) window-total-width))
+           (vertical-splits (wm/column-count))
+           (ephemeral-width (- (/ total-width vertical-splits) shrink-by-amt))
+           ;; Split the width from `shrink-by-amt` evently between the non-ephemeral windows.
+           (non-ephemeral-width (-> (/ total-width vertical-splits)
+                                    (+ (/ shrink-by-amt (- vertical-splits 1))))))
       (dolist (w (wm/get-visible-windows))
         (wm/set-window-width w (if (wm/ephemeral-window-p w) ephemeral-width non-ephemeral-width))))))
 
@@ -166,8 +166,8 @@
   (window-in-direction 'above (get-buffer-window "*Messages*"))
   (let ((ephemeral-window (first (wm/get-ephemeral-windows))))
     (when ephemeral-window
-      (lexical-let ((covered-window (or (window-in-direction 'above ephemeral-window)
-                                        (window-in-direction 'below ephemeral-window))))
+      (let ((covered-window (or (window-in-direction 'above ephemeral-window)
+                                (window-in-direction 'below ephemeral-window))))
         (if covered-window
             (progn
               (setq buffer-underneath-maximized-ephemeral-window (window-buffer covered-window))
@@ -277,7 +277,7 @@
    It can return false even though the selected window was successfully changed."
   ;; TODO(philc): I think a better approach with less quirks is to remove framemove and to provide
   ;; advice to windmove-* myself.
-  (lexical-let ((window nil))
+  (let ((window nil))
     (while (not (eq window (selected-window)))
       (setq window (selected-window))
       (funcall f))))
@@ -300,12 +300,12 @@
   "Creates a new column in my window layout by splitting the rightmost window and rebalancing
    windows. Returns the new window."
   (interactive)
-  (lexical-let* ((is-part-of-vertical-combination (window-combined-p))
-                 (window-to-split (if is-part-of-vertical-combination
-                                      (window-parent (selected-window))
-                                    (selected-window)))
-                 (b (current-buffer))
-                 (new-window (wm/split-window-horizontally-and-focus window-to-split)))
+  (let* ((is-part-of-vertical-combination (window-combined-p))
+         (window-to-split (if is-part-of-vertical-combination
+                              (window-parent (selected-window))
+                            (selected-window)))
+         (b (current-buffer))
+         (new-window (wm/split-window-horizontally-and-focus window-to-split)))
     ;; Ensure that no matter where the window is created, it has the same buffer as the window prior
     ;; to creating the new one. Otherwise, the new window could have some random buffer in it,
     ;; making it difficult to use commands like open-in-project, for instance.

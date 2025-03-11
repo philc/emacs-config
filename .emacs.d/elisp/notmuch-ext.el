@@ -28,9 +28,9 @@
 (defun in-notmuch (f)
   "Execute the given function within the notmuch view. Used for REPL-based development."
   (util/preserve-selected-window
-   (lexical-let* ((f f))
+   (let* ((f f))
      (fn ()
-       (lexical-let ((w (select-window (get-buffer-window "*notmuch-search-folder:Inbox*"))))
+       (let ((w (select-window (get-buffer-window "*notmuch-search-folder:Inbox*"))))
          (when (not w)
            (throw "Can't switch to the given notmuch window" nil))
          (funcall f))))))
@@ -44,8 +44,8 @@
   (setq queue (plist-sget notmuch-message :body))
   (setq result '())
   (while queue
-    (lexical-let* ((item (pop queue))
-                   (content (plist-sget item :content)))
+    (let* ((item (pop queue))
+           (content (plist-sget item :content)))
       (push item result)
       ;; Content can either be a string (in the case of text/html) or a list (in the case of
       ;; multipart/alternative)).
@@ -66,17 +66,17 @@
 (defun notmuch-ext/get-html-body (message-id)
   "Returns the HTML body for the given message ID. Returns nil if there is no HTML body (e.g. if there's only
    a plaintext body.)"
-  (lexical-let* ((message (->> message-id
-                               (util/call-process-and-check "notmuch" nil "show" "--format=sexp"
-                                                            "--entire-thread=false" "--include-html")
-                               read
-                               ;; Since we have --entire-thread=false, this list of messages can have nil
-                               ;; entries.
-                               notmuch-ext/remove-empty-envelopes))
-                 (parts (notmuch-ext/get-body-parts-from-notmuch-message message))
-                 (html-part (-?>> parts
-                                  (--filter (string= (plist-sget it :content-type) "text/html"))
-                                  first)))
+  (let* ((message (->> message-id
+                       (util/call-process-and-check "notmuch" nil "show" "--format=sexp"
+                                                    "--entire-thread=false" "--include-html")
+                       read
+                       ;; Since we have --entire-thread=false, this list of messages can have nil
+                       ;; entries.
+                       notmuch-ext/remove-empty-envelopes))
+         (parts (notmuch-ext/get-body-parts-from-notmuch-message message))
+         (html-part (-?>> parts
+                          (--filter (string= (plist-sget it :content-type) "text/html"))
+                          first)))
     (-?> html-part (plist-sget :content))))
 
 (defun notmuch-ext/extract-message-id (message-body)
@@ -100,18 +100,18 @@
 
 (defun notmuch-ext/get-message-parts (message)
   "Splits a message into its parts. Returns a plist of :header, :reply-text, :quoted-text, :attribution-line."
-  (lexical-let* ((parts (split-string message notmuch-ext/header-section-separator))
-                 (header (-> parts first s-trim))
-                 (message-body (-> parts second s-trim))
-                 (body-lines (s-split "\n" message-body))
-                 (attribution-line-index (--find-last-index
-                                          (string-match notmuch-ext/attribution-line-regexp it)
-                                          body-lines))
-                 ;; TODO(philc): If there's no attribution line in a reply message, we should instead just
-                 ;; split on the starting index of the contiguous quoted region at the bottom of the email.
-                 (reply-text (--> body-lines (-slice it 0 attribution-line-index) (s-join "\n" it)))
-                 (quoted-text (when attribution-line-index
-                                (--> body-lines (-slice it (+ 1 attribution-line-index)) (s-join "\n" it)))))
+  (let* ((parts (split-string message notmuch-ext/header-section-separator))
+         (header (-> parts first s-trim))
+         (message-body (-> parts second s-trim))
+         (body-lines (s-split "\n" message-body))
+         (attribution-line-index (--find-last-index
+                                  (string-match notmuch-ext/attribution-line-regexp it)
+                                  body-lines))
+         ;; TODO(philc): If there's no attribution line in a reply message, we should instead just
+         ;; split on the starting index of the contiguous quoted region at the bottom of the email.
+         (reply-text (--> body-lines (-slice it 0 attribution-line-index) (s-join "\n" it)))
+         (quoted-text (when attribution-line-index
+                        (--> body-lines (-slice it (+ 1 attribution-line-index)) (s-join "\n" it)))))
     (list :header header
           :attribution-line (-?> attribution-line-index (nth body-lines))
           ;; TODO(philc): Rename this to compose-text.
@@ -122,30 +122,30 @@
   "Takes in a compose/reply buffer and returns a multipart response (plaintext and HTML) where the HTML
    portion contains the plaintext reply, converted to markdown.
    Returns a plist of header, plaintext, html."
-  (lexical-let* ((message-id (notmuch-ext/extract-message-id message-body)) ; nil if this msg isn't a reply.
-                 (parts (notmuch-ext/get-message-parts message-body))
-                 (quoted-text (plist-get parts :quoted-text))
-                 (attribution-line (plist-get parts :attribution-line))
-                 (plaintext-response (->> (list (plist-get parts :reply-text)
-                                                attribution-line
-                                                quoted-text)
-                                          -non-nil
-                                          (s-join "\n\n")))
-                 ;; TODO(philc): do I need Gmail CSS, i.e. do I need to pass "--css" "gmail" to this command?
-                 (markdown-reply-text (->> (plist-get parts :reply-text)
-                                           (util/call-process-and-check notmuch-ext/markdown-to-html-command)))
-                 (html-quoted-text (when message-id
-                                     (notmuch-ext/get-html-body (concat "id:" message-id))))
-                 ;; There may be no quoted-text if this is a new message with no reply history.
-                 (quoted-text-as-html
-                  (cond
-                   (html-quoted-text (concat "<blockquote>\n" html-quoted-text "\n<blockquote>"))
-                   (quoted-text (concat "<pre>\n" quoted-text "\n</pre>"))))
-                 (html-response (concat (s-trim markdown-reply-text)
-                                        (when attribution-line "\n<br/>\n")
+  (let* ((message-id (notmuch-ext/extract-message-id message-body)) ; nil if this msg isn't a reply.
+         (parts (notmuch-ext/get-message-parts message-body))
+         (quoted-text (plist-get parts :quoted-text))
+         (attribution-line (plist-get parts :attribution-line))
+         (plaintext-response (->> (list (plist-get parts :reply-text)
                                         attribution-line
-                                        (when quoted-text-as-html "\n<br/>\n")
-                                        quoted-text-as-html)))
+                                        quoted-text)
+                                  -non-nil
+                                  (s-join "\n\n")))
+         ;; TODO(philc): do I need Gmail CSS, i.e. do I need to pass "--css" "gmail" to this command?
+         (markdown-reply-text (->> (plist-get parts :reply-text)
+                                   (util/call-process-and-check notmuch-ext/markdown-to-html-command)))
+         (html-quoted-text (when message-id
+                             (notmuch-ext/get-html-body (concat "id:" message-id))))
+         ;; There may be no quoted-text if this is a new message with no reply history.
+         (quoted-text-as-html
+          (cond
+           (html-quoted-text (concat "<blockquote>\n" html-quoted-text "\n<blockquote>"))
+           (quoted-text (concat "<pre>\n" quoted-text "\n</pre>"))))
+         (html-response (concat (s-trim markdown-reply-text)
+                                (when attribution-line "\n<br/>\n")
+                                attribution-line
+                                (when quoted-text-as-html "\n<br/>\n")
+                                quoted-text-as-html)))
     (list :header (plist-get parts :header)
           :plaintext plaintext-response
           :html html-response)))
@@ -155,7 +155,7 @@
 
 (defun notmuch-ext/render-message-in-browser (html)
   ;; TODO(philc): Make this command configurable.
-  (lexical-let ((styled-html (concat "<style>" notmuch-ext/stylesheet-for-previews "</style>" html)))
+  (let ((styled-html (concat "<style>" notmuch-ext/stylesheet-for-previews "</style>" html)))
     (util/call-process-and-check "browser" styled-html)))
 
 (defun notmuch-ext/view-message-in-browser ()
@@ -171,8 +171,8 @@
 ;; http://edward.oconnor.cx/2008/01/html-email-composition-in-emacs
 ;; http://gnus.org/manual/emacs-mime_9.html#SEC9
 (defun notmuch-ext/get-mml-for-buffer ()
-  (lexical-let* ((text (buffer-substring-no-properties (point-min) (point-max)))
-                 (response (notmuch-ext/build-response-from-markdown text)))
+  (let* ((text (buffer-substring-no-properties (point-min) (point-max)))
+         (response (notmuch-ext/build-response-from-markdown text)))
     (->> (list (plist-get response :header)
                notmuch-ext/header-section-separator
                (notmuch-ext/assemble-multipart-mml (plist-get response :plaintext)
@@ -241,8 +241,8 @@
 
 (defun within-message-view (f)
   "Execute the given function within the message view (the window to the right of the notmuch-search window. For REPL development."
-  (lexical-let* ((f f)
-                 (win (window-in-direction 'right)))
+  (let* ((f f)
+         (win (window-in-direction 'right)))
     (if win
         (util/preserve-selected-window (fn ()
                                          (select-window win)
@@ -263,9 +263,9 @@
   (notmuch-search "folder:1action"))
 
 (defun get-messages-to-move (thread-id include-special-gmail-folders)
-  (lexical-let ((filter-fn (if include-special-gmail-folders
-                               (fn (s) nil)
-                             (fn (s) (search "[Gmail]" s)))))
+  (let ((filter-fn (if include-special-gmail-folders
+                       (fn (s) nil)
+                     (fn (s) (search "[Gmail]" s)))))
     (->>
      ;;"thread:0000000000000490"
      thread-id
@@ -304,7 +304,7 @@
   ;; Another way to handle deletions would be to move the message into Gmail's trash folder, but that would
   ;; require syncing the Gmail trash folder, which is something I'm not doing now with mbsync due to the
   ;; unnecessary overhead.
-  (lexical-let ((deletions-folder (concat (get-notmuch-db-path) "/.deletions/")))
+  (let ((deletions-folder (concat (get-notmuch-db-path) "/.deletions/")))
     (unless (file-exists-p deletions-folder)
       (make-directory deletions-folder))
     ;; (print (concat "deleting" file))
@@ -313,7 +313,7 @@
     ;; (print (concat deletions-folder (file-name-nondirectory file)))
     ;; (util/call-process-and-check "mv" file (concat deletions-folder (file-name-nondirectory file)))
     (rename-file file (concat deletions-folder (file-name-nondirectory file)))))
-    ;; ))
+;; ))
 
 (defun notmuch-search-quick-refresh-view ()
   ;; TODO(philc): document/remove
@@ -333,7 +333,7 @@
   (notmuch-refresh-this-buffer))
 
 (defun perform-move-thread (thread-id dest-folder)
-  (lexical-let ((destination (concat (get-notmuch-db-path) "/" dest-folder "/cur/")))
+  (let ((destination (concat (get-notmuch-db-path) "/" dest-folder "/cur/")))
     (->> (get-messages-to-move thread-id nil)
          (--map (rename-file it destination)))))
 

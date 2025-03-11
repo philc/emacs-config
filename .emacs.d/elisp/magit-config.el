@@ -72,7 +72,7 @@ Date: %ad
      ;; After a delay, scroll the window opened by magit-show-commit to the top. While
      ;; magit-show-commit is supposed to sccroll the window to the top, if the diff being shown is
      ;; large, that doesn't always work for some reason.
-     (lexical-let ((w (selected-window)))
+     (let ((w (selected-window)))
        (run-with-timer 0.01 0
                        (lambda ()
                          (util/preserve-selected-window
@@ -210,11 +210,10 @@ Date: %ad
 
 (defun with-magit-output-buffer (f)
   "Displays the magit output buffer after invoking the given function"
-  (lexical-let ((f f))
-    (util/preserve-selected-window
-     (lambda ()
-       (funcall f)
-       (display-buffer (magit-process-buffer t))))))
+  (util/preserve-selected-window
+   (lambda ()
+     (funcall f)
+     (display-buffer (magit-process-buffer t)))))
 
 (defun git-pull ()
   (interactive)

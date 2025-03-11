@@ -22,7 +22,7 @@
 (defun util/call-process-and-check (program stdin &rest args)
   "Calls the given program and raises an error if the exist status is non-zero. The error's message
    is the program's output."
-  (lexical-let* ((result (apply 'util/call-process-with-exit-status program stdin args))
+  (let* ((result (apply 'util/call-process-with-exit-status program stdin args))
                  (exit-code (first result))
                  (output (second result)))
     (if (= exit-code 0)
@@ -120,7 +120,7 @@
    invoke a function (like showing documentation) but desire to keep your current window focused."
   ;; Note that we must preserve the selected window of every frame, because the function being
   ;; executed may change the focused frame, even if the current frame is in focus.
-  (lexical-let* ((original-frame (selected-frame))
+  (let* ((original-frame (selected-frame))
                  (frames->windows (util/get-frame->selected-window))
                  (result (funcall f)))
     (-each frames->windows (lambda (x)
@@ -134,7 +134,7 @@
    when the text in the buffer moves (e.g. as a result of indentation commands). This is different
    from save-excursion which will restore the (point). This does not restore the cursor to the
    previous point."
-  (lexical-let* ((former-line (line-number-at-pos))
+  (let* ((former-line (line-number-at-pos))
                  (former-col (current-column))
                  (return-val (funcall f)))
     (goto-line former-line)
