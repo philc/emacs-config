@@ -76,7 +76,7 @@
   ;; For some reason it interferes with Emacs' window switching behavior.
   (let* ((original-window (selected-window))
          (window-showing-buffer (get-buffer-window buffer show-ephemeral-buffer-in-other-frames))
-         (ephemeral-window (first (wm/get-ephemeral-windows)))
+         (ephemeral-window (cl-first (wm/get-ephemeral-windows)))
          (should-create-new-window (and (not window-showing-buffer)
                                         (not ephemeral-window)
                                         (< (wm/column-count)
@@ -131,7 +131,7 @@
    Thunderbolt monitor: 2 splits which fit 110 chars without wrapping, and 1 narrower split with a
    REPL."
   (interactive)
-  (when (first (wm/get-ephemeral-windows))
+  (when (cl-first (wm/get-ephemeral-windows))
     (let* ((shrink-by-amt 12)
            (total-width (-> (frame-root-window) window-total-width))
            (vertical-splits (wm/column-count))
@@ -165,7 +165,7 @@
   ;; close that window.
   (interactive)
   (window-in-direction 'above (get-buffer-window "*Messages*"))
-  (let ((ephemeral-window (first (wm/get-ephemeral-windows))))
+  (let ((ephemeral-window (cl-first (wm/get-ephemeral-windows))))
     (when ephemeral-window
       (let ((covered-window (or (window-in-direction 'above ephemeral-window)
                                 (window-in-direction 'below ephemeral-window))))

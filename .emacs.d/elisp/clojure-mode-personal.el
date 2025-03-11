@@ -61,7 +61,7 @@
 (defun cider-eval-paragraph (beg end)
   (interactive "r")
   (let ((region (evil-a-paragraph)))
-    (evil-cider-eval (first region) (second region))))
+    (evil-cider-eval (cl-first region) (cl-second region))))
 
 (defun cider-show-cider-buffer ()
   "Shows the nrepl buffer, but does not focus it."

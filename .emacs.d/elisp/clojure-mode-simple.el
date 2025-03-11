@@ -400,7 +400,7 @@
   (string-match ".+ (\\(.+\\))" line)
   (let* ((tuple-str (match-string 1 line))
          (tuple (s-split ":" tuple-str)))
-    (list (first tuple) (string-to-number (second tuple)))))
+    (list (cl-first tuple) (string-to-number (cl-second tuple)))))
 
 (defun clj/update-backtrace-cursor (direction)
   (let* ((exception-str (-> "(my-pst user/_last-exception true)"
@@ -412,8 +412,10 @@
                      (-drop-last 1) ; the last line is the string "nil"
                      (-map 's-trim))))
     (if (not clj/backtrace-cursor-linenum)
-        ;; Find the first line in the backtrace which corresponds to the current buffer, and start there.
-        (let* ((index (-find-index (lambda (x) (string= (buffer-name) (first (clj/file-of-backtrace-line x))))
+        ;; Find the first line in the backtrace which corresponds to the current buffer, and start
+        ;; there.
+        (let* ((index (-find-index (lambda (x)
+                                     (string= (buffer-name) (cl-first (clj/file-of-backtrace-line x))))
                                    lines)))
           (if index
               (setq clj/backtrace-cursor-linenum index)
@@ -422,9 +424,9 @@
     (let* ((line (nth clj/backtrace-cursor-linenum lines))
            ;; This removes any non-top-level functions from the symbol name in the exception outout.
            ;; So "the.ns/fn/inner-fn" becomes "the.ns/fn".
-           (clj-symbol (->> line (s-split " ") first (s-split "/") (-take 2) (s-join "/")))
+           (clj-symbol (->> line (s-split " ") cl-first (s-split "/") (-take 2) (s-join "/")))
            (file-and-linenum (clj/file-of-backtrace-line line))
-           (linenum (second file-and-linenum)))
+           (linenum (cl-second file-and-linenum)))
       ;; Assume this is an anonymous eval form, like "ns/eval1234", which we can't easily resolve.
       (if (s-contains? "/eval" clj-symbol)
           (message "Jumping to anonymous top-level forms like %s isn't implemented." clj-symbol)
@@ -432,7 +434,7 @@
           (clj/jump-to-var clj-symbol)
           (goto-line linenum)
           (recenter) ; Put the line in the center of the screen: for errors, you need context above & below.
-          (message "Jumped to: %s:%s" (first file-and-linenum) linenum))))))
+          (message "Jumped to: %s:%s" (cl-first file-and-linenum) linenum))))))
 
 (defun clj/goto-next-exception () (interactive) (clj/update-backtrace-cursor 1))
 
@@ -477,7 +479,7 @@
     (if fn-name
         (format "(do %s (alter-meta! #'%s assoc :file \"%s\" :line %s :column 0))"
                 exp fn-name (buffer-file-name)
-                (-> (bounds-of-thing-at-point thing) first line-number-at-pos))
+                (-> (bounds-of-thing-at-point thing) cl-first line-number-at-pos))
       exp)))
 
 (defun clj/eval-sexp ()

@@ -147,7 +147,7 @@
                         (-map (lambda (line) (s-split "=" line 1))))))
     (-each env-vars
       (lambda (pair)
-        (when pair (setenv (first pair) (second pair)))))))
+        (when pair (setenv (cl-first pair) (cl-second pair)))))))
 
 (defun set-exec-path-from-shell-PATH ()
   "Use the same PATH within Emacs as your shell."
@@ -464,8 +464,8 @@
          (jump-list (-filter 'identity jump-list)))
     (print (format "Index: %s" index))
     (dolist (entry jump-list)
-      (let* ((file (first entry))
-             (file-offset (second entry)))
+      (let* ((file (cl-first entry))
+             (file-offset (cl-second entry)))
         (message (format "%s:' %s" file file-offset))))))
 
 ; These keybindings conflict with nothing else, which allows me to pull up help from within any mode.
@@ -755,9 +755,9 @@
     ;; For now, assume it's a URL.
     (let ((trimmed-url (->> clipboard
                             (s-split "?")
-                            first
+                            cl-first
                             (s-split "#")
-                            first)))
+                            cl-first)))
       (insert trimmed-url))))
 
 (define-minor-mode osx-keys-minor-mode
@@ -1259,7 +1259,7 @@
             (util/replace-buffer-text out)))
       (error
        (message "%s failed: %s"
-                (first (s-split " " command-string))
+                (cl-first (s-split " " command-string))
                 (error-message-string err))))))
 
 (defun markdown-format-outline-into-sections ()

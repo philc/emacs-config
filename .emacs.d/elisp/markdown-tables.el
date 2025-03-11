@@ -51,7 +51,7 @@
 (setq tables/cell-padding 0)
 
 (defun tables/reflow-table (rows)
-  ;; (let* ((column-count (->> rows first length))
+  ;; (let* ((column-count (->> rows cl-first length))
   ;;        (width-without-boders (- tables/max-width (+ column-count
   ;;                                                     (* column-count tables/cell-padding 2))))
   ;;        (column-width (/ width-without-boders column-count)))
@@ -60,7 +60,7 @@
 (defun tables/to-string (rows)
   "Returns a string representation of a table."
   ;; TODO(philc): Figure out who is computing column widths.
-  (let* ((column-count (->> rows first length))
+  (let* ((column-count (->> rows cl-first length))
          (width-without-boders (- tables/max-width (+ column-count
                                                       (* column-count tables/cell-padding 2))))
          (column-width (/ width-without-boders column-count))
@@ -108,7 +108,7 @@
   (let* ((table-text (substring-no-properties (thing-at-point 'paragraph)))
          (bounds (bounds-of-thing-at-point 'paragraph)))
     ;; (progn (print ">>>> bounsd") (prin1 bounds t))
-    ;; (progn (print ">>>> (first bounds") (prin1 (first bounds t)))
+    ;; (progn (print ">>>> (cl-first bounds") (prin1 (first bounds t)))
     ;; (progn (print ">>>> (second bounds)") (prin1 (second bounds) t))
     (delete-region (car bounds) (cdr bounds))
     (->> table-text

@@ -139,7 +139,7 @@
 
 (defun org-get-current-heading ()
   "Assumes the cursor is currently on a heading. TODO: return nil if the cursor isn't on a heading."
-  (-> (text-of-current-line) s-trim (split-string "* ") second))
+  (-> (text-of-current-line) s-trim (split-string "* ") cl-second))
 
 (defun org-move-to-heading (heading-name)
   (let ((heading-has-changed nil)

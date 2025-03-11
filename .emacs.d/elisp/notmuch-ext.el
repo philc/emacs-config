@@ -103,7 +103,7 @@
   "Splits a message into its parts. Returns a plist of :header, :reply-text, :quoted-text, :attribution-line."
   (let* ((parts (split-string message notmuch-ext/header-section-separator))
          (header (-> parts first s-trim))
-         (message-body (-> parts second s-trim))
+         (message-body (-> parts cl-second s-trim))
          (body-lines (s-split "\n" message-body))
          (attribution-line-index (--find-last-index
                                   (string-match notmuch-ext/attribution-line-regexp it)

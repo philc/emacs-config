@@ -86,13 +86,13 @@
   (let ((region (evil-ext/get-comment-block-region)))
     (evil-ext/preserve-cursor-after-fill
      (lambda ()
-       (evil-fill (first region) (second region))))))
+       (evil-fill (cl-first region) (cl-second region))))))
 
 (defun evil-ext/fill-inside-string ()
   "Fills the current quote surrounded string. Equivalent to gqi\"."
   (interactive)
   (let ((region (evil-a-double-quote)))
-    (evil-fill (first region) (second region))))
+    (evil-fill (cl-first region) (cl-second region))))
 
 (defun evil-ext/fill-inside-paragraph ()
   "Fills (reflows/linewraps) the current paragraph. Equivalent to gqip in vim."
@@ -102,7 +102,7 @@
                           (util/preserve-line-and-column 'evil-inner-paragraph))))
     (evil-ext/preserve-cursor-after-fill
      (lambda ()
-       (evil-fill (first region) (second region))))))
+       (evil-fill (cl-first region) (cl-second region))))))
 
 (defun evil-ext/fill-inside-paragraph-or-comment-block ()
   "If the cursor is inside a comment block in a programming mode, fill the surrounding comment.
@@ -123,7 +123,7 @@
      (let ((region (if (use-region-p)
                        (list (region-beginning) (region-end))
                      (evil-inner-paragraph))))
-       (evil-ext/indent-without-move (first region) (second region))))))
+       (evil-ext/indent-without-move (cl-first region) (cl-second region))))))
 
 (evil-define-operator evil-ext/indent-without-move (beg end)
   "Indent text."

@@ -126,7 +126,7 @@
   (interactive)
   (when js/last-run-command
     (let ((fn-name (nth 1 js/last-run-command))
-          (buf (first js/last-run-command)))
+          (buf (cl-first js/last-run-command)))
       (message (format "Saving command: %s on %s" fn-name (buffer-name buf)))
       (setq js/saved-run-command js/last-run-command))))
 
@@ -136,7 +136,7 @@
   (util/save-buffer-if-dirty)
   (if js/saved-run-command
       (let ((fn-name (nth 1 js/saved-run-command))
-            (buf (first js/saved-run-command)))
+            (buf (cl-first js/saved-run-command)))
         (with-current-buffer buf
           (progn (print "fn-name") (prin1 fn-name t))
           (progn (print "buf") (prin1 buf t))

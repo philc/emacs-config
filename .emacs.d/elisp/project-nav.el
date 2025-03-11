@@ -42,7 +42,7 @@
     (let ((file-to-open (ido-completing-read "Notes file: " (mapcar 'file-name-nondirectory file-list))))
       (->> file-list
            (--filter (s-ends-with? (concat "/" file-to-open) it))
-           first
+           cl-first
            find-file))
     ;; When that file is shown, ensure it's in normal mode. If the file is open in another window in insert
     ;; mode, then it will remain in insert mode in this current window.
@@ -62,7 +62,7 @@
                          (append (list (concat project-path "/" "README.md")))))
          (main-file (->> main-files
                          (remove-if-not 'file-exists-p)
-                         first)))
+                         cl-first)))
     (if main-file
         (set-window-buffer (selected-window) (find-file main-file))
       (dired project-path))))
@@ -81,7 +81,7 @@
                                                nil t))
          (project (->> all-project-folders
                        (--filter (s-ends-with? (concat "/" project-to-open) it))
-                       first)))
+                       cl-first)))
     (project-nav/open-root-of-project project)
     ;; If we invoke this inside of a split, don't set the tab's title.
     (when (= 1 (length (window-list)))

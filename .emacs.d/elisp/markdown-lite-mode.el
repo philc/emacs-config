@@ -99,8 +99,8 @@
         (message "Not currently inside a list item.")
       (let* ((space-char 32)
              (new-indent (make-string indent space-char))
-             (is-collapsed (invisible-p (second bounds))))
-        (goto-char (+ (second bounds) (if is-collapsed 1 0)))
+             (is-collapsed (invisible-p (cl-second bounds))))
+        (goto-char (+ (cl-second bounds) (if is-collapsed 1 0)))
         (newline)
         (insert new-indent new-marker " ")
         (evil-append nil)))))
@@ -177,13 +177,13 @@
   "Promotes the list item under the cursor, excluding subtrees"
   (let* ((region (mlm/markdown-get-list-item-region))
          (indent-amount (if should-promote -2 2))
-         (is-collapsed-subtree (invisible-p (second region))))
+         (is-collapsed-subtree (invisible-p (cl-second region))))
     (if is-collapsed-subtree
         (progn
           (outline-show-subtree)
           (mlm/markdown-perform-promote-subtree should-promote)
           (outline-hide-subtree))
-      (indent-rigidly (first region) (second region) indent-amount))))
+      (indent-rigidly (cl-first region) (cl-second region) indent-amount))))
 
 (defun mlm/markdown-perform-promote-subtree (should-promote)
   "Promotes thes list under under the cursor, and also promotes all subtrees."

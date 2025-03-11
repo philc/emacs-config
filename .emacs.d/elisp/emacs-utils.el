@@ -24,8 +24,8 @@
   "Calls the given program and raises an error if the exist status is non-zero. The error's message
    is the program's output."
   (let* ((result (apply 'util/call-process-with-exit-status program stdin args))
-                 (exit-code (first result))
-                 (output (second result)))
+                 (exit-code (cl-first result))
+                 (output (cl-second result)))
     (if (= exit-code 0)
         output
       (error "%s" output))))
@@ -73,7 +73,7 @@
 (defun util/define-keys (keymap &rest key-and-fn-pairs)
   "Like define-key, but takes a variable number of arguments -- two per key binding pair."
   (dolist (pair (partition key-and-fn-pairs 2))
-    (define-key keymap (first pair) (second pair))))
+    (define-key keymap (cl-first pair) (cl-second pair))))
 
 (defun util/save-buffer-if-dirty ()
   (when (and buffer-file-name (buffer-modified-p))
@@ -125,8 +125,8 @@
                  (frames->windows (util/get-frame->selected-window))
                  (result (funcall f)))
     (-each frames->windows (lambda (x)
-                             (select-frame (first x) t)
-                             (select-window (second x) t)))
+                             (select-frame (cl-first x) t)
+                             (select-window (cl-second x) t)))
     (select-frame-set-input-focus original-frame t)
     result))
 
