@@ -761,7 +761,9 @@
 
 (define-minor-mode osx-keys-minor-mode
   "A minor-mode for emulating osx keyboard shortcuts."
-  t " osx" osx-keys-minor-mode-map)
+  :init-value t
+  :lighter " osx"
+  :keymap osx-keys-minor-mode-map)
 
 (osx-keys-minor-mode t)
 

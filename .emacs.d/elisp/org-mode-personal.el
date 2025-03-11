@@ -174,7 +174,6 @@
                               (?j "Journal")
                               (?n "Entertainment")
                               (?m "Emacs")
-                              (?d "Dad")
                               (?h "Handbook")
                               (?p "Side projects")
                               (?v "Vimium")
