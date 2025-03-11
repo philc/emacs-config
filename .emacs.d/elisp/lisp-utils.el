@@ -49,13 +49,14 @@
 ;; Taken from https://groups.google.com/forum/#!topic/gnu.emacs.help/_p2-GXAANgw. Requires CL.
 (defun partition (l n)
   "Return a list of L's consecutive sublists of length N."
-  (assert (zerop (mod (length l) n)))
-  (loop for l on l by #'(lambda (l) (nthcdr n l)) collect (subseq l 0 n)))
+  (cl-assert (zerop (mod (length l) n)))
+  (cl-loop for l on l by #'(lambda (l) (nthcdr n l)) collect (subseq l 0 n)))
 
 (defun plist-sget (plist prop)
   "Retrives the prop value in plist. Throws and error if plist does not contain prop."
   (when (not (plist-member plist prop))
-    (throw (concat "plist is missing property: " (prin1-to-string prop) ". " (prin1-to-string plist)) nil))
+    (throw (concat "plist is missing property: " (prin1-to-string prop) ". "
+                   (prin1-to-string plist)) nil))
   (plist-get plist prop))
 
 (defmacro setq-temporarily (var value form)
