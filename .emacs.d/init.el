@@ -835,6 +835,10 @@
 ;;
 ;; Dired mode - using the Emacs file browser.
 ;;
+
+;; Suppress a warning that the MacOS ls binary doesn't support the --dired option.
+(setq dired-use-ls-dired nil)
+
 (require 'dired-details+)
 (setq dired-recursive-copies (quote always))
 (setq dired-recursive-deletes (quote top))
