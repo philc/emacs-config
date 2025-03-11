@@ -771,7 +771,8 @@
   "Try to ensure that osx keybindings always have priority."
   (if (not (eq (car (car minor-mode-map-alist)) 'osx-keys-minor-mode))
       (let ((osx-keys (assq 'osx-keys-minor-mode minor-mode-map-alist)))
-        (assq-delete-all 'osx-keys-minor-mode minor-mode-map-alist)
+        (setq minor-mode-map-alist
+              (assq-delete-all 'osx-keys-minor-mode minor-mode-map-alist))
         (add-to-list 'minor-mode-map-alist osx-keys))))
 (ad-activate 'load)
 
