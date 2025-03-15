@@ -2024,6 +2024,7 @@
   (kbd "r") 'package-menu-refresh
   (kbd "x") 'package-menu-execute
   (kbd "u") 'package-menu-mark-unmark
+  (kbd "U") 'package-menu-mark-upgrades
   (kbd "i") 'package-menu-mark-install)
 
 ;;
