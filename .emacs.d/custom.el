@@ -1,6 +1,6 @@
-; Emac's "customize" system is a way of declaring settings which can be edited via a UI. Some plugins use
-; this, like elscreen. See here for more:
-; http://ergoemacs.org/emacs/emacs_custom_system.html
+;; Emac's "customize" system is a way of declaring settings which can be edited via a UI. Some plugins use
+;; this, like elscreen. See here for more:
+;; http://ergoemacs.org/emacs/emacs_custom_system.html
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -9,18 +9,15 @@
  '(cider-repl-pop-to-buffer-on-connect nil)
  '(org-agenda-files '("~/test.org"))
  '(package-selected-packages
-   '(ace-jump-mode ag align-cljlet auto-complete autopair better-jumper browse-at-remote coffee-mode
-                   color-theme-sanityinc-tomorrow color-theme-solarized column-marker dash-at-point
-                   dash-functional diminish dired+ dired-details+ dogears edit-server elisp-autofmt
-                   elisp-benchmarks evil evil-anzu evil-mc evil-multiedit evil-nerd-commenter
-                   evil-surround eyebrowse f fill-column-indicator fiplr flx-ido framemove general
-                   go-mode gradle-mode gumshoe hiwin ht ido-ubiquitous ido-vertical-mode indium
-                   inf-clojure js-comint less-css-mode lua-mode magit markdown-mode maxframe
+   '(ace-jump-mode ag align-cljlet auto-complete better-jumper browse-at-remote coffee-mode
+                   column-marker diminish dired+ dired-details+ edit-server elisp-autofmt
+                   elisp-benchmarks evil evil-nerd-commenter evil-surround fill-column-indicator
+                   flx-ido framemove general go-mode hiwin ht ido-ubiquitous ido-vertical-mode
+                   indium inf-clojure js-comint less-css-mode lua-mode magit markdown-mode
                    mu4e-maildirs-extension multi-term mustache-mode notmuch outline-magic parinfer
-                   powerline projectile queue rainbow-delimiters ruby-electric rust-mode scss-mode
-                   seq slamhound smartparens smex spell-fu spinner swift-mode tempel tree-mode
-                   typescript-mode undo-fu wcheck-mode web-mode yaml-mode yascroll yasnippet
-                   zoom-frm))
+                   powerline projectile queue rainbow-delimiters rust-mode scss-mode smartparens
+                   smex spell-fu spinner swift-mode tempel tree-mode typescript-mode undo-fu
+                   wcheck-mode web-mode yaml-mode yascroll))
  '(spell-fu-idle-delay 1.5))
 
 (custom-set-faces

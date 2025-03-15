@@ -44,7 +44,6 @@
 
 (defvar my-packages '(ace-jump-mode ; Jump to any text on screen in a few keystrokes.
                       ag ; Silver searcher integration for Emacs
-                      autopair ; Insert matching delimiters, e.g. insert closing braces.
                       browse-at-remote ; Jump to the Github page for a given line in a file.
                       clojure-mode ; For editing Clojure files.
                       coffee-mode ; For syntax highlighting coffeescript.
@@ -1311,7 +1310,6 @@
 ;;
 (add-hook 'css-mode-hook
           (lambda ()
-            ;; (autopair-mode 1) ; Auto-insert matching delimiters. NOTE(philc): I don't like this.
             ;; Properly unindent a closing brace after you type it and hit enter.
             (electric-indent-mode)))
 
