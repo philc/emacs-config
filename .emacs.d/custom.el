@@ -9,7 +9,18 @@
  '(cider-repl-pop-to-buffer-on-connect nil)
  '(org-agenda-files '("~/test.org"))
  '(package-selected-packages
-   '(evil-multiedit evil-mc elisp-autofmt elisp-benchmarks typescript-mode rust-mode tempel yascroll gumshoe dogears spell-fu undo-fu evil general js-comint indium browse-at-remote parinfer zoom-frm yasnippet yaml-mode web-mode wcheck-mode tree-mode swift-mode spinner smex smartparens slamhound seq scss-mode ruby-electric rainbow-delimiters queue projectile powerline outline-magic notmuch mustache-mode multi-term mu4e-maildirs-extension maxframe markdown-mode magit lua-mode less-css-mode inf-clojure ido-vertical-mode ido-ubiquitous ht hiwin gradle-mode go-mode framemove flx-ido fiplr fill-column-indicator f eyebrowse evil-surround evil-nerd-commenter evil-anzu edit-server dired-details+ dired+ diminish dash-functional dash-at-point column-marker color-theme-solarized color-theme-sanityinc-tomorrow coffee-mode autopair auto-complete align-cljlet ag ace-jump-mode))
+   '(ace-jump-mode ag align-cljlet auto-complete autopair better-jumper browse-at-remote coffee-mode
+                   color-theme-sanityinc-tomorrow color-theme-solarized column-marker dash-at-point
+                   dash-functional diminish dired+ dired-details+ dogears edit-server elisp-autofmt
+                   elisp-benchmarks evil evil-anzu evil-mc evil-multiedit evil-nerd-commenter
+                   evil-surround eyebrowse f fill-column-indicator fiplr flx-ido framemove general
+                   go-mode gradle-mode gumshoe hiwin ht ido-ubiquitous ido-vertical-mode indium
+                   inf-clojure js-comint less-css-mode lua-mode magit markdown-mode maxframe
+                   mu4e-maildirs-extension multi-term mustache-mode notmuch outline-magic parinfer
+                   powerline projectile queue rainbow-delimiters ruby-electric rust-mode scss-mode
+                   seq slamhound smartparens smex spell-fu spinner swift-mode tempel tree-mode
+                   typescript-mode undo-fu wcheck-mode web-mode yaml-mode yascroll yasnippet
+                   zoom-frm))
  '(spell-fu-idle-delay 1.5))
 
 (custom-set-faces
