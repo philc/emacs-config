@@ -9,15 +9,10 @@
  '(cider-repl-pop-to-buffer-on-connect nil)
  '(org-agenda-files '("~/test.org"))
  '(package-selected-packages
-   '(ace-jump-mode ag align-cljlet auto-complete better-jumper browse-at-remote coffee-mode
-                   column-marker diminish dired+ dired-details+ edit-server elisp-autofmt
-                   elisp-benchmarks evil evil-nerd-commenter evil-surround fill-column-indicator
-                   flx-ido framemove general go-mode hiwin ht ido-ubiquitous ido-vertical-mode
-                   indium inf-clojure js-comint less-css-mode lua-mode magit markdown-mode
-                   mu4e-maildirs-extension multi-term mustache-mode notmuch outline-magic parinfer
-                   powerline projectile queue rainbow-delimiters rust-mode scss-mode smartparens
-                   smex spell-fu spinner swift-mode tempel tree-mode typescript-mode undo-fu
-                   wcheck-mode web-mode yaml-mode yascroll))
+   '(ace-jump-mode ag better-jumper browse-at-remote coffee-mode dash-functional diminish evil
+                   evil-nerd-commenter flx-ido general go-mode hiwin ido-vertical-mode inf-clojure
+                   magit outline-magic powerline projectile rainbow-delimiters scss-mode smartparens
+                   smex spell-fu tempel undo-fu yaml-mode yascroll))
  '(spell-fu-idle-delay 1.5))
 
 (custom-set-faces
