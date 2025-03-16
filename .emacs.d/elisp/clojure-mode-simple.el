@@ -17,7 +17,6 @@
 (require 'thingatpt)
 (require 'dash)
 (require 's)
-(require 'ht)
 (require 'smartparens)
 (require 'browse-url)
 

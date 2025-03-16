@@ -4,7 +4,6 @@
 ;;
 (provide 'window-management)
 (require 'dash)
-(require 'framemove)
 
 ;; When switching between windows using windmove, also jump across frames if there are multiple
 ;; frames.
