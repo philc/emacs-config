@@ -193,7 +193,7 @@
   ;; TODO(philc): Populate these completions with the top-level headers from the buffer.
   (let* (; I got this elaborate esnippet from online.
          (headings (org-map-entries (lambda () (fifth (org-heading-components))) "LEVEL=1"))
-         (heading (ido-completing-read "Heading: " headings nil t)))
+         (heading (completing-read "Heading: " headings nil t)))
     (goto-char 0)
     (org-move-to-heading heading)
     (recenter-no-redraw)))

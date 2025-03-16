@@ -47,19 +47,18 @@
                       better-jumper ; A configurable jump implementation
                       browse-at-remote ; Jump to the Github page for a given line in a file.
                       clojure-mode ; For editing Clojure files.
+                      consult
                       coffee-mode ; For syntax highlighting coffeescript.
                       dash ; Dash provides modern functions for working with lists in Emacs Lisp.
                       dash-functional ; Useful combinators for Emacs Lisp.
                       diminish ; For hiding and shortening minor modes in the modeline
                       evil ; Evil mode implements Vim's modal bindings and text object manipulation.
                       evil-nerd-commenter
+                      flx ; For fuzzy-completion in vertico
                       general ; Functions for defining keybindings and leader keys. Complements Evil
-                      flx-ido ; Fuzzy matching for ido, which improves the UX of Projectile.
                       go-mode ; For editing Go files.
                       hiwin ; For highlighting the active pane/window in Emacs.
                       less-css-mode ; Syntax highlighting for LESS CSS files.
-                      ido-ubiquitous ; Make ido completions work everywhere.
-                      ido-vertical-mode ; Show ido results vertically.
                       inf-clojure ; Clojure REPL mode
                       magit ; A mode for committing to git repositories and viewing Git history.
                       org ; For outlining. It's bundled with Emacs, but I'm using the latest version
@@ -70,10 +69,10 @@
                       s ; A strings library.
                       scss-mode ; For editing SCSS files.
                       smartparens ; For editing expressions in parentheses.
-                      smex ; Makes M-x more useful by showing you recently used commands.
                       spell-fu ; Spell checking
                       tempel ;; Insert snippets
                       undo-fu ; Used for undo/redo in Evil mode. No longer needed in Emacs 28.
+                      vertico ; Nicely show menu completions
                       yaml-mode ; For editing YAML files
                       yascroll ; For rendering scroll bars in the right fringe
                       ))
@@ -205,7 +204,8 @@
 
 (setq vc-follow-symlinks t) ; Don't ask confirmation to follow symlinks to edit files.
 
-(savehist-mode t) ; Save your minibuffer history across Emacs sessions.
+;; Save minibuffer history across Emacs sessions.
+(savehist-mode t)
 
 ;; Include the path when displaying buffer names which have the same filename open (e.g. a/foo.txt
 ;; b/foo.txt)
@@ -295,12 +295,9 @@
 (setq kill-buffer-query-functions
       (remq 'process-kill-buffer-query-function kill-buffer-query-functions))
 
-;; Use smex to show the M-x command prompt. It has better completion support than the default M-x.
-(require 'smex)
-(global-set-key (kbd "M-x") 'smex)
-
 ;; RecentF mode is the Emacs minor mode used when opening files via C-x C-f.
 (require 'recentf)
+(recentf-mode)
 (define-key recentf-mode-map (kbd "C-w") 'backward-delete-word)
 
 ;; Save buffers whenever they lose focus. This obviates the need to hit the Save key thousands of
@@ -495,7 +492,7 @@
  :keymaps '(normal visual)
  :prefix global-leader-prefix
  "h" 'help
- "b" 'ido-switch-buffer
+ "b" 'consult-buffer
  "f" 'projectile-find-file
  "t" (lambda () (interactive) (message (buffer-name)))
  "SPC" 'evil-ext/fill-inside-paragraph-or-comment-block ; Shortcut for Vim's gqip
@@ -817,21 +814,42 @@
 ;;
 ;; Filename completions (i.e. CTRL-P or CMD-T in other editors)
 ;;
-(ido-mode t)
-(ido-ubiquitous-mode t)
-(ido-vertical-mode t)
-(setq ido-vertical-define-keys 'C-n-C-p-up-down-left-right)
 
-;; By default, ido-switch-buffer will move your focus to another frame if the buffer is open there.
-;; I instead want the desired buffer to open again within my current frame, even if it's already
-;; open in another frame.
-(setq ido-default-buffer-method 'selected-window)
-(with-eval-after-load "ido"
-  (setq ido-enable-flex-matching t)
-  (setq ido-use-virtual-buffers t)
-  (setq ido-everywhere t)
-  ;; Kill (unload) the highlighted buffer in the matches list.
-  (define-key ido-file-completion-map (kbd "C-w") 'backward-delete-word))
+(require 'flx)
+
+(require 'vertico)
+;; Ignore case when matching completions to a query.
+(setq read-file-name-completion-ignore-case t)
+(setq read-buffer-completion-ignore-case t)
+(setq completion-ignore-case t)
+
+(setq completion-styles '(flex)) ; Allow fuzzy matching.
+(setq vertico-count 15) ; Number of results to show.
+
+(vertico-mode)
+
+(require 'consult)
+;; Don't show previews of the buffers in consult-buffer.
+(setq consult-preview-key nil)
+
+(defun kill-consult-buffer-at-point ()
+  (interactive)
+  "Kill the buffer at point in consult-buffer."
+  ;; vertico--candidate returns a string of this form. We want the buffer name.
+  ;; #("some-buffer.el..." 0 15 ...)
+  (let* ((buffer-name (->> (vertico--candidate)
+                           substring-no-properties
+                           ;; Remove the mysterious invalid unicode character at the end of the
+                           ;; buffer's name.
+                           (s-chop-right 1)))
+         (buffer (get-buffer buffer-name)))
+    (when buffer
+      (kill-buffer buffer)
+      ;; I would like to refresh the consult view now that the buffer is gone, but this doesn't
+      ;; appear to do anything.
+      (consult--vertico-refresh))))
+
+(define-key vertico-map (kbd "C-k") #'kill-consult-buffer-at-point)
 
 ;;
 ;; Dired mode - using the Emacs file browser.

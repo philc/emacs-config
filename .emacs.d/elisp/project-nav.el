@@ -39,7 +39,8 @@
          (file-list (->> project-nav/notes-directories
                          (--map (project-nav/filter-files-in-directory it file-matches-pattern? t))
                          flatten)))
-    (let ((file-to-open (ido-completing-read "Notes file: " (mapcar 'file-name-nondirectory file-list))))
+    (let ((file-to-open (completing-read "Notes file: "
+                                         (mapcar 'file-name-nondirectory file-list))))
       (->> file-list
            (--filter (s-ends-with? (concat "/" file-to-open) it))
            cl-first
@@ -76,9 +77,9 @@
   (let* ((all-project-folders (->> project-nav/project-folders
                                    (--map (project-nav/filter-files-in-directory it 'file-directory-p nil))
                                    flatten))
-         (project-to-open (ido-completing-read "Project folder: "
-                                               (-map 'file-name-nondirectory all-project-folders)
-                                               nil t))
+         (project-to-open (completing-read "Project folder: "
+                                           (-map 'file-name-nondirectory all-project-folders)
+                                           nil t))
          (project (->> all-project-folders
                        (--filter (s-ends-with? (concat "/" project-to-open) it))
                        cl-first)))
