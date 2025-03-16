@@ -3,3 +3,9 @@ elpa
 spell-fu/
 .emacs.desktop
 .emacs.desktop.lock
+# Cache directory for compiled elisp code
+eln-cache
+# Magit uses the Transient library to store command history
+transient
+# Used by lsp-mode to store session information
+.lsp-session-v1
