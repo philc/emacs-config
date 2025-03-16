@@ -1493,9 +1493,6 @@
   ;; TODO(philc): Make this use a variable
   (util/call-process-with-exit-status "open" nil "-a" browser-app (buffer-file-name)))
 
-;; Disable spell check in HTML buffers. There are too many false-positives in the markup.
-(add-hook 'html-mode-hook (lambda () (wcheck-mode -1)))
-
 ;;
 ;; CSS
 ;;
