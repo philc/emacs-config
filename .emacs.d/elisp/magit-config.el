@@ -2,8 +2,8 @@
 ;;
 ;; My configuration and customizations of magit mode, for interacting with Git.
 ;;
-;; Note that magit's keybindings are notoriously hard to rebind consistently. It would be better if there was
-;; a way to unset all of Magit's keybindings. For further discussion:
+;; Note that magit's keybindings are notoriously hard to rebind consistently. It would be better if
+;; there was a way to unset all of Magit's keybindings. For further discussion:
 ;; https://github.com/magit/magit/issues/1968
 ;;
 ;; Helpful references:
@@ -16,14 +16,14 @@
 (require 'magit)
 (provide 'magit-config)
 
-;; When committing, don't have Magit show the diff of what's changed. This feature is annoying because it
-;; creates two buffers. I've already reviewed the staged changes prior to activating commit mode and don't
-;; need to see the changes again.
+;; When committing, don't have Magit show the diff of what's changed. This feature is annoying
+;; because it creates two buffers. I've already reviewed the staged changes prior to activating
+;; commit mode and don't need to see the changes again.
 (setq magit-commit-show-diff nil)
 
-;; Disable Emacs' built-in VC package for git repositories. This prevents it from doing unnecessary work when
-;; Magit is performing git operations. This was recommended by the Magit manual. Empirically, I've noticed
-;; this greatly speeds up git rebasing with Magit.
+;; Disable Emacs' built-in VC package for git repositories. This prevents it from doing unnecessary
+;; work when Magit is performing git operations. This was recommended by the Magit manual.
+;; Empirically, I've noticed this greatly speeds up git rebasing with Magit.
 (setq vc-handled-backends (delq 'Git vc-handled-backends))
 
 ;; Don't refresh the status buffer unless it's currently focused. This should improve performance.
@@ -45,14 +45,14 @@
   (setq-local whitespace-trailing nil))
 (add-hook 'magit-mode-hook 'magit-disable-whitespace-mode)
 
-;; ;; Don't show the stashes in the status view. In my repos over time I accumulate a huge list of stashes,
-;; ;; and it clutters the UI to see them every time when reviewing diffs.
+;; Don't show the stashes in the status view. In my repos over time I accumulate a huge list of
+;; stashes, and it clutters the UI to see them every time when reviewing diffs.
 (remove-hook 'magit-status-sections-hook 'magit-insert-stashes)
 (remove-hook 'magit-status-sections-hook 'magit-insert-status-headers) ; Remove boilerplate
 (remove-hook 'magit-revision-sections-hook 'magit-insert-revision-tag) ; Don't show the commit ID.
 
-;; This string formats the headers of revision mode, when reviewing diffs. It's taken from
-;; magit's diff.el. I've edited it to omit the commiter name and the date, to allow more of the diff to show
+;; This string formats the headers of revision mode, when reviewing diffs. It's taken from magit's
+;; diff.el. I've edited it to omit the commiter name and the date, to allow more of the diff to show
 ;; and less diff metadata. I already know the commiter and the date because I view specific commits
 ;; from the git log view.
 (setq magit-revision-headers-format "\
@@ -60,7 +60,8 @@ Author: %aN <%aE>
 Date: %ad
 ")
 
-;; This setting can speed up the diff view as suggested by https://magit.vc/manual/magit/Performance.html
+;; This setting can speed up the diff view as suggested by
+;; https://magit.vc/manual/magit/Performance.html
 (setq magit-revision-insert-related-refs nil)
 
 (defun show-commit-and-preserve-window ()
@@ -82,15 +83,16 @@ Date: %ad
                             (select-window w)
                             (beginning-of-buffer)))))))))
 
-;; Magit mode feels twitchy because every key has a binding, and some are very destructive or disorienting.
-;; I'm defining a whitelist of keys that I actually use, so this mode feels less error-prone.
+;; Magit mode feels twitchy because every key has a binding, and some are very destructive or
+;; disorienting. I'm defining a whitelist of keys that I actually use, so this mode feels less
+;; error-prone.
 (evil-define-key 'normal magit-mode-map
   ";gg" 'magit-process
   "J" 'magit-section-forward
   "K" 'magit-section-backward)
 
-;; ;; This is a tricky binding -- depending on where your cursor is in the magit status view, you may have
-;; ;; the magit-file-section-map activated. evil-define-key doesn't work with this keymap.
+;; ;; This is a tricky binding -- depending on where your cursor is in the magit status view, you
+;; ;; may have the magit-file-section-map activated. evil-define-key doesn't work with this keymap.
 (define-key magit-file-section-map "K" 'magit-section-backward) ; "K" was bound to magit-file-untrack.
 
 ;; Instead of removing the whole window, just close the buffer showing a commit's details and
@@ -143,8 +145,8 @@ Date: %ad
    "yy" 'magit-copy-section-value ; Copies the commit ID of the commit under the cursor.
    "r" 'my-magit/magit-refresh-preserve-cursor
    "q" 'bury-buffer
-   ;; I use C-d and C-u for scrolling the log view, and d and u for scrolling the diff view which shows the
-   ;; diff of the currently-focused commit.
+   ;; I use C-d and C-u for scrolling the log view, and d and u for scrolling the diff view which
+   ;; shows the diff of the currently-focused commit.
    "u" (lambda () (interactive) (scroll-magit-revision-buffer 'View-scroll-half-page-backward))
    "d" (lambda () (interactive) (scroll-magit-revision-buffer 'View-scroll-half-page-forward))))
 
@@ -168,7 +170,8 @@ Date: %ad
    "o" 'my-magit/diff-visit-file
    (kbd "RET") 'my-magit/diff-visit-file
    "c" 'magit-commit
-   ;; I have a git precommit hook which does style checks. Sometimes I want to disable it when committing.
+   ;; I have a git precommit hook which does style checks. Sometimes I want to disable it when
+   ;; committing.
    "C" (lambda() (interactive) (util/with-env-var "SKIP_GIT_STYLE_CHECK" "true" 'magit-commit))
    "e" 'magit-show-level-4-all ; e for exapnd
    "d" 'magit-discard
@@ -198,17 +201,18 @@ Date: %ad
 
 (add-hook 'git-commit-mode-hook 'init-git-commit-mode)
 (defun init-git-commit-mode ()
-  ;; Enter insert mode when the git commit window is shown. evil-set-initial-state doesn't work here because
-  ;; the git commit window's major mode is text-mode, and not git-commit-mode, for some reason.
+  ;; Enter insert mode when the git commit window is shown. evil-set-initial-state doesn't work here
+  ;; because the git commit window's major mode is text-mode, and not git-commit-mode, for some
+  ;; reason.
   (evil-insert 0)
-  ;; In some repos I have a git commit hook which prepopulates a commit message prefix for me. In those cases,
-  ;; move to the end ;; of the line so I can begin typing after the prefix.
+  ;; In some repos I have a git commit hook which prepopulates a commit message prefix for me. In
+  ;; those cases, move to the end ;; of the line so I can begin typing after the prefix.
   (end-of-line))
 
 (add-hook 'magit-commit-mode-hook 'init-magit-commit-mode-keybindings)
 (defun init-magit-commit-mode-keybindings ()
-  ;; I'm specifying these keys here because for some reason they get overridden by the yy shortcut I've
-  ;; defined for magit-log-mode.
+  ;; I'm specifying these keys here because for some reason they get overridden by the yy shortcut
+  ;; I've defined for magit-log-mode.
   (util/define-keys evil-normal-state-local-map "yy" 'evil-yank-line)
   (util/define-keys evil-visual-state-local-map "y" 'evil-yank))
 
