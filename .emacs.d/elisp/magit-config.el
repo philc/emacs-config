@@ -34,32 +34,35 @@
 (setq magit-display-buffer-function (lambda (buffer)
                                       (display-buffer buffer '(display-buffer-same-window))))
 
-;; Magit is causing empty lines in the git status diff view to be highlighted with "whitespace-trailing", even
-;; though those lines are not trailing whitespace, so it's distracting. To fix, I've disabled the font face
-;; used to show such errors. Another approach is to disable whitespace-mode (which is activated via
-;; `global-whitespace-mode`) in all magit-* buffers. However, I was unable to get that to work, even by
-;; setting (whitespace-mode -1) in the hook for every Magit mode I could find. There is some Magit mode used
-;; in the Magit diff view that is enabling whitespace-mode, and I couldn't find it.
+;; Magit is causing empty lines in the git status diff view to be highlighted with
+;; "whitespace-trailing", even though those lines do not have trailing whitespace, so it's
+;; distracting. To fix, I've disabled the font face used to show such errors. Another approach is to
+;; disable whitespace-mode (which is activated via `global-whitespace-mode`) in all magit-* buffers.
+;; However, I was unable to get that to work, even by setting (whitespace-mode -1) in the hook for
+;; every Magit mode I could find. There is some Magit mode used in the Magit diff view that is
+;; enabling whitespace-mode, and I couldn't find it.
 (defun magit-disable-whitespace-mode ()
   (setq-local whitespace-trailing nil))
 (add-hook 'magit-mode-hook 'magit-disable-whitespace-mode)
 
-;; Don't show the stashes in the status view. In my repos over time I accumulate a huge list of stashes,
-;; and it clutters the UI to see them every time when reviewing diffs.
+;; ;; Don't show the stashes in the status view. In my repos over time I accumulate a huge list of stashes,
+;; ;; and it clutters the UI to see them every time when reviewing diffs.
 (remove-hook 'magit-status-sections-hook 'magit-insert-stashes)
 (remove-hook 'magit-status-sections-hook 'magit-insert-status-headers) ; Remove boilerplate
 (remove-hook 'magit-revision-sections-hook 'magit-insert-revision-tag) ; Don't show the commit ID.
 
-;; This string formats the headers of revision mode, when reviewing diffs. It's taken from magit's diff.el and
-;; has been edited to omit commiter name and date.
+;; This string formats the headers of revision mode, when reviewing diffs. It's taken from
+;; magit's diff.el. I've edited it to omit the commiter name and the date, to allow more of the diff to show
+;; and less diff metadata. I already know the commiter and the date because I view specific commits
+;; from the git log view.
 (setq magit-revision-headers-format "\
 Author: %aN <%aE>
 Date: %ad
 ")
 
-;; Don't use a unicode ellipsis character when truncating author names in the git log view. It screws up
-;; the line height with my current font (Inconsolata).
-(setq magit-ellipsis (get-byte 0 "."))
+;; ;; Don't use a unicode ellipsis character when truncating author names in the git log view. It screws up
+;; ;; the line height with my current font (Inconsolata).
+;; (setq magit-ellipsis (get-byte 0 "."))
 
 ;; This setting can speed up the diff view as suggested by https://magit.vc/manual/magit/Performance.html
 (setq magit-revision-insert-related-refs nil)
@@ -72,8 +75,9 @@ Date: %ad
      ;; directly gives an argument error.
      (call-interactively 'magit-show-commit)
      ;; After a delay, scroll the window opened by magit-show-commit to the top. While
-     ;; magit-show-commit is supposed to sccroll the window to the top, if the diff being shown is
+     ;; magit-show-commit is supposed to scroll the window to the top, if the diff being shown is
      ;; large, that doesn't always work for some reason.
+     ;; NOTE(philc): This is needed as of 2025-03-15.
      (let ((w (selected-window)))
        (run-with-timer 0.01 0
                        (lambda ()
@@ -89,10 +93,12 @@ Date: %ad
   "J" 'magit-section-forward
   "K" 'magit-section-backward)
 
-;; This is a tricky binding -- depending on where your cursor is in the magit status view, you may have
-;; the magit-file-section-map activated. evil-define-key doesn't work with this keymap.
+;; ;; This is a tricky binding -- depending on where your cursor is in the magit status view, you may have
+;; ;; the magit-file-section-map activated. evil-define-key doesn't work with this keymap.
 (define-key magit-file-section-map "K" 'magit-section-backward) ; "K" was bound to magit-file-untrack.
 
+;; Instead of removing the whole window, just close the buffer showing a commit's details and
+;; surface the next buffer in the window.
 ;; "q" in this mode can't be bound with evil-define-key for some reason.
 (util/define-keys magit-revision-mode-map "q" 'bury-buffer)
 
@@ -122,10 +128,10 @@ Date: %ad
   ";wk" 'with-editor-cancel
   "ZZ" 'with-editor-finish)
 
-;; NOTE(philc): I'm setting the key bindings for these magit modes when their buffers load, because for
-;; some reason, the evil bindings on these modes conflict (i.e. when a new mode loads, it redefines the key
-;; for the other modes). This was needed the last time I checked, but may be unnecessary in later versions of
-;; magit. But it does work in later versions of magit.
+;; NOTE(philc): I'm setting the key bindings for these magit modes when their buffers load, because
+;; for some reason, the evil bindings on these modes conflict (i.e. when a new mode loads, it
+;; redefines the key for the other modes). This was needed the last time I checked, but may be
+;; unnecessary in later versions of magit. But it does work in later versions of magit.
 (add-hook 'magit-log-mode-hook 'init-magit-log-mode-keybindings)
 (defun init-magit-log-mode-keybindings ()
   (util/define-keys
@@ -155,7 +161,6 @@ Date: %ad
     (when window
       (with-selected-window window (funcall fn)))))
 
-(add-hook 'magit-status-mode-hook 'init-magit-status-mode-keybindings)
 (defun init-magit-status-mode-keybindings ()
   ;; NOTE(philc): using `evil-define-key` for these keymaps does not work.
   (util/define-keys
@@ -183,6 +188,7 @@ Date: %ad
    (kbd "TAB") 'magit-section-toggle
    "q" 'bury-buffer
    "r" 'my-magit/magit-refresh-preserve-cursor))
+(add-hook 'magit-status-mode-hook 'init-magit-status-mode-keybindings)
 
 (defun my-magit/magit-refresh-preserve-cursor ()
   (interactive)
@@ -228,5 +234,5 @@ Date: %ad
 (defun magit-status-and-focus-unstaged ()
   "Opens the magit-status view and focuses the cursor on the first unstaged file."
   (interactive)
-  (call-interactively 'magit-status)
+  (magit-status)
   (magit-jump-to-unstaged))
