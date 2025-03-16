@@ -44,6 +44,7 @@
 
 (defvar my-packages '(ace-jump-mode ; Jump to any text on screen in a few keystrokes.
                       ag ; Silver searcher integration for Emacs
+                      better-jumper ; A configurable jump implementation
                       browse-at-remote ; Jump to the Github page for a given line in a file.
                       clojure-mode ; For editing Clojure files.
                       coffee-mode ; For syntax highlighting coffeescript.
@@ -60,6 +61,7 @@
                       less-css-mode ; Syntax highlighting for LESS CSS files.
                       ido-ubiquitous ; Make ido completions work everywhere.
                       ido-vertical-mode ; Show ido results vertically.
+                      inf-clojure ; Clojure REPL mode
                       magit ; A mode for committing to git repositories and viewing Git history.
                       org ; For outlining. It's bundled with Emacs, but I'm using the latest version
                       outline-magic ; Extensions to ouline mode, which I use in markdown mode.
