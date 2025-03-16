@@ -60,10 +60,6 @@ Author: %aN <%aE>
 Date: %ad
 ")
 
-;; ;; Don't use a unicode ellipsis character when truncating author names in the git log view. It screws up
-;; ;; the line height with my current font (Inconsolata).
-;; (setq magit-ellipsis (get-byte 0 "."))
-
 ;; This setting can speed up the diff view as suggested by https://magit.vc/manual/magit/Performance.html
 (setq magit-revision-insert-related-refs nil)
 
