@@ -1314,13 +1314,22 @@ Return nil if the current line is not the beginning of a list item."
          (headings (mlm/get-headings regexp))
          (stripped (mapcar (lambda (s) (replace-regexp-in-string regexp "" s))
                            headings))
-         ;; TODO(philc): I don't want to use ido-completing-read here because it has fuzzy matching,
-         ;; which isn't appropriate for this UX. I want strict substring matching, and
-         ;; ido-completing-read can't be configured to do that.
-         (selected-string (completing-read "Heading: " stripped nil t))
-         (selected-heading (-first (lambda (s) (s-ends-with? selected-string s))
-                                   headings)))
-    (mlm/goto-heading selected-heading)))
+         (vertico-original-styles completion-styles)
+         (vertico-original-sort-function vertico-sort-function)
+         (selected-heading nil))
+    ;; Normally, Vertico will match completions using fuzzy matching. For headings
+    ;; in Markdown, that's not appropriate, given the headings can be very long.
+    ;; Use plain substring matching instead.
+    (setq completion-styles (list 'substring))
+    ;; Disable Vertico sorting: show the headings in the order they are supplied.
+    (setq vertico-sort-function nil)
+    (unwind-protect
+        (setq selected-string (completing-read "Heading: " stripped nil t))
+      (setq completion-styles vertico-original-styles)
+      (setq vertico-sort-function vertico-original-sort-function))
+    (let ((selected-heading (-first (lambda (s) (s-ends-with? selected-string s))
+                                    headings)))
+      (mlm/goto-heading selected-heading))))
 
 (defun mlm/navigate-to-top-level-heading ()
   (interactive)
