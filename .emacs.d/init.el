@@ -50,7 +50,6 @@
                       coffee-mode ; For syntax highlighting coffeescript.
                       dash ; Dash provides modern functions for working with lists in Emacs Lisp.
                       dash-functional ; Useful combinators for Emacs Lisp.
-                      dired-details+ ; Hides all of the unnecessary file details in dired mode.
                       diminish ; For hiding and shortening minor modes in the modeline
                       evil ; Evil mode implements Vim's modal bindings and text object manipulation.
                       evil-nerd-commenter
@@ -838,10 +837,13 @@
 ;; Dired mode - using the Emacs file browser.
 ;;
 
+;; By default dired mode shows the file's permissions, access time, size, etc. I just want to see
+;; the file names.
+(add-hook 'dired-mode-hook #'dired-hide-details-mode)
+
 ;; Suppress a warning that the MacOS ls binary doesn't support the --dired option.
 (setq dired-use-ls-dired nil)
 
-(require 'dired-details+)
 (setq dired-recursive-copies (quote always))
 (setq dired-recursive-deletes (quote top))
 
