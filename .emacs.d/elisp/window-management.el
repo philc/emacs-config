@@ -37,9 +37,17 @@
         "*Completions*"))
 (setq special-display-regexps '("*cider.*"
                                 "magit-process.*"
-                                "magit-revision.*"
                                 "*ghelp.*"))
 (setq special-display-function 'wm/show-ephemeral-buffer-in-a-sensible-window)
+
+;; Instructions for where to place specific buffer types.
+;; See https://www.masteringemacs.org/article/demystifying-emacs-window-manager
+(add-to-list 'display-buffer-alist
+             ;; Show magit-revision buffers (the contents of a diff, from magit's log view) to the
+             ;; right of the log view window.
+             '("^magit-revision:"
+               (lambda (buffer action-alist)
+                 (wm/show-buffer-rightward buffer))))
 
 ;; A list of "special" (ephemeral) buffer names which should be focused after they are shown. Used
 ;; by wm/show-ephemeral-buffer-in-a-sensible-window
@@ -101,25 +109,28 @@
       (select-window window))
     window))
 
-(defun wm/switch-to-buffer-other-window (buffer)
-  "Switches to the given buffer if it's showing already. If not, shows it on column 1 or 2, creating
-   a new column (window) if there is only one column."
+(defun wm/show-buffer-in-direction (direction buffer)
+  "Switches to the given buffer if it's showing already. If not, shows it in a window in the given
+   direction, and creates a new column / window if there aren't enough columns yet."
   (let* ((original-window (selected-window))
          (window-showing-buffer (get-buffer-window buffer show-ephemeral-buffer-in-other-frames))
          (should-create-new-window (and (not window-showing-buffer)
+                                        ;; TODO(philc): Change this to be < max column count
                                         (< (wm/column-count) 2)))
          (window (or window-showing-buffer
                      (when should-create-new-window
-                         (wm/create-new-column))
-                     ;; If we already have two columns, show the window in the column which is
-                     ;; opposite to the current window.
-                     (if (= (wm/column-number) 1)
-                         (wm/window-in-column 0)
-                         (wm/window-in-column 1)))))
+                       (wm/create-new-column))
+                     ;; If we have enough columns already, select the window in the given direction,
+                     ;; if there is one.
+                     (wm/frame-window-in-direction direction (selected-window)))))
     (display-buffer-record-window (if should-create-new-window 'window 'reuse) window buffer)
     (set-window-buffer window buffer)
     (when should-create-new-window (set-window-prev-buffers window nil))
-    (select-window window)))
+    (select-window window)
+    (select-frame-set-input-focus (window-frame window))))
+
+(defun wm/show-buffer-rightward (buffer)
+  (wm/show-buffer-in-direction 'right buffer))
 
 (defun wm/dismiss-ephemeral-windows ()
   "Dismisses any visible windows in the current frame identifiedy by `special-display-buffer-names`

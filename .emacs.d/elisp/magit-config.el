@@ -197,7 +197,7 @@ Date: %ad
 ;; to show the visited file in.
 (defun my-magit/diff-visit-file (file)
   (interactive (list (magit-file-at-point t t)))
-  (magit-diff-visit-file--internal file nil #'wm/switch-to-buffer-other-window))
+  (magit-diff-visit-file--internal file nil #'wm/show-buffer-rightward))
 
 (add-hook 'git-commit-mode-hook 'init-git-commit-mode)
 (defun init-git-commit-mode ()

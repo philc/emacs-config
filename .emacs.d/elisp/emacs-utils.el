@@ -180,7 +180,7 @@ details."
                    (buffer-substring-no-properties p1 p2))))
         (open-file-fn (lambda (path)
                         (let ((b (find-file-noselect path)))
-                          (wm/switch-to-buffer-other-window b)))))
+                          (wm/show-buffer-rightward b)))))
     (if (string-match-p "\\`https?://" ξpath)
         (browse-url-default-browser ξpath)
       (progn ; not starting “http://”
