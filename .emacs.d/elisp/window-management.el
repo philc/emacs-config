@@ -122,18 +122,24 @@
 
 (defun wm/show-buffer-in-direction (direction buffer)
   "Switches to the given buffer if it's showing already. If not, shows it in a window in the given
-   direction, and creates a new column / window if there aren't enough columns yet."
+   direction, and creates a new column / window if there aren't enough columns yet. Note that this
+   won't traverse frames, intentionally so."
   (let* ((original-window (selected-window))
          (window-showing-buffer (get-buffer-window buffer show-ephemeral-buffer-in-other-frames))
+         (next-window (window-in-direction direction original-window))
          (should-create-new-window (and (not window-showing-buffer)
-                                        ;; TODO(philc): Change this to be < max column count
-                                        (< (wm/column-count) 2)))
+                                        (not next-window)
+                                        (< (wm/column-count)
+                                           (wm/max-column-count-for-frame-width))))
          (window (or window-showing-buffer
                      (when should-create-new-window
                        (wm/create-new-column))
-                     ;; If we have enough columns already, select the window in the given direction,
-                     ;; if there is one.
-                     (wm/frame-window-in-direction direction (selected-window)))))
+                     next-window
+                     ;; If next-window is nil, then we don't have a window in that direction,
+                     ;; and we already have too many columns. So use the current window.
+                     ;; NOTE(philc): In that case, would it be nicer to pick a window in the
+                     ;; opposite direction rather than replacing the current window?
+                     original-window)))
     (display-buffer-record-window (if should-create-new-window 'window 'reuse) window buffer)
     (set-window-buffer window buffer)
     (when should-create-new-window (set-window-prev-buffers window nil))
@@ -408,7 +414,8 @@
   "Returns the desired max number of columns for the current frame. This count depends on how wide
    the frame is."
   (let* ((column-width 100))
-    (/ (frame-width frame) column-width)))
+    (/ (frame-width (or frame (selected-frame)))
+       column-width)))
 
 (defun wm/create-new-column ()
   "Creates a new column in my window layout by splitting the rightmost window and rebalancing
