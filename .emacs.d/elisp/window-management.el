@@ -139,13 +139,15 @@
 (defun wm/show-buffer-rightward (buffer)
   (wm/show-buffer-in-direction 'right buffer))
 
-(defun wm/dismiss-ephemeral-windows ()
-  "Dismisses any visible windows in the current frame identifiedy by `special-display-buffer-names`
-   and `special-display-regexps`. I use this to quickly dismiss help windows, compile output, etc."
+(defun wm/dismiss-ephemeral-window ()
+  "Dismisses the leftmost visible ephemeral window in the current frame identifiedy by
+   `special-display-buffer-names`, `special-display-regexps`, and
+   `extra-ephemeral-window-regexps-to-close`. I use this to quickly dismiss help windows, compile
+   output, etc."
   (interactive)
   (save-excursion
     (let ((original-window (selected-window)))
-      (dolist (w (wm/get-ephemeral-windows))
+      (when-let ((w (cl-first (wm/get-ephemeral-windows))))
         (quit-window nil w))
       (select-window original-window))))
 

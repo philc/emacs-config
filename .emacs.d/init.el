@@ -562,7 +562,7 @@
  "wb" 'balance-windows
  "we" 'wm/narrow-ephemeral-window
  "wE" 'wm/toggle-maximize-lower-right-window
- "q" 'wm/dismiss-ephemeral-windows)
+ "q" 'wm/dismiss-ephemeral-window)
 
 ;; Make it so Esc means quit, no matter the context.
 ;; http://stackoverflow.com/a/10166400/46237
