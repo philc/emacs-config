@@ -38,6 +38,10 @@
 (setq special-display-regexps '("*cider.*"
                                 "magit-process.*"
                                 "*ghelp.*"))
+;; I don't want these windows to be opened using my standard window opening logic, because I have
+;; dedicated specific places that I like to place them, but I do want them to be closed by
+;; wm/dismiss-ephemeral-windows.
+(setq extra-ephemeral-window-regexps-to-close '("^magit-revision"))
 (setq special-display-function 'wm/show-ephemeral-buffer-in-a-sensible-window)
 
 ;; Instructions for where to place specific buffer types.
@@ -59,7 +63,10 @@
 
 (defun wm/ephemeral-window-p (w)
   "True if the given window is an 'ephemeral' window."
-  (-> w window-buffer buffer-name special-display-p))
+  (let ((name (-> w window-buffer buffer-name)))
+    (or (special-display-p name)
+        (-first (lambda (r) (string-match r name))
+                extra-ephemeral-window-regexps-to-close))))
 
 (defun wm/get-visible-windows ()
   "The list of visible windows across all frames."
