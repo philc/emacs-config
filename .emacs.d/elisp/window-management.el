@@ -78,6 +78,12 @@
   (->> (wm/get-visible-windows)
        (-filter 'wm/ephemeral-window-p)))
 
+(defun raise-frame-without-focus (frame)
+  "Raise `frame` without shifting the input focus to it."
+  (let ((original-frame (selected-frame)))
+    (raise-frame frame)
+    (select-frame-set-input-focus original-frame)))
+
 ;; References, for context:
 ;; http://snarfed.org/emacs_special-display-function_prefer-other-visible-frame
 ;; http://stackoverflow.com/questions/1002091/how-to-force-emacs-not-to-display-buffer-in-a-specific-window
@@ -108,10 +114,8 @@
     (display-buffer-record-window (if should-create-new-window 'window 'reuse) window buffer)
     (set-window-buffer window buffer)
     (when should-create-new-window (set-window-prev-buffers window nil))
-    ;; NOTE(philc): The window manager won't focus the window if it's in a different frame.
-    ;; If I want that behavior, invoke select-frame-set-input-focus.
+    (raise-frame-without-focus (window-frame window))
     (select-window original-window)
-    ;; TODO(philc): Make sure the frame where the new window is shown is raised.
     (when (member (buffer-name buffer) special-display-auto-focused-buffers)
       (select-window window))
     window))
