@@ -2016,7 +2016,9 @@
                                         (condition-case nil (windmove-right)
                                           (error (progn (split-window-right) (windmove-right)))))))
     (util/with-patch-function
-     'pop-to-buffer (buffer &rest args) (progn (funcall move-right-or-create) (switch-to-buffer buffer))
+     'pop-to-buffer (buffer &rest args) (progn
+                                          (funcall move-right-or-create)
+                                          (switch-to-buffer buffer))
      (compile-goto-error))))
 
 (defun ag-project-in-current-window ()

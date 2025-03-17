@@ -193,7 +193,7 @@ Date: %ad
   (interactive)
   (util/preserve-line-and-column 'magit-refresh))
 
-;; Works like magit-diff-visible-file, expet that it uses my custom function to select which window
+;; Works like magit-diff-visible-file, except that it uses my custom function to select which window
 ;; to show the visited file in.
 (defun my-magit/diff-visit-file (file)
   (interactive (list (magit-file-at-point t t)))
