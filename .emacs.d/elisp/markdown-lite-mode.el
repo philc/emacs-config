@@ -132,16 +132,18 @@
       (end-of-line)
       (insert (concat "\n" setext-str)))))
 
-(defun mlm/preview-markdown (beg end)
+(defun mlm/preview-markdown (&optional markdown-stylesheet)
+  (interactive)
   "Pipes the buffer's contents into a script which renders the markdown as HTML and opens in a
    browser. If the `markdown-stylesheet` var is bound, then that stylesheet will be used (i.e.
    passed as an argument into `markdown_page.rb`."
-  (interactive (if (use-region-p)
-                   (list (region-beginning) (region-end))
-                 (list nil nil)))
-  (let* ((beg (or beg (point-min)))
-         (end (or end (point-max)))
-         (stylesheet (if (boundp 'markdown-stylesheet) markdown-stylesheet "github"))
+  (let* ((beg (if (use-region-p)
+                  (region-beginning)
+                (point-min)))
+         (end (if (use-region-p)
+                  (region-end)
+                (point-max)))
+         (stylesheet (or markdown-stylesheet "github"))
          (use-clipboard (not (string= stylesheet "google-docs")))
          ;; NOTE(philc): line-number-at-pos is 1-indexed.
          (command (format "~/scripts/publishing/markdown_page.rb %s --css %s --scroll-to-line %s"
@@ -283,12 +285,10 @@
     "ad" 'mlm/markdown-insert-date
     "re" (lambda ()
            (interactive)
-           (let ((markdown-stylesheet "gmail"))
-             (call-interactively 'mlm/preview-markdown)))
+           (mlm/preview-markdown "gmail"));
     "rd" (lambda ()
            (interactive)
-           (let ((markdown-stylesheet "google-docs"))
-             (call-interactively 'mlm/preview-markdown)))
+           (mlm/preview-markdown "google-docs"));
     "rr" 'mlm/preview-markdown)
 
   (evil-define-key 'visual markdown-lite-mode-map
