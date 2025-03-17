@@ -144,7 +144,10 @@
                   (region-end)
                 (point-max)))
          (stylesheet (or markdown-stylesheet "github"))
-         (use-clipboard (not (string= stylesheet "google-docs")))
+         (use-clipboard (or t
+                            ;; I used to need to copy from an actual browser window to get a good
+                            ;; export ready for Google Docs, but I think this is no longer the case.
+                            (not (string= stylesheet "google-docs"))))
          ;; NOTE(philc): line-number-at-pos is 1-indexed.
          (command (format "~/scripts/publishing/markdown_page.rb %s --css %s --scroll-to-line %s"
                           (if use-clipboard "--clipboard" "")
