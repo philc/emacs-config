@@ -132,11 +132,9 @@
       (end-of-line)
       (insert (concat "\n" setext-str)))))
 
-(defun mlm/preview-markdown (&optional markdown-stylesheet)
+(defun mlm/preview-markdown (&optional markdown-stylesheet show-in-browser)
   (interactive)
-  "Pipes the buffer's contents into a script which renders the markdown as HTML and opens in a
-   browser. If the `markdown-stylesheet` var is bound, then that stylesheet will be used (i.e.
-   passed as an argument into `markdown_page.rb`."
+  "Pipes the buffer's contents into a script which renders the markdown as HTML."
   (let* ((beg (if (use-region-p)
                   (region-beginning)
                 (point-min)))
@@ -144,10 +142,10 @@
                   (region-end)
                 (point-max)))
          (stylesheet (or markdown-stylesheet "github"))
-         (use-clipboard (or t
-                            ;; I used to need to copy from an actual browser window to get a good
-                            ;; export ready for Google Docs, but I think this is no longer the case.
-                            (not (string= stylesheet "google-docs"))))
+         ;; I used to need to copy from an actual browser window to get a good
+         ;; export ready for Google Docs, but I think this is no longer the case.
+         ;; (use-clipboard (not (string= stylesheet "google-docs")))
+         (use-clipboard (not show-in-browser))
          ;; NOTE(philc): line-number-at-pos is 1-indexed.
          (command (format "~/scripts/publishing/markdown_page.rb %s --css %s --scroll-to-line %s"
                           (if use-clipboard "--clipboard" "")
@@ -292,7 +290,9 @@
     "rd" (lambda ()
            (interactive)
            (mlm/preview-markdown "google-docs"));
-    "rr" 'mlm/preview-markdown)
+    "rr" (lambda ()
+           (interactive)
+            (mlm/preview-markdown nil t)))
 
   (evil-define-key 'visual markdown-lite-mode-map
     (kbd "M-b") 'mlm/markdown-bold)
