@@ -392,6 +392,26 @@
     (interactive)
     (util/preserve-line-and-column (lambda () (call-interactively 'evil-join)))))
 
+(define-key evil-normal-state-map (kbd "C-k") 'move-to-previous-paragraph-start)
+(define-key evil-normal-state-map (kbd "C-j") 'move-to-next-paragraph-start)
+
+(defun move-to-next-paragraph-start ()
+  "Move the cursor to the first line of the next paragraph."
+  (interactive)
+  (forward-paragraph)
+  (forward-line 1))
+
+(defun move-to-previous-paragraph-start ()
+  "Move the cursor to the first line of the previous paragraph. If the cursor is already at the
+   start of a paragraph, move to the previous one."
+  (interactive)
+  (beginning-of-line)
+  (when (and (not (bobp))
+             (not (looking-at-p paragraph-start))
+             (previous-line)))
+  (backward-paragraph)
+  (skip-chars-forward "\n\t "))
+
 ;; This splits the current line at the cursor position.
 (define-key evil-normal-state-map (kbd "RET") 'newline-and-indent)
 ;; This creates a newline below the current line, like open, but does not enter insert mode.
