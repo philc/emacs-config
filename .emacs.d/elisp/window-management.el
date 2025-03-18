@@ -74,7 +74,7 @@
   (->> (wm/get-visible-windows)
        (-filter 'wm/ephemeral-window-p)))
 
-(defun raise-frame-without-focus (frame)
+(defun wm/raise-frame-without-focus (frame)
   "Raise `frame` without shifting the input focus to it."
   (let ((original-frame (selected-frame)))
     (raise-frame frame)
@@ -110,7 +110,7 @@
     (display-buffer-record-window (if should-create-new-window 'window 'reuse) window buffer)
     (set-window-buffer window buffer)
     (when should-create-new-window (set-window-prev-buffers window nil))
-    (raise-frame-without-focus (window-frame window))
+    (wm/raise-frame-without-focus (window-frame window))
     (select-window original-window)
     (when (member (buffer-name buffer) special-display-auto-focused-buffers)
       (select-window window))
@@ -157,6 +157,7 @@
         (quit-window nil w))
       (select-window original-window))))
 
+;; TODO(philc): I don't use this much anymore since I changed to 100-character lines. Remove.
 (defun wm/narrow-ephemeral-window ()
   "Narrows the ephemeral window (usually a REPL) so that 3 vertical splits can fit on a Mac
    Thunderbolt monitor: 2 splits which fit 110 chars without wrapping, and 1 narrower split with a
@@ -188,14 +189,13 @@
 (setq buffer-underneath-maximized-ephemeral-window nil)
 
 (defun wm/toggle-maximize-lower-right-window ()
-  "Toggles the vertical maximization of an ephemeral window, whereever it's showing. If there's a
+  "Toggles the vertical maximization of an ephemeral window, wherever it's showing. If there's a
    window above or below it, that window will be saved and will be restored if maximization is
    toggled."
-  ;; I usually have a REPL or diff view showing in the lower right. Often I want to "maximize it"
+  ;; I usually have a REPL or diff view showing in the lower right. Often I want to maximize it
   ;; vertically, to view a long stacktrace etc., without having to switch to the upper right and
   ;; close that window.
   (interactive)
-  (window-in-direction 'above (get-buffer-window "*Messages*"))
   (let ((ephemeral-window (cl-first (wm/get-ephemeral-windows))))
     (when ephemeral-window
       (let ((covered-window (or (window-in-direction 'above ephemeral-window)

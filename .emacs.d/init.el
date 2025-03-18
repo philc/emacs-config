@@ -932,6 +932,7 @@
   "gf" 'find-function-at-point-same-window
   (kbd "C-S-H") 'shift-sexp-backward
   (kbd "C-S-L") 'shift-sexp-forward
+  ;; TODO(philc): This is currently broken.
   "K" (lambda ()
         (interactive)
         (let ((target-word (current-word)))
