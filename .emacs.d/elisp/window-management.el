@@ -356,9 +356,11 @@
 (defun wm/switch-to-column (n)
   "Switches to the nth column. Does nothing if n >= the number of columns. Returns the window
    switched to."
+  (util/save-buffer-if-dirty)
   (let ((w (wm/window-in-column n)))
     (select-frame-set-input-focus (window-frame w)) ; Needed if window is in another frame.
-    (select-window w)))
+    (select-window w)
+    (evil-change-to-initial-state)))
 
 (defun wm/switch-to-column-or-change-row (n)
   "Switches to the nth column. If the current column is already the nth column, then switch to the
@@ -369,9 +371,11 @@
   (util/save-buffer-if-dirty)
   (if (/= n (wm/column-number))
       (wm/switch-to-column n)
-    (if-let ((split-below (window-in-direction 'below (selected-window))))
-        (select-window split-below)
-      (select-window (wm/topmost-window (selected-window))))))
+    (progn
+      (if-let ((split-below (window-in-direction 'below (selected-window))))
+          (select-window split-below)
+        (select-window (wm/topmost-window (selected-window))))
+      (evil-change-to-initial-state))))
 
 (defun wm/column-number ()
   "Returns the column number (zero-based) of the current window."
