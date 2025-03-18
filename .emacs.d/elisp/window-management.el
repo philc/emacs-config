@@ -5,10 +5,6 @@
 (provide 'window-management)
 (require 'dash)
 
-;; When switching between windows using windmove, also jump across frames if there are multiple
-;; frames.
-(setq framemove-hook-into-windmove t)
-
 ;; Settings for window splits.
 (setq split-height-threshold 40)
 (setq split-width-threshold 200)
@@ -386,18 +382,9 @@
       (setq count (1+ count)))
     count))
 
-(defun wm/while-window-changes (f)
-  "Run the given function until the selected window stops changing after each invocation. This is
-   useful because the return value of `windmove-right` is not reliable when combined with framemove.
-   It can return false even though the selected window was successfully changed."
-  ;; TODO(philc): I think a better approach with less quirks is to remove framemove and to provide
-  ;; advice to windmove-* myself.
-  (let ((window nil))
-    (while (not (eq window (selected-window)))
-      (setq window (selected-window))
-      (funcall f))))
-
 (defun wm/farthest-window-in-direction (direction)
+  "Returns the window that's farthest in direction. If there isn't one, returns the current
+   window."
   (let ((current nil)
         (next (selected-window)))
     (while next
@@ -434,11 +421,6 @@
     (balance-windows)
     new-window))
 
-(defadvice windmove-do-window-select (after windowmove-change-to-normal-mode)
-  "Ensure we reset to Evil's normal mode when switching windows."
-  (evil-change-to-initial-state))
-(ad-activate 'windmove-do-window-select)
-
 (defun wm/split-window-sensibly-reverse (&optional window)
   "Identical to the built-in function split-window-sensibly, but prefers horizontal splits over
    vertical."
@@ -460,6 +442,7 @@
      (with-selected-window window
        (split-window-below))))))))
 
+;; TODO(philc): Remove this if I don't use it often enough.
 (defun wm/quarter-height ()
   "Set the current window to be a quarter of the frame height."
   (interactive)
