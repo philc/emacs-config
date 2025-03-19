@@ -88,12 +88,15 @@ Date: %ad
 ;; error-prone.
 (evil-define-key 'normal magit-mode-map
   ";gg" 'magit-process
-  "J" 'magit-section-forward
-  "K" 'magit-section-backward)
+  (kbd "C-j") 'magit-section-forward
+  (kbd "C-k") 'magit-section-backward)
 
-;; ;; This is a tricky binding -- depending on where your cursor is in the magit status view, you
-;; ;; may have the magit-file-section-map activated. evil-define-key doesn't work with this keymap.
-(define-key magit-file-section-map "K" 'magit-section-backward) ; "K" was bound to magit-file-untrack.
+;; This is a tricky binding -- depending on where your cursor is in the magit status view, you
+;; may have the magit-file-section-map activated. evil-define-key doesn't work with this keymap.
+;; magit-diff-section-keymap is the parent of magit-file-section and magit-hunk-section. See
+;; magit-diff.el
+(define-key magit-diff-section-map (kbd "C-k") 'magit-section-backward)
+(define-key magit-diff-section-map (kbd "C-j") 'magit-section-forward)
 
 ;; Instead of removing the whole window, just close the buffer showing a commit's details and
 ;; surface the next buffer in the window.
