@@ -295,3 +295,16 @@ details."
               (push buf visible-buffers))))))
     (set-window-configuration original-wc)
     visible-buffers))
+
+(defun util/replace-string-in-buffer (from to)
+  "Replace string in entire buffer using selected text or prompt. If region is active, use its
+   content as replacement target string."
+  (interactive
+   (let ((from (if (use-region-p)
+                   (buffer-substring-no-properties
+                    (region-beginning) (region-end))
+                 (read-string "Replace string: "))))
+     (list from (read-string (format "Replace '%s' with: " from)))))
+  (deactivate-mark)
+  (save-excursion
+    (replace-string from to nil (point-min) (point-max))))
