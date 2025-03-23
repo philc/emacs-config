@@ -262,7 +262,7 @@ details."
   "Kill all buffers that are not currently displayed in any window."
   (interactive)
   (let* ((exclusions '("*Messages*" "*scratch*"))
-         (visible-buffers (visible-buffers-in-all-tabs))
+         (visible-buffers (util/visible-buffers-in-all-tabs))
          (to-delete (->> (buffer-list)
                          (-remove (lambda (b)
                                     (or (get-buffer-window b 'visible)
@@ -272,7 +272,7 @@ details."
       (printall "Killing" (buffer-name b))
       (kill-buffer b))))
 
-(defun visible-buffers-in-all-tabs ()
+(defun util/visible-buffers-in-all-tabs ()
   "Returns all visible buffers in all tabs."
   (interactive)
   (let* ((original-wc (current-window-configuration))
