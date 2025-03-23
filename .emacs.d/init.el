@@ -1039,7 +1039,8 @@
   "Useful to call after reloading the project cache while the find file dialog still open."
   (interactive)
   (let ((file (projectile-completing-read "Find file: "
-                                            (projectile-current-project-files) initial-val)))
+                                            (projectile-current-project-files)
+                                            :initial-input initial-val)))
       (find-file (expand-file-name file (projectile-project-root)))
       (run-hooks 'projectile-find-file-hook)))
 
