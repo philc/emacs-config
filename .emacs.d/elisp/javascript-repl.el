@@ -143,9 +143,20 @@
           (funcall fn-name)))
     (message "No runnable command has yet been saved.")))
 
-(defun js/run-file-as-shoulda-test (&optional filename)
+;; TODO(philc): I would like to instead make import reloading work well in Deno. I haven't looked
+;; into it yet, so this is a workaround.
+(defun js/restart-and-run-file-as-shoulda-test ()
+  (interactive)
+  (setq js/last-run-command (list (current-buffer) 'js/restart-and-run-file-as-shoulda-test))
+  (js/restart-repl)
+  (js/run-shoulda-test))
+
+(defun js/run-file-as-shoulda-test ()
   (interactive)
   (setq js/last-run-command (list (current-buffer) 'js/run-file-as-shoulda-test))
+  (js/run-shoulda-test))
+
+(defun js/run-shoulda-test ()
   (js/ensure-repl-is-running)
   ;; This whole approach is flawed. It's tricky to determine how "shoulda" can be imported here by
   ;; this helper such that it's not imported twice by Deno as different modules. shoulda may be

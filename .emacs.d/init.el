@@ -1907,6 +1907,7 @@
   "clf" 'js/lint-file
   "clp" 'js/lint-project
   "tf" 'js/run-file-as-shoulda-test
+  "tF" 'js/restart-and-run-file-as-shoulda-test
   "en" 'js/restart-repl
   "i" 'js/format-buffer
   "cc" (go-save-and-compile-fn "make")
