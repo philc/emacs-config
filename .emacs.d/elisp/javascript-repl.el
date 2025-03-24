@@ -15,26 +15,24 @@
 
 (defun js/restart-repl ()
   (interactive)
-  (util/preserve-selected-window
-   (lambda ()
-     (when (repl/is-running?)
-       (repl/send-command "close()")
-       (let ((repl-buffer (get-buffer repl/buffer-name)))
-         ;; We could wait for the process to clean up, but restart it immediately so we can begin
-         ;; starting the next repl.
-         ;; (sit-for 0.5)
-         (-?> (ignore-errors (repl/get-process))
-              delete-process)
-         ;; Erase what was previously in the buffer, so we get a new, blank REPL buffer.
-         (with-current-buffer repl-buffer
-           (erase-buffer))
-         ;; Don't kill the existing buffer: my window management functions will open
-         ;; a new buffer where the existing one is (if it's showing) and can't do this if
-         ;; the existing buffer is killed before restarting the REPL.
-         ;; (-?> (get-buffer repl/buffer-name)
-         ;;      kill-buffer)
-         ))
-     (js/start-or-switch-to-repl))))
+  (when (repl/is-running?)
+    (repl/send-command "close()")
+    (let ((repl-buffer (get-buffer repl/buffer-name)))
+      ;; We could wait for the process to clean up, but restart it immediately so we can begin
+      ;; starting the next repl.
+      ;; (sit-for 0.5)
+      (-?> (ignore-errors (repl/get-process))
+           delete-process)
+      ;; Erase what was previously in the buffer, so we get a new, blank REPL buffer.
+      (with-current-buffer repl-buffer
+        (erase-buffer))
+      ;; Don't kill the existing buffer: my window management functions will open a new buffer where
+      ;; the existing one is (if it's showing) and can't do this if the existing buffer is killed
+      ;; before restarting the REPL.
+      ;; (-?> (get-buffer repl/buffer-name)
+      ;;      kill-buffer)
+      ))
+  (js/start-or-switch-to-repl))
 
 (defun js/ensure-repl-is-running ()
   (interactive)
@@ -59,9 +57,10 @@
             "./"))
          (repl-buffer (get-buffer-create repl/buffer-name)))
     (repl/start js/program-command js/program-arguments the-default-directory)
-    (pop-to-buffer (get-buffer-create repl/buffer-name))
-    ;; (js-comint-mode)
-    ))
+    ;; Using with-current-buffer here prevents display-buffer from changing the current buffer.
+    ;; Code invoking js/start-or-switch-to-repl expects that the buffer doesn't change.
+    (with-current-buffer (current-buffer)
+      (display-buffer (get-buffer-create repl/buffer-name)))))
 
 (setq js/load-file-counter 1)
 
