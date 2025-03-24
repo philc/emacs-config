@@ -122,8 +122,8 @@
   ;; Note that we must preserve the selected window of every frame, because the function being
   ;; executed may change the focused frame, even if the current frame is in focus.
   (let* ((original-frame (selected-frame))
-                 (frames->windows (util/get-frame->selected-window))
-                 (result (funcall f)))
+         (frames->windows (util/get-frame->selected-window))
+         (result (funcall f)))
     (-each frames->windows (lambda (x)
                              (select-frame (cl-first x) t)
                              (select-window (cl-second x) t)))
