@@ -1483,9 +1483,25 @@
   "Reloads the current tab in Chrome. This works on OSX only, using Applescript."
   (interactive)
   (util/save-buffer-if-dirty)
-  (util/call-process-with-exit-status "osascript"
-                                      (format "tell app \"%s\" to reload active tab of window 1"
-                                              browser-app)))
+  (cond
+   ((s-contains? "Chrome" browser-app)
+    (util/call-process-with-exit-status "osascript"
+                                        (format "tell app \"%s\" to reload active tab of window 1"
+                                                browser-app)))
+   ;; Note that this script will shift the focus to the Firefox application. Focus can be restored
+   ;; to Emacs afterwards, but timers must be used, and this is fragile and verbose, so I haven't
+   ;; bothered with it.
+   ((s-contains? "Firefox" browser-app)
+    (progn
+      (util/call-process-with-exit-status
+       "osascript"
+       ;; Including shift down makes it a hard reload
+       (format "tell application \"%s\"
+                  activate
+                  tell application \"System Events\" to keystroke \"r\"
+                  using {command down, shift down}
+              end tell"
+               browser-app))))))
 
 ;; This is Chrome-centric. I'm not currently using this because I mostly develop extensions in
 ;; Firefox, but if that changes, I could resume using this.
