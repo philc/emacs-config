@@ -10,9 +10,9 @@
  '(org-agenda-files '("~/test.org"))
  '(package-selected-packages
    '(ace-jump-mode ag better-jumper browse-at-remote coffee-mode consult dash-functional diminish evil
-                   evil-nerd-commenter flx-ido general go-mode hiwin ido-vertical-mode inf-clojure
-                   magit memoize outline-magic powerline projectile rainbow-delimiters scss-mode
-                   smartparens smex spell-fu tempel undo-fu vertico yaml-mode yascroll))
+                   evil-nerd-commenter flx general go-mode hiwin inf-clojure magit outline-magic
+                   powerline projectile rainbow-delimiters scss-mode smartparens spell-fu tempel
+                   undo-fu vertico yaml-mode yascroll))
  '(safe-local-variable-directories '("/Users/phil/.emacs.d/elpa/magit-20250312.1432/"))
  '(spell-fu-idle-delay 1.5))
 
