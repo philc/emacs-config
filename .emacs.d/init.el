@@ -33,10 +33,11 @@
 (require 'package)
 (add-to-list 'package-archives '("melpa" . "http://melpa.org/packages/"))
 (add-to-list 'package-archives '("melpa-stable" . "http://melpa-stable.melpa.org/packages/"))
-
-;; Cider from MELPA has been too unstable for me. Only use versions from MELPA Stable.
-(add-to-list 'package-pinned-packages '(cider . "melpa-stable") t)
-(add-to-list 'package-pinned-packages '(clojure-mode . "melpa-stable") t)
+;; When installing or upgrading packages programmatically, choose the version from melpa-stable if
+;; available.
+(setq package-archive-priorities
+      '(("melpa-stable" . 10)
+        ("melpa" . 5)))
 
 (package-initialize)
 (when (not package-archive-contents)
