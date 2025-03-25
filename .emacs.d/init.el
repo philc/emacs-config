@@ -513,7 +513,10 @@
  :keymaps '(normal visual)
  :prefix global-leader-prefix
  "h" 'help
- "b" 'consult-buffer
+ "b" (lambda ()
+       (interactive)
+       (util/save-buffer-if-dirty)
+       (consult-buffer))
  "f" 'projectile-find-file
  "t" (lambda () (interactive) (message (buffer-name)))
  "SPC" 'evil-ext/fill-inside-paragraph-or-comment-block ; Shortcut for Vim's gqip
