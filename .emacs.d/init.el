@@ -2077,6 +2077,7 @@
 ;; Emacs' package manager. Invoke it via "M-x package-list-packages".
 ;;
 
+(evil-set-initial-state 'package-menu-mode 'normal)
 (evil-define-key 'normal package-menu-mode-map
   (kbd "d") 'package-menu-mark-delete
   (kbd "r") 'package-menu-refresh
