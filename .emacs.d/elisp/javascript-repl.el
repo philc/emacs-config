@@ -109,9 +109,10 @@
       (goto-char (point-min))
       (while (and (not result)
                   (re-search-forward regexp nil t))
-        (setq result (concat (match-string 1) "/" (match-string 2))))
+        (setq result (concat (match-string-no-properties 1)
+                             "/"
+                             (match-string-no-properties 2))))
       result)))
-
 
 ;; The JS action that was last run. It's a tuple of (buffer, function-name).
 (setq js/last-run-command nil)
@@ -173,7 +174,8 @@
         (let* ((file-dir (-> (buffer-file-name) file-truename file-name-directory))
                (shoulda-is-url (or (s-starts-with? "https://" shoulda-import-path)
                                    ;; Support JSR imports.
-                                   (s-starts-with? "@" shoulda-import-path)))
+                                   (s-starts-with? "@" shoulda-import-path)
+                                   (s-starts-with? "jsr:" shoulda-import-path)))
                (shoulda-js-path (if shoulda-is-url
                                     shoulda-import-path
                                   (expand-file-name shoulda-import-path file-dir))))
