@@ -319,3 +319,11 @@ details."
   (deactivate-mark)
   (save-excursion
     (replace-string from to nil (point-min) (point-max))))
+
+(defun util/time (fn)
+  "Executes fn, prints how long it took, and returns its value."
+  (let ((start (current-time)))
+    (prog1
+        (funcall fn)
+      (let ((duration (float-time (time-since start))))
+        (message "Duration: %.1f ms" (* 1000 duration))))))
