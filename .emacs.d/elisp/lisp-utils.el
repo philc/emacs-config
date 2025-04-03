@@ -32,7 +32,7 @@
   (cond ((not (null more)) `(-?> (-?> ,x ,form) ,@more))
         (t (if (sequencep form)
                `(if (null ,x) nil
-                  (,(cl-first form) ,x ,@(rest form)))
+                  (,(cl-first form) ,x ,@(cl-rest form)))
              `(if (null ,x) nil
                 ,(list form x))))))
 
@@ -40,7 +40,7 @@
   (cond ((not (null more)) `(-?>> (-?>> ,x ,form) ,@more))
         (t (if (sequencep form)
                `(if (null ,x) nil
-                  (,(cl-first form) ,@(rest form) ,x))
+                  (,(cl-first form) ,@(cl-rest form) ,x))
              `(if (null ,x) nil
                 ,(list form x))))))
 
