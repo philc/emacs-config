@@ -163,37 +163,40 @@
     ;; This will throw an exception once we can no longer move the subtree up.
     (org-move-subtree-up)))
 
-(defun org-capture-item-and-prepend-to-subtree ()
-  "Prompts for a TODO and the name of a top-level heading, and adds the TODO as a child to the
-   heading."
+;; heading-arg and todo-arg are used for programmatic testing.
+(defun org-capture-item-and-prepend-to-subtree (&optional heading-arg todo-arg)
+  "Prompts for a TODO and the name of a top-level heading, and adds the TODO as the first child to
+   the heading."
   (interactive)
-  ;; NOTE(philc): These are personalized to the way I organize my org mode TODO file.
+  ;; NOTE(philc): These are personalized to the way I organize my org mode TODO list.
   (message "[L] Liftoff  [B] Base  [S] Study  [N] Entertainment  [M] Emacs [J] Journal")
-  (let ((subheading (pcase (read-char)
-                      (?l "Liftoff")
-                      (?b "Base")
-                      (?s "Study")
-                      (?j "Journal")
-                      (?n "Entertainment")
-                      (?m "Emacs")
-                      (?h "Handbook")
-                      (?p "Side projects")
-                      (?v "Vimium")
-                      (?d "PD"))))
-    (when subheading
-      (let ((new-todo (read-from-minibuffer (concat subheading " TODO: "))))
-        (save-excursion
-          (goto-char 0)
-          (org-move-to-heading subheading)
-          (org-insert-subheading-as-first-child new-todo))))))
+  (when-let ((heading
+              (or heading-arg
+                  (pcase (read-char)
+                    (?l "Liftoff")
+                    (?b "Base")
+                    (?s "Study")
+                    (?j "Journal")
+                    (?n "Entertainment")
+                    (?m "Emacs")
+                    (?h "Handbook")
+                    (?v "Vimium")))))
+    (let ((new-todo (or todo-arg
+                        (read-from-minibuffer (concat heading " TODO: ")))))
+      (save-excursion
+        (org-goto-top-level-heading heading)
+        (next-line)
+        (insert (concat "** " new-todo "\n"))))))
 
-(defun org-goto-top-level-heading ()
+(defun org-goto-top-level-heading (&optional heading-arg)
   (interactive)
   "Prompts for the name of a top-level heading and jumps to there."
-  (let* ((headings (org/get-headings org/top-heading-regexp))
-         (headings (mapcar (lambda (s) (replace-regexp-in-string org/top-heading-regexp "" s))
-                           headings))
-         (heading (completing-read "Heading: " headings nil t)))
+  (let ((heading
+         (or heading-arg
+             (let* ((headings (org/get-headings org/top-heading-regexp))
+                    (headings (mapcar (lambda (s) (replace-regexp-in-string org/top-heading-regexp "" s))
+                                      headings)))
+               (completing-read "Heading: " headings nil t)))))
     (goto-char 0)
     (org-move-to-heading heading)
     (recenter-no-redraw)))
