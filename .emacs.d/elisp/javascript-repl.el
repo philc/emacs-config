@@ -134,6 +134,7 @@
   "Execute the last saved runnable command, if any."
   (interactive)
   (util/save-buffer-if-dirty)
+  (evil-normal-state)
   (if js/saved-run-command
       (let ((fn-name (nth 1 js/saved-run-command))
             (buf (cl-first js/saved-run-command)))
