@@ -1539,7 +1539,7 @@
   ;; This URL is specific to the Vimium Firefox extension.
   ;; This corresponds to the "Internal UUID" field show in about:addons for the extension.
   ;; Sometimes this internal extension ID can change as the extension's manifest.json changes.
-  (let* ((extension-id "29be34e8-2dfe-4a75-96c1-e8b5a33aa23e")
+  (let* ((extension-id "a1d8df1a-fc26-4523-a7e8-d2dbb66e6f1f")
          (url (format "moz-extension://%s/pages/reload.html" extension-id)))
     (util/call-process-with-exit-status "open"
                                         nil
