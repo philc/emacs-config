@@ -186,8 +186,10 @@
     (util/scroll-to-buffer-end (js/get-repl-buffer))))
 
 (defun js/eval-str (str)
+  (util/raise-repl-frame (js/get-repl-buffer))
   (repl/send-command str))
 
 (defun js/clear ()
   (interactive)
+  (util/raise-repl-frame (js/get-repl-buffer))
   (repl/clear))

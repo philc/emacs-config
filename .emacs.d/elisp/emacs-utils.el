@@ -227,6 +227,17 @@ details."
      (pop-to-buffer buffer nil t)
      (util/scroll-to-buffer-end buffer))))
 
+(defun util/raise-repl-frame (buffer)
+  "If the REPL buffer is visible in a window, in the case where that window is in a different frame
+   than the current one, raise that window so we can see the REPL output."
+  (util/preserve-selected-window
+   (lambda ()
+     (-?> buffer
+          ;; Search all visible frames.
+          (get-buffer-window "visible")
+          window-frame
+          raise-frame))))
+
 (defun util/scroll-to-buffer-end (buffer)
   (let ((w (get-buffer-window buffer t)))
     (when w
