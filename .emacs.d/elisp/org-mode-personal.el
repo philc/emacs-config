@@ -190,10 +190,24 @@
 (defun org-goto-top-level-heading ()
   (interactive)
   "Prompts for the name of a top-level heading and jumps to there."
-  ;; TODO(philc): Populate these completions with the top-level headers from the buffer.
-  (let* (; I got this elaborate esnippet from online.
-         (headings (org-map-entries (lambda () (fifth (org-heading-components))) "LEVEL=1"))
+  (let* ((headings (org/get-headings org/top-heading-regexp))
+         (headings (mapcar (lambda (s) (replace-regexp-in-string org/top-heading-regexp "" s))
+                           headings))
          (heading (completing-read "Heading: " headings nil t)))
     (goto-char 0)
     (org-move-to-heading heading)
     (recenter-no-redraw)))
+
+(defvar org/top-heading-regexp "^\\* ")
+
+;; NOTE(philc): This is duplicated from my markdown-lite-mode.el.
+(defun org/get-headings (regexp)
+  (let ((headings '()))
+    (save-excursion
+      (goto-char (point-min))
+      (while (re-search-forward regexp nil t)
+        (let ((heading-text (buffer-substring-no-properties
+                             (line-beginning-position)
+                             (line-end-position))))
+          (push heading-text headings))))
+    (nreverse headings)))
