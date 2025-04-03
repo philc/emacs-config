@@ -533,7 +533,8 @@
  "vu" 'notmuch-go-to-inbox
  "vp" 'project-nav/navigate-to-project
  "vn" 'project-nav/open-file-from-notes-folder
- "vo" (lambda () (interactive) (find-file "~/Dropbox/tasks.org")) ; "View my task list in org mode"
+ ;; View my org-mode task list.
+ "vo" (lambda () (interactive) (find-file "~/Dropbox/notes/tasks/tasks.org"))
  "ve" (lambda () (interactive) (find-file "~/.emacs.d/init.el"))) ; "View Emacs init.el"
 
 (defun show-git-status-in-left-column ()
