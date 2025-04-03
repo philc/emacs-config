@@ -192,7 +192,12 @@
          (util/preserve-scroll-position
           (lambda ()
             (mlm/goto-heading (concat "* " heading))
-            (next-line)
+            ;; NOTE(philc): We can't just insert a new line here, because if the heading is
+            ;; folded, the insertion behavior becomes incorrect. I don't understand the mechanics
+            ;; of folded outline-mode headings, but moving to the first sub-item under the current
+            ;; heading resolves the issue.
+            (re-search-forward "^\\*\\* ")
+            (beginning-of-line)
             (insert (concat "** " new-todo "\n"))))))
       ;; If we inserted text above us in the buffer, the cursor will now be on the wrong line;
       ;; in that case; advance one line.
