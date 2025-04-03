@@ -2012,6 +2012,19 @@
 (add-to-list 'compilation-error-regexp-alist 'deno-lint-item)
 
 ;;
+;; Typescript
+;;
+(add-to-list 'auto-mode-alist '("\\.ts\\'" . typescript-ts-mode))
+(setq treesit-language-source-alist
+      '((typescript . ("https://github.com/tree-sitter/tree-sitter-typescript"
+                       nil
+                       "typescript/src"))))
+(let ((lang 'typescript))
+  (unless (treesit-language-available-p lang)
+    (message "Installing Tree-sitter grammar for %s..." lang)
+    (treesit-install-language-grammar lang)))
+
+;;
 ;; Ag (silver searcher)
 ;;
 (require 'ag)

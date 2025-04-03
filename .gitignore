@@ -8,3 +8,5 @@
 .emacs.d/url
 projectile.cache
 /.emacs.d/ac-comphist.dat
+# Compiled grammars for tree-sitter
+.emacs.d/tree-sitter
