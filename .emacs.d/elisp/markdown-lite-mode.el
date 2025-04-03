@@ -1307,8 +1307,7 @@ Return nil if the current line is not the beginning of a list item."
           (when (string= heading-text text)
             (setq heading-line-number (line-number-at-pos))))))
     (when heading-line-number
-      (goto-line heading-line-number)
-      (recenter))))
+      (goto-line heading-line-number))))
 
 (defun mlm/navigate-to-heading (top-level)
   "Show a menu of headings and jump to the one selected."
@@ -1332,7 +1331,8 @@ Return nil if the current line is not the beginning of a list item."
       (setq vertico-sort-function vertico-original-sort-function))
     (let ((selected-heading (-first (lambda (s) (s-ends-with? selected-string s))
                                     headings)))
-      (mlm/goto-heading selected-heading))))
+      (mlm/goto-heading selected-heading)
+      (recenter))))
 
 (defun mlm/navigate-to-top-level-heading ()
   (interactive)

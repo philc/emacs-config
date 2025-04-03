@@ -7,6 +7,8 @@
 (require 'evil)
 (require 'org)
 (require 's)
+;; This org mode customization uses functions from my markdown-lite-mode.
+(require 'markdown-lite-mode)
 
 (provide 'org-mode-personal)
 
@@ -181,36 +183,35 @@
                     (?m "Emacs")
                     (?h "Handbook")
                     (?v "Vimium")))))
-    (let ((new-todo (or todo-arg
-                        (read-from-minibuffer (concat heading " TODO: ")))))
-      (save-excursion
-        (org-goto-top-level-heading heading)
+    (let* ((former-line (util/get-line))
+           (former-col (current-column))
+           (new-todo (or todo-arg
+                         (read-from-minibuffer (concat heading " TODO: ")))))
+      (util/preserve-line-and-column
+       (lambda ()
+         (util/preserve-scroll-position
+          (lambda ()
+            (mlm/goto-heading (concat "* " heading))
+            (next-line)
+            (insert (concat "** " new-todo "\n"))))))
+      ;; If we inserted text above us in the buffer, the cursor will now be on the wrong line;
+      ;; in that case; advance one line.
+      (when (not (string= former-line (util/get-line)))
         (next-line)
-        (insert (concat "** " new-todo "\n"))))))
+        (move-to-column former-col))
+      (message "Added"))))
+
+(defvar org/top-heading-regexp "^\\* ")
 
 (defun org-goto-top-level-heading (&optional heading-arg)
   (interactive)
   "Prompts for the name of a top-level heading and jumps to there."
-  (let ((heading
-         (or heading-arg
-             (let* ((headings (org/get-headings org/top-heading-regexp))
-                    (headings (mapcar (lambda (s) (replace-regexp-in-string org/top-heading-regexp "" s))
-                                      headings)))
-               (completing-read "Heading: " headings nil t)))))
-    (goto-char 0)
-    (org-move-to-heading heading)
+  (let* ((heading
+          (or heading-arg
+              (let* ((headings (mlm/get-headings org/top-heading-regexp))
+                     (headings (mapcar (lambda (s) (replace-regexp-in-string org/top-heading-regexp "" s))
+                                       headings)))
+                (completing-read "Heading: " headings nil t))))
+         (heading-with-prefix (concat "* " heading)))
+    (mlm/goto-heading heading-with-prefix)
     (recenter-no-redraw)))
-
-(defvar org/top-heading-regexp "^\\* ")
-
-;; NOTE(philc): This is duplicated from my markdown-lite-mode.el.
-(defun org/get-headings (regexp)
-  (let ((headings '()))
-    (save-excursion
-      (goto-char (point-min))
-      (while (re-search-forward regexp nil t)
-        (let ((heading-text (buffer-substring-no-properties
-                             (line-beginning-position)
-                             (line-end-position))))
-          (push heading-text headings))))
-    (nreverse headings)))

@@ -58,12 +58,13 @@
    (delete-region (region-beginning) (region-end))
    (insert new-text)))
 
-(defun util/get-line (offset)
+(defun util/get-line (&optional offset)
   "Returns the text (without string properties) of the line offset by `offset` from the current.
    This has the same behavior as `forward-line`, so if offset is larger than the buffer, the
    buffer's last line of text will be returned."
   (save-excursion
-    (forward-line offset)
+    (when offset
+      (forward-line offset))
     (buffer-substring-no-properties (line-beginning-position) (line-end-position))))
 
 (defun util/get-current-line ()
@@ -136,11 +137,20 @@
    from save-excursion which will restore the (point). This does not restore the cursor to the
    previous point."
   (let* ((former-line (line-number-at-pos))
-                 (former-col (current-column))
-                 (return-val (funcall f)))
+         (former-col (current-column))
+         (return-val (funcall f)))
     (goto-line former-line)
     (move-to-column former-col)
     return-val))
+
+(defun util/preserve-scroll-position (f)
+  (let ((point-pos (point))
+        (start-pos (window-start))
+        (end-pos (window-end)))
+    (unwind-protect
+        (funcall f)
+      (goto-char point-pos)
+      (set-window-start (selected-window) start-pos))))
 
 (defun util/thing-at-point-no-properties (thing)
   "Returns the text of the thing at point, but without properties. See `thing-at-point` for
