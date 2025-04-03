@@ -142,29 +142,6 @@
   "Assumes the cursor is currently on a heading. TODO: return nil if the cursor isn't on a heading."
   (-> (org-text-of-current-line) s-trim (split-string "* ") cl-second))
 
-(defun org-move-to-heading (heading-name)
-  (let ((heading-has-changed nil)
-        (heading-has-been-found nil)
-        (current-heading nil))
-    (while (not (or (eq heading-has-changed 't)
-                    (eq heading-has-been-found 't)))
-      (setq current-heading (org-get-current-heading))
-      (setq heading-has-been-found (string= current-heading heading-name))
-      (when (not heading-has-been-found)
-        (org-forward-heading-same-level nil)
-        (setq heading-has-changed (string= current-heading (org-get-current-heading)))))))
-
-(defun org-insert-subheading-as-first-child (subheading-text)
-  "Inserts the given text as the first child of the heading which is currently under the cursor."
-  (org-insert-heading-after-current)
-  (insert subheading-text)
-  (org-demote)
-  ;; TODO(philc): This works because org-move-subtree-up throws an error (using user-error) when it
-  ;; can no longer move up. Change this so we only invoke org-move-subtree-up "current-depth" times.
-  (while t
-    ;; This will throw an exception once we can no longer move the subtree up.
-    (org-move-subtree-up)))
-
 ;; heading-arg and todo-arg are used for programmatic testing.
 (defun org-capture-item-and-prepend-to-subtree (&optional heading-arg todo-arg)
   "Prompts for a TODO and the name of a top-level heading, and adds the TODO as the first child to
