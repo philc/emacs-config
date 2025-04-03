@@ -7,6 +7,7 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(cider-repl-pop-to-buffer-on-connect nil)
+ '(ignored-local-variable-values '((jest-test-command-string "yarn %s jest %s %s")))
  '(org-agenda-files '("~/test.org"))
  '(package-selected-packages
    '(ace-jump-mode ag better-jumper browse-at-remote coffee-mode consult dash-functional diminish evil
