@@ -55,7 +55,6 @@
                       diminish ; For hiding and shortening minor modes in the modeline
                       evil ; Evil mode implements Vim's modal bindings and text object manipulation.
                       evil-nerd-commenter
-                      flx ; For fuzzy-completion in vertico
                       general ; Functions for defining keybindings and leader keys. Complements Evil
                       go-mode ; For editing Go files.
                       hiwin ; For highlighting the active pane/window in Emacs.
