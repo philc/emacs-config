@@ -1314,8 +1314,6 @@ Return nil if the current line is not the beginning of a list item."
   (interactive)
   (let* ((regexp (if top-level mlm/top-heading-regexp mlm/heading-regexp))
          (headings (mlm/get-headings regexp))
-         (stripped (mapcar (lambda (s) (replace-regexp-in-string regexp "" s))
-                           headings))
          (vertico-original-styles completion-styles)
          (vertico-original-sort-function vertico-sort-function)
          (selected-heading nil))
@@ -1326,7 +1324,7 @@ Return nil if the current line is not the beginning of a list item."
     ;; Disable Vertico sorting: show the headings in the order they are supplied.
     (setq vertico-sort-function nil)
     (unwind-protect
-        (setq selected-string (completing-read "Heading: " stripped nil t))
+        (setq selected-string (completing-read "Heading: " headings nil t))
       (setq completion-styles vertico-original-styles)
       (setq vertico-sort-function vertico-original-sort-function))
     (let ((selected-heading (-first (lambda (s) (s-ends-with? selected-string s))
