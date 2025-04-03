@@ -837,16 +837,17 @@
 ;;
 ;; Filename completions (i.e. CTRL-P or CMD-T in other editors)
 ;;
-
-(require 'flx)
-
 (require 'vertico)
+
+;; Emacs' built-in flex matching style work well for finding files. I found it better
+;; than any of the matching styles offered by the orderless package.
+(setq completion-styles '(flex))
+
 ;; Ignore case when matching completions to a query.
 (setq read-file-name-completion-ignore-case t)
 (setq read-buffer-completion-ignore-case t)
 (setq completion-ignore-case t)
 
-(setq completion-styles '(flex)) ; Allow fuzzy matching.
 (setq vertico-count 15) ; Number of results to show.
 
 (vertico-mode)
