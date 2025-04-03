@@ -1,7 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 ;;
-;;; My additions and customizations to org-mode.
-;;; Based loosely on evil-org-mode as a starting point.
+;;; My additions and customizations to org-mode, based loosely on evil-org-mode as a starting point.
 ;;; Provides an evil-org-mode minor mode.
 ;;; https://github.com/edwtjo/evil-org-mode
 
@@ -20,15 +19,16 @@
 
 (add-hook 'org-mode-hook 'evil-org-mode) ;; only load with org-mode
 
-;; Highlight the TODO keywords using various colors
+;; Highlight the TODO keywords using various colors.
 ;; See http://orgmode.org/manual/Faces-for-TODO-keywords.html.
-(setq org-todo-keyword-faces '(("WAITING" . (:foreground "#999999"))
-                               ("TODO" . (:foreground "orange")) ; The default red used for TODO is opressive
-                               ("IP" .(:foreground "#85C7FF"))))
+(setq org-todo-keyword-faces
+      '(("WAITING" . (:foreground "#999999"))
+        ("TODO" . (:foreground "orange")) ; The default red used for TODO is opressive
+        ("IP" .(:foreground "#85C7FF"))))
 
 (defun init-org-mode-personal ()
-  ;; This enables "clean mode", such that sublists use whitespace for indentation (ala markdown) instead of
-  ;; many stars.
+  ;; This enables "clean mode", such that sublists use whitespace for indentation (ala markdown)
+  ;; instead of many stars.
   (setq org-startup-indented t))
 
 (with-eval-after-load "org" (init-org-mode-personal))
@@ -49,7 +49,8 @@
   ">" 'org-metaright
   "gh" 'org-goto-top-level-heading
   "gu" 'outline-up-heading
-  ; Normally these go backwards-and-forward by paragraphs but skipping between headings is more useful.
+  ; Normally these go backwards-and-forward by paragraphs but skipping between headings is more
+  ; useful.
   "{" 'org-backward-heading-same-level
   "}" 'org-forward-heading-same-level
   (kbd "<C-tab>") 'org-expand-top-level-parent
@@ -60,7 +61,8 @@
   (kbd "TAB") 'org-cycle)
 
 (defun preview-org ()
-  "Pipes the buffer's contents into a script which renders the markdown as HTML and opens in a browser."
+  "Pipes the buffer's contents into a script which renders the markdown as HTML and opens in a
+   browser."
   (interactive)
   ;; This convert_org_to_markdown.rb is a primitive script I've written which fits my needs.
   (call-process-region (point-min) (point-max) "/bin/bash" nil nil nil "-c"
@@ -85,10 +87,6 @@
           (kbd "<C-return>") '(lambda () (interactive)
                                 (org-insert-heading-after-current)
                                 (evil-append nil))))
-      ;; TODO(philc): Make S-C-enter insert a heading above
-          ;; (kbd "<C-S-return>") '(lambda () (interactive)
-          ;;                       (org-insert-subheading-as-first-child)
-          ;;                       (evil-append nil))))
       '(normal insert))
 
 (defun always-insert-item ()
@@ -101,8 +99,8 @@
   (funcall fun)
   (evil-append nil))
 
-;; Moves the current heading (and all of its children) into the matching parent note in the archive file.
-;; I think this is the most sensible way to archive TODOs in org mode files.
+;; Moves the current heading (and all of its children) into the matching parent note in the archive
+;; file. I think this is the most sensible way to archive TODOs in org mode files.
 ;; http://orgmode.org/worg/org-hacks.html
 (defadvice org-archive-subtree (around my-org-archive-subtree activate)
   (let ((org-archive-location
@@ -115,17 +113,18 @@
     ad-do-it))
 
 (defun org-show-todo-and-done-tree ()
-  "Shows only subtrees which are TODOs or DONE items. Similar to org-show-todo-tree, but it matches DONE items
-   as well."
+  "Shows only subtrees which are TODOs or DONE items. Similar to org-show-todo-tree, but it matches
+   DONE items as well."
   (interactive)
   (save-excursion
     ;; Note that these tags are case insensitive.
     (org-occur "\\(TODO\\|DONE\\|INPROGRESS\\|WAITING\\)")
-    ;; org-occur highlights every TODO and DONE string match in the doc, which is distracting. Remove it.
+    ;; org-occur highlights every TODO and DONE string match in the doc, which is distracting.
+    ;; Remove it.
     (org-remove-occur-highlights)))
 
-;; When I've narrowed a subtree (e.g. via org-show-todo-and-done-tree), this allows me to quickly expand the
-;; tree around the cursor to show all items again, not just TODO and DONE.
+;; When I've narrowed a subtree (e.g. via org-show-todo-and-done-tree), this allows me to quickly
+;; expand the tree around the cursor to show all items again, not just TODO and DONE.
 (defun org-expand-top-level-parent ()
   "Shows the children of the top-level parent for the tree under the cursor."
   (interactive)
@@ -133,13 +132,13 @@
     (outline-up-heading 4)
     (show-children)))
 
-(defun text-of-current-line ()
+(defun org-text-of-current-line ()
   (buffer-substring-no-properties (line-beginning-position)
                                   (line-beginning-position 2)))
 
 (defun org-get-current-heading ()
   "Assumes the cursor is currently on a heading. TODO: return nil if the cursor isn't on a heading."
-  (-> (text-of-current-line) s-trim (split-string "* ") cl-second))
+  (-> (org-text-of-current-line) s-trim (split-string "* ") cl-second))
 
 (defun org-move-to-heading (heading-name)
   (let ((heading-has-changed nil)
@@ -158,14 +157,15 @@
   (org-insert-heading-after-current)
   (insert subheading-text)
   (org-demote)
-  ;; TODO(philc): This works because org-move-subtree-up throws an error (using user-error) when it can no
-  ;; longer move up. Change this so we only invoke org-move-subtree-up "current-depth" times.
+  ;; TODO(philc): This works because org-move-subtree-up throws an error (using user-error) when it
+  ;; can no longer move up. Change this so we only invoke org-move-subtree-up "current-depth" times.
   (while t
     ;; This will throw an exception once we can no longer move the subtree up.
     (org-move-subtree-up)))
 
 (defun org-capture-item-and-prepend-to-subtree ()
-  "Prompts for a TODO and the name of a top-level heading, and adds the TODO as a child to the heading."
+  "Prompts for a TODO and the name of a top-level heading, and adds the TODO as a child to the
+   heading."
   (interactive)
   ;; NOTE(philc): These are personalized to the way I organize my org mode TODO file.
   (message "[L] Liftoff  [B] Base  [S] Study  [N] Entertainment  [M] Emacs [J] Journal")
