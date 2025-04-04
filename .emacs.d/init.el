@@ -540,7 +540,10 @@
 (defun show-git-status-in-left-column ()
   (interactive)
     (util/save-buffer-if-dirty)
-    (let ((dir (projectile-project-root)))
+    ;; We want to show the git status for the current buffer's repo. We first get that repo before
+    ;; switching to the first column's window, because it may contain a buffer from a different git
+    ;; repo.
+    (let ((dir (magit-toplevel)))
       (wm/switch-to-column 0)
       (magit-status dir)
       (magit-status-and-focus-unstaged)))
