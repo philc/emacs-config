@@ -539,9 +539,11 @@
 
 (defun show-git-status-in-left-column ()
   (interactive)
-  (util/save-buffer-if-dirty)
-  (wm/switch-to-column 0)
-  (magit-status-and-focus-unstaged))
+    (util/save-buffer-if-dirty)
+    (let ((dir (projectile-project-root)))
+      (wm/switch-to-column 0)
+      (magit-status dir)
+      (magit-status-and-focus-unstaged)))
 
 (defun backward-kill-line (arg)
   "Delete backward (Ctrl-u) as in Bash, and save the contents to the clipboard."
