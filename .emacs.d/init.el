@@ -1183,6 +1183,18 @@
 ;; Use a less distracting color when underlining mispelled words.
 (set-face-attribute 'spell-fu-incorrect-face nil :underline '(:color "#E99265" :style wave))
 
+(defun disable-spell-checking-for-html-attributes ()
+  ;; It's distracting to see attribute names and values marked as mispelled, so disable spell-fu on
+  ;; those faces. Another way to do this is by modifying spell-fu-skip-region-function, but that
+  ;; seems overkill and less efficient.
+  (setq-local spell-fu-faces-exclude
+              '(;; The names of attributes, like href in <a href>
+                font-lock-variable-name-face
+                ;; Attribute values, like "foo" in <a href="foo">
+                font-lock-string-face)))
+
+(add-hook 'html-mode-hook 'disable-spell-checking-for-html-attributes)
+
 (defun add-word-to-dictionary ()
   "Adds the word under the cursor to your personal dictionary. Also re-spellchecks the buffer to
    clear any stale highlights."
