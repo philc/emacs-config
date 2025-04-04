@@ -15,19 +15,6 @@
 ;; (setq debug-on-error t)
 
 ;;
-;; Color scheme
-;;
-(defun reload-theme ()
-  (interactive)
-  ;; A reasonable color scheme which lives in my .emacs.d.
-  (load-theme 'tangotango t))
-
-(reload-theme)
-
-;; Make the dividing line between window splits less bright. It's #EAEAEA in tangotango.
-(set-face-attribute 'vertical-border nil :foreground "#888888")
-
-;;
 ;; Package management
 ;;
 (require 'package)
@@ -93,40 +80,18 @@
 (require 'lisp-utils)
 (require 'emacs-utils)
 
-;; The prefix key to use when defining Vim style leader keys. See the Evil section below.
-(setq global-leader-prefix ";")
-
-;; Based on my anecdotal observations, this reduces the amount of display flicker during Emacs
-;; startup.
-(setq redisplay-dont-pause t)
-
-;; This allows Emacs to occupy the full screen width and height, so that nothing below it (e.g. the
-;; desktop) is visible. The default behavior in Emacs is to allow only resizing by whole
-;; character-columns and rows.
-(setq frame-resize-pixelwise t)
-
-;; Set the titlebar to be transparent and dark, although just after, it gets hidden altogether.
-(add-to-list 'default-frame-alist '(ns-transparent-titlebar . t))
-(add-to-list 'default-frame-alist '(ns-appearance . dark))
-;; Remove the titlebar on OSX, so that Emacs occupies the entire screen.
-(add-to-list 'default-frame-alist '(undecorated . t))
-
-;; Turn off graphical toolbars.
-(if (display-graphic-p) (menu-bar-mode 1) (menu-bar-mode -1))
-(when (and (fboundp 'tool-bar-mode) tool-bar-mode) (tool-bar-mode -1))
-(when (and (fboundp 'scroll-bar-mode) scroll-bar-mode) (scroll-bar-mode -1))
-
 ;; Disable Eldoc mode, which is enabled by default in Emacs. I've found that it makes navigating
 ;; Elisp files slow, and I don't use it.
 (global-eldoc-mode -1)
 
 ;; Make it possible to open files via the command line in this Emacs using `emacsclient`.
-(require 'server)
-(if (not (or (server-running-p)
-             ;; I use two Emacs apps, one dedicated to Org mode. Don't start the server in that
-             ;; Emacs.
-             (string-match "Org\\.app" (car command-line-args))))
-    (server-start))
+;; NOTE: I'm disabling this. I never use it.
+;; (require 'server)
+;; (if (not (or (server-running-p)
+;;              ;; I use two Emacs apps, one dedicated to Org mode. Don't start the server in that
+;;              ;; Emacs.
+;;              (string-match "Org\\.app" (car command-line-args))))
+    ;; (server-start))
 
 ;; Make it so that the scratch buffer uses markdown. By default it uses Emacs Lisp mode.
 (setq initial-major-mode 'markdown-lite-mode)
@@ -171,12 +136,6 @@
 ;; listing when a file is created or removed.
 (setq global-auto-revert-non-file-buffers t)
 (add-hook 'dired-mode-hook 'auto-revert-mode)
-
-;; Remove some of Emacs UI
-(setq initial-scratch-message "") ; When opening a new buffer, don't show the scratch message.
-(setq inhibit-startup-message t)
-(setq inhibit-startup-echo-area-message t)
-(setq ring-bell-function 'ignore)
 
 (setq mac-option-modifier 'alt)
 (setq mac-command-modifier 'meta)
@@ -353,6 +312,10 @@
 ;;
 ;; Evil mode -- Vim keybindings for Emacs.
 ;;
+
+;; The prefix key to use when defining Vim style leader keys. See the Evil section below.
+(setq global-leader-prefix ";")
+
 (setq evil-want-C-u-scroll t)
 (setq evil-want-Y-yank-to-eol t) ; Map "Y" to copy to the end of line (y$ in Vim).
 (setq evil-undo-system 'undo-fu) ; In emacs 28, this can be removed, as undo-redo.
