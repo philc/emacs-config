@@ -238,4 +238,11 @@ Date: %ad
   "Opens the magit-status view and focuses the cursor on the first unstaged file."
   (interactive)
   (magit-status)
+  ;; Untracked files are collapsed by default. Show them, so I can resolve them. I tried to instead
+  ;; customize magit-section-initial-visibility-alist to achieve this, but it had no effect.
+  (magit-jump-to-untracked)
+  (let ((section (magit-current-section)))
+    (when (eq (oref section type) 'untracked)
+      (magit-section-show section)))
+  ;; Put the cursor on the unstaged section.
   (magit-jump-to-unstaged))
