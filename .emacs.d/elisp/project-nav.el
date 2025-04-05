@@ -38,7 +38,7 @@
                                         project-nav/notes-file-extensions)))
          (file-list (->> project-nav/notes-directories
                          (--map (project-nav/filter-files-in-directory it file-matches-pattern? t))
-                         flatten)))
+                         flatten project-nav/sort-by-file-mtime)))
     (let ((file-to-open (completing-read "Notes file: "
                                          (mapcar 'file-name-nondirectory file-list))))
       (->> file-list
@@ -48,6 +48,26 @@
     ;; When that file is shown, ensure it's in normal mode. If the file is open in another window in insert
     ;; mode, then it will remain in insert mode in this current window.
     (switch-to-evil-normal-state)))
+
+(defun project-nav/sort-by-file-mtime (paths)
+  "Returns the paths, sorted by mtime descending."
+  ;; NOTE(philc): Maybe it would be better to tap into recentf's database of files, so I can sort these by
+  ;; when I last accessed them.
+  ;;
+  ;; It requires many more syscalls to get file attributes per file, rather than in batch for a full
+  ;; directory. So, if this is ever slow, we can switch to getting the file mtimes when we scan
+  ;; directories, using directory-files-and-attributes.
+  (let* ((paths-and-mtimes (-map (lambda (path)
+                                   (list path
+                                         (-> path
+                                             file-attributes
+                                             file-attribute-modification-time)))
+                                 paths))
+         (sorted (sort paths-and-mtimes
+                       (lambda (a b)
+                         (time-less-p (cl-second b) (cl-second a)))))
+         (sorted-names (-map 'cl-first sorted)))
+    sorted-names))
 
 (defun project-nav/open-root-of-project (project-path)
   "Opens the project at path. If it's a clojure project, find the project's 'main' file and open that.
