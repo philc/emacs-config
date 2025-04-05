@@ -825,6 +825,16 @@
 ;; Don't show previews of the buffers in consult-buffer.
 (setq consult-preview-key nil)
 
+;; When using consult-buffer, this will show the previously-used buffer as the first suggestion,
+;; *even if* that buffer is showing in another window somewhere. Taken from here:
+;; https://github.com/minad/consult/discussions/1141
+(setf (plist-get consult--source-buffer :items)
+      (lambda ()
+        (consult--buffer-query
+         :sort 'visibility
+         :as #'consult--buffer-pair
+         :buffer-list (delete-dups (nconc (mapcar #'car (window-prev-buffers)) (buffer-list))))))
+
 (defun kill-consult-buffer-at-point ()
   (interactive)
   "Kill the buffer at point in consult-buffer."
