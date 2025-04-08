@@ -1890,6 +1890,7 @@
 
 (define-leader-keys 'js-mode-map
   "l" 'log-word-under-cursor
+  "L" 'log-word-under-cursor-without-value
   "rr" 'reload-active-browser-tab
   "re" 'reload-vimium-extension-firefox
   "rs" 'js/save-last-run-command
@@ -1913,8 +1914,10 @@
 (defun my-repl-mode-init ()
   (visual-line-mode))
 
-(defun log-word-under-cursor ()
-  "Inserts a logging statement for the word under the cursor, or the current selection."
+(defun log-word-under-cursor (&optional omit-the-value)
+  "Inserts a logging statement for the word under the cursor, or the current selection.
+   * omit-the-value: only log the string under the cursor, but don't log its value as a variable.
+     This is useful when you want to print some tracing statements."
   (interactive)
   (let* ((word
           (if (region-active-p)
@@ -1924,20 +1927,31 @@
                     s-trim
                     (s-replace "\n" "")
                     (s-chop-suffix ";")))
-         (format-str (pcase major-mode
-                       ('js-mode "console.log(\"%s:\", %s);")
-                       ('go-mode "fmt.Println(\"%s:\", %s);")
-                       ('rust-mode "println!(\"%s: {:?}\", %s);")
-                       ('emacs-lisp-mode "(progn (print \"%s\") (prin1 %s t))")))
+         (format-str
+          (if omit-the-value
+              (pcase major-mode
+                ('js-mode "console.log(\"%s\");")
+                ('go-mode "fmt.Println(\"%s\");")
+                ('rust-mode "println!(\"%s\");")
+                ('emacs-lisp-mode "(progn (print \"%s\"))"))
+            (pcase major-mode
+              ('js-mode "console.log(\"%s:\", %s);")
+              ('go-mode "fmt.Println(\"%s:\", %s);")
+              ('rust-mode "println!(\"%s: {:?}\", %s);")
+              ('emacs-lisp-mode "(progn (print \"%s\") (prin1 %s t))"))))
          (statement
           (format format-str
-                  ;; Escape quotes
+                  ;; Escape any quotes.
                   (s-replace "\"" "\\\"" word)
                   word)))
     (end-of-line)
     (insert "\n")
     (indent-according-to-mode)
     (insert statement)))
+
+(defun log-word-under-cursor-without-value ()
+  (interactive)
+  (log-word-under-cursor t))
 
 (add-hook 'repl-mode-hook 'my-repl-mode-init)
 
