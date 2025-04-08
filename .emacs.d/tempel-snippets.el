@@ -14,6 +14,7 @@ js-mode
 (elif "else if (" q ") {" n> n "}")
 (else "else {" n> q n "}")
 (function "function " p "(" p ") {" n> q n "};")
+(f "function " p "(" p ") {" n> q n "};")
 (log "console.log(" q ");")
 (qs "document.querySelector(\"" q "\");")
 (context "context(\"" q "\", () => {" n> n "});")
