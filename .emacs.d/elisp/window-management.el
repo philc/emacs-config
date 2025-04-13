@@ -452,3 +452,38 @@
   (interactive)
    (let ((quarter-height (/ (frame-height) 4)))
      (enlarge-window (- quarter-height (window-height)))))
+
+(defun wm/switch-to-recent-buffer ()
+  "Show recent buffers in a menu and switch to the selected one."
+  (interactive)
+  ;; I wrote this rather than using switch-to-buffer or consult-buffer because those commands will
+  ;; move a buffer to the bottom of the list if it's displayed in another window, and I don't want
+  ;; that.
+  (let* ((current (current-buffer))
+         (buffers (-filter (lambda (buf)
+                             (and (not (eq buf current))
+                                  (buffer-file-name buf)))
+                           (buffer-list)))
+         (buffer-names (-map #'buffer-name buffers))
+         (selection (completing-read "Switch to: " buffer-names nil t)))
+    (when selection
+      (switch-to-buffer selection))))
+
+(defun wm/kill-buffer-in-buffer-selection-menu ()
+  "When a vertico menu is being shown, kill the buffer that's currently selected and refresh
+   the buffer selection UI."
+  (interactive)
+  (let* ((buffer-name (->> (vertico--candidate)
+                           substring-no-properties))
+         (buffer (get-buffer buffer-name)))
+    (progn (print "buffer") (prin1 buffer t))
+    (progn (print "vertico--candidate") (prin1 (vertico--candidate) t))
+    (when buffer
+      (kill-buffer buffer)
+      ;; We quit the completing-read UI and redisplay it without the buffer that was killed.
+      ;; minibuffer-keyboard-quit unwinds the call stack and executes no further code, so we must
+      ;; run wm/switch-to-recent-buffer in a timer.
+      (run-at-time nil nil
+                   (lambda ()
+                     (wm/switch-to-recent-buffer)))
+      (minibuffer-keyboard-quit))))

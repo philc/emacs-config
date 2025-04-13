@@ -478,7 +478,7 @@
  "b" (lambda ()
        (interactive)
        (util/save-buffer-if-dirty)
-       (consult-buffer))
+       (wm/switch-to-recent-buffer))
  "f" 'projectile-find-file
  "t" (lambda () (interactive) (message (buffer-name)))
  "SPC" 'evil-ext/fill-inside-paragraph-or-comment-block ; Shortcut for Vim's gqip
@@ -822,37 +822,10 @@
 (vertico-mode)
 
 (require 'consult)
-;; Don't show previews of the buffers in consult-buffer.
+;; Don't show previews of buffers in consult-buffer.
 (setq consult-preview-key nil)
 
-;; When using consult-buffer, this will show the previously-used buffer as the first suggestion,
-;; *even if* that buffer is showing in another window somewhere. Taken from here:
-;; https://github.com/minad/consult/discussions/1141
-(setf (plist-get consult--source-buffer :items)
-      (lambda ()
-        (consult--buffer-query
-         :sort 'visibility
-         :as #'consult--buffer-pair
-         :buffer-list (delete-dups (nconc (mapcar #'car (window-prev-buffers)) (buffer-list))))))
-
-(defun kill-consult-buffer-at-point ()
-  (interactive)
-  "Kill the buffer at point in consult-buffer."
-  ;; vertico--candidate returns a string of this form. We want the buffer name.
-  ;; #("some-buffer.el..." 0 15 ...)
-  (let* ((buffer-name (->> (vertico--candidate)
-                           substring-no-properties
-                           ;; Remove the mysterious invalid unicode character at the end of the
-                           ;; buffer's name.
-                           (s-chop-right 1)))
-         (buffer (get-buffer buffer-name)))
-    (when buffer
-      (kill-buffer buffer)
-      ;; I would like to refresh the consult view now that the buffer is gone, but this doesn't
-      ;; appear to do anything.
-      (consult--vertico-refresh))))
-
-(define-key vertico-map (kbd "C-k") #'kill-consult-buffer-at-point)
+(define-key vertico-map (kbd "C-k") #'wm/kill-buffer-in-buffer-selection-menu)
 
 ;;
 ;; Dired mode - using the Emacs file browser.
