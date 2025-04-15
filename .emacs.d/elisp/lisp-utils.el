@@ -69,10 +69,19 @@
      (setq ,var old-val)
      ret-val))
 
+(defun log-to-messages-buffer (&rest args)
+  "Unlike `print` and `message`, this will not log to the echo area."
+  (with-current-buffer "*Messages*"
+    (let ((inhibit-read-only t))
+      (goto-char (point-max))
+      (insert "\n")
+      (dolist (arg args)
+        (insert (prin1-to-string arg t))
+        (insert " "))
+      (insert "\n"))))
+
 ;; This is useful because `print` only prints its first arg. `message` accepts a formatter string
 ;; and so can print multiple arguments, but it also prints to the echo area.
 (defun printall (&rest args)
-  (dolist (arg args)
-    (princ arg)
-    (princ " "))
-  (princ "\n"))
+  "Prints its arguments directly to the *Messages* buffer, and not to the echo area."
+  (apply 'log-to-messages-buffer args))
