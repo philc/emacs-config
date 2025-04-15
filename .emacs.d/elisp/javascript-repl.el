@@ -139,8 +139,6 @@
       (let ((fn-name (nth 1 js/saved-run-command))
             (buf (cl-first js/saved-run-command)))
         (with-current-buffer buf
-          (progn (print "fn-name") (prin1 fn-name t))
-          (progn (print "buf") (prin1 buf t))
           (message (format "Running %s on %s" fn-name (buffer-name buf)))
           (funcall fn-name)))
     (message "No runnable command has yet been saved.")))
