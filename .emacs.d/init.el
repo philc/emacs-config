@@ -129,6 +129,10 @@
   (set-exec-path-from-shell-PATH)
   (set-env-vars-from-shell))
 
+;; When quitting Emacs, if we have a REPL or other subprocesses running, don't prompt confirmation;
+;; just quit!
+(setq confirm-kill-processes nil)
+
 ;; Auto revert mode
 ;; Reload an open file from disk if it is changed outside of Emacs.
 (global-auto-revert-mode 1)
