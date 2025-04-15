@@ -1910,12 +1910,12 @@
                 ('js-mode "console.log(\"%s\");")
                 ('go-mode "fmt.Println(\"%s\");")
                 ('rust-mode "println!(\"%s\");")
-                ('emacs-lisp-mode "(progn (print \"%s\"))"))
+                ('emacs-lisp-mode "(printall \"%s\"))"))
             (pcase major-mode
               ('js-mode "console.log(\"%s:\", %s);")
               ('go-mode "fmt.Println(\"%s:\", %s);")
               ('rust-mode "println!(\"%s: {:?}\", %s);")
-              ('emacs-lisp-mode "(progn (print \"%s\") (prin1 %s t))"))))
+              ('emacs-lisp-mode "(printall \"%s\" %s)"))))
          (statement
           (format format-str
                   ;; Escape any quotes.
