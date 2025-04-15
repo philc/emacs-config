@@ -461,8 +461,7 @@
   ;; that.
   (let* ((current (current-buffer))
          (buffers (-filter (lambda (buf)
-                             (and (not (eq buf current))
-                                  (buffer-file-name buf)))
+                             (not (eq buf current)))
                            (buffer-list)))
          (buffer-names (-map #'buffer-name buffers))
          (selection (completing-read "Switch to: " buffer-names nil t)))
