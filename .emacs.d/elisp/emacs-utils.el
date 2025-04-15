@@ -232,21 +232,24 @@ details."
 (defun util/show-and-scroll-repl-window (buffer)
   "Shows the REPL in a popup window and scrolls to its end, but does not switch to the window."
   (interactive)
-  (util/preserve-selected-window
-   (lambda ()
-     (pop-to-buffer buffer nil t)
-     (util/scroll-to-buffer-end buffer))))
+  (save-selected-window
+    (pop-to-buffer buffer nil t)
+    (util/scroll-to-buffer-end buffer)))
 
 (defun util/raise-repl-frame (buffer)
   "If the REPL buffer is visible in a window, in the case where that window is in a different frame
    than the current one, raise that window so we can see the REPL output."
-  (util/preserve-selected-window
-   (lambda ()
-     (-?> buffer
-          ;; Search all visible frames.
-          (get-buffer-window "visible")
-          window-frame
-          raise-frame))))
+  (let ((f (selected-frame)))
+    ;; We must save the selected window, or when we return focus to the current frame after raising
+    ;; the REPL's frame, the first window of the current frame will be selected.
+    (save-selected-window
+      (-?> buffer
+           ;; Search all visible frames.
+           (get-buffer-window "visible")
+           window-frame
+           raise-frame)
+      ;; Restore focus back to the frame we were previously on.
+      (raise-frame f))))
 
 (defun util/scroll-to-buffer-end (buffer)
   (let ((w (get-buffer-window buffer t)))
