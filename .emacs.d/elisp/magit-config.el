@@ -143,6 +143,8 @@ Date: %ad
    ";gri" 'magit-rebase-interactive
    ";gpush" 'git-push
    ";gpull" 'git-pull
+   ";re" 'reload-vimium-extension-firefox
+   ";rr" 'reload-active-browser-tab
    "o" 'show-commit-and-preserve-window
    (kbd "RET") 'show-commit-and-preserve-window
    "yy" 'magit-copy-section-value ; Copies the commit ID of the commit under the cursor.
@@ -170,6 +172,8 @@ Date: %ad
    ";gca" 'magit-commit-amend
    ";gpush" 'git-push
    ";gpull" 'git-pull
+   ";re" 'reload-vimium-extension-firefox
+   ";rr" 'reload-active-browser-tab
    "o" 'my-magit/diff-visit-file
    (kbd "RET") 'my-magit/diff-visit-file
    "c" 'magit-commit
