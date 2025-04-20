@@ -19,6 +19,7 @@ js-mode
 (qs "document.querySelector(\"" q "\");")
 (context "context(\"" q "\", () => {" n> n "});")
 (should "should(\"" q "\", () => {" n> n "});")
+(teardown "teardown(() => {" n> q n "});")
 
 emacs-lisp-mode
 
