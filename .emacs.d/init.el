@@ -494,7 +494,10 @@
  "o" 'util/open-file-at-cursor
  "wc" 'count-chars-region
  ;; Grep (using the "ag" command) for files in the current directory.
- "s" 'ag-project-in-current-window
+ "s" (lambda ()
+       (interactive)
+       (util/save-buffer-if-dirty)
+       (ag-project-in-current-window))
  ;; "v" is a mnemonic prefix for "view X".
  ;; "vv" will be a natural choice as a mode-specific shortcut for previewing the current file.
  "vu" 'notmuch-go-to-inbox
@@ -872,7 +875,11 @@
   "G" 'evil-goto-line
   ;; dired overrides my global "other window" shorcut.
   (kbd "M-C-n") 'other-window
-  ";s" 'ag-project-in-current-window ; Dired overrides this too.
+  ;; Dired overrides ;s, so redefine it again.
+  ";s" (lambda ()
+         (interactive)
+         (util/save-buffer-if-dirty)
+         (ag-project-in-current-window))
   "cd" 'dired-create-directory
   "cf" 'dired-create-file
   "x" 'dired-mark
