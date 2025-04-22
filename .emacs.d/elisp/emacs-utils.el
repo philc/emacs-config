@@ -117,6 +117,14 @@
     (select-frame original-frame t)
     result))
 
+(defun util/preserve-selected-frame (f)
+  "Runs the given function and raises (refocuses) the existing frame afterwards, in case the
+   selected frame was changed."
+  (let ((frame (selected-frame)))
+    (funcall f)
+    (raise-frame frame)))
+
+;; TODO(philc): I think I can switch this out for the built-in save-selected-window.
 (defun util/preserve-selected-window (f)
   "Runs the given function and then restores focus to the original window. Useful when you want to
    invoke a function (like showing documentation) but desire to keep your current window focused."

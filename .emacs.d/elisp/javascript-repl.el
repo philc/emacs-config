@@ -59,8 +59,10 @@
     (repl/start js/program-command js/program-arguments the-default-directory)
     ;; Using with-current-buffer here prevents display-buffer from changing the current buffer.
     ;; Code invoking js/start-or-switch-to-repl expects that the buffer doesn't change.
-    (with-current-buffer (current-buffer)
-      (display-buffer (get-buffer-create repl/buffer-name)))))
+    (util/preserve-selected-frame
+     (lambda ()
+       (with-current-buffer (current-buffer)
+         (display-buffer (get-buffer-create repl/buffer-name)))))))
 
 (setq js/load-file-counter 1)
 
