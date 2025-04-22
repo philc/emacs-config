@@ -914,38 +914,49 @@
 ;;
 ;; Emacs Lisp (elisp) mode.
 ;;
-(add-hook 'emacs-lisp-mode-hook (lambda () (modify-syntax-entry ?- "w" emacs-lisp-mode-syntax-table)))
+
+;; Don't treat hypens as word boundaries.
+(add-hook 'emacs-lisp-mode-hook
+          (lambda ()
+            (modify-syntax-entry ?- "w" emacs-lisp-mode-syntax-table)))
+
 (evil-define-key 'normal emacs-lisp-mode-map
-  "gf" 'find-function-at-point-same-window
+  "gf" 'elisp/find-function-at-point-same-window
   (kbd "C-S-H") 'shift-sexp-backward
   (kbd "C-S-L") 'shift-sexp-forward
-  ;; TODO(philc): This is currently broken.
-  "K" (lambda ()
-        (interactive)
-        (let ((target-word (current-word)))
-          (util/preserve-selected-window
-           (lambda ()
-             ;; Run `describe-function` and show its output in a help
-             ;; window. Inspired from help-fns.el.
-             (with-help-window "*Help*"
-               (describe-function (intern target-word))))))))
+  "gh" 'elisp/navigate-to-defun)
 
-(defun find-function-at-point-same-window ()
+(define-leader-keys 'emacs-lisp-mode-map
+  "l" 'log-word-under-cursor
+  ;; Note that I'm saving the buffer before each eval because otherwise, the buffer gets saved after
+  ;; the eval (due to save-when-switching-windows setup) and the output from the buffer save
+  ;; overwrites the eval results in the minibuffer.
+  "e b" (lambda() (interactive) (util/save-buffer-if-dirty) (eval-buffer))
+  "e s" (lambda () (interactive) (util/save-buffer-if-dirty) (elisp-eval-current-sexp))
+  "e x" (lambda () (interactive) (util/save-buffer-if-dirty) (call-interactively 'eval-defun))
+  "e k" 'elisp/erase-messages-buffer
+  "e e" 'elisp/view-echo-area-messages-and-scroll)
+
+;; Indentation rules.
+(put '-> 'lisp-indent-function nil)
+(put '->> 'lisp-indent-function nil)
+
+(defun elisp/find-function-at-point-same-window ()
   "Find directly the function at point in the other window."
   (interactive)
   (let ((f (function-called-at-point)))
     (when f
       (find-function f))))
 
-(defun current-sexp ()
+(defun elisp/current-sexp ()
   "Returns the text content of the sexp list around the cursor."
   (thing-at-point 'list t))
 
 (defun elisp-eval-current-sexp ()
   (interactive)
-  (message "%s" (eval (read (current-sexp)))))
+  (message "%s" (eval (read (elisp/current-sexp)))))
 
-(defun view-echo-area-messages-and-scroll ()
+(defun elisp/view-echo-area-messages-and-scroll ()
   "Opens the echo area messages buffer and scrolls to the bottom of it. That's where the latest
   messages are."
   (interactive)
@@ -955,7 +966,7 @@
      (select-window (get-buffer-window "*Messages*" t))
      (goto-char (point-max)))))
 
-(defun erase-messages-buffer ()
+(defun elisp/erase-messages-buffer ()
   "Clears the messages buffer. Useful when you want to clear and reset the output when evaluating
   elisp code."
   (interactive)
@@ -988,24 +999,6 @@
   (let* ((fns (elisp/get-defun-names))
          (selected (completing-read "fn: " fns nil t)))
     (elisp/goto-defun selected)))
-
-(evil-define-key 'normal emacs-lisp-mode-map
-  "gh" 'elisp/navigate-to-defun)
-
-(define-leader-keys 'emacs-lisp-mode-map
-  "l" 'log-word-under-cursor
-  ;; Note that I'm saving the buffer before each eval because otherwise, the buffer gets saved after
-  ;; the eval (due to save-when-switching-windows setup) and the output from the buffer save
-  ;; overwrites the eval results in the minibuffer.
-  "e b" (lambda() (interactive) (util/save-buffer-if-dirty) (eval-buffer))
-  "e s" (lambda () (interactive) (util/save-buffer-if-dirty) (elisp-eval-current-sexp))
-  "e x" (lambda () (interactive) (util/save-buffer-if-dirty) (call-interactively 'eval-defun))
-  "e k" 'erase-messages-buffer
-  "e e" 'view-echo-area-messages-and-scroll)
-
-;; Indentation rules.
-(put '-> 'lisp-indent-function nil)
-(put '->> 'lisp-indent-function nil)
 
 ;;
 ;; Org mode. For TODOs and note taking.
