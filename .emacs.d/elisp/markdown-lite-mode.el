@@ -1316,7 +1316,7 @@ Return nil if the current line is not the beginning of a list item."
          (headings (mlm/get-headings regexp))
          (vertico-original-styles completion-styles)
          (vertico-original-sort-function vertico-sort-function)
-         (selected-heading nil))
+         (selected-string nil))
     ;; Normally, Vertico will match completions using fuzzy matching. For headings
     ;; in Markdown, that's not appropriate, given the headings can be very long.
     ;; Use plain substring matching instead.
