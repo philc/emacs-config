@@ -1466,7 +1466,8 @@
   (interactive)
   (util/save-buffer-if-dirty)
   (cond
-   ((s-contains? "Chrome" browser-app)
+   ((or (s-contains? "Chrome" browser-app)
+        (s-contains? "Brave" browser-app))
     (util/call-process-with-exit-status "osascript"
                                         (format "tell app \"%s\" to reload active tab of window 1"
                                                 browser-app)))
