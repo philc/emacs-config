@@ -956,8 +956,8 @@
      (goto-char (point-max)))))
 
 (defun erase-messages-buffer ()
-  "Clears the messages buffer. Useful when you want to clear and reset the output from your Elisp
-  code."
+  "Clears the messages buffer. Useful when you want to clear and reset the output when evaluating
+  elisp code."
   (interactive)
   (util/preserve-selected-window
    (lambda ()
@@ -966,6 +966,31 @@
      (read-only-mode -1)
      (erase-buffer)
      (read-only-mode 1))))
+
+(defun elisp/get-defun-names ()
+  "Return list of function names defined via defun in the current buffer."
+  (save-excursion
+    (goto-char (point-min))
+    (let (names)
+      (while (re-search-forward "^(defun \\([^[:space:]]+\\)" nil t)
+        (printall (match-string 1) (line-number-at-pos))
+        (push (substring-no-properties (match-string 1)) names))
+      (nreverse names))))
+
+(defun elisp/goto-defun (name)
+  (let ((pattern (concat "(defun " name)))
+    (goto-char (point-min))
+    (re-search-forward pattern nil t)
+    (beginning-of-line)))
+
+(defun elisp/navigate-to-defun ()
+  (interactive)
+  (let* ((fns (elisp/get-defun-names))
+         (selected (completing-read "fn: " fns nil t)))
+    (elisp/goto-defun selected)))
+
+(evil-define-key 'normal emacs-lisp-mode-map
+  "gh" 'elisp/navigate-to-defun)
 
 (define-leader-keys 'emacs-lisp-mode-map
   "l" 'log-word-under-cursor
