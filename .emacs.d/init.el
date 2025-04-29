@@ -57,6 +57,7 @@
                       scss-mode ; For editing SCSS files.
                       smartparens ; For editing expressions in parentheses.
                       spell-fu ; Spell checking
+                      swift-mode ; Swift syntax highlighting
                       tempel ;; Insert snippets
                       undo-fu ; Used for undo/redo in Evil mode. No longer needed in Emacs 28.
                       vertico ; Nicely show menu completions
@@ -2134,11 +2135,22 @@
 ;; Swift
 ;;
 
+(use-package swift-mode
+  :ensure t
+  :defer t
+  :mode "\\.swift\\'")
+
 (defun swift/compile ()
   (compile (concat "swiftc " (buffer-file-name))))
 
+(defun swift/run-file ()
+  (let ((binary (->> (buffer-file-name)
+                     (s-chop-suffix ".swift"))))
+    (compile binary)))
+
 (define-leader-keys 'swift-mode-map
   "i" 'swift/format-buffer
+  "rf" (lambda () (interactive) (save-and-compile 'swift/run-file))
   "cc" (lambda () (interactive) (save-and-compile 'swift/compile)))
 
 (defun swift/format-buffer ()
