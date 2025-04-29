@@ -18,6 +18,7 @@ js-mode
 (log "console.log(" q ");")
 (qs "document.querySelector(\"" q "\");")
 (context "context(\"" q "\", () => {" n> n "});")
+(setup "setup(() => {" n> n "});")
 (should "should(\"" q "\", () => {" n> n "});")
 (teardown "teardown(() => {" n> q n "});")
 
