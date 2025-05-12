@@ -1711,6 +1711,30 @@
         ;; project's root, so override that.
         (lambda () (compile (concat "cd " (projectile-project-root) " && " command))))))))
 
+(defun get-makefile-targets (project-dir)
+  "Return a list of Makefile targets in PROJECT-DIR. If no Makefile exists, return an empty list."
+  (let* ((abs-dir (expand-file-name project-dir))
+         ;; This command produces a list of all targets in the makefile:
+         ;; make -qp 2>/dev/null | awk -F: '/^[a-zA-Z0-9][^$#\/\t=]*:([^=]|$)/ {print $1}'
+         (make-cmd "make -qp 2>/dev/null | awk -F: '/^[a-zA-Z0-9][^$#\\/\\t=]*:([^=]|$)/ {print $1}'")
+         (makefile-exists (file-exists-p (concat abs-dir "/Makefile"))))
+    (if makefile-exists
+        (with-temp-buffer
+          (let ((default-directory abs-dir))
+            (ignore-errors
+              (insert (shell-command-to-string make-cmd))
+              (split-string (buffer-string) "\n" t))))
+      '())))
+
+(defun go-test-all ()
+  "Runs `make test` if the project has a Makefile with a test target. Otherwise runs go test ./..."
+  (interactive)
+  (let ((targets (get-makefile-targets (projectile-project-root))))
+    (printall "targets" targets)
+    (if (-contains? targets "test")
+        (go-save-and-compile "make test")
+      (go-save-and-compile "go test ./..."))))
+
 (defun go-test-file ()
   "Runs go test with the path of the current buffer's file."
   (interactive)
@@ -1751,7 +1775,7 @@
   "rb" (go-save-and-compile-fn "make synthetic-benchmark")
   ;; "t" is a namespace for test-related commands.
   "tf" 'go-test-file
-  "ta" (go-save-and-compile-fn "go test ./...")
+  "ta" 'go-test-all
   "rw" (go-save-and-compile-fn "make run-web")
   ;; "c" is a namespace for compile-related commands.
   "i" 'gofmt-ignoring-errors
