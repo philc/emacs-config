@@ -18,13 +18,11 @@
 ;; Package management
 ;;
 (require 'package)
-(add-to-list 'package-archives '("melpa" . "http://melpa.org/packages/"))
-(add-to-list 'package-archives '("melpa-stable" . "http://melpa-stable.melpa.org/packages/"))
-;; When installing or upgrading packages programmatically, choose the version from melpa-stable if
-;; available.
-(setq package-archive-priorities
-      '(("melpa-stable" . 10)
-        ("melpa" . 5)))
+;; I'm using melpa-stable as the only source for packages. That's where I install all packages from.
+;; Allowing other respositories like melpa would cause an error which installing swift-mode, which
+;; has a date version in melpa but a version number in melpa-stable. This happened even after
+;; setting package-archive-priorities.
+(setq package-archives '(("melpa-stable" . "http://stable.melpa.org/packages/")))
 
 (package-initialize)
 (when (not package-archive-contents)
