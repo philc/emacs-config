@@ -2280,3 +2280,15 @@
     ;; whether this is a material performance win given my usage patterns.
     (setq desktop-restore-eager 15)
     (desktop-save-mode 1)))
+
+;;
+;; Sql mode
+;;
+
+(defun sql/format-buffer ()
+  (interactive)
+  ;; Get this with `brew install sql-formatter`.
+  (replace-region-with-command-output "sql-formatter --language postgresql"))
+
+(define-leader-keys 'sql-mode-map
+  "i" 'sql/format-buffer)
