@@ -1922,6 +1922,7 @@
 
 (require 'js)
 (util/define-keys js-mode-map
+                  "gh" 'js-goto-def-in-file
                   (kbd "M-r") 'js/run-saved-command)
 
 (define-leader-keys 'js-mode-map
@@ -1990,6 +1991,28 @@
   (log-word-under-cursor t))
 
 (add-hook 'repl-mode-hook 'my-repl-mode-init)
+
+(defun js-goto-def-in-file ()
+  (interactive)
+  (let* ((bin (expand-file-name "scripts/list_symbols.js" user-emacs-directory))
+         (lines (->> (util/call-process-and-check bin nil (buffer-file-name))
+                     s-trim
+                     (s-split "\n")))
+         (symbols (mapcar (lambda (s)
+                            (cl-second (s-split " " s)))
+                          lines))
+         (selected (completing-read "fn: " symbols nil t))
+         (index (-elem-index selected symbols))
+         (line-col (->> lines
+                        (nth index)
+                        (s-split " ")
+                        cl-first
+                        (s-split ":")))
+         (line (-> line-col cl-first string-to-number))
+         (col (-> line-col cl-second string-to-number)))
+    (goto-line line)
+    ;; move-to-column uses zero-based column numbers.
+    (move-to-column (- col 1))))
 
 ;; Detect files in the Deno backtrace format in the compilation buffer, so that files and line
 ;; numbers can be navigated to when the compilation buffer is showing compile or runtime backtraces
