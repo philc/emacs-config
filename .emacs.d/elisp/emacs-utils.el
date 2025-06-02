@@ -21,7 +21,7 @@
           (buffer-string))))
 
 (defun util/call-process-and-check (program stdin &rest args)
-  "Calls the given program and raises an error if the exist status is non-zero. The error's message
+  "Calls the given program and raises an error if the exit status is non-zero. The error's message
    is the program's output."
   (let* ((result (apply 'util/call-process-with-exit-status program stdin args))
                  (exit-code (cl-first result))

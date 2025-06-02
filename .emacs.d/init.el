@@ -352,7 +352,7 @@
 ;; Move up and down through long, wrapped lines one visual line at a time.
 (define-key evil-normal-state-map (kbd "j") 'evil-next-visual-line)
 (define-key evil-normal-state-map (kbd "k") 'evil-previous-visual-line)
-(define-key evil-normal-state-map (kbd "K") 'info-lookup-symbol)
+(define-key evil-normal-state-map (kbd "K") 'describe-symbol-at-point)
 (define-key evil-normal-state-map (kbd "J")
   (lambda ()
     (interactive)
@@ -360,6 +360,16 @@
 
 (define-key evil-normal-state-map (kbd "C-k") 'move-to-previous-paragraph-start)
 (define-key evil-normal-state-map (kbd "C-j") 'move-to-next-paragraph-start)
+
+(defun describe-symbol-at-point ()
+  "Describe the symbol at point without prompting. Show error if no symbol is found."
+  (interactive)
+  (let ((symbol (symbol-at-point)))
+    (if symbol
+        (condition-case err
+            (describe-symbol symbol)
+          (error (message "Error: %s" (error-message-string err))))
+      (message "Error: No symbol at point"))))
 
 (defun move-to-next-paragraph-start ()
   "Move the cursor to the first line of the next paragraph."
