@@ -930,7 +930,7 @@
             (modify-syntax-entry ?- "w" emacs-lisp-mode-syntax-table)))
 
 (evil-define-key 'normal emacs-lisp-mode-map
-  "gf" 'elisp/find-function-at-point-same-window
+  "gd" 'elisp/find-function-at-point-same-window
   (kbd "C-S-H") 'shift-sexp-backward
   (kbd "C-S-L") 'shift-sexp-forward
   "gh" 'elisp/navigate-to-defun)
@@ -1658,7 +1658,7 @@
 ;;
 (with-eval-after-load "go-mode"
   (evil-define-key 'normal go-mode-map
-    "gf" 'xref-find-defintions
+    "gd" 'xref-find-defintions
     "K" 'go-show-doc-at-point))
 
 (defun go-show-doc-at-point ()
