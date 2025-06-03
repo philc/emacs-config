@@ -24,8 +24,8 @@
   "Calls the given program and raises an error if the exit status is non-zero. The error's message
    is the program's output."
   (let* ((result (apply 'util/call-process-with-exit-status program stdin args))
-                 (exit-code (cl-first result))
-                 (output (cl-second result)))
+         (exit-code (cl-first result))
+         (output (cl-second result)))
     (if (= exit-code 0)
         output
       (error "%s" output))))

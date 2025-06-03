@@ -1922,8 +1922,11 @@
 
 (require 'js)
 (util/define-keys js-mode-map
-                  "gh" 'js-goto-def-in-file
                   (kbd "M-r") 'js/run-saved-command)
+
+(evil-define-key 'normal js-mode-map
+  "gd" 'js-goto-def
+  "gh" 'js-goto-def-in-file)
 
 (define-leader-keys 'js-mode-map
   "l" 'log-word-under-cursor
@@ -2013,6 +2016,30 @@
     (goto-line line)
     ;; move-to-column uses zero-based column numbers.
     (move-to-column (- col 1))))
+
+(defun js-goto-def ()
+  (interactive)
+  (let* ((bin (expand-file-name "scripts/goto_def.js" user-emacs-directory))
+         (query (thing-at-point 'word 'no-properties))
+         (result (util/call-process-with-exit-status bin nil (buffer-file-name) query))
+         (exit-code (cl-first result))
+         (lines (-?>> result
+                      cl-second
+                      s-trim
+                      (s-split "\n"))))
+    (if (= exit-code 1)
+        (message "Definition of %s not found." query)
+      (let*
+          ;; TODO(philc): If there are multiple matches, handle that.
+          ((result (cl-first lines))
+           (components (s-split ":" result))
+           (path (nth 0 components))
+           (line (->> components (nth 1) string-to-number))
+           (col (->> components (nth 2) string-to-number)))
+        ;; TODO(philc): if path is another buffer other than this, switch to it.
+        (goto-line line)
+        ;; move-to-column uses zero-based column numbers.
+        (move-to-column (- col 1))))))
 
 ;; Detect files in the Deno backtrace format in the compilation buffer, so that files and line
 ;; numbers can be navigated to when the compilation buffer is showing compile or runtime backtraces

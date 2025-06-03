@@ -1,0 +1,28 @@
+{
+  "version": "4",
+  "specifiers": {
+    "jsr:@philc/shoulda@2": "2.0.0",
+    "jsr:@std/fs@*": "1.0.18",
+    "jsr:@std/path@^1.1.0": "1.1.0"
+  },
+  "jsr": {
+    "@philc/shoulda@2.0.0": {
+      "integrity": "2bc8b2eb9e5dee41fcd77760b009d3b3527980edf5b29cbf9f25443489a5faa9"
+    },
+    "@std/fs@1.0.18": {
+      "integrity": "24bcad99eab1af4fde75e05da6e9ed0e0dce5edb71b7e34baacf86ffe3969f3a",
+      "dependencies": [
+        "jsr:@std/path"
+      ]
+    },
+    "@std/path@1.1.0": {
+      "integrity": "ddc94f8e3c275627281cbc23341df6b8bcc874d70374f75fec2533521e3d6886"
+    }
+  },
+  "workspace": {
+    "dependencies": [
+      "jsr:@philc/shoulda@2",
+      "jsr:@std/fs@^1.0.18"
+    ]
+  }
+}

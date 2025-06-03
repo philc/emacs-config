@@ -47,16 +47,10 @@
   ;; pollutes the color used in the terminal from then on. I'm not sure why. This obviates the
   ;; issue, but it would be nice to have color.
   (setenv "NO_COLOR" "1")
-  (let* (;; Launch the REPL process in the directory of this project's root, rather than starting
-         ;; the REPL from the directory of the current buffer's file. Here I'm using projectfile to
-         ;; determine what is the project's root.
-         (the-default-directory
-          ;; (locate-dominating-file (buffer-file-name) ".git")
-          (if (projectile-project-p)
-              (projectile-project-root)
-            "./"))
-         (repl-buffer (get-buffer-create repl/buffer-name)))
-    (repl/start js/program-command js/program-arguments the-default-directory)
+  (let* ((repl-buffer (get-buffer-create repl/buffer-name)))
+    ;; Launch the REPL process in the project's directory, rather than starting it from the
+    ;; directory of the current buffer's file.
+    (repl/start js/program-command js/program-arguments (js/project-root))
     ;; Using with-current-buffer here prevents display-buffer from changing the current buffer.
     ;; Code invoking js/start-or-switch-to-repl expects that the buffer doesn't change.
     (util/preserve-selected-frame
@@ -72,6 +66,20 @@
   (setq js/last-run-command (list (current-buffer) 'js/load-current-file))
   (js/load-file (buffer-file-name)))
 
+(defun js/project-root ()
+  "A project directory can be the directory with a deno.json, or a .git directory, or a
+  .projectfile file. Use whichever is the most specific (has the longer path)."
+  (let* ((deno-json (-?> (locate-dominating-file (buffer-file-name) "deno.json")
+                         expand-file-name))
+         (project-root
+          (if (projectile-project-p)
+              (projectile-project-root)
+            (expand-file-name "./"))))
+    (if (> (length deno-json)
+           (length project-root))
+        deno-json
+      project-root)))
+
 (defun js/load-file (file-name)
   (js/ensure-repl-is-running)
   (let* (;; Since Deno treats files required with relative paths as separate from files required via
@@ -79,11 +87,9 @@
          ;; file's path, and then make the path relative to the project's root, if we're loading a
          ;; file in a Projectile project.
          (file (file-truename file-name))
-         (file (if (projectile-project-p)
-                   (->> file
-                        (s-chop-prefix (projectile-project-root))
-                        (concat "./"))
-                 file))
+         (file (->> file
+                    (s-chop-prefix (js/project-root))
+                    (concat "./")))
          ;; Note that unfortunately, if the file being imported has an unhandled rejected promise, it
          ;; will not be propagated by Deno until this is fixed:
          ;; https://github.com/denoland/deno/issues/8858
