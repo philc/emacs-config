@@ -1066,6 +1066,9 @@
 (setq tab-bar-separator "")
 (setq tab-bar-new-button-show nil)
 (setq tab-bar-close-button-show nil)
+;; Which tab to select when a tab is closed. The default value for this is 'recent, but that
+;; behavior doesn't match most MacOS applications, notably Chrome and Safari.
+(setq tab-bar-close-tab-select 'right)
 
 ;; Returns a caption for the tab in the form of " 1 tab-name ". The difference between this and the
 ;; default tab formatter is that it has a space prefix so that the text isn't directly adjacent to
