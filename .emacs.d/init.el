@@ -1434,6 +1434,11 @@
 (require 'clojure-mode-simple)
 
 ;;
+;; Chrome extension development
+;;
+(require 'browser-extension-devel)
+
+;;
 ;; HTML mode
 ;;
 ;; html-beautify is used for indentation in these commands. It's here:
@@ -1463,7 +1468,7 @@
 (define-leader-keys 'html-mode-map
   "i" 'format-html-buffer
   "rr" 'reload-active-browser-tab
-  "re" 'reload-vimium-extension-firefox
+  "re" 'ext-dev/reload-extension-in-browser
   "vv" 'preview-html)
 
 (define-leader-keys 'mustache-mode-map
@@ -1484,8 +1489,7 @@
                                         (format "tell app \"%s\" to reload active tab of window 1"
                                                 browser-app)))
    ;; Note that this script will shift the focus to the Firefox application. Focus can be restored
-   ;; to Emacs afterwards, but timers must be used, and this is fragile and verbose, so I haven't
-   ;; bothered with it.
+   ;; to Emacs afterwards, but timers must be used.
    ((s-contains? "Firefox" browser-app)
     (progn
       (util/call-process-with-exit-status
@@ -1497,49 +1501,6 @@
                   using {command down, shift down}
               end tell"
                browser-app))))))
-
-;; This is Chrome-centric. I'm not currently using this because I mostly develop extensions in
-;; Firefox, but if that changes, I could resume using this.
-(defun reload-browser-extensions-previous ()
-  "Reloads all extensions in the browser in tandem with the Extensions Reloader extension."
-  (interactive)
-  (util/save-buffer-if-dirty)
-  ;; If we're currently viewing the Errors page for an extension (i.e.
-  ;; chrome://extensions/?errors=extension-id) clear the list of errors before reloading the
-  ;; extensions.
-  (let ((script (->> (list "document.querySelector('extensions-manager').shadowRoot"
-                           ".querySelector('#viewManager extensions-error-page').shadowRoot"
-                           ".querySelector('cr-button')"
-                           ".click()")
-                     (s-join ""))))
-    (util/call-process-with-exit-status browser-cli
-                                        nil
-                                        "execute"
-                                        script)
-    (util/call-process-with-exit-status browser-cli
-                                        nil
-                                        "open"
-                                        "http://reload.extensions"
-                                        "-n" ; open in a new window
-                                        )))
-
-(defun reload-vimium-extension-firefox ()
-  "Reloads the Vimium extension in Firefox."
-  (interactive)
-  (util/save-buffer-if-dirty)
-  ;; This URL is specific to the Vimium Firefox extension.
-  ;; This corresponds to the "Internal UUID" field show in about:addons for the extension.
-  ;; Sometimes this internal extension ID can change as the extension's manifest.json changes.
-  (let* ((extension-id "a1d8df1a-fc26-4523-a7e8-d2dbb66e6f1f")
-         (url (format "moz-extension://%s/pages/reload.html" extension-id)))
-    (util/call-process-with-exit-status "open"
-                                        nil
-                                        ;; Which app to open
-                                        "-a"
-                                        "Firefox"
-                                        ;; -g means don't foreground the app.
-                                        "-g"
-                                        url)))
 
 (defun open-file-in-browser ()
   "Opens the current file in the browser."
@@ -1616,7 +1577,7 @@
   "i" 'css/format-buffer)
 
 (define-leader-keys '(css-mode-map less-css-mode-map)
-  "re" 'reload-vimium-extension-firefox
+  "re" 'ext-dev/reload-extension-in-browser
   "rr" 'reload-active-browser-tab)
 
 ;;
@@ -1935,7 +1896,7 @@
   "l" 'log-word-under-cursor
   "L" 'log-word-under-cursor-without-value
   "rr" 'reload-active-browser-tab
-  "re" 'reload-vimium-extension-firefox
+  "re" 'ext-dev/reload-extension-in-browser
   "rs" 'js/save-last-run-command
   "eb" 'js/load-current-file
   "eB" (lambda ()
