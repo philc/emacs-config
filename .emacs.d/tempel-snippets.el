@@ -13,6 +13,7 @@ js-mode
 (if "if (" q ") {" n> n "}")
 (elif "else if (" q ") {" n> n "}")
 (else "else {" n> q n "}")
+(try "try {" n> q n "} catch (error) {" n "}")
 (function "function " p "(" p ") {" n> q n "};")
 (f "function " p "(" p ") {" n> q n "};")
 (log "console.log(" q ");")
