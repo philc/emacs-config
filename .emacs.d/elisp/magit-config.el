@@ -105,7 +105,8 @@ Date: %ad
 
 (evil-define-key 'normal magit-diff-mode-map
   (kbd "RET") 'my-magit/diff-visit-file
-  "o" 'my-magit/diff-visit-file)
+  "o" 'my-magit/diff-visit-file
+  "O" 'my-magit/diff-visit-file)
 
 (evil-define-key 'normal git-commit-mode-map
   ";wk" 'git-commit-abort
@@ -146,6 +147,7 @@ Date: %ad
    ";re" 'reload-vimium-extension-firefox
    ";rr" 'reload-active-browser-tab
    "o" 'show-commit-and-preserve-window
+   "O" 'show-commit-and-preserve-window
    (kbd "RET") 'show-commit-and-preserve-window
    "yy" 'magit-copy-section-value ; Copies the commit ID of the commit under the cursor.
    "r" 'my-magit/magit-refresh-preserve-cursor
@@ -175,6 +177,7 @@ Date: %ad
    ";re" 'reload-vimium-extension-firefox
    ";rr" 'reload-active-browser-tab
    "o" 'my-magit/diff-visit-file
+   "O" 'my-magit/diff-visit-file
    (kbd "RET") 'my-magit/diff-visit-file
    "c" 'magit-commit
    ;; I have a git precommit hook which does style checks. Sometimes I want to disable it when
