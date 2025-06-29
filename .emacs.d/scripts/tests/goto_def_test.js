@@ -71,7 +71,7 @@ context("goto_def_test", () => {
     assert.equal(1, got.length);
     const line = got[0].split(":")[1];
     assert.equal("1", line);
-});
+  });
 
   teardown(async () => {
     await deleteFixtures();
