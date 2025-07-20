@@ -348,3 +348,10 @@ details."
         (funcall fn)
       (let ((duration (float-time (time-since start))))
         (message "Duration: %.1f ms" (* 1000 duration))))))
+
+;; I use this when writing make files. The key combination to insert tabs is hard to remember. I
+;; prefer a named commmand.
+(defun util/insert-tab ()
+  "Inserts a tab character."
+  (interactive)
+  (insert "\t"))
