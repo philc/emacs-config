@@ -453,20 +453,36 @@
    (let ((quarter-height (/ (frame-height) 4)))
      (enlarge-window (- quarter-height (window-height)))))
 
+(defun wm/include-in-buffer-list? (buf)
+  "Whether a buffer should be shown in the buffer switcher."
+  (let ((name (-?> (buffer-name buf)
+                   ;; The buffer " *Minibuf-1*" has a space before its name for some reason.
+                   s-trim)))
+    (not (or (eq buf (current-buffer))
+             (s-starts-with? "*Minibuf" name)
+             (s-starts-with? "*Old buffer" name)
+             ;; For special/internal buffers, only allow them if they're not already visible in any
+             ;; visible window in any visible frame.
+             (when (and (s-starts-with? "*" name)
+                        (s-ends-with? "*" name))
+               (get-buffer-window-list buf t t))))))
+
 (defun wm/switch-to-recent-buffer ()
   "Show recent buffers in a menu and switch to the selected one."
   (interactive)
   ;; I wrote this rather than using switch-to-buffer or consult-buffer because those commands will
   ;; move a buffer to the bottom of the list if it's displayed in another window, and I don't want
   ;; that.
+  ;;
+  ;; vertico applies some kind of sorting to the collection given to completing-read, but we don't
+  ;; want that here. To disable this behavior, vertico-sort-override-function must be set.
   (let* ((current (current-buffer))
-         (buffers (-filter (lambda (buf)
-                             (not (eq buf current)))
+         (buffers (-filter 'wm/include-in-buffer-list?
                            (buffer-list)))
-         (buffer-names (-map #'buffer-name buffers))
-         (selection (completing-read "Switch to: " buffer-names nil t)))
-    (when selection
-      (switch-to-buffer selection))))
+         (buffer-names (-map #'buffer-name buffers)))
+    (setq-temporarily vertico-sort-override-function #'identity
+                      (when-let (selection (completing-read "Switch to: " buffer-names nil t))
+                        (switch-to-buffer selection)))))
 
 (defun wm/kill-buffer-in-buffer-selection-menu ()
   "When a vertico menu is being shown, kill the buffer that's currently selected and refresh
