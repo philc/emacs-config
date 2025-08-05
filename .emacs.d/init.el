@@ -128,8 +128,8 @@
   (set-exec-path-from-shell-PATH)
   (set-env-vars-from-shell))
 
-;; When quitting Emacs, if we have a REPL or other subprocesses running, don't prompt confirmation;
-;; just quit!
+;; When quitting Emacs, if we have a REPL or other subprocesses running, don't prompt for additional
+;; confirmation to kill those subprocesses; just quit!
 (setq confirm-kill-processes nil)
 
 ;; Auto revert mode
@@ -715,7 +715,7 @@
                   (kbd "M-~") '(lambda () (interactive) (other-frame -1))
                   (kbd "M-w") 'vimlike-quit
                   (kbd "M-W") 'tab-close ; Close the current tab, including every window.
-                  (kbd "M-q") 'save-buffers-kill-terminal
+                  (kbd "M-q") 'quit-emacs-after-confirmation
                   (kbd "M-n") 'make-frame
                   (kbd "M-a") 'mark-whole-buffer
                   (kbd "M-h") 'ns-do-hide-emacs
@@ -746,6 +746,17 @@
                   (kbd "M-4") (lambda () (interactive) (wm/switch-to-column-or-change-row 3))
                   (kbd "M-5") (lambda () (interactive) (wm/switch-to-column-or-change-row 4))
                   (kbd "M-6") (lambda () (interactive) (wm/switch-to-column-or-change-row 5)))
+
+(defun quit-emacs-after-confirmation ()
+  ;; When quitting Emacs interactively, ask for confirmation, because sometimes I hit Cmd-q
+  ;; accidentally, and I would like to prompt for confirmation as Chrome does.
+  ;;
+  ;; The reason I'm not just setting the `confirm-kill-emacs` variable to 'y-or-n-p is because I
+  ;; want system quit commands issues by MacOS to not trigger a confirmation.
+  (interactive)
+  (if (y-or-n-p "Quit Emacs?")
+      (save-buffers-kill-emacs)
+    (message "Quit cancelled")))
 
 (defun clipboard-yank-and-remove-query-string ()
   "Assumes the clipboard contents are a URL, and strips everything after a query string and hash
