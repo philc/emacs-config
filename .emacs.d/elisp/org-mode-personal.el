@@ -74,6 +74,9 @@
 (define-leader-keys 'org-mode-map
   "a" 'org-archive-subtree
   "c" 'org-capture-item-and-prepend-to-subtree
+  ;; Leader-space is bound to evil-ext/fill-inside-paragraph-or-comment-block globally, but I
+  ;; haven't yet made that command work well in org, and it wreaks havoc in huge org mode files.
+  "SPC" (lambda () (interactive))
   "vv" 'preview-org)
 
 ;; normal & insert state shortcuts.
