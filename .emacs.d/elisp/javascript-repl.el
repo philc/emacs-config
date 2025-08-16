@@ -70,7 +70,8 @@
   "A project directory can be the directory with a deno.json, or a .git directory, or a
   .projectfile file. Use whichever is the most specific (has the longer path)."
   (let* ((deno-json (-?> (locate-dominating-file (buffer-file-name) "deno.json")
-                         expand-file-name))
+                         expand-file-name
+                         file-truename))
          (project-root
           (if (projectile-project-p)
               (projectile-project-root)
