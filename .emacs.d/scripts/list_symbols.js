@@ -5,10 +5,10 @@
 
 const regexps = [
   // E.g.: async function add(a, b) {
-  /^\s*(?:async )?function ([^( ]+)\([^()]*\) {\s*}?$/,
+  /^\s*(?:export )?(?:async )?function ([^( ]+)\([^()]*\) {\s*}?$/,
   // Syntax for declaring members in a class.
   // E.g.: add(a, b) {
-  /^\s*(?:async )?([^( ]+)\([^()]*\) {\s*}?$/,
+  /^\s*(?:export )?(?:async )?([^( ]+)\([^()]*\) {\s*}?$/,
 ];
 
 export function getSymbols(text) {
