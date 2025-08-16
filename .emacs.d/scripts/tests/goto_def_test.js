@@ -1,11 +1,13 @@
 import { assert, context, setup, should, teardown } from "@philc/shoulda";
 import { getModuleImports, search } from "../goto_def.js";
 import * as fs from "jsr:@std/fs";
+import * as stdPath from "@std/path";
 
 const fixturesDir = "tests/tmpFixtures";
-const fixtureFile = fixturesDir + "/goto_def_fixture.js";
+const fixture1 = fixturesDir + "/goto_def_fixture1.js";
+const fixture2 = fixturesDir + "/goto_def_fixture2.js";
 
-async function writeFixture(contents, path = fixtureFile) {
+async function writeFixture(contents, path = fixture1) {
   if (!await fs.exists(fixturesDir)) {
     await Deno.mkdir(fixturesDir);
   }
@@ -37,22 +39,22 @@ context("getModuleImports", () => {
 context("goto_def_test", () => {
   should("return nothing when definition is not found", async () => {
     await writeFixture("");
-    const got = await search("not-found", fixtureFile);
+    const got = await search("not-found", fixture1);
     assert.equal([], got);
   });
 
   should("include a filename, line, and column", async () => {
     await writeFixture("function foo(a, b) {}");
-    const got = await search("foo", fixtureFile);
+    const got = await search("foo", fixture1);
     const [path, line, col] = got[0].split(":", 3);
-    assert.equal(fixtureFile, path);
+    assert.equal(fixture1, path);
     assert.equal("1", line);
     assert.equal("9", col);
   });
 
   should("handle const foo = function() syntax", async () => {
     await writeFixture("const foo = function (a, b) {}");
-    const got = await search("foo", fixtureFile);
+    const got = await search("foo", fixture1);
     assert.equal(1, got.length);
     const line = got[0].split(":")[1];
     assert.equal("1", line);
@@ -60,7 +62,7 @@ context("goto_def_test", () => {
 
   should("handle const foo = () => syntax", async () => {
     await writeFixture("const foo = (a, b) =>");
-    const got = await search("foo", fixtureFile);
+    const got = await search("foo", fixture1);
     assert.equal(1, got.length);
     const line = got[0].split(":")[1];
     assert.equal("1", line);
@@ -68,15 +70,13 @@ context("goto_def_test", () => {
 
   should("handle class syntax: foo(a, b) {", async () => {
     await writeFixture("foo(a, b) {");
-    const got = await search("foo", fixtureFile);
+    const got = await search("foo", fixture1);
     assert.equal(1, got.length);
     const line = got[0].split(":")[1];
     assert.equal("1", line);
   });
 
   should("expand search to project root", async () => {
-    const fixture1 = fixturesDir + "/goto_def_fixture1.js";
-    const fixture2 = fixturesDir + "/goto_def_fixture2.js";
     await writeFixture("", fixture1);
     await writeFixture("function foo() {}", fixture2);
     // There should be no matches when projectRoot isn't provided.
@@ -87,6 +87,38 @@ context("goto_def_test", () => {
     assert.equal(1, got.length);
     const line = got[0].split(":")[1];
     assert.equal("1", line);
+  });
+
+  should("resolves references to on-disk imported modules", async () => {
+    await writeFixture("function foo() {}", fixture1);
+    await writeFixture('import * as bar from "./goto_def_fixture1.js";\n' +
+                       'bar.foo()', fixture2);
+    let got = await search("bar.foo", fixture2);
+    assert.equal(1, got.length);
+    assert.equal(fixture1 + ":1:9", got[0]);
+
+    // Test the alternate import syntax.
+    await writeFixture('import { foo } from "./goto_def_fixture1.js";\n' +
+                       'foo()', fixture2);
+    got = await search("foo", fixture2);
+    assert.equal(1, got.length);
+    assert.equal(fixture1 + ":1:9", got[0]);
+  });
+
+  should("resolves references to on-disk imported modules", async () => {
+    await writeFixture("function foo() {}", fixture1);
+    // Here, the current file has shadowed the imported `foo`. Prefer `foo` from the current file.
+    await writeFixture('import { foo } from "./goto_def_fixture1.js";\n' +
+                       'function foo() {}', fixture2);
+    let got = await search("foo", fixture2);
+    assert.equal(1, got.length);
+    assert.equal(fixture2 + ":2:9", got[0]);
+  });
+
+  should("ignore references to imports on non-local file systems", async () => {
+    await writeFixture('import { foo } from "@std/path";');
+    let got = await search("bar.foo", fixture1);
+    assert.equal(0, got.length);
   });
 
   teardown(async () => {

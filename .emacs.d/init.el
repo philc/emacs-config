@@ -1994,15 +1994,18 @@
 (defun js-goto-def ()
   (interactive)
   (let* ((bin (expand-file-name "scripts/goto_def.js" user-emacs-directory))
-         (query (thing-at-point 'word 'no-properties))
-         (result (util/call-process-with-exit-status bin nil (buffer-file-name) query))
+         (filename-arg (format "%s:%s:%s"
+                               (buffer-file-name)
+                               (line-number-at-pos)
+                               (current-column)))
+         (result (util/call-process-with-exit-status bin nil filename-arg))
          (exit-code (cl-first result))
          (lines (-?>> result
                       cl-second
                       s-trim
                       (s-split "\n"))))
     (if (= exit-code 1)
-        (message "Definition of %s not found." query)
+        (message "Definition of \"%s\" not found." query)
       (let*
           ;; TODO(philc): If there are multiple matches, handle that.
           ((result (cl-first lines))
@@ -2010,7 +2013,8 @@
            (path (nth 0 components))
            (line (->> components (nth 1) string-to-number))
            (col (->> components (nth 2) string-to-number)))
-        ;; TODO(philc): if path is another buffer other than this, switch to it.
+        (when (not (string= path (buffer-file-name)))
+          (find-file path))
         (goto-line line)
         ;; move-to-column uses zero-based column numbers.
         (move-to-column col)))))

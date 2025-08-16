@@ -10,9 +10,7 @@
 // NOTE(philc): For more robust inspection of a specific js file, the npm:acorn parser could be
 // used.
 
-let file = Deno.args[0];
-let query = Deno.args[1];
-let projectRoot = Deno.args[2];
+import * as stdPath from "@std/path";
 
 // Parses `fileContents` for all named imports and returns an object of symbolName => moduleName.
 export function getModuleImports(fileContents) {
@@ -51,7 +49,7 @@ export function getModuleImports(fileContents) {
   return importMap;
 }
 
-async function runRipgrep(query, file, projectRoot) {
+async function runRipgrep(query, args, file, projectRoot) {
   if (!query) throw new Error("query is required.");
   if (!file && !projectRoot) throw new Error("file or projectRoot is required.");
 
@@ -64,6 +62,8 @@ async function runRipgrep(query, file, projectRoot) {
     "--no-heading",
   ];
 
+  args = [].concat(args, additionalArgs);
+
   if (file) {
     args.push(file);
   } else {
@@ -74,7 +74,6 @@ async function runRipgrep(query, file, projectRoot) {
     ]);
   }
 
-  args = args.concat(regexpArgs);
   const command = new Deno.Command("rg", {
     args,
     stdout: "piped",
@@ -94,6 +93,7 @@ async function runRipgrep(query, file, projectRoot) {
   let lines = str.split("\n");
   // Remove the matched string, and just retain path:line:column. Also, adjust the column to where
   // the query occurs, rather than where the regexp first matched.
+  // TODO(philc): Consider doing this output munging in the caller.
   lines = lines.map((line) => {
     const [path, lineNum, _, matchText] = line.split(":", 4);
     const col = matchText.indexOf(query);
@@ -103,17 +103,87 @@ async function runRipgrep(query, file, projectRoot) {
 }
 
 export async function search(query, startingFile, projectRoot) {
-  let lines = await runRipgrep(query, startingFile, null);
+  // If the query contains multiple symbols, see if the first is a module pointing to a local file,
+  // and search in that file. Otherwise, fall back to searching for the symbol that's immediately
+  // under the cursor.
+  const queryParts = query.split(".");
+  const isMultipartQuery = queryParts.length > 1;
+  const isLocalPath = (s) => ["./", "../", "file:///"].find((prefix) => s.startsWith(prefix));
+  const importMap = getModuleImports(await Deno.readTextFile(startingFile));
+  if (isMultipartQuery) {
+    let modulePath = importMap[queryParts[0]];
+    if (modulePath && isLocalPath(modulePath)) {
+      // Resolve the module path relative to `startingFile`.
+      modulePath = stdPath.join(stdPath.dirname(startingFile), modulePath);
+      startingFile = modulePath;
+      // TODO(philc): Make this be the symbol that's under the cursor, rather than the
+      // last part of the dot chain.
+      query = queryParts[queryParts.length - 1];
+    }
+  }
+
+  // These are the valid syntaxes for function declarations.
+  const rgArgs = [
+    // function foo(a, b) {
+    "-e",
+    `function\\s+${query}\\s*\\(`,
+    // const foo = function(a, b) {
+    "-e",
+    `(const|let|var)\\s+${query}\\s*=\\s*function\\s*\\(`,
+    // let foo = (a, b) => {
+    "-e",
+    `(const|let|var)\\s+${query}\\s*=\\s*\\([^)]*\\)\\s*=>`,
+    // foo(a, b) {
+    "-e",
+    `^\\s*${query}\\s*\\([^)]*\\)\\s*\\{`,
+  ];
+
+  let lines = await runRipgrep(query, rgArgs, startingFile, null);
+  if (lines.length == 0 && !isMultipartQuery) {
+    // We didn't find a match in the local file. Check to see if the query matches an imported
+    // symbol.
+    let modulePath = importMap[queryParts[0]];
+    if (modulePath && isLocalPath(modulePath)) {
+      // Resolve the module path relative to `startingFile`.
+      modulePath = stdPath.join(stdPath.dirname(startingFile), modulePath);
+      startingFile = modulePath;
+      lines = await runRipgrep(query, rgArgs, startingFile, null);
+    }
+  }
   if (lines.length == 0 && projectRoot != null) {
-    lines = await runRipgrep(query, null, projectRoot);
+    lines = await runRipgrep(query, rgArgs, null, projectRoot);
   }
   return lines;
+}
+
+async function getLine(path, lineNum) {
+  const text = await Deno.readTextFile(path);
+  const lines = text.split("\n");
+  return lines[lineNum - 1];
+}
+
+async function parseQueryFromCursorPos(path, lineNum, column) {
+  const line = await getLine(path, lineNum);
+  let start = column;
+  let end = column;
+  const wordBoundary = /[[\]()\s:;]/;
+  // Extract the word surrounding the cursor.
+  for (let i = column; i >= 0; i--) {
+    if (wordBoundary.test(line[i])) break;
+    start = i;
+  }
+  for (let i = column; i < line.length; i++) {
+    if (wordBoundary.test(line[i])) break;
+    end = i;
+  }
+  const query = line.substring(start, end + 1);
+  return query;
 }
 
 const test = false;
 if (test) {
   file = "/Users/phil/projects/vimium/pages/vomnibar_page.js";
-  query = "init";
+  query = "UIComponentMessenger.postMessage";
   const lines = await search(query, file, projectRoot);
   console.log("lines:", lines);
 }
@@ -122,7 +192,11 @@ const isUnitTesting = import.meta.url != Deno.mainModule;
 
 if (!isUnitTesting) {
   try {
-    const lines = await search(query, file, projectRoot);
+    const filenameArg = Deno.args[0];
+    const [path, line, col] = filenameArg.split(":");
+    const query = await parseQueryFromCursorPos(path, parseInt(line), parseInt(col));
+    const projectRoot = Deno.args[1];
+    const lines = await search(query, path, projectRoot);
     if (!test && lines.length == 0) {
       Deno.exit(1);
     }
