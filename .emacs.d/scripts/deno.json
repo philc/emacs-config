@@ -4,6 +4,7 @@
   },
   "imports": {
     "@philc/shoulda": "jsr:@philc/shoulda@^2.0.0",
-    "@std/fs": "jsr:@std/fs@^1.0.18"
+    "@std/fs": "jsr:@std/fs@^1.0.18",
+    "@std/path": "jsr:@std/path@^1.1.2"
   }
 }
