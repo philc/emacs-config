@@ -1989,8 +1989,7 @@
          (line (-> line-col cl-first string-to-number))
          (col (-> line-col cl-second string-to-number)))
     (goto-line line)
-    ;; move-to-column uses zero-based column numbers.
-    (move-to-column (- col 1))))
+    (move-to-column col)))
 
 (defun js-goto-def ()
   (interactive)

@@ -4,20 +4,20 @@ import { getSymbols } from "../list_symbols.js";
 
 context("getSymbols", () => {
   should("functions", () => {
-    assert.equal([[1, 12, "example"]], getSymbols("  function example() {"));
-    assert.equal([[1, 18, "example"]], getSymbols("  async function example() {"));
+    assert.equal([[1, 11, "example"]], getSymbols("  function example() {"));
+    assert.equal([[1, 17, "example"]], getSymbols("  async function example() {"));
   });
 
   should("empty functions", () => {
-    assert.equal([[1, 10, "example"]], getSymbols("function example() {}"));
+    assert.equal([[1, 9, "example"]], getSymbols("function example() {}"));
   });
 
   should("class member syntax", () => {
-    assert.equal([[1, 3, "example"]], getSymbols("  example() {"));
-    assert.equal([[1, 8, "example"]], getSymbols(" async example() {"));
+    assert.equal([[1, 2, "example"]], getSymbols("  example() {"));
+    assert.equal([[1, 7, "example"]], getSymbols(" async example() {"));
   });
 
   should("class member syntax empty functions", () => {
-    assert.equal([[1, 3, "example"]], getSymbols("  example() { }"));
+    assert.equal([[1, 2, "example"]], getSymbols("  example() { }"));
   });
 });

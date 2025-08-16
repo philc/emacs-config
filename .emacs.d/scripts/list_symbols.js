@@ -1,7 +1,7 @@
 #!/usr/bin/env -S deno run --allow-read
 // Outputs the JavaScript function names in a given file, in this format:
 //   line:column functionName
-// Line and column numbers are one-based.
+// Line numbers are one-based and column numbers are zero-based.
 
 const regexps = [
   // E.g.: async function add(a, b) {
@@ -21,7 +21,7 @@ export function getSymbols(text) {
       if (groups == null) continue;
       const symbol = groups[1];
       const lineNum = i + 1;
-      const column = line.indexOf(symbol) + 1;
+      const column = line.indexOf(symbol);
       results.push([lineNum, column, symbol]);
     }
   }
