@@ -14,27 +14,48 @@ let file = Deno.args[0];
 let query = Deno.args[1];
 let projectRoot = Deno.args[2];
 
+// Parses `fileContents` for all named imports and returns an object of symbolName => moduleName.
+export function getModuleImports(fileContents) {
+  // Syntax: `import * as fs from "path"`
+  const importAsRegexp = /import\s+\*\s+as\s+(\S+)\s+from\s+"(.+)"/;
+  // Syntax: `import {a, b} from "path"`
+  const importSpecificRegexp = /import\s+{(.+)}\s+from\s+"(.+)"/;
+  const importLines = fileContents.split("\n").filter((line) => line.startsWith("import "));
+  const importMap = {};
+  for (const line of importLines) {
+    let matches = line.match(importAsRegexp);
+    if (matches != null) {
+      const symbol = matches[1];
+      const path = matches[2];
+      importMap[symbol] = path;
+    } else {
+      matches = line.match(importSpecificRegexp);
+      if (matches == null) continue;
+
+      // `names` is the content inside the import statement's curly braces.
+      const names = matches[1].split(",").map((s) => s.trim());
+      const path = matches[2];
+      for (const s of names) {
+        // There are two possible syntaxes for names inside the curly braces:
+        // * import {a, b}
+        // * import {a, b as aliasName, c}
+        if (s.includes(" as ")) {
+          const name = s.split(" as ")[1].trim();
+          importMap[name] = path;
+        } else {
+          importMap[s] = path;
+        }
+      }
+    }
+  }
+  return importMap;
+}
+
 async function runRipgrep(query, file, projectRoot) {
   if (!query) throw new Error("query is required.");
   if (!file && !projectRoot) throw new Error("file or projectRoot is required.");
 
-  const regexpArgs = [
-    // function foo(a, b) {
-    "-e",
-    // "function\\s+\\w+\\s*\\(",
-    `function\\s+${query}\\s*\\(`,
-    // const theFn = function(a, b) {
-    "-e",
-    `(const|let|var)\\s+${query}\\s*=\\s*function\\s*\\(`,
-    // let theFn = (a, b) => {
-    "-e",
-    `(const|let|var)\\s+${query}\\s*=\\s*\\([^)]*\\)\\s*=>`,
-    // // theFn(a, b) {
-    "-e",
-    `^\\s*${query}\\s*\\([^)]*\\)\\s*\\{`,
-  ];
-
-  let args = [
+  let additionalArgs = [
     // --no-unicode makes rg's character classes simpler. Do I want this?
     // "--no-unicode",
     "--line-number",

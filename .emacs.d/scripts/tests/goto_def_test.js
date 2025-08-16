@@ -1,5 +1,5 @@
 import { assert, context, setup, should, teardown } from "@philc/shoulda";
-import { search } from "../goto_def.js";
+import { getModuleImports, search } from "../goto_def.js";
 import * as fs from "jsr:@std/fs";
 
 const fixturesDir = "tests/tmpFixtures";
@@ -17,6 +17,22 @@ async function deleteFixtures() {
     await Deno.remove(fixturesDir, { recursive: true });
   }
 }
+
+context("getModuleImports", () => {
+  should("find imports using import * syntax", () => {
+    const file = 'import * as foo   from "pathA" \n' +
+          'import * as bar from "pathB"';
+    const result = getModuleImports(file);
+    assert.equal({ "foo": "pathA",
+                   "bar": "pathB"}, result);
+  });
+
+  should("find imports using import { a, b} syntax", () => {
+    const file = 'import { a , b as  alias, c} from "pathA"';
+    const result = getModuleImports(file);
+    assert.equal({ "a": "pathA", "alias": "pathA", "c": "pathA" }, result);
+  });
+});
 
 context("goto_def_test", () => {
   should("return nothing when definition is not found", async () => {
