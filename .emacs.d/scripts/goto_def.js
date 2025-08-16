@@ -3,7 +3,7 @@
 // jump_to_symbol.js filePath line column
 // Outputs the file and line number of the match:
 // line:column filePath
-// Line and column numbers are one-based.
+// Line is one-based and column is zero-based, as is the Unix convention.
 //
 // This doesn't handle variable shadowing.
 //
@@ -75,7 +75,7 @@ async function runRipgrep(query, file, projectRoot) {
   // the query occurs, rather than where the regexp first matched.
   lines = lines.map((line) => {
     const [path, lineNum, _, matchText] = line.split(":", 4);
-    const col = matchText.indexOf(query) + 1; // Make the column 1-based.
+    const col = matchText.indexOf(query);
     return [path, lineNum, col].join(":");
   });
   return lines;

@@ -2014,7 +2014,7 @@
         ;; TODO(philc): if path is another buffer other than this, switch to it.
         (goto-line line)
         ;; move-to-column uses zero-based column numbers.
-        (move-to-column (- col 1))))))
+        (move-to-column col)))))
 
 ;; Detect files in the Deno backtrace format in the compilation buffer, so that files and line
 ;; numbers can be navigated to when the compilation buffer is showing compile or runtime backtraces

@@ -31,7 +31,7 @@ context("goto_def_test", () => {
     const [path, line, col] = got[0].split(":", 3);
     assert.equal(fixtureFile, path);
     assert.equal("1", line);
-    assert.equal("10", col);
+    assert.equal("9", col);
   });
 
   should("handle const foo = function() syntax", async () => {
