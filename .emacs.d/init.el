@@ -1469,6 +1469,7 @@
   (call-process-region (point-min) (point-max) "/bin/bash" nil nil nil "-c" "browser"))
 
 (defun run-deno-fmt (ext)
+  (setenv "NO_COLOR" "1")
   (replace-region-with-command-output (format "deno fmt --ext %s -" ext)))
 
 (defun format-html-buffer ()
