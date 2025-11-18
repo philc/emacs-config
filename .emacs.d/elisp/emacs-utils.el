@@ -355,3 +355,57 @@ details."
   "Inserts a tab character."
   (interactive)
   (insert "\t"))
+
+;; These paste functions are replacements for evil-paste-after and evil-paste-before. The reason
+;; they exist is to record the position of the selection after pasting, so that the pasted content
+;; can be immediately selected using `select-pasted-text` if desired. I do this often in my
+;; workflow, e.g. to indent a set of paragraphs or list items after pasting them.
+
+(defun util/paste-text-before ()
+  "Paste text before the cursor."
+  (interactive)
+  (util/paste-text "before"))
+
+(defun util/paste-text-after ()
+  "Paste text after the cursor."
+  (interactive)
+  (util/paste-text "after"))
+
+(defvar last-paste-start nil)
+(defvar last-paste-end nil)
+(make-variable-buffer-local 'last-paste-start)
+(make-variable-buffer-local 'last-paste-end)
+
+(defun util/paste-text (placement)
+  "Paste text either before or after cursor. This is meant to be a replacement for evil-paste-after
+   and evil-paste-before.
+  - placement: either after or before"
+  (let* ((is-before (string= placement "before"))
+         (is-after (not is-before))
+         (has-newline (string-suffix-p "\n" (car kill-ring))))
+    ;; If the kill ring has a newline, it's treated as a line selection and will be pasted by evil
+    ;; on the next line rather than the current.
+    (setq last-paste-start
+          (if has-newline
+              (progn
+                (when is-after
+                  (forward-line 1))
+                (beginning-of-line)
+                (point))
+            (point)))
+    ;; Yank will put the cursor behind when called interactively with a prefix argument; calling it
+    ;; non-interactively with the argument '(4) is equivalent.
+    (if is-before
+        (yank '(4))
+      ;; When pasting after the cursor, yank will leave the cursor at the end of the pasted content.
+      ;; We want it to remain at the beginning of the pasted content, to match evil-paste-after.
+      (save-excursion
+        (yank)))
+    (setq last-paste-end (+ last-paste-start
+                            (length (current-kill 0))))))
+
+(defun util/select-pasted-text ()
+  (interactive)
+  (when (and last-paste-start last-paste-end)
+    ;; Make it so the selection grows downward when navigating in visual mode.
+    (evil-visual-select last-paste-end last-paste-start "SELECTION" -1)))

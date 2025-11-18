@@ -361,6 +361,11 @@
 (define-key evil-normal-state-map (kbd "C-k") 'move-to-previous-paragraph-start)
 (define-key evil-normal-state-map (kbd "C-j") 'move-to-next-paragraph-start)
 
+(define-key evil-normal-state-map (kbd "p") 'util/paste-text-after) ; Originally evil-paste-after
+(define-key evil-normal-state-map (kbd "P") 'util/paste-text-before) ; Originally evil-paste-before
+
+(define-key evil-normal-state-map "gp" 'util/select-pasted-text)
+
 (defun describe-symbol-at-point ()
   "Describe the symbol at point without prompting. Show error if no symbol is found."
   (interactive)
@@ -493,7 +498,7 @@
        (util/save-buffer-if-dirty)
        (wm/switch-to-recent-buffer))
  "f" 'projectile-find-file
- "t" (lambda () (interactive) (message (buffer-name)))
+ "t" 'util/select-pasted-text
  "SPC" 'evil-ext/fill-inside-paragraph-or-comment-block ; Shortcut for Vim's gqip
  "i" 'evil-ext/indent-inside-paragraph ; Shortcut to Vim's =ip
  "d" 'projectile-dired
