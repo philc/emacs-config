@@ -2011,7 +2011,7 @@
                       s-trim
                       (s-split "\n"))))
     (if (= exit-code 1)
-        (message "Definition of \"%s\" not found." query)
+        (message "Definition under cursor not found.")
       (let*
           ;; TODO(philc): If there are multiple matches, handle that.
           ((result (cl-first lines))
