@@ -104,8 +104,8 @@ async function runRipgrep(query, args, file, projectRoot) {
 
 export async function search(query, startingFile, projectRoot) {
   // If the query contains multiple symbols, see if the first is a module pointing to a local file,
-  // and search in that file. Otherwise, fall back to searching for the symbol that's immediately
-  // under the cursor.
+  // and if so, search in that file. If not, then fall back to searching for just the symbol that's
+  // immediately under the cursor.
   const queryParts = query.split(".");
   const isMultipartQuery = queryParts.length > 1;
   const isLocalPath = (s) => ["./", "../", "file:///"].find((prefix) => s.startsWith(prefix));
@@ -116,10 +116,10 @@ export async function search(query, startingFile, projectRoot) {
       // Resolve the module path relative to `startingFile`.
       modulePath = stdPath.join(stdPath.dirname(startingFile), modulePath);
       startingFile = modulePath;
-      // TODO(philc): Make this be the symbol that's under the cursor, rather than the
-      // last part of the dot chain.
-      query = queryParts[queryParts.length - 1];
     }
+    // TODO(philc): Make this be the symbol that's under the cursor, rather than the
+    // last part of the dot chain.
+    query = queryParts[queryParts.length - 1];
   }
 
   // These are the valid syntaxes for function declarations.
@@ -138,8 +138,12 @@ export async function search(query, startingFile, projectRoot) {
     `^\\s*${query}\\s*\\([^)]*\\)\\s*\\{`,
   ];
 
+  // Search the current file.
   let lines = await runRipgrep(query, rgArgs, startingFile, null);
-  if (lines.length == 0 && !isMultipartQuery) {
+  if (lines.length > 0) return lines;
+
+  // If the query is a single word, see if it's a symbol imported from the module import statements.
+  if (!isMultipartQuery) {
     // We didn't find a match in the local file. Check to see if the query matches an imported
     // symbol.
     let modulePath = importMap[queryParts[0]];
@@ -150,7 +154,10 @@ export async function search(query, startingFile, projectRoot) {
       lines = await runRipgrep(query, rgArgs, startingFile, null);
     }
   }
-  if (lines.length == 0 && projectRoot != null) {
+  if (lines.length > 0) return lines;
+
+  // Search all of the project's files.
+  if (projectRoot != null) {
     lines = await runRipgrep(query, rgArgs, null, projectRoot);
   }
   return lines;
@@ -182,10 +189,13 @@ async function parseQueryFromCursorPos(path, lineNum, column) {
 
 const test = false;
 if (test) {
-  file = "/Users/phil/projects/vimium/pages/vomnibar_page.js";
-  query = "UIComponentMessenger.postMessage";
-  const lines = await search(query, file, projectRoot);
-  console.log("lines:", lines);
+  const filenameArg = "/Users/phil/projects/vimium/pages/options.js:50:13";
+  const [path, line, col] = filenameArg.split(":");
+  const query = await parseQueryFromCursorPos(path, parseInt(line), parseInt(col));
+  const projectRoot = null;
+  // file = "/Users/phil/projects/vimium/pages/vomnibar_page.js";
+  // query = "UIComponentMessenger.postMessage";
+  const lines = await search(query, path, projectRoot);
 }
 
 const isUnitTesting = import.meta.url != Deno.mainModule;

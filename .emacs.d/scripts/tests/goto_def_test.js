@@ -23,10 +23,9 @@ async function deleteFixtures() {
 context("getModuleImports", () => {
   should("find imports using import * syntax", () => {
     const file = 'import * as foo   from "pathA" \n' +
-          'import * as bar from "pathB"';
+      'import * as bar from "pathB"';
     const result = getModuleImports(file);
-    assert.equal({ "foo": "pathA",
-                   "bar": "pathB"}, result);
+    assert.equal({ "foo": "pathA", "bar": "pathB" }, result);
   });
 
   should("find imports using import { a, b} syntax", () => {
@@ -76,7 +75,51 @@ context("goto_def_test", () => {
     assert.equal("1", line);
   });
 
-  should("expand search to project root", async () => {
+  should("search for the last part when no earlier part refers to a module", async () => {
+    await writeFixture("function foo() {}", fixture1);
+    let got = await search("this.foo", fixture1);
+    assert.equal(1, got.length);
+    assert.equal(fixture1 + ":1:9", got[0]);
+  });
+
+  should("resolve references to on-disk imported modules", async () => {
+    await writeFixture("function foo() {}", fixture1);
+    await writeFixture('import * as bar from "./goto_def_fixture1.js";\nbar.foo()', fixture2);
+    let got = await search("bar.foo", fixture2);
+    assert.equal(1, got.length);
+    assert.equal(fixture1 + ":1:9", got[0]);
+
+    // Test the alternate import syntax.
+    await writeFixture(
+      'import { foo } from "./goto_def_fixture1.js";\n' +
+        "foo()",
+      fixture2,
+    );
+    got = await search("foo", fixture2);
+    assert.equal(1, got.length);
+    assert.equal(fixture1 + ":1:9", got[0]);
+  });
+
+  should("resolve references to on-disk imported modules with shadowed variables", async () => {
+    await writeFixture("function foo() {}", fixture1);
+    // Here, the current file has shadowed the imported `foo`. Prefer `foo` from the current file.
+    await writeFixture(
+      'import { foo } from "./goto_def_fixture1.js";\n' +
+        "function foo() {}",
+      fixture2,
+    );
+    let got = await search("foo", fixture2);
+    assert.equal(1, got.length);
+    assert.equal(fixture2 + ":2:9", got[0]);
+  });
+
+  should("ignore references to imports on non-local file systems", async () => {
+    await writeFixture('import { foo } from "@std/path";');
+    let got = await search("bar.foo", fixture1);
+    assert.equal(0, got.length);
+  });
+
+  should("expand search to project root if no matches in the local file", async () => {
     await writeFixture("", fixture1);
     await writeFixture("function foo() {}", fixture2);
     // There should be no matches when projectRoot isn't provided.
@@ -87,38 +130,6 @@ context("goto_def_test", () => {
     assert.equal(1, got.length);
     const line = got[0].split(":")[1];
     assert.equal("1", line);
-  });
-
-  should("resolves references to on-disk imported modules", async () => {
-    await writeFixture("function foo() {}", fixture1);
-    await writeFixture('import * as bar from "./goto_def_fixture1.js";\n' +
-                       'bar.foo()', fixture2);
-    let got = await search("bar.foo", fixture2);
-    assert.equal(1, got.length);
-    assert.equal(fixture1 + ":1:9", got[0]);
-
-    // Test the alternate import syntax.
-    await writeFixture('import { foo } from "./goto_def_fixture1.js";\n' +
-                       'foo()', fixture2);
-    got = await search("foo", fixture2);
-    assert.equal(1, got.length);
-    assert.equal(fixture1 + ":1:9", got[0]);
-  });
-
-  should("resolves references to on-disk imported modules", async () => {
-    await writeFixture("function foo() {}", fixture1);
-    // Here, the current file has shadowed the imported `foo`. Prefer `foo` from the current file.
-    await writeFixture('import { foo } from "./goto_def_fixture1.js";\n' +
-                       'function foo() {}', fixture2);
-    let got = await search("foo", fixture2);
-    assert.equal(1, got.length);
-    assert.equal(fixture2 + ":2:9", got[0]);
-  });
-
-  should("ignore references to imports on non-local file systems", async () => {
-    await writeFixture('import { foo } from "@std/path";');
-    let got = await search("bar.foo", fixture1);
-    assert.equal(0, got.length);
   });
 
   teardown(async () => {
