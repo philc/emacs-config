@@ -1909,6 +1909,10 @@
   "gd" 'js-goto-def
   "gh" 'js-goto-def-in-file)
 
+(evil-define-key 'visual js-mode-map
+  "gd" 'js-goto-def
+  "gh" 'js-goto-def-in-file)
+
 (define-leader-keys 'js-mode-map
   "l" 'log-word-under-cursor
   "L" 'log-word-under-cursor-without-value
@@ -1976,6 +1980,21 @@
 
 (add-hook 'repl-mode-hook 'my-repl-mode-init)
 
+(defun evil-column-of-last-char ()
+  "Column of the last selected character when in visual state, or `current-column' otherwise."
+  ;; This is necessary because when in visual mode, (current-column) returns the column one after
+  ;; the last character in the selection, but in normal mode, it returns the column of the character
+  ;; under the crusor.
+  (interactive)
+  (if (evil-visual-state-p)
+      (let* ((range (evil-visual-range))
+             (end   (evil-range-end range)))
+        ;; `end' is the buffer position *after* the last char; convert to column.
+        (save-excursion
+          (goto-char (1- end))
+          (current-column)))
+    (current-column)))
+
 (defun js-goto-def-in-file ()
   (interactive)
   (let* ((bin (expand-file-name "scripts/list_symbols.js" user-emacs-directory))
@@ -2003,7 +2022,7 @@
          (filename-arg (format "%s:%s:%s"
                                (buffer-file-name)
                                (line-number-at-pos)
-                               (current-column)))
+                               (evil-column-of-last-char)))
          (result (util/call-process-with-exit-status bin nil filename-arg))
          (exit-code (cl-first result))
          (lines (-?>> result
@@ -2011,7 +2030,7 @@
                       s-trim
                       (s-split "\n"))))
     (if (= exit-code 1)
-        (message "Definition under cursor not found.")
+        (message (s-join "\n" lines))
       (let*
           ;; TODO(philc): If there are multiple matches, handle that.
           ((result (cl-first lines))
@@ -2019,6 +2038,8 @@
            (path (nth 0 components))
            (line (->> components (nth 1) string-to-number))
            (col (->> components (nth 2) string-to-number)))
+        ;; Before moving the cursor, exit visual mode if there is a selection.
+        (evil-normal-state)
         (when (not (string= path (buffer-file-name)))
           (find-file path))
         (goto-line line)

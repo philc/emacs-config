@@ -1,5 +1,5 @@
 import { assert, context, setup, should, teardown } from "@philc/shoulda";
-import { getModuleImports, search } from "../goto_def.js";
+import { getModuleImports, parseQueryFromCursorPos, search } from "../goto_def.js";
 import * as fs from "jsr:@std/fs";
 import * as stdPath from "@std/path";
 
@@ -19,6 +19,17 @@ async function deleteFixtures() {
     await Deno.remove(fixturesDir, { recursive: true });
   }
 }
+
+context("parseQueryFromCursorPos", () => {
+  should("find word boundaries", () => {
+    assert.equal("bar.baz", parseQueryFromCursorPos("foo bar.baz end", 1, 5));
+  });
+
+  should("return null when the query isn't a valid symbol", () => {
+    assert.throwsError(() => parseQueryFromCursorPos("!!!", 1, 0));
+    assert.throwsError(() => parseQueryFromCursorPos(".", 1, 0));
+  });
+});
 
 context("getModuleImports", () => {
   should("find imports using import * syntax", () => {

@@ -163,27 +163,28 @@ export async function search(query, startingFile, projectRoot) {
   return lines;
 }
 
-async function getLine(path, lineNum) {
-  const text = await Deno.readTextFile(path);
-  const lines = text.split("\n");
-  return lines[lineNum - 1];
-}
-
-async function parseQueryFromCursorPos(path, lineNum, column) {
-  const line = await getLine(path, lineNum);
+export function parseQueryFromCursorPos(fileContents, lineNum, column) {
+  const lines = fileContents.split("\n");
+  const line = lines[lineNum - 1];
   let start = column;
   let end = column;
-  const wordBoundary = /[[\]()\s:;]/;
+  // Only letters, numbers, and periods
+  const word = /^[A-Za-z0-9.]+$/;
   // Extract the word surrounding the cursor.
   for (let i = column; i >= 0; i--) {
-    if (wordBoundary.test(line[i])) break;
+    if (!word.test(line[i])) break;
     start = i;
   }
   for (let i = column; i < line.length; i++) {
-    if (wordBoundary.test(line[i])) break;
+    if (!word.test(line[i])) break;
     end = i;
   }
   const query = line.substring(start, end + 1);
+
+  // Reject queries which are just single, non-alphanumeric characters.
+  if (query.length <= 1 && (query == "." || !word.test(query))) {
+    throw new Error(`Query \"${query}\" isn't the name of a symbol.`);
+  }
   return query;
 }
 
@@ -191,7 +192,11 @@ const test = false;
 if (test) {
   const filenameArg = "/Users/phil/projects/vimium/pages/options.js:50:13";
   const [path, line, col] = filenameArg.split(":");
-  const query = await parseQueryFromCursorPos(path, parseInt(line), parseInt(col));
+  const query = parseQueryFromCursorPos(
+    await Deno.readTextFile(path),
+    parseInt(line),
+    parseInt(col),
+  );
   const projectRoot = null;
   // file = "/Users/phil/projects/vimium/pages/vomnibar_page.js";
   // query = "UIComponentMessenger.postMessage";
@@ -204,14 +209,20 @@ if (!isUnitTesting) {
   try {
     const filenameArg = Deno.args[0];
     const [path, line, col] = filenameArg.split(":");
-    const query = await parseQueryFromCursorPos(path, parseInt(line), parseInt(col));
+    const query = parseQueryFromCursorPos(
+      await Deno.readTextFile(path),
+      parseInt(line),
+      parseInt(col),
+    );
     const projectRoot = Deno.args[1];
     const lines = await search(query, path, projectRoot);
     if (!test && lines.length == 0) {
+      console.log("Definition not found.");
       Deno.exit(1);
     }
     console.log(lines.join("\n"));
   } catch (e) {
     console.log("Error:", e);
+    Deno.exit(1);
   }
 }
