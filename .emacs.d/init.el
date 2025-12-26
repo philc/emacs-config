@@ -493,37 +493,32 @@
  :keymaps '(normal visual)
  :prefix global-leader-prefix
  "h" 'help
- "b" (lambda ()
-       (interactive)
-       (util/save-buffer-if-dirty)
-       (wm/switch-to-recent-buffer))
+ "b" (util/save-and-call 'wm/switch-to-recent-buffer)
  "f" 'projectile-find-file
  "t" 'util/select-pasted-text
  "SPC" 'evil-ext/fill-inside-paragraph-or-comment-block ; Shortcut for Vim's gqip
  "i" 'evil-ext/indent-inside-paragraph ; Shortcut to Vim's =ip
  "d" 'projectile-dired
  "D" (lambda () (interactive) (-> (buffer-file-name) file-name-directory dired))
- "gs" 'show-git-status-in-left-column
+ "gs" (util/save-and-call 'show-git-status-in-left-column)
  "gl" 'magit-log-current
- "o" 'util/open-file-at-cursor
+ "o" (util/save-and-call 'util/open-file-at-cursor)
  "wc" 'count-chars-region
  ;; Grep (using the "ag" command) for files in the current directory.
- "s" (lambda ()
-       (interactive)
-       (util/save-buffer-if-dirty)
-       (ag-project-in-current-window))
+ "s" (util/save-and-call 'ag-project-in-current-window)
  ;; "v" is a mnemonic prefix for "view X".
  ;; "vv" will be a natural choice as a mode-specific shortcut for previewing the current file.
  "vu" 'notmuch-go-to-inbox
- "vp" 'project-nav/navigate-to-project
- "vn" 'project-nav/open-file-from-notes-folder
+ "vp" (util/save-and-call 'project-nav/navigate-to-project)
+ ;; "vn" 'project-nav/open-file-from-notes-folder
+ "vn" (util/save-and-call 'project-nav/open-file-from-notes-folder)
  ;; View my org-mode task list.
- "vo" (lambda () (interactive) (find-file "~/Dropbox/notes/tasks/tasks.org"))
- "ve" (lambda () (interactive) (find-file "~/.emacs.d/init.el"))) ; "View Emacs init.el"
+ "vo" (util/save-and-call (lambda () (find-file "~/Dropbox/notes/tasks/tasks.org")))
+ ;; "View Emacs init.el"
+ "ve" (util/save-and-call (lambda () (find-file "~/.emacs.d/init.el"))))
 
 (defun show-git-status-in-left-column ()
   (interactive)
-    (util/save-buffer-if-dirty)
     ;; We want to show the git status for the current buffer's repo. We first get that repo before
     ;; switching to the first column's window, because it may contain a buffer from a different git
     ;; repo.
@@ -901,10 +896,7 @@
   ;; dired overrides my global "other window" shorcut.
   (kbd "M-C-n") 'other-window
   ;; Dired overrides ;s, so redefine it again.
-  ";s" (lambda ()
-         (interactive)
-         (util/save-buffer-if-dirty)
-         (ag-project-in-current-window))
+  ";s" (util/save-and-call 'ag-project-in-current-window)
   "cd" 'dired-create-directory
   "cf" 'dired-create-file
   "x" 'dired-mark
@@ -956,9 +948,9 @@
   ;; Note that I'm saving the buffer before each eval because otherwise, the buffer gets saved after
   ;; the eval (due to save-when-switching-windows setup) and the output from the buffer save
   ;; overwrites the eval results in the minibuffer.
-  "e b" (lambda() (interactive) (util/save-buffer-if-dirty) (eval-buffer))
-  "e s" (lambda () (interactive) (util/save-buffer-if-dirty) (elisp-eval-current-sexp))
-  "e x" (lambda () (interactive) (util/save-buffer-if-dirty) (call-interactively 'eval-defun))
+  "e b" (util/save-then-call 'eval-buffer)
+  "e s" (util/save-then-call 'elisp-eval-current-sexp)
+  "e x" (util/save-then-call (lambda () (call-interactively 'eval-defun)))
   "e k" 'elisp/erase-messages-buffer
   "e e" 'elisp/view-echo-area-messages-and-scroll)
 
@@ -1485,7 +1477,7 @@
 (define-leader-keys 'html-mode-map
   "i" 'format-html-buffer
   "rr" 'reload-active-browser-tab
-  "re" 'ext-dev/reload-extension-in-browser
+  "re" (util/save-then-call 'ext-dev/reload-extension-in-browser)
   "vv" 'preview-html)
 
 (define-leader-keys 'mustache-mode-map
@@ -1498,7 +1490,6 @@
 (defun reload-active-browser-tab ()
   "Reloads the current tab in Chrome. This works on OSX only, using Applescript."
   (interactive)
-  (util/save-buffer-if-dirty)
   (cond
    ((or (s-contains? "Chrome" browser-app)
         (s-contains? "Brave" browser-app))
@@ -1594,8 +1585,8 @@
   "i" 'css/format-buffer)
 
 (define-leader-keys '(css-mode-map less-css-mode-map)
-  "re" 'ext-dev/reload-extension-in-browser
-  "rr" 'reload-active-browser-tab)
+  "re" (util/save-then-call 'ext-dev/reload-extension-in-browser)
+  "rr" (util/save-then-call 'reload-active-browser-tab)
 
 ;;
 ;; SCSS mode, for editing SCSS files.
@@ -1903,7 +1894,7 @@
 
 (require 'js)
 (util/define-keys js-mode-map
-                  (kbd "M-r") 'js/run-saved-command)
+                  (kbd "M-r") (util/save-then-call 'js/run-saved-command))
 
 (evil-define-key 'normal js-mode-map
   "gd" 'js-goto-def
@@ -1917,9 +1908,9 @@
   "l" 'log-word-under-cursor
   "L" 'log-word-under-cursor-without-value
   "rr" 'reload-active-browser-tab
-  "re" 'ext-dev/reload-extension-in-browser
-  "rs" 'js/save-last-run-command
-  "eb" 'js/load-current-file
+  "re" (util/save-then-call 'ext-dev/reload-extension-in-browser)
+  "rs" (util/save-then-call 'js/save-last-run-command)
+  "eb" (util/save-then-call 'js/load-current-file)
   "eB" (lambda ()
          (interactive)
          (js/restart-repl)

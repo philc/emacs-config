@@ -16,7 +16,6 @@
 
 (defun ext-dev/reload-extension-in-browser ()
   (interactive)
-  (util/save-buffer-if-dirty)
   (pcase ext-dev/browser-app
     ("Firefox" (ext-dev/reload-firefox))
     ("Google Chrome Beta" (ext-dev/reload-chrome))

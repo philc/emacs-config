@@ -349,6 +349,13 @@ details."
       (let ((duration (float-time (time-since start))))
         (message "Duration: %.1f ms" (* 1000 duration))))))
 
+(defun util/save-and-call (fn)
+  "Returns an interactive command that saves the current buffer and then calls `fn`."
+  (lambda ()
+    (interactive)
+    (util/save-buffer-if-dirty)
+    (funcall fn)))
+
 ;; I use this when writing make files. The key combination to insert tabs is hard to remember. I
 ;; prefer a named commmand.
 (defun util/insert-tab ()
