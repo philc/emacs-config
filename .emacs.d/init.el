@@ -2158,9 +2158,13 @@
                             (buffer-substring-no-properties (region-beginning) (region-end))
                           ;; Taken from (ag) in ag.el.
                           (read-from-minibuffer "Search: " (ag/dwim-at-point)))))
-    (util/with-patch-function
-     'display-buffer (buffer &rest args) (progn (switch-to-buffer buffer) (selected-window))
-     (ag/search search-string project-dir))))
+    (if project-dir
+        (util/with-patch-function
+         'display-buffer (buffer &rest args) (progn (switch-to-buffer buffer) (selected-window))
+         (ag/search search-string project-dir))
+      ;; ag/search will fail if project-dir is nil.
+      (message (format "%s does not belong to a project; it's not in a version control repo."
+                       (buffer-name))))))
 
 ;;
 ;; Emacs' package manager. Invoke it via "M-x package-list-packages".
