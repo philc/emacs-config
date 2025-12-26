@@ -161,6 +161,9 @@
       `((".*" ,temporary-file-directory t)))
 (setq auto-save-default nil)
 
+;; Do not show unhelpful hints in the echo bar when running commands via M-x.
+(setq suggest-key-bindings nil)
+
 ;; Disable Emacs' write-lock, which creates temporary .#files when saving.
 (setq create-lockfiles nil)
 
