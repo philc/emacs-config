@@ -2349,9 +2349,13 @@
         ("\x2014" . "-"))) ; em-dash
 
 (defun replace-smart-quotes (beg end)
-  "Replace any fancy non-ascii quote characters with plain ones. You can get fancy quotes when
-   copying text from the web into Emacs."
-  (interactive "r")
+  "Replace any fancy non-ascii quote characters with plain ones. Fancy quotes can be introduced
+   copying text from the web into Emacs.
+   If region is active, operate on the region; otherwise on the whole buffer."
+  (interactive
+   (if (use-region-p)
+       (list (region-beginning) (region-end))
+     (list (point-min) (point-max))))
   (format-replace-strings smart-chars-to-ascii nil beg end))
 
 
