@@ -10,7 +10,7 @@
 ;; Set the titlebar to be transparent and dark, although just after, it gets hidden altogether.
 (add-to-list 'default-frame-alist '(ns-transparent-titlebar . t))
 (add-to-list 'default-frame-alist '(ns-appearance . dark))
-;; Remove the titlebar on OSX, so that Emacs occupies the entire screen.
+;; Remove the titlebar on MacOS, so that Emacs occupies the entire screen.
 (add-to-list 'default-frame-alist '(undecorated . t))
 
 ;; Turn off graphical toolbars.

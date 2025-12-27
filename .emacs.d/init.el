@@ -99,7 +99,7 @@
   "This fetches a list of env vars exported in the interactive shell, and sets them as env vars
    within Emacs so that subshells run from Emacs have the same environment vars as if they were
    executed from a shell."
-  ;; NOTE(philc): Doing this is necessary because if you launch Emacs.app on OSX not from a
+  ;; NOTE(philc): Doing this is necessary because if you launch Emacs.app on MacOS not from a
   ;; terminal, Emacs not have the same environment as my user shell. I have many env vars (e.g.
   ;; Ansible's env) which are critical for executing my REPLs from within Emacs.
   (let* ((shell "zsh")
@@ -115,7 +115,7 @@
 (defun set-exec-path-from-shell-PATH ()
   "Use the same PATH within Emacs as your shell."
   ;; From http://clojure-doc.org/articles/tutorials/emacs.html
-  ;; NOTE(philc): For some reason, /usr/bin is not on the PATH when launching emacs in OSX. As a
+  ;; NOTE(philc): For some reason, /usr/bin is not on the PATH when launching emacs in MacOS. As a
   ;; result, zsh will fail to start up because my .zshrc calls a few basic programs. So add it,
   ;; before calling zsh.
   (setenv "PATH" (concat (getenv "PATH") ":/usr/bin"))
@@ -182,7 +182,7 @@
       scroll-step 1
       scroll-conservatively 10000
       scroll-preserve-screen-position 1
-      ;; Make touchpad scrolling on OSX less jerky
+      ;; Make touchpad scrolling on MacOS less jerky
       mouse-wheel-scroll-amount '(0.01))
 
 ;; The preference file for Emac's "Customize" system. `M-x customize` to access it.
@@ -553,13 +553,13 @@
 ;;
 (require 'window-management)
 
-;; Don't use the native OSX full screen support, because it uses OSX Spaces which don't play well
+;; Don't use the native MacOS full screen support, because it uses MacOS Spaces which don't play well
 ;; with CMD-tabbing to applications which are behind Emacs. With this set to nil, if you want to
 ;; invoke fullscreen, do so the emacs command `toggle-frame-fullscreen`.
 (setq ns-use-native-fullscreen nil)
 
 ;; Window-management keybindings. "w" is the namespace I use.
-;; There are also some window switching keybindings set in osx-keys-minor-mode-map, below.
+;; There are also some window switching keybindings set in macos-keys-minor-mode-map, below.
 (general-define-key
  :prefix global-leader-prefix
  :keymaps '(normal visual)
@@ -709,11 +709,11 @@
 
 ;;
 ;; MacOS keybindings minor mode.
-;; Make it so the OSX keybindings you're used to always work in every mode in Emacs.
+;; Make it so the MACOS keybindings you're used to always work in every mode in Emacs.
 ;; http://stackoverflow.com/questions/683425/globally-override-key-binding-in-emacs
 ;;
-(defvar osx-keys-minor-mode-map (make-keymap) "osx-keys-minor-mode-keymap")
-(util/define-keys osx-keys-minor-mode-map
+(defvar macos-keys-minor-mode-map (make-keymap) "macos-keys-minor-mode-keymap")
+(util/define-keys macos-keys-minor-mode-map
                   (kbd "M-`") 'other-frame
                   (kbd "M-~") '(lambda () (interactive) (other-frame -1))
                   (kbd "M-w") 'vimlike-quit
@@ -733,7 +733,7 @@
                   (kbd "M-T") 'clone-tab
                   (kbd "M-i") 'tab-bar-rename-tab
                   (kbd "M-x") 'my-execute-extended-command-mru
-                  ;; These aren't specifically replicating OSX shortcuts, but they manipulate the
+                  ;; These aren't specifically replicating MacOS shortcuts, but they manipulate the
                   ;; window, so I want them to take precedence over everything else.
                   (kbd "A-f") (lambda () (interactive) (ignore-errors (windmove-right)))
                   (kbd "A-d") (lambda () (interactive) (ignore-errors (windmove-down)))
@@ -780,25 +780,25 @@
                             cl-first)))
       (insert trimmed-url))))
 
-(define-minor-mode osx-keys-minor-mode
-  "A minor-mode for emulating osx keyboard shortcuts."
+(define-minor-mode macos-keys-minor-mode
+  "A minor-mode for emulating MacOS keyboard shortcuts."
   :init-value t
-  :lighter " osx"
-  :keymap osx-keys-minor-mode-map)
+  :lighter " macos"
+  :keymap macos-keys-minor-mode-map)
 
-(osx-keys-minor-mode t)
+(macos-keys-minor-mode t)
 
-(defadvice load (after give-osx-keybindings-priority)
-  "Try to ensure that osx keybindings always have priority."
-  (if (not (eq (car (car minor-mode-map-alist)) 'osx-keys-minor-mode))
-      (let ((osx-keys (assq 'osx-keys-minor-mode minor-mode-map-alist)))
+(defadvice load (after give-macos-keybindings-priority)
+  "Try to ensure that MacOS keybindings always have priority."
+  (if (not (eq (car (car minor-mode-map-alist)) 'macos-keys-minor-mode))
+      (let ((macos-keys (assq 'macos-keys-minor-mode minor-mode-map-alist)))
         (setq minor-mode-map-alist
-              (assq-delete-all 'osx-keys-minor-mode minor-mode-map-alist))
-        (add-to-list 'minor-mode-map-alist osx-keys))))
+              (assq-delete-all 'macos-keys-minor-mode minor-mode-map-alist))
+        (add-to-list 'minor-mode-map-alist macos-keys))))
 (ad-activate 'load)
 
 (defun open-folder-in-finder ()
-  "Opens the folder of the current file in OSX's Finder."
+  "Opens the folder of the current file in MacOS's Finder."
   (interactive)
   (call-process-region nil nil "/usr/bin/open" nil nil nil "."))
 
@@ -1251,7 +1251,7 @@
 ;; (diminish 'global-visual-line-mode "")
 (diminish 'auto-fill-function "")
 (diminish 'projectile-mode " p")
-(diminish 'osx-keys-minor-mode "")
+(diminish 'macos-keys-minor-mode "")
 
 ;;
 ;; Powerline: improve the appearance and density of the Emacs mode line (status bar).
@@ -1522,7 +1522,7 @@
 (setq browser-cli "chrome-cli")
 
 (defun reload-active-browser-tab ()
-  "Reloads the current tab in Chrome. This works on OSX only, using Applescript."
+  "Reloads the current tab in Chrome. This works on MacOS only, using Applescript."
   (interactive)
   (cond
    ((or (s-contains? "Chrome" browser-app)
