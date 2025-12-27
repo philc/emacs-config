@@ -22,10 +22,14 @@ async function deleteFixtures() {
 
 context("parseQueryFromCursorPos", () => {
   should("find word boundaries", () => {
-    assert.equal("bar.baz", parseQueryFromCursorPos("foo bar.baz end", 1, 5));
+    assert.equal("bar.baz", parseQueryFromCursorPos("foo bar.baz end", 1, 8));
   });
 
-  should("return null when the query isn't a valid symbol", () => {
+  should("return only the symbol under the cursor, not the full property chain", () => {
+    assert.equal("foo.bar", parseQueryFromCursorPos("foo.bar.baz", 1, 5));
+  });
+
+  should("throw error when the query isn't a valid symbol", () => {
     assert.throwsError(() => parseQueryFromCursorPos("!!!", 1, 0));
     assert.throwsError(() => parseQueryFromCursorPos(".", 1, 0));
   });

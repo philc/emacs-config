@@ -163,6 +163,8 @@ export async function search(query, startingFile, projectRoot) {
   return lines;
 }
 
+// Returns the symbol under the cursor. If the cursor is in a property chain like "foo.bar.baz", and
+// the cursor is on "bar", return "foo.bar". If there is no text under the cursor, throw an error.
 export function parseQueryFromCursorPos(fileContents, lineNum, column) {
   const lines = fileContents.split("\n");
   const line = lines[lineNum - 1];
@@ -176,7 +178,8 @@ export function parseQueryFromCursorPos(fileContents, lineNum, column) {
     start = i;
   }
   for (let i = column; i < line.length; i++) {
-    if (!word.test(line[i])) break;
+    // When traversing right, don't step over periods. In the case of f_oo.bar, return foo.
+    if (!word.test(line[i]) || line[i] == ".") break;
     end = i;
   }
   const query = line.substring(start, end + 1);
