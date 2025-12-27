@@ -2028,7 +2028,10 @@
 (defun js-goto-def-in-file ()
   (interactive)
   (let* ((bin (expand-file-name "scripts/list_symbols.js" user-emacs-directory))
-         (lines (->> (util/call-process-and-check bin nil (buffer-file-name))
+         (lines (->> (util/call-process-and-check bin
+                                                  nil
+                                                  (buffer-file-name)
+                                                  (projectile-project-root))
                      s-trim
                      (s-split "\n")))
          (symbols (mapcar (lambda (s)
