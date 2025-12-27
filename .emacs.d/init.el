@@ -892,6 +892,33 @@
 ;; Dired mode - using the Emacs file browser.
 ;;
 
+(with-eval-after-load 'dired (configure-dired-mode))
+
+(defun configure-dired-mode ()
+  ;; For some reason, dired's keymap overrides the keys of Evil mode's leader keys, and my global
+  ;; macos-keys-minor-mode. To avoid fighting with it, I'm clearing the default dired keymap,
+  ;; and installing only the keybindings that I use.
+  (setq dired-mode-map (make-sparse-keymap))
+
+  (evil-define-key 'normal dired-mode-map
+    (kbd "gu") (lambda () (interactive) (find-alternate-file ".."))
+    "H" (lambda () (interactive) (find-alternate-file ".."))
+    ;; This was originally dired-advertised-find-file.
+    (kbd "<return>") 'dired-find-alternate-file
+    "d" 'dired-flag-file-deletion
+    "o" 'dired-find-alternate-file
+    "O" 'dired-open-file-in-window-to-the-right
+    "cd" 'dired-create-directory
+    "cf" 'dired-create-file
+    "x" 'dired-mark
+    "u" 'dired-unmark
+    "U" 'dired-unmark-all-marks
+    ;; TODO(philc): dired-details-toggle no longer exists.
+    "v" 'dired-details-toggle
+    ;; The "e" prefix is for execute.
+    "ed" 'dired-do-flagged-delete
+    "em" 'dired-do-rename))
+
 ;; By default dired mode shows the file's permissions, access time, size, etc. I just want to see
 ;; the file names.
 (add-hook 'dired-mode-hook #'dired-hide-details-mode)
@@ -916,28 +943,6 @@
   (lexical-let ((f (dired-get-file-for-visit))
                 (w (window-in-direction 'right)))
     (util/preserve-selected-window (lambda () (select-window w) (find-file f)))))
-
-;; Use the same buffer for going into and up directories.
-(evil-define-key 'normal dired-mode-map
-  (kbd "gu") (lambda () (interactive) (find-alternate-file ".."))
-  "H" (lambda () (interactive) (find-alternate-file ".."))
-  ;; This was originally dired-advertised-find-file
-  (kbd "<return>") 'dired-find-alternate-file
-  "o" 'dired-find-alternate-file
-  "O" 'dired-open-file-in-window-to-the-right
-  "gg" 'beginning-of-buffer
-  "G" 'evil-goto-line
-  ;; dired overrides my global "other window" shorcut.
-  (kbd "M-C-n") 'other-window
-  ;; Dired overrides ;s, so redefine it again.
-  ";s" (util/save-and-call 'ag-project-in-current-window)
-  "cd" 'dired-create-directory
-  "cf" 'dired-create-file
-  "x" 'dired-mark
-  "v" 'dired-details-toggle
-  ;; The "e" prefix is for execute.
-  "ed" 'dired-do-flagged-delete
-  "em" 'dired-do-rename)
 
 ;; Taken from http://stackoverflow.com/a/18885461/46237.
 (defun dired-create-file (file)
