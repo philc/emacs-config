@@ -982,9 +982,9 @@
   ;; Note that I'm saving the buffer before each eval because otherwise, the buffer gets saved after
   ;; the eval (due to save-when-switching-windows setup) and the output from the buffer save
   ;; overwrites the eval results in the minibuffer.
-  "e b" (util/save-then-call 'eval-buffer)
-  "e s" (util/save-then-call 'elisp-eval-current-sexp)
-  "e x" (util/save-then-call (lambda () (call-interactively 'eval-defun)))
+  "e b" (util/save-and-call 'eval-buffer)
+  "e s" (util/save-and-call 'elisp-eval-current-sexp)
+  "e x" (util/save-and-call (lambda () (call-interactively 'eval-defun)))
   "e k" 'elisp/erase-messages-buffer
   "e e" 'elisp/view-echo-area-messages-and-scroll)
 
@@ -1511,7 +1511,7 @@
 (define-leader-keys 'html-mode-map
   "i" 'format-html-buffer
   "rr" 'reload-active-browser-tab
-  "re" (util/save-then-call 'ext-dev/reload-extension-in-browser)
+  "re" (util/save-and-call 'ext-dev/reload-extension-in-browser)
   "vv" 'preview-html)
 
 (define-leader-keys 'mustache-mode-map
@@ -1619,8 +1619,8 @@
   "i" 'css/format-buffer)
 
 (define-leader-keys '(css-mode-map less-css-mode-map)
-  "re" (util/save-then-call 'ext-dev/reload-extension-in-browser)
-  "rr" (util/save-then-call 'reload-active-browser-tab)
+  "re" (util/save-and-call 'ext-dev/reload-extension-in-browser)
+  "rr" (util/save-and-call 'reload-active-browser-tab))
 
 ;;
 ;; SCSS mode, for editing SCSS files.
@@ -1928,7 +1928,7 @@
 
 (require 'js)
 (util/define-keys js-mode-map
-                  (kbd "M-r") (util/save-then-call 'js/run-saved-command))
+                  (kbd "M-r") (util/save-and-call 'js/run-saved-command))
 
 (evil-define-key 'normal js-mode-map
   "gd" 'js-goto-def
@@ -1942,9 +1942,9 @@
   "l" 'log-word-under-cursor
   "L" 'log-word-under-cursor-without-value
   "rr" 'reload-active-browser-tab
-  "re" (util/save-then-call 'ext-dev/reload-extension-in-browser)
-  "rs" (util/save-then-call 'js/save-last-run-command)
-  "eb" (util/save-then-call 'js/load-current-file)
+  "re" (util/save-and-call 'ext-dev/reload-extension-in-browser)
+  "rs" (util/save-and-call 'js/save-last-run-command)
+  "eb" (util/save-and-call 'js/load-current-file)
   "eB" (lambda ()
          (interactive)
          (js/restart-repl)
