@@ -421,54 +421,6 @@
 
 (define-key evil-motion-state-map "gg" 'evil-goto-point-min)
 
-;;
-;; Jumping
-;;
-;; Evil has Vim-style jumping support built-in. However, the implementation is buggy and incomplete.
-;; When moving forward in the jump list, if the jump crosses buffers, the jumplist gets truncated at
-;; that moment and one can't continue navigating forward.
-;; See here for discussion on how its implementation needs to be rewritten.
-;; https://github.com/emacs-evil/evil/issues/732#issuecomment-454289474
-;; I'm using better-jump-mode which was written in response to some of Evil's jump defects.
-
-(require 'better-jumper)
-(better-jumper-mode +1)
-;; Create a jump point wherever evil-jump's implementation does.
-(setq better-jumper-use-evil-jump-advice t)
-;; When creating a new window, don't copy over any jump history from the source window.
-(setq better-jumper-new-window-behavior 'empty)
-
-(define-key evil-normal-state-map (kbd "C-o")
-  (lambda () (interactive)
-    (better-jumper-jump-backward)
-    ;; (recenter-no-redraw)
-    ))
-
-;; Note that "<C-i>" is a special annotation for binding "i". See <C-i> elsewhere in this file for
-;; details.
-(define-key evil-normal-state-map (kbd "<C-i>")
-  (lambda () (interactive)
-    (better-jumper-jump-forward)
-    ;; (recenter-no-redraw)
-    ))
-
-(defun show-jump-list ()
-  "Prints the jump ring to *messages*. Useful for debugging purposes."
-  (interactive)
-  (let* ((jumps (better-jumper-get-jumps))
-         (index (better-jumper-jump-list-struct-idx jumps))
-         (jump-vector (->> (better-jumper-jump-list-struct-ring jumps)
-                           cdr
-                           cdr))
-         (jump-list (append jump-vector nil))
-         ;; The jump list vector is 100 entries long, padded with nils if necessary. Remove those.
-         (jump-list (-filter 'identity jump-list)))
-    (print (format "Index: %s" index))
-    (dolist (entry jump-list)
-      (let* ((file (cl-first entry))
-             (file-offset (cl-second entry)))
-        (message (format "%s:' %s" file file-offset))))))
-
 ; These keybindings conflict with nothing else, which allows me to pull up help from within any mode.
 (global-set-key (kbd "C-A-M-h") 'help)
 (global-set-key (kbd "C-A-M-b") 'describe-bindings)
@@ -2398,3 +2350,51 @@
 
 (define-leader-keys 'sql-mode-map
   "i" 'sql/format-buffer)
+
+;;
+;; Jumping
+;;
+;; Evil has Vim-style jumping support built-in. However, the implementation is buggy and incomplete.
+;; When moving forward in the jump list, if the jump crosses buffers, the jumplist gets truncated at
+;; that moment and one can't continue navigating forward.
+;; See here for discussion on how its implementation needs to be rewritten.
+;; https://github.com/emacs-evil/evil/issues/732#issuecomment-454289474
+;; I'm using better-jump-mode which was written in response to some of Evil's jump defects.
+
+(require 'better-jumper)
+(better-jumper-mode +1)
+;; Create a jump point wherever evil-jump's implementation does.
+(setq better-jumper-use-evil-jump-advice t)
+;; When creating a new window, don't copy over any jump history from the source window.
+(setq better-jumper-new-window-behavior 'empty)
+
+(define-key evil-normal-state-map (kbd "C-o")
+  (lambda () (interactive)
+    (better-jumper-jump-backward)
+    ;; (recenter-no-redraw)
+    ))
+
+;; Note that "<C-i>" is a special annotation for binding "i". See <C-i> elsewhere in this file for
+;; details.
+(define-key evil-normal-state-map (kbd "<C-i>")
+  (lambda () (interactive)
+    (better-jumper-jump-forward)
+    ;; (recenter-no-redraw)
+    ))
+
+(defun show-jump-list ()
+  "Prints the jump ring to *messages*. Useful for debugging purposes."
+  (interactive)
+  (let* ((jumps (better-jumper-get-jumps))
+         (index (better-jumper-jump-list-struct-idx jumps))
+         (jump-vector (->> (better-jumper-jump-list-struct-ring jumps)
+                           cdr
+                           cdr))
+         (jump-list (append jump-vector nil))
+         ;; The jump list vector is 100 entries long, padded with nils if necessary. Remove those.
+         (jump-list (-filter 'identity jump-list)))
+    (print (format "Index: %s" index))
+    (dolist (entry jump-list)
+      (let* ((file (cl-first entry))
+             (file-offset (cl-second entry)))
+        (message (format "%s:' %s" file file-offset))))))
