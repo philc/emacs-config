@@ -858,11 +858,13 @@
     ;; This was originally dired-advertised-find-file.
     (kbd "<return>") 'dired-find-alternate-file
     "d" 'dired-flag-file-deletion
+    "q" 'quit-window
     "o" 'dired-find-alternate-file
     "O" 'dired-open-file-in-window-to-the-right
     "cd" 'dired-create-directory
     "cf" 'dired-create-file
     "x" 'dired-mark
+    "!" 'dired-do-shell-command
     "u" 'dired-unmark
     "U" 'dired-unmark-all-marks
     ;; TODO(philc): dired-details-toggle no longer exists.
