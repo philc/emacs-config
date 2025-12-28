@@ -57,7 +57,16 @@ context("goto_def_test", () => {
     assert.equal([], got);
   });
 
-  should("include a filename, line, and column", async () => {
+  should("ignore `this` in queries", async () => {
+    await writeFixture("function foo(a, b) {}");
+    const got = await search("this.foo", fixture1);
+    const [path, line, col] = got[0].split(":", 3);
+    assert.equal(fixture1, path);
+    assert.equal("1", line);
+    assert.equal("9", col);
+  });
+
+  should("return a filename, line, and column when found", async () => {
     await writeFixture("function foo(a, b) {}");
     const got = await search("foo", fixture1);
     const [path, line, col] = got[0].split(":", 3);

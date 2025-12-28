@@ -107,6 +107,13 @@ export async function search(query, startingFile, projectRoot) {
   // and if so, search in that file. If not, then fall back to searching for just the symbol that's
   // immediately under the cursor.
   const queryParts = query.split(".");
+
+  // Ignore "this" in "this.foo" for the purposes of resolving a function.
+  if (queryParts.length > 1 && queryParts[0] == "this") {
+    queryParts.shift();
+    query = queryParts.join(".");
+  }
+
   const isMultipartQuery = queryParts.length > 1;
   const isLocalPath = (s) => ["./", "../", "file:///"].find((prefix) => s.startsWith(prefix));
   const importMap = getModuleImports(await Deno.readTextFile(startingFile));
@@ -117,8 +124,6 @@ export async function search(query, startingFile, projectRoot) {
       modulePath = stdPath.join(stdPath.dirname(startingFile), modulePath);
       startingFile = modulePath;
     }
-    // TODO(philc): Make this be the symbol that's under the cursor, rather than the
-    // last part of the dot chain.
     query = queryParts[queryParts.length - 1];
   }
 
