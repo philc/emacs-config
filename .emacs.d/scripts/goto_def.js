@@ -130,17 +130,21 @@ export async function search(query, startingFile, projectRoot) {
   // These are the valid syntaxes for function declarations.
   const rgArgs = [
     // function foo(a, b) {
+    // async function foo(a, b) {
     "-e",
-    `function\\s+${query}\\s*\\(`,
+    `(async )?function\\s+${query}\\s*\\(`,
     // const foo = function(a, b) {
+    // const foo = async function(a, b) {
     "-e",
-    `(const|let|var)\\s+${query}\\s*=\\s*function\\s*\\(`,
+    `(const|let|var)\\s+${query}\\s*=\\s*(async )?function\\s*\\(`,
     // let foo = (a, b) => {
+    // let foo = async (a, b) => {
     "-e",
-    `(const|let|var)\\s+${query}\\s*=\\s*\\([^)]*\\)\\s*=>`,
-    // foo(a, b) {
+    `(const|let|var)\\s+(async )?${query}\\s*=\\s*\\([^)]*\\)\\s*=>`,
+    // foo(a) {
+    // async foo(a) {
     "-e",
-    `^\\s*${query}\\s*\\([^)]*\\)\\s*\\{`,
+    `^\\s*(async )?${query}\\s*\\([^)]*\\)\\s*\\{`,
   ];
 
   // Search the current file.

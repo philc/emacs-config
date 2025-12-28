@@ -93,9 +93,15 @@ context("goto_def_test", () => {
 
   should("handle class syntax: foo(a, b) {", async () => {
     await writeFixture("foo(a, b) {");
-    const got = await search("foo", fixture1);
+    let got = await search("foo", fixture1);
     assert.equal(1, got.length);
-    const line = got[0].split(":")[1];
+    let line = got[0].split(":")[1];
+    assert.equal("1", line);
+
+    await writeFixture("async foo(a, b) {");
+    got = await search("foo", fixture1);
+    assert.equal(1, got.length);
+    line = got[0].split(":")[1];
     assert.equal("1", line);
   });
 
