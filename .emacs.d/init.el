@@ -84,13 +84,12 @@
 (global-eldoc-mode -1)
 
 ;; Make it possible to open files via the command line in this Emacs using `emacsclient`.
-;; NOTE: I'm disabling this. I never use it.
-;; (require 'server)
-;; (if (not (or (server-running-p)
-;;              ;; I use two Emacs apps, one dedicated to Org mode. Don't start the server in that
-;;              ;; Emacs.
-;;              (string-match "Org\\.app" (car command-line-args))))
-    ;; (server-start))
+(require 'server)
+(if (not (or (server-running-p)
+             ;; I use two Emacs apps, one dedicated to Org mode. Don't start the server in that
+             ;; Emacs.
+             (string-match "Org\\.app" (car command-line-args))))
+    (server-start))
 
 ;; Make it so that the scratch buffer uses markdown. By default it uses Emacs Lisp mode.
 (setq initial-major-mode 'markdown-lite-mode)
