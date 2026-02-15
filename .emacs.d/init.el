@@ -902,23 +902,23 @@
   "Create a file called FILE, and recursively create any parent directories.
   If FILE already exists, signal an error."
   (interactive
-   (list (read-file-name "Create file: " (dired-current-directory))))
+   ;; I previously used `read-file-name` here instead of `read-string`. However, with Vertico, it
+   ;; has an unfortunate UX: if the filename provided is a prefix of another filename, hitting enter
+   ;; will select the existing file's name, because it's considered a completion.
+   (list (expand-file-name (read-string "Create file: ") (dired-current-directory))))
   (let* ((expanded (expand-file-name file))
-         (try expanded)
-         (dir (directory-file-name (file-name-directory expanded)))
-         new)
-    (if (file-exists-p expanded)
-        (error "Cannot create file %s: file exists" expanded))
-    ;; Find the topmost nonexistent parent dir (variable `new')
-    (while (and try (not (file-exists-p try)) (not (equal new try)))
-      (setq new try
-            try (directory-file-name (file-name-directory try))))
-    (when (not (file-exists-p dir))
-      (make-directory dir t))
-    (write-region "" nil expanded t)
-    (when new
-      (dired-add-file new)
-      (dired-move-to-filename))))
+         (parent (file-name-directory expanded))
+         (in-current-dir (equal parent (dired-current-directory))))
+    (when (file-exists-p expanded)
+      (error "Cannot create file %s: file exists" expanded))
+    (make-directory parent t)
+    (make-empty-file expanded)
+    (if in-current-dir
+        ;; Add the file and jump to it in the dired buffer.
+        (progn (dired-add-file expanded)
+               (dired-move-to-filename))
+      ;; Otherwise, open the newly-created directory in dired.
+      (find-file parent))))
 
 ;;
 ;; Emacs Lisp (elisp) mode.
