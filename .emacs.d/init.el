@@ -264,11 +264,6 @@
 (recentf-mode)
 (define-key recentf-mode-map (kbd "C-w") 'backward-delete-word)
 
-;; Save buffers whenever they lose focus. This obviates the need to hit the Save key thousands of
-;; times a day. Inspired by http://goo.gl/2z0g5O.
-(dolist (f '(windmove-up windmove-right windmove-down windmove-left))
-  (advice-add f :before (lambda (&optional args) (util/save-buffer-if-dirty))))
-
 ;; When switching focus out of the Emacs app, save the buffer.
 (add-hook 'focus-out-hook 'util/save-buffer-if-dirty)
 
@@ -663,6 +658,15 @@
 ;; Make it so the MACOS keybindings you're used to always work in every mode in Emacs.
 ;; http://stackoverflow.com/questions/683425/globally-override-key-binding-in-emacs
 ;;
+
+(defun switch-window (move-fn)
+  "Saves the buffer, exits insert mode, and moves to another window using MOVE-FN (e.g.
+   windmove-right). Does nothing if there is no window in that direction."
+  (util/save-buffer-if-dirty)
+  (evil-change-to-initial-state)
+  ;; windmove-* functions throw an error if there is no window in that direction.
+  (ignore-errors (funcall move-fn)))
+
 (defvar macos-keys-minor-mode-map (make-keymap) "macos-keys-minor-mode-keymap")
 (util/define-keys macos-keys-minor-mode-map
                   (kbd "M-`") 'other-frame
@@ -686,10 +690,10 @@
                   (kbd "M-x") 'my-execute-extended-command-mru
                   ;; These aren't specifically replicating MacOS shortcuts, but they manipulate the
                   ;; window, so I want them to take precedence over everything else.
-                  (kbd "A-f") (lambda () (interactive) (ignore-errors (windmove-right)))
-                  (kbd "A-d") (lambda () (interactive) (ignore-errors (windmove-down)))
-                  (kbd "A-s") (lambda () (interactive) (ignore-errors (windmove-left)))
-                  (kbd "A-e") (lambda () (interactive) (ignore-errors (windmove-up)))
+                  (kbd "A-f") (lambda () (interactive) (switch-window 'windmove-right))
+                  (kbd "A-d") (lambda () (interactive) (switch-window 'windmove-down))
+                  (kbd "A-s") (lambda () (interactive) (switch-window 'windmove-left))
+                  (kbd "A-e") (lambda () (interactive) (switch-window 'windmove-up))
                   (kbd "A-F") 'wm/swap-window-right
                   (kbd "A-D") 'wm/swap-window-down
                   ;; This is Alt-shift-s. I don't know why Emacs is receivivng "§" as the key.
@@ -2136,7 +2140,8 @@
 (defun ag/open-search-result-in-window-to-right ()
   (interactive)
   (lexical-let ((move-right-or-create (lambda ()
-                                        (message "called")
+                                        (util/save-buffer-if-dirty)
+                                        (evil-change-to-initial-state)
                                         (condition-case nil (windmove-right)
                                           (error (progn (split-window-right) (windmove-right)))))))
     (util/with-patch-function
