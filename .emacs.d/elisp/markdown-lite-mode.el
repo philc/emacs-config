@@ -301,8 +301,8 @@
     ;; Autocomplete setext headers by typing "==" or "--" on the header's line in normal mode.
     (kbd "==") '(lambda () (interactive) (mlm/insert-markdown-setext-header "=="))
     (kbd "--") '(lambda () (interactive) (mlm/insert-markdown-setext-header "--"))
-    (kbd "A-k") 'mlm/backward-same-level
-    (kbd "A-j") 'mlm/forward-same-level
+    (kbd "C-k") 'mlm/backward-same-level
+    (kbd "C-j") 'mlm/forward-same-level
     (kbd "A-h") 'outline-previous-visible-heading
     (kbd "A-l") 'outline-next-visible-heading
     (kbd "TAB") 'mlm/markdown-cycle
@@ -344,13 +344,16 @@
 (defun mlm/forward-same-level ()
   (interactive)
   (condition-case nil (outline-forward-same-level 1)
-    (error (outline-next-visible-heading 1))))
+    (error (outline-next-visible-heading 1)))
+  ;; Move the cursor to the first non-whitespace character.
+  (back-to-indentation))
 
 (defun mlm/backward-same-level ()
   (interactive)
   (condition-case nil (outline-backward-same-level 1)
-    (error (outline-previous-visible-heading 1))))
-
+    (error (outline-previous-visible-heading 1)))
+  ;; Move the cursor to the first non-whitespace character.
+  (back-to-indentation))
 
 ;;
 ;; Much of this code is taken from markdown-mode.el.
