@@ -897,9 +897,16 @@
 (defun dired-open-file-in-window-to-the-right ()
   "Opens the file in the window to the right of the dired window. Focus remains in the dired window."
   (interactive)
-  (lexical-let ((f (dired-get-file-for-visit))
-                (w (window-in-direction 'right)))
-    (util/preserve-selected-window (lambda () (select-window w) (find-file f)))))
+  (lexical-let* ((f (dired-get-file-for-visit))
+                 (existing-window (window-in-direction 'right))
+                 (target-window (or existing-window
+                                    (split-window-right))))
+    ;; If we created a new window to show the result, balance the columns.
+    (unless existing-window
+      (balance-windows))
+    (util/preserve-selected-window (lambda ()
+                                     (select-window target-window)
+                                     (find-file f)))))
 
 ;; Taken from http://stackoverflow.com/a/18885461/46237.
 (defun dired-create-file (file)
