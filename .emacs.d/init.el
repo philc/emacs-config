@@ -908,7 +908,6 @@
                                      (select-window target-window)
                                      (find-file f)))))
 
-;; Taken from http://stackoverflow.com/a/18885461/46237.
 (defun dired-create-file (file)
   "Create a file called FILE, and recursively create any parent directories.
   If FILE already exists, signal an error."
