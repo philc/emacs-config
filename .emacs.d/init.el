@@ -41,7 +41,6 @@
                       evil-nerd-commenter
                       general ; Functions for defining keybindings and leader keys. Complements Evil
                       go-mode ; For editing Go files.
-                      hiwin ; For highlighting the active pane/window in Emacs.
                       less-css-mode ; Syntax highlighting for LESS CSS files.
                       inf-clojure ; Clojure REPL mode
                       magit ; A mode for committing to git repositories and viewing Git history.
