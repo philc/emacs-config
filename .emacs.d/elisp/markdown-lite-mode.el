@@ -125,7 +125,7 @@
     ;; line-length).
     (when (or (s-starts-with? "--" next-line) (s-starts-with? "==" next-line))
       (save-excursion
-        (next-line)
+        (forward-line 1)
         (beginning-of-line)
         (delete-region (- (point) 1) (line-end-position))))
     (save-excursion
@@ -165,15 +165,14 @@
     (let ((start (line-beginning-position))
           (end (line-end-position))
           (end-of-file nil))
-      ;; NOTE(philc): (next-line) returns an error if we're at the end of the file.
-      (ignore-errors (next-line))
+      (forward-line 1)
       ;; Stop the search at left-aligned text (which is an approximation for detecting headings).
       (while (not (or ; (string/blank? (util/get-current-line)) ; TODO(philc): Remove this.
                    end-of-file
                    (string-match "^[ ]*\\*" (util/get-current-line))
                    (string-match "^[^ *]" (util/get-current-line))))
         (setq end (line-end-position))
-        (condition-case nil (next-line) (error (setq end-of-file t))))
+        (when (> (forward-line 1) 0) (setq end-of-file t)))
       (list start end))))
 
 (defun mlm/markdown-perform-promote (should-promote)
@@ -200,13 +199,13 @@
                       (indent-rigidly (line-beginning-position) (line-end-position) indent-amount))))
     (save-excursion
       (funcall indent-fn)
-      (next-line)
+      (forward-line 1)
       (while (and (setq line (util/get-current-line))
                   (or (string/blank? line)
                       (> (util/line-indentation-level line) start-level)))
         (when (not (string/blank? line))
           (funcall indent-fn))
-        (next-line)))))
+        (forward-line 1)))))
 
 (defun mlm/markdown-promote () (interactive) (mlm/markdown-perform-promote t))
 (defun mlm/markdown-demote () (interactive) (mlm/markdown-perform-promote nil))

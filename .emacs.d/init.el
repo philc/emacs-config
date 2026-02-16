@@ -385,7 +385,7 @@
   (beginning-of-line)
   (when (and (not (bobp))
              (not (looking-at-p paragraph-start))
-             (previous-line)))
+             (forward-line -1)))
   (backward-paragraph)
   (skip-chars-forward "\n\t "))
 
@@ -1570,8 +1570,9 @@
           ;; When expanding the CSS to multiple lines, we didn't preserve line indentation, so as a
           ;; workaround, here we just re-indent the paragraph around the cursor.
           (evil-ext/indent-inside-paragraph)
-          ; Put cursor on the line prior to the brace, so you can immediately begin typing in new
-          styles. (previous-line)
+          ;; Put cursor on the line prior to the brace, so you can immediately begin typing in new
+          ;; styles.
+          (forward-line -1)
           (end-of-line))))))
 
 (evil-define-key 'normal css-mode-map

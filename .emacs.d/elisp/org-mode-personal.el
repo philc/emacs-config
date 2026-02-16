@@ -183,7 +183,7 @@
       ;; If we inserted text above us in the buffer, the cursor will now be on the wrong line;
       ;; in that case; advance one line.
       (when (not (string= former-line (util/get-line)))
-        (next-line)
+        (forward-line 1)
         (move-to-column former-col))
       (message "Added"))))
 
