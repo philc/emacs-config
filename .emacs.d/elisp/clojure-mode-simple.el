@@ -611,7 +611,7 @@ but doesn't treat single semicolons as right-hand-side comments."
   ;; "ex" 'inf-clojure-eval-defun
   "ex" 'clj/eval-defun
   "eb" 'clj/load-buffer
-  "rr" 'reload-active-chrome-tab
+  "rr" 'reload-active-browser-tab
   "ta" 'clj/run-all-tests
   "tf" 'clj/run-tests-in-ns
   "tt" 'clj/run-test-at-point

@@ -4,7 +4,7 @@
 ;; of my setup they may want to use.
 ;;
 ;; I often extend existing Emacs modes with new functions, and those are typically kept in separate
-;; files (e.g. see elisp/magit-mode-ext.el). However, I try to keep all of the configuration for
+;; files (e.g. see elisp/magit-config.el). However, I try to keep all of the configuration for
 ;; those modes (like keybindings) here in init.el.
 
 ;; Launch debugger with stacktrace if there's any Emacs Lisp error.
@@ -451,7 +451,6 @@
  ;; Grep (using the "ag" command) for files in the current directory.
  "s" (util/save-and-call 'ag-project-in-current-window)
  ;; "v" is a mnemonic prefix for "view X".
- ;; "vv" will be a natural choice as a mode-specific shortcut for previewing the current file.
  "vp" (util/save-and-call 'project-nav/navigate-to-project)
  ;; "vn" 'project-nav/open-file-from-notes-folder
  "vn" (util/save-and-call 'project-nav/open-file-from-notes-folder)
@@ -1592,14 +1591,13 @@
   "Saves the current buffer before invoking the given command."
   ;; I could also configure "compilation-ask-about-save", which saves all modified buffers if set to
   ;; false.
-  (let ((has-makefile (file-exists-p (concat (projectile-project-root) "Makefile"))))
-    (save-and-compile
+  (save-and-compile
      (lambda ()
        (message command)
        (util/without-confirmation
         ;; `compile` will use the current file's directory to execute the command, rather than the
         ;; project's root, so override that.
-        (lambda () (compile (concat "cd " (projectile-project-root) " && " command))))))))
+        (lambda () (compile (concat "cd " (projectile-project-root) " && " command)))))))
 
 (defun get-makefile-targets (project-dir)
   "Return a list of Makefile targets in PROJECT-DIR. If no Makefile exists, return an empty list."
