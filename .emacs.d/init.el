@@ -759,8 +759,7 @@
   (switch-to-evil-normal-state)
   (let ((one-tab (= 1 (length (tab-bar-tabs))))
         (one-window (one-window-p)))
-    (progn
-      (cond
+    (cond
        ;; If the current tab has multiple windows in it, close the current window.
        ((not one-window)
         (delete-window)
@@ -774,7 +773,7 @@
        ;; Calling tab-bar-close-tab will fail when there's only one tab in the frame.
        (one-tab
         (evil-quit)
-        nil)))))
+        nil))))
 
 ;;
 ;; Filename completions (i.e. CTRL-P or CMD-T in other editors)
