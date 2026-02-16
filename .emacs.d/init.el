@@ -28,7 +28,7 @@
 (when (not package-archive-contents)
   (package-refresh-contents))
 
-(defvar my-packages '(ace-jump-mode ; Jump to any text on screen in a few keystrokes.
+(defvar my-packages '(avy ; Jump to any text on screen in a few keystrokes.
                       ag ; Silver searcher integration for Emacs
                       better-jumper ; A configurable jump implementation
                       browse-at-remote ; Jump to the Github page for a given line in a file.
@@ -541,13 +541,11 @@
 (global-set-key [escape] 'evil-exit-emacs-state)
 
 ;;
-;; Ace jump - for quickly jumping to a precise character in view. Similar to Vim's EasyMotion.
+;; Avy - for quickly jumping to a precise character in view. Similar to Vim's EasyMotion.
 ;;
-(require 'ace-jump-mode)
-(define-key evil-normal-state-map (kbd "SPC") 'ace-jump-word-mode)
-;; Note that Evil mode's ace-jump integration is supposed to add this motion keybinding
-;; automatically for you, but it doesn't work. So I've defined it here explicitly.
-(define-key evil-motion-state-map (kbd "SPC") 'evil-ace-jump-word-mode)
+(require 'avy)
+(define-key evil-normal-state-map (kbd "SPC") 'avy-goto-word-1)
+(define-key evil-motion-state-map (kbd "SPC") 'avy-goto-word-1)
 
 ;;
 ;; Incremental search (isearch)
