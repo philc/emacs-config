@@ -1997,7 +1997,7 @@
                         (s-split ":")))
          (line (-> line-col cl-first string-to-number))
          (col (-> line-col cl-second string-to-number)))
-    (goto-line line)
+    (util/goto-line line)
     (move-to-column col)))
 
 (defun js-goto-def ()
@@ -2026,7 +2026,7 @@
         (evil-normal-state)
         (when (not (string= path (buffer-file-name)))
           (find-file path))
-        (goto-line line)
+        (util/goto-line line)
         ;; move-to-column uses zero-based column numbers.
         (move-to-column col)
         (evil-scroll-line-to-center nil)))))

@@ -139,6 +139,12 @@
     (select-frame-set-input-focus original-frame t)
     result))
 
+;; The built-in `goto-line' is interactive-only: it widens the buffer and pushes a mark, which is
+;; undesirable when called from Elisp.
+(defun util/goto-line (line)
+  (goto-char (point-min))
+  (forward-line (1- line)))
+
 (defun util/preserve-line-and-column (f)
   "Runs the given function and restores the cursor to its former line and column. This is helpful
    when the text in the buffer moves (e.g. as a result of indentation commands). This is different
@@ -147,7 +153,7 @@
   (let* ((former-line (line-number-at-pos))
          (former-col (current-column))
          (return-val (funcall f)))
-    (goto-line former-line)
+    (util/goto-line former-line)
     (move-to-column former-col)
     return-val))
 

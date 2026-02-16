@@ -179,7 +179,7 @@
               (push (list (current-buffer) (line-number-at-pos) (current-column))
                     clj/buffers-before-jump)
               (find-file file))
-            (goto-line line)
+            (util/goto-line line)
             (recenter))))))))
 
 (defun clj/jump-back ()
@@ -192,7 +192,7 @@
       ;; (message item)
       (set-window-buffer (selected-window) buf)
       (with-selected-window (selected-window)
-        (goto-line line)
+        (util/goto-line line)
         (move-to-column col)
         (recenter)))))
 
@@ -431,7 +431,7 @@
           (message "Jumping to anonymous top-level forms like %s isn't implemented." clj-symbol)
         (progn
           (clj/jump-to-var clj-symbol)
-          (goto-line linenum)
+          (util/goto-line linenum)
           (recenter) ; Put the line in the center of the screen: for errors, you need context above & below.
           (message "Jumped to: %s:%s" (cl-first file-and-linenum) linenum))))))
 

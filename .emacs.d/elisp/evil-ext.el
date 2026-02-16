@@ -48,7 +48,7 @@
                  (estimated-line (+ (line-number-at-pos)
                                     (/ (current-column) fill-column))))
     (funcall f)
-    (goto-line estimated-line)
+    (util/goto-line estimated-line)
     (move-to-column estimated-col)))
 
 ;; This regexp matches lines starting with these chars:
