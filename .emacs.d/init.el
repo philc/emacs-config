@@ -1597,12 +1597,6 @@
 (add-to-list 'auto-mode-alist '("\\.scss\\'" . scss-mode))
 
 ;;
-;; notmuch - email & gmail in Emacs.
-;; This is an alternative to mu4e. WIP, not currently used.
-;;
-;; (require 'notmuch-ext)
-
-;;
 ;; YAML mode, for editing YAML files
 ;;
 (require 'yaml-mode)
