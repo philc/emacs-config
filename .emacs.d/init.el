@@ -565,7 +565,7 @@
   (let ((i 0))
     (while (and (< i (length string))
                 (string-match "[-_ ]+" string i))
-      (setq i (second (match-data))))
+      (setq i (cl-second (match-data))))
     (if (= i 0)
         ""
       (substring string 0 (dec i)))))

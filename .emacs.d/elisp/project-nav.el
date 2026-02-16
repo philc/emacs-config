@@ -35,8 +35,8 @@
   "Prompts for the name of a notes file to open."
   (interactive)
   (let* ((file-matches-pattern? (lambda (file)
-                                  (some (lambda (ext) (s-ends-with? ext file))
-                                        project-nav/notes-file-extensions)))
+                                  (cl-some (lambda (ext) (s-ends-with? ext file))
+                                           project-nav/notes-file-extensions)))
          (file-list (->> project-nav/notes-directories
                          (--map (project-nav/filter-files-in-directory it file-matches-pattern? t))
                          flatten-tree project-nav/sort-by-file-mtime)))
