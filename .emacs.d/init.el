@@ -1430,11 +1430,8 @@
 ;;
 ;; Clojure
 ;;
-;; (require 'clojure-mode-personal)
-;; (require 'cider-test-personal)
 ;; NOTE(philc): My Clojure setup is a work-in-progress. I'm progressively rewriting Cider for my own
 ;; use case.
-
 (require 'clojure-mode-simple)
 
 ;;
