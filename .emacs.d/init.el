@@ -1538,10 +1538,7 @@
   "Format and replace the current buffer's contents with `rustfmt`."
   (interactive)
   (save-buffer)
-  (let ((ext (or (-> (buffer-file-name) (file-name-extension))
-                 ;; The file might not have an extension. Assume javascript.
-                 "js")))
-    (replace-region-with-command-output "rustfmt")))
+  (replace-region-with-command-output "rustfmt"))
 
 ;;
 ;; Go mode, for writing golang code
@@ -2162,10 +2159,7 @@
   "Format and replace the current buffer's contents with `swift-format`."
   (interactive)
   (save-buffer)
-  (let ((ext (or (-> (buffer-file-name) (file-name-extension))
-                 ;; The file might not have an extension. Assume javascript.
-                 "js")))
-    (replace-region-with-command-output "swift-format format --ignore-unparsable-files")))
+  (replace-region-with-command-output "swift-format format --ignore-unparsable-files"))
 
 ;;
 ;; eglot - Emacs LSP
