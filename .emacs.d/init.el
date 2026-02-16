@@ -71,7 +71,6 @@
 (require 'cl-lib)
 (require 's)
 (add-to-list 'load-path "~/.emacs.d/elisp")
-(add-to-list 'load-path "~/.emacs.d/ghelp")
 (require 'lisp-utils)
 (require 'emacs-utils)
 
@@ -2171,30 +2170,6 @@
   (flymake-mode -1))
 
 (add-hook 'eglot-managed-mode-hook 'on-eglot-managed-mode-hook)
-
-;;
-;; ghelp - a replacement for Emacs help system.
-;; I'm using this because it can fetch documentation from the major mode's language server (via
-;; eglot) and show it. eglot can show documentation as well by invoking eldoc-doc-buffer, but not if
-;; you've disabled eglot from showing documentation on hover >.<
-;; See https://www.reddit.com/r/emacs/comments/11mv5ky/eglot_documentation/
-;; (require 'ghelp)
-
-(defun on-ghelp-page-mode-hook ()
-  ;; Turn on line wrapping for help pages.
-  (visual-line-mode 1)
-  (word-wrap-whitespace-mode 1))
-
-(add-hook 'ghelp-page-mode-hook 'on-ghelp-page-mode-hook)
-
-;; Use default font rather than a variable-width font.
-(copy-face 'default 'ghelp-entry-title)
-;; Turn off the annoying back and forward buttons in ghelp's window title.
-(setq-default ghelp-enable-header-line nil)
-
-(defun ghelp-describe-at-point-no-focus ()
-  (interactive)
-  (util/preserve-selected-window 'ghelp-describe-at-point))
 
 ;;
 ;; Misc
