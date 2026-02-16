@@ -453,7 +453,6 @@
  "s" (util/save-and-call 'ag-project-in-current-window)
  ;; "v" is a mnemonic prefix for "view X".
  ;; "vv" will be a natural choice as a mode-specific shortcut for previewing the current file.
- "vu" 'notmuch-go-to-inbox
  "vp" (util/save-and-call 'project-nav/navigate-to-project)
  ;; "vn" 'project-nav/open-file-from-notes-folder
  "vn" (util/save-and-call 'project-nav/open-file-from-notes-folder)
