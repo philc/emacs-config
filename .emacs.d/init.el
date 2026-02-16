@@ -143,7 +143,7 @@
 
 ;; By default, you must type "yes" when confirming destructive actions. Change that so only "y" is
 ;; required.
-(defalias 'yes-or-no-p 'y-or-n-p)
+(setq use-short-answers t)
 
 ;; Increase the maximum stack depth (the default is 1000).
 ;; Without this, some of the iterative functions I've written (like
