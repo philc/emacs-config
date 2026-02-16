@@ -16,7 +16,7 @@
 
 ;; I manage my windows in a 4x4 grid. I want ephemeral or status-based buffers to always show in the
 ;; lower-right or right window, in that order of preference.
-(setq special-display-buffer-names
+(setq wm/ephemeral-buffer-names
       '("*Help*" "*compilation*" "COMMIT_EDITMSG" "*Messages*"
         ;; Clojure
         "*clojure-simple*" "*inf-clojure*" "*Cljfmt Errors*"
@@ -31,20 +31,29 @@
         "*REPL*"
         "*eldoc*"
         "*Completions*"))
-(setq special-display-regexps '("*cider.*"
-                                "magit-process.*"
-                                "*ghelp.*"))
+(setq wm/ephemeral-buffer-regexps '("\\*cider.*"
+                                     "magit-process.*"
+                                     "\\*ghelp.*"))
 ;; I don't want these windows to be opened using my standard window opening logic, because I have
 ;; dedicated specific places that I like to place them, but I do want them to be closed by
 ;; wm/dismiss-ephemeral-windows.
 (setq extra-ephemeral-window-regexps-to-close '("^magit-revision"))
-(setq special-display-function 'wm/show-ephemeral-buffer-in-a-sensible-window)
 
-;; Instructions for where to place specific buffer types.
+(defun wm/ephemeral-buffer-name-p (buffer-name &optional _action)
+  "Returns non-nil if BUFFER-NAME is an ephemeral buffer."
+  (or (member buffer-name wm/ephemeral-buffer-names)
+      (-first (lambda (r) (string-match r buffer-name))
+              wm/ephemeral-buffer-regexps)))
+
+;; Route ephemeral buffers to wm/show-ephemeral-buffer-in-a-sensible-window.
 ;; See https://www.masteringemacs.org/article/demystifying-emacs-window-manager
 (add-to-list 'display-buffer-alist
-             ;; Show magit-revision buffers (the contents of a diff, from magit's log view) to the
-             ;; right of the log view window.
+             '(wm/ephemeral-buffer-name-p
+               (wm/show-ephemeral-buffer-in-a-sensible-window)))
+
+;; Show magit-revision buffers (the contents of a diff, from magit's log view) to the
+;; right of the log view window.
+(add-to-list 'display-buffer-alist
              '("^magit-revision:"
                (lambda (buffer action-alist)
                  (wm/show-buffer-rightward buffer))))
@@ -60,7 +69,7 @@
 (defun wm/ephemeral-window-p (w)
   "True if the given window is an 'ephemeral' window."
   (let ((name (-> w window-buffer buffer-name)))
-    (or (special-display-p name)
+    (or (wm/ephemeral-buffer-name-p name)
         (-first (lambda (r) (string-match r name))
                 extra-ephemeral-window-regexps-to-close))))
 
