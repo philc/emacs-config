@@ -865,7 +865,7 @@
     "u" 'dired-unmark
     "U" 'dired-unmark-all-marks
     ;; TODO(philc): dired-details-toggle no longer exists.
-    "v" 'dired-details-toggle
+    "v" 'dired-hide-details-mode
     ;; The "e" prefix is for execute.
     "ed" 'dired-do-flagged-delete
     "em" 'dired-do-rename))
