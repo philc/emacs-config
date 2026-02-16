@@ -57,7 +57,6 @@
                       spell-fu ; Spell checking
                       swift-mode ; Swift syntax highlighting
                       tempel ;; Insert snippets
-                      undo-fu ; Used for undo/redo in Evil mode. No longer needed in Emacs 28.
                       vertico ; Nicely show menu completions
                       yaml-mode ; For editing YAML files
                       yascroll ; For rendering scroll bars in the right fringe
@@ -318,7 +317,7 @@
 
 (setq evil-want-C-u-scroll t)
 (setq evil-want-Y-yank-to-eol t) ; Map "Y" to copy to the end of line (y$ in Vim).
-(setq evil-undo-system 'undo-fu) ; In emacs 28, this can be removed, as undo-redo.
+(setq evil-undo-system 'undo-redo)
 (require 'evil)
 (require 'evil-ext)
 (require 'evil-nerd-commenter)
