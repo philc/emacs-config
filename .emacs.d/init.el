@@ -1584,7 +1584,7 @@
 ;;
 (with-eval-after-load "go-mode"
   (evil-define-key 'normal go-mode-map
-    "gd" 'xref-find-defintions
+    "gd" 'xref-find-definitions
     "K" 'go-show-doc-at-point))
 
 (defun go-show-doc-at-point ()
