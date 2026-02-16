@@ -1341,14 +1341,6 @@
   (replace-region-with-command-output "~/scripts/publishing/swap_pronouns.rb male"))
 
 ;;
-;; CSS
-;;
-(add-hook 'css-mode-hook
-          (lambda ()
-            ;; Properly unindent a closing brace after you type it and hit enter.
-            (electric-indent-mode)))
-
-;;
 ;; Ruby
 ;;
 (add-to-list 'auto-mode-alist '("\\.rake$" . ruby-mode))
@@ -1478,6 +1470,11 @@
 ;;
 ;; CSS
 ;;
+
+(add-hook 'css-mode-hook
+          (lambda ()
+            ;; Properly unindent a closing brace after you type it and hit enter.
+            (electric-indent-mode)))
 
 ;; css-mode will render the text of color values in their color. This is conceptually useful but
 ;; very loud when reading the source code; disable it.
