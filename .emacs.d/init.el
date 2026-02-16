@@ -1561,12 +1561,12 @@
 (add-to-list 'auto-mode-alist '("\\.yml$" . yaml-mode))
 
 ;;
-;; Rust mode
+;; Rust mode - currently unused.
 ;;
 
 (define-leader-keys 'rust-mode-map
   "cc" (lambda () (interactive) (save-and-compile 'rust-compile))
-  "rr" (lambda () (interactive) (save-then 'rust-run))
+  "rr" (lambda () (interactive) (save-and-compile 'rust-run))
   "l" 'log-word-under-cursor
   "i" 'rust/format-buffer)
 
