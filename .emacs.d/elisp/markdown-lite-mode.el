@@ -60,11 +60,6 @@
   (make-local-variable 'fill-nobreak-predicate)
   (add-hook 'fill-nobreak-predicate 'mlm/markdown-nobreak-p)
 
-  ;; Prepare hooks for XEmacs compatibility
-  (when (featurep 'xemacs)
-    (make-local-hook 'after-change-functions)
-    (make-local-hook 'font-lock-extend-region-functions)
-    (make-local-hook 'window-configuration-change-hook))
   )
 
 (add-to-list 'auto-mode-alist '("\\.markdown$" . markdown-lite-mode))
