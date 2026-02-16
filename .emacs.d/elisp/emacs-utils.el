@@ -216,9 +216,9 @@
                       (funcall open-file-fn ξfpath))))))
           (progn
             (if (file-exists-p ξpath)
-                (funcall open-file-fn ξfpath)
+                (funcall open-file-fn ξpath)
               (if (file-exists-p (concat ξpath ".el"))
-                  (funcall open-file-fn (conat ξfpath ".el"))
+                  (funcall open-file-fn (concat ξpath ".el"))
                 (when (y-or-n-p (format "file doesn't exist: 「%s」. Create?" ξpath))
                   (funcall open-file-fn ξpath ))))))))))
 
