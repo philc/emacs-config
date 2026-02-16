@@ -11,7 +11,7 @@
  '(org-agenda-files '("~/test.org"))
  '(package-selected-packages
    '(ag avy better-jumper browse-at-remote consult dash-functional diminish
-        evil evil-nerd-commenter flx general go-mode inf-clojure magit
+        evil evil-nerd-commenter general go-mode inf-clojure magit
         outline-magic powerline projectile rainbow-delimiters scss-mode smartparens
         spell-fu swift-mode tempel undo-fu vertico yaml-mode yascroll))
  '(safe-local-variable-directories '("/Users/phil/.emacs.d/elpa/magit-20250312.1432/"))
