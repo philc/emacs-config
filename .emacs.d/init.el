@@ -223,7 +223,7 @@
 ;; indent-tabs-mode explicitly. Makefile-mode already does that, for example. If indent-tabs-mode is
 ;; off, replace tabs with spaces before saving the file.
 (setq-default indent-tabs-mode nil)
-(add-hook 'write-file-hooks
+(add-hook 'write-file-functions
           (lambda ()
             (if (not indent-tabs-mode)
                 (untabify (point-min) (point-max)))
