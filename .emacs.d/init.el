@@ -204,7 +204,7 @@
 (setq-default css-indent-offset 2)
 
 (setq sentence-end-double-space nil) ; Don't add double spaces after periods when filling strings.
-(setq-default fill-column 100) ; Wrap at 110 chars when using the Emacs fill commands.
+(setq-default fill-column 100) ; Wrap at 100 chars when using the Emacs fill commands.
 (auto-fill-mode t) ; When typing across the fill-column, hard-wrap the line as you type.
 (add-hook 'text-mode-hook 'turn-on-auto-fill) ; Some modes, like markdown, turn off autofill.
 
