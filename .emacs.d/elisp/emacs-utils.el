@@ -377,10 +377,8 @@
   (interactive)
   (util/paste-text "after"))
 
-(defvar last-paste-start nil)
-(defvar last-paste-end nil)
-(make-variable-buffer-local 'last-paste-start)
-(make-variable-buffer-local 'last-paste-end)
+(defvar-local last-paste-start nil)
+(defvar-local last-paste-end nil)
 
 (defun util/paste-text (placement)
   "Paste text either before or after cursor. This is meant to be a replacement for evil-paste-after
