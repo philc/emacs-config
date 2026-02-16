@@ -304,10 +304,6 @@
         result
         ))))
 
-(defun clj/load-file (file-name)
-  "Load a Clojure file FILE-NAME into the inferior Clojure process."
-  (clj/eval-str (format "(clojure.core/load-file \"%s\")\n" file-name)))
-
 ;; TODO(philc): Different from eval-buffer -- doesn't eval each statement individually and send the output to the REPL.
 (defun clj/load-buffer ()
   (interactive)
