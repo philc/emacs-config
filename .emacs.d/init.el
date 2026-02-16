@@ -1609,7 +1609,7 @@
     (with-help-window "*Help*"
       ;; The help string will be formatted as Markdown, so enable Markdown syntax highlighting in
       ;; the help window.
-      (gfm-view-mode)
+      (markdown-lite-mode); Or alternatively, gfm-view-mode.
       ;; Allow text to wrap to the next line at word boundaries.
       (visual-line-mode 1)
       (word-wrap-whitespace-mode 1)
