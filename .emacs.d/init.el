@@ -602,14 +602,9 @@
 ;; When pressing enter to confirm a search, or jumping to the next result, scroll the result into
 ;; the center of the window. This removes the UX problem of the result appearing at the bottom of
 ;; the screen with little context around it.
-(defadvice evil-search-next (after isearch-recenter activate)
-  (recenter-no-redraw))
-
-(defadvice evil-search-previous (after isearch-recenter activate)
-  (recenter-no-redraw))
-
-(defadvice isearch-exit (before isearch-recenter activate)
-  (recenter-no-redraw))
+(advice-add 'evil-search-next :after (lambda (&rest _) (recenter-no-redraw)))
+(advice-add 'evil-search-previous :after (lambda (&rest _) (recenter-no-redraw)))
+(advice-add 'isearch-exit :before (lambda (&rest _) (recenter-no-redraw)))
 
 ;;
 ;; Changing font sizes - text-scale-mode
@@ -742,14 +737,14 @@
 
 (macos-keys-minor-mode t)
 
-(defadvice load (after give-macos-keybindings-priority)
+(defun give-macos-keybindings-priority (&rest _)
   "Try to ensure that MacOS keybindings always have priority."
   (if (not (eq (car (car minor-mode-map-alist)) 'macos-keys-minor-mode))
       (let ((macos-keys (assq 'macos-keys-minor-mode minor-mode-map-alist)))
         (setq minor-mode-map-alist
               (assq-delete-all 'macos-keys-minor-mode minor-mode-map-alist))
         (add-to-list 'minor-mode-map-alist macos-keys))))
-(ad-activate 'load)
+(advice-add 'load :after #'give-macos-keybindings-priority)
 
 (defun open-folder-in-finder ()
   "Opens the folder of the current file in MacOS's Finder."

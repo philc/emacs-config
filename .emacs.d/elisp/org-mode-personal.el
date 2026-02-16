@@ -107,7 +107,7 @@
 ;; Moves the current heading (and all of its children) into the matching parent note in the archive
 ;; file. I think this is the most sensible way to archive TODOs in org mode files.
 ;; http://orgmode.org/worg/org-hacks.html
-(defadvice org-archive-subtree (around my-org-archive-subtree activate)
+(defun my-org-archive-subtree (orig-fn &rest args)
   (let ((org-archive-location
          (if (save-excursion (org-back-to-heading)
                              (> (org-outline-level) 1))
@@ -115,7 +115,8 @@
                      "::* "
                      (car (org-get-outline-path)))
            org-archive-location)))
-    ad-do-it))
+    (apply orig-fn args)))
+(advice-add 'org-archive-subtree :around #'my-org-archive-subtree)
 
 (defun org-show-todo-and-done-tree ()
   "Shows only subtrees which are TODOs or DONE items. Similar to org-show-todo-tree, but it matches
