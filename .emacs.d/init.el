@@ -1549,7 +1549,7 @@
   ;; 2025-01-06: I don't use this anymore. Instead I use prettier to format the CSS, which doesn't
   ;; allow single-line declarations.
   (interactive)
-  (let* ((text (util/thing-at-point-no-properties 'brace-block)))
+  (let* ((text (thing-at-point 'brace-block t)))
     (when text
       (let* ((lines (split-string text "\n"))
              (should-expand (= (length lines) 1))
