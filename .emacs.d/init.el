@@ -516,7 +516,6 @@
  "wr" 'evil-window-rotate-downwards
  "wR" 'evil-window-rotate-upwards
  "wb" 'balance-windows
- "we" 'wm/narrow-ephemeral-window
  "wE" 'wm/toggle-maximize-lower-right-window
  "q" 'wm/dismiss-ephemeral-window)
 
