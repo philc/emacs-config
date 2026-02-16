@@ -26,7 +26,7 @@
          (--map (if (and include-subdirectories (file-directory-p it))
                     (project-nav/filter-files-in-directory it filter-fn include-subdirectories)
                   it))
-         flatten
+         flatten-tree
          (-filter filter-fn))))
 
 (setq project-nav/notes-file-extensions '(".md" ".sql" ".txt"))
@@ -39,7 +39,7 @@
                                         project-nav/notes-file-extensions)))
          (file-list (->> project-nav/notes-directories
                          (--map (project-nav/filter-files-in-directory it file-matches-pattern? t))
-                         flatten project-nav/sort-by-file-mtime)))
+                         flatten-tree project-nav/sort-by-file-mtime)))
     (let ((file-to-open (completing-read "Notes file: "
                                          (mapcar 'file-name-nondirectory file-list))))
       (->> file-list
@@ -98,7 +98,7 @@
   (let* ((all-project-folders
           (->> project-nav/project-folders
                (--map (project-nav/filter-files-in-directory it 'file-directory-p nil))
-               flatten))
+               flatten-tree))
          (project-to-open (completing-read "Project folder: "
                                            (-map 'file-name-nondirectory all-project-folders)
                                            nil t))

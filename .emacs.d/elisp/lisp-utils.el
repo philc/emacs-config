@@ -9,13 +9,6 @@
 ;; Use Clojure's convention of `fn` for anonymous functions. It's shorter.
 (defalias 'fn 'lambda)
 
-(defun flatten (mylist)
-  (cond
-   ((null mylist) nil)
-   ((atom mylist) (list mylist))
-   (t
-    (append (flatten (car mylist)) (flatten (cdr mylist))))))
-
 (defun inc (i) (+ i 1))
 
 (defun dec (i) (- i 1))
