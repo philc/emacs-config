@@ -34,7 +34,6 @@
                       browse-at-remote ; Jump to the Github page for a given line in a file.
                       clojure-mode ; For editing Clojure files.
                       consult
-                      coffee-mode ; For syntax highlighting coffeescript.
                       dash ; Dash provides modern functions for working with lists in Emacs Lisp.
                       dash-functional ; Useful combinators for Emacs Lisp.
                       diminish ; For hiding and shortening minor modes in the modeline
@@ -1351,34 +1350,6 @@
           (lambda ()
             ;; Properly unindent a closing brace after you type it and hit enter.
             (electric-indent-mode)))
-
-;;
-;; Coffeescript
-;;
-(setq coffee-tab-width 2)
-(define-leader-keys 'coffee-mode-map
-  "c" nil ; Establishes "c" as a "prefix key". I found this trick here: http://www.emacswiki.org/emacs/Evil
-  "rr" 'reload-active-browser-tab
-  ;; This compiles the file and jumps to the first error, if there is one.
-  "cc" (lambda () (interactive) (save-buffer) (coffee-compile-without-side-effect))
-  ;; The mnemonic for this is "compile & preview". It shows the javascript output in a new buffer.
-  "cp" 'coffee-compile-buffer)
-
-(defun coffee-compile-without-side-effect ()
-  ;; coffee-compile-file annoyingly creates a file on disk.
-  (let* ((js-file (concat (file-name-sans-extension (buffer-file-name)) ".js"))
-         (js-file-existed (file-exists-p js-file)))
-    (coffee-compile-file)
-    (when (and (not js-file-existed) (file-exists-p js-file))
-      (delete-file js-file))))
-
-;; Make return and open-line indent the cursor properly.
-(evil-define-key 'insert coffee-mode-map (kbd "RET") 'coffee-newline-and-indent)
-(evil-define-key 'normal coffee-mode-map "o" '(lambda ()
-                                                (interactive)
-                                                (end-of-line)
-                                                (evil-append nil)
-                                                (coffee-newline-and-indent)))
 
 ;;
 ;; Ruby
