@@ -45,7 +45,6 @@
                       inf-clojure ; Clojure REPL mode
                       magit ; A mode for committing to git repositories and viewing Git history.
                       org ; For outlining. It's bundled with Emacs, but I'm using the latest version
-                      outline-magic ; Extensions to ouline mode, which I use in markdown mode.
                       powerline ; Improve the appearance & density of the Emacs status bar.
                       projectile ; Find file in project (ala Vim's CTRL-P or Textmate's Cmd-T)
                       rainbow-delimiters ; Highlight parentheses in rainbow colors.

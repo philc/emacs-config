@@ -12,9 +12,6 @@
 ;;
 
 (provide 'markdown-lite-mode)
-;; I use markdown heavily for outlining. outline-magic provides handy functions for cycling the
-;; visibility of subtrees, the same way org mode does it.
-(require 'outline-magic)
 (require 'evil)
 (require 's)
 (require 'markdown-tables)
