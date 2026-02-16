@@ -568,12 +568,12 @@
 (defun trim-last-word-of-string (string)
   "Removes the last word from the given string. Word separators are -, _ and spaces. This is
   designed to perform the same function as kill-word, but on a string argument."
-  (lexical-let ((i 0))
+  (let ((i 0))
     (while (and (< i (length string))
                 (string-match "[-_ ]+" string i))
       (setq i (second (match-data))))
     (if (= i 0)
-      ""
+        ""
       (substring string 0 (dec i)))))
 
 (defun isearch-del-word (&optional arg)
@@ -896,10 +896,10 @@
 (defun dired-open-file-in-window-to-the-right ()
   "Opens the file in the window to the right of the dired window. Focus remains in the dired window."
   (interactive)
-  (lexical-let* ((f (dired-get-file-for-visit))
-                 (existing-window (window-in-direction 'right))
-                 (target-window (or existing-window
-                                    (split-window-right))))
+  (let* ((f (dired-get-file-for-visit))
+         (existing-window (window-in-direction 'right))
+         (target-window (or existing-window
+                            (split-window-right))))
     ;; If we created a new window to show the result, balance the columns.
     (unless existing-window
       (balance-windows))
@@ -1665,7 +1665,7 @@
 (defun go-save-and-compile-fn (command)
   "Returns a function for the purpose of binding to a key which saves the current buffer and then
    runs the given command in the root of the go project."
-  (lexical-let ((command command))
+  (let ((command command))
     #'(lambda ()
         (interactive)
         (go-save-and-compile command))))
@@ -1677,7 +1677,7 @@
   "Saves the current buffer before invoking the given command."
   ;; I could also configure "compilation-ask-about-save", which saves all modified buffers if set to
   ;; false.
-  (lexical-let ((has-makefile (file-exists-p (concat (projectile-project-root) "Makefile"))))
+  (let ((has-makefile (file-exists-p (concat (projectile-project-root) "Makefile"))))
     (save-and-compile
      (lambda ()
        (message command)
@@ -1841,7 +1841,7 @@
 (defun java-save-and-compile-fn (command-name)
   "Returns a function for the purpose of binding to a key which saves the current buffer and then
    runs the given command in the root of the go project."
-  (lexical-let ((command-name command-name))
+  (let ((command-name command-name))
     #'(lambda ()
         (interactive)
         (save-buffer)
@@ -2138,11 +2138,11 @@
 
 (defun ag/open-search-result-in-window-to-right ()
   (interactive)
-  (lexical-let ((move-right-or-create (lambda ()
-                                        (util/save-buffer-if-dirty)
-                                        (evil-change-to-initial-state)
-                                        (condition-case nil (windmove-right)
-                                          (error (progn (split-window-right) (windmove-right)))))))
+  (let ((move-right-or-create (lambda ()
+                                (util/save-buffer-if-dirty)
+                                (evil-change-to-initial-state)
+                                (condition-case nil (windmove-right)
+                                  (error (progn (split-window-right) (windmove-right)))))))
     (util/with-patch-function
      'pop-to-buffer (buffer &rest args) (progn
                                           (funcall move-right-or-create)
