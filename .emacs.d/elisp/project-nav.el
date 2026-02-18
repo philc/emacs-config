@@ -83,7 +83,7 @@
                            [])
                          (append (list (concat project-path "/" "README.md")))))
          (main-file (->> main-files
-                         (remove-if-not 'file-exists-p)
+                         (cl-remove-if-not 'file-exists-p)
                          cl-first)))
     (if main-file
         (set-window-buffer (selected-window) (find-file main-file))
