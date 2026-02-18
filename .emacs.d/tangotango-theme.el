@@ -55,7 +55,7 @@
       "Source Code Pro"
       :foundry "unknown"
       :width normal
-      :height 140
+      :height 140 ; 14 pt
       :weight normal
       :slant normal
       :underline nil

@@ -207,6 +207,7 @@
 (auto-fill-mode t) ; When typing across the fill-column, hard-wrap the line as you type.
 (add-hook 'text-mode-hook 'turn-on-auto-fill) ; Some modes, like markdown, turn off autofill.
 
+;; When showing long lines, truncate them and require horizontal scrolling, rather than wrapping.
 (set-default 'truncate-lines t)
 
 ;; Highlight the line the cursor is on. This is mostly to make it easier to tell which split is
