@@ -5,10 +5,10 @@
 ;;
 ;; Performance notes:
 ;;
-;; This mode becomes surprisingly slow due to font locking on some operations, like indenting a
-;; block of text in a large file, when some list items are collapsed.
-;; There are many functions that can be made more efficient by reducing features that I don't
-;; personally use. mlm/markdown-search-backward-baseline for instance can be made more efficient.
+;; indent-rigidly fires after-change-functions once per line. The yascroll package hooks into
+;; after-change-functions and calls line-pixel-height, which forces synchronous jit-lock
+;; fontification on every line. To avoid this, use inhibit-modification-hooks around bulk
+;; indent-rigidly calls, followed by font-lock-flush to queue one lazy refontification pass.
 ;;
 
 (provide 'markdown-lite-mode)
@@ -173,31 +173,40 @@
          (indent-amount (if should-promote -2 2))
          (is-collapsed-subtree (invisible-p (cl-second region))))
     (if is-collapsed-subtree
-        (progn
+        (let ((inhibit-redisplay t))
           (outline-show-subtree)
           (mlm/markdown-perform-promote-subtree should-promote)
           (outline-hide-subtree))
-      (indent-rigidly (cl-first region) (cl-second region) indent-amount))))
+      (let ((inhibit-modification-hooks t))
+        (indent-rigidly (cl-first region) (cl-second region) indent-amount))
+      (font-lock-flush (cl-first region) (cl-second region)))))
 
 (defun mlm/markdown-perform-promote-subtree (should-promote)
-  "Promotes thes list under under the cursor, and also promotes all subtrees."
+  "Promotes the list item under the cursor, and also promotes all subtrees."
   ;; This show-subtree call is important because this indentation code does not work with collapsed
   ;; subtrees, which are represented as overlays. The hidden overlays get lost upon indention.
   (outline-show-subtree)
   (let* ((line (util/get-current-line))
          (start-level (util/line-indentation-level line))
          (indent-amount (if should-promote -2 2))
-         (indent-fn (lambda ()
-                      (indent-rigidly (line-beginning-position) (line-end-position) indent-amount))))
+         (region-start (line-beginning-position))
+         (region-end (line-end-position)))
     (save-excursion
-      (funcall indent-fn)
       (forward-line 1)
       (while (and (setq line (util/get-current-line))
                   (or (string/blank? line)
                       (> (util/line-indentation-level line) start-level)))
-        (when (not (string/blank? line))
-          (funcall indent-fn))
-        (forward-line 1)))))
+        (unless (string/blank? line)
+          (setq region-end (line-end-position)))
+        (forward-line 1)))
+    ;; Use inhibit-modification-hooks to prevent after-change hooks (notably yascroll) from firing
+    ;; once per line during indent-rigidly. Without this, yascroll calls line-pixel-height which
+    ;; forces synchronous jit-lock fontification on every line change.
+    (let ((inhibit-modification-hooks t))
+      (indent-rigidly region-start (1+ region-end) indent-amount))
+    ;; inhibit-modification-hooks prevents jit-lock from being notified of the change, so
+    ;; manually queue a lazy refontification of the modified region.
+    (font-lock-flush region-start (1+ region-end))))
 
 (defun mlm/markdown-promote () (interactive) (mlm/markdown-perform-promote t))
 (defun mlm/markdown-demote () (interactive) (mlm/markdown-perform-promote nil))
@@ -1198,19 +1207,21 @@ immediately  after a list item, return nil."
       levels)))
 
 (defun mlm/markdown-search-backward-baseline ()
-  "Search backward baseline point with no indentation and not a list item."
+  "Search backward to a baseline point with no indentation and not a list item.
+Limits the search to 10000 characters back to avoid O(position) font-lock cost."
   (end-of-line)
-  (let (stop)
+  (let ((limit (max (point-min) (- (point) 10000)))
+        stop)
     (while (not (or stop (bobp)))
-      (re-search-backward mlm/markdown-regex-block-separator nil t)
-      (when (match-end 2)
-        (goto-char (match-end 2))
-        (cond
-         ((mlm/markdown-new-baseline-p)
-          (setq stop t))
-         ((looking-at mlm/markdown-regex-list)
-          (setq stop nil))
-         (t (setq stop t)))))))
+      (if (re-search-backward mlm/markdown-regex-block-separator limit t)
+          (when (match-end 2)
+            (goto-char (match-end 2))
+            (cond
+             ((mlm/markdown-new-baseline-p) (setq stop t))
+             ((looking-at mlm/markdown-regex-list))
+             (t (setq stop t))))
+        (goto-char limit)
+        (setq stop t)))))
 
 (defun mlm/markdown-update-list-levels (marker indent levels)
   "Update list levels given list MARKER, block INDENT, and current LEVELS.
