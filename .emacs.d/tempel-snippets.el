@@ -108,3 +108,7 @@ clojure-mode
 rust-mode
 
 (deb "println!(\">>> " (s text) " {:?}\", " text ");" q)
+
+markdown-lite-mode
+
+(lorem "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc sed convallis augue. Integer sit amet risus sit amet dui tempor finibus id et erat. Nunc varius turpis est, ut tincidunt ligula finibus vitae. Proin tincidunt felis at lectus tempus, quis feugiat metus aliquet. Mauris vel egestas odio. Donec id sem euismod, placerat eros vel, luctus est. Ut quis mi mauris. Vivamus sagittis efficitur sodales. Sed accumsan bibendum nibh.")
