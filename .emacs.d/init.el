@@ -832,13 +832,13 @@
 ;; Dired mode - using the Emacs file browser.
 ;;
 
-(with-eval-after-load 'dired (configure-dired-mode))
-
 (defun configure-dired-mode ()
   ;; For some reason, dired's keymap overrides the keys of Evil mode's leader keys, and my global
   ;; macos-keys-minor-mode. To avoid fighting with it, I'm clearing the default dired keymap,
   ;; and installing only the keybindings that I use.
   (setq dired-mode-map (make-sparse-keymap))
+
+(with-eval-after-load 'dired (configure-dired-mode))
 
   (evil-define-key 'normal dired-mode-map
     (kbd "gu") (lambda () (interactive) (find-alternate-file ".."))
