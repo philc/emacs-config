@@ -193,7 +193,8 @@
          (region-end (line-end-position)))
     (save-excursion
       (forward-line 1)
-      (while (and (setq line (util/get-current-line))
+      (while (and (not (eobp))
+                  (setq line (util/get-current-line))
                   (or (string/blank? line)
                       (> (util/line-indentation-level line) start-level)))
         (unless (string/blank? line)
