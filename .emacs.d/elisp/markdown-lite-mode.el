@@ -204,10 +204,13 @@
     ;; once per line during indent-rigidly. Without this, yascroll calls line-pixel-height which
     ;; forces synchronous jit-lock fontification on every line change.
     (let ((inhibit-modification-hooks t))
-      (indent-rigidly region-start (1+ region-end) indent-amount))
+      (indent-rigidly region-start (min (1+ region-end) (point-max)) indent-amount))
     ;; inhibit-modification-hooks prevents jit-lock from being notified of the change, so
     ;; manually queue a lazy refontification of the modified region.
-    (font-lock-flush region-start (1+ region-end))))
+    ;; Note: (point-max) is intentionally not cached before indent-rigidly. When promoting,
+    ;; indent-rigidly shrinks the buffer, so a pre-modification point-max would be stale
+    ;; and cause an args-out-of-range error here.
+    (font-lock-flush region-start (min (1+ region-end) (point-max)))))
 
 (defun mlm/markdown-promote () (interactive) (mlm/markdown-perform-promote t))
 (defun mlm/markdown-demote () (interactive) (mlm/markdown-perform-promote nil))
