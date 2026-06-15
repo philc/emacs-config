@@ -838,8 +838,6 @@
   ;; and installing only the keybindings that I use.
   (setq dired-mode-map (make-sparse-keymap))
 
-(with-eval-after-load 'dired (configure-dired-mode))
-
   (evil-define-key 'normal dired-mode-map
     (kbd "gu") (lambda () (interactive) (find-alternate-file ".."))
     "H" (lambda () (interactive) (find-alternate-file ".."))
@@ -860,6 +858,8 @@
     ;; The "e" prefix is for execute.
     "ed" 'dired-do-flagged-delete
     "em" 'dired-do-rename))
+
+(with-eval-after-load 'dired (configure-dired-mode))
 
 ;; By default dired mode shows the file's permissions, access time, size, etc. I just want to see
 ;; the file names.
