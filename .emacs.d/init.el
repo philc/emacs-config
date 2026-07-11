@@ -855,6 +855,9 @@
     "U" 'dired-unmark-all-marks
     ;; TODO(philc): dired-details-toggle no longer exists.
     "v" 'dired-hide-details-mode
+    ;; Copy the filename(s) at point (or marked) to the kill ring, without the ls -l details that
+    ;; dired-hide-details-mode merely hides rather than removes from the buffer.
+    "yy" 'dired-copy-filename-as-kill
     ;; The "e" prefix is for execute.
     "ed" 'dired-do-flagged-delete
     "em" 'dired-do-rename))
