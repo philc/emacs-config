@@ -37,6 +37,10 @@
        "\\(?:[ \t\f]*\\|.*  \\)$")
   (set (make-local-variable 'adaptive-fill-first-line-regexp)
        "\\`[ \t]*>[ \t]*?\\'")
+  ;; Without this, Emacs's default adaptive-fill-regexp (which treats "*" as a
+  ;; bullet/comment-continuation character) can misparse a "**bold**" span that
+  ;; starts a wrapped line as a list marker, corrupting the asterisks on refill.
+  (set (make-local-variable 'adaptive-fill-regexp) "\\s-*")
 
   (set (make-local-variable 'adaptive-fill-function)
        'mlm/markdown-adaptive-fill-function)
@@ -755,9 +759,15 @@ If the point is not in a list item, do nothing."
    ;; Blockquote
    ((looking-at "^[ \t]*>[ \t]*")
     (match-string-no-properties 0))
-   ;; List items
+   ;; The line at point is a list item's marker line: continuation lines should align under the
+   ;; item's text, not repeat the marker itself.
    ((looking-at mlm/markdown-regex-list)
-    (match-string-no-properties 0))
+    (make-string (length (match-string-no-properties 0)) ?\s))
+   ;; A line inside an existing list item that doesn't itself start with a marker (e.g. a wrapped or
+   ;; pasted continuation line). Align it under the item's text instead of preserving whatever
+   ;; indentation it happened to already have.
+   ((let ((bounds (mlm/markdown-cur-list-item-bounds)))
+      (when bounds (make-string (nth 3 bounds) ?\s))))
    ;; No match
    (t nil)))
 
