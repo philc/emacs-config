@@ -1311,6 +1311,11 @@
   (interactive)
   (replace-region-with-command-output "~/scripts/publishing/format_outline_into_sections.rb --bold"))
 
+(defun markdown-format-outline-into-paragraphs ()
+  "See markdown-format-outline-into-sections. This converts each list item into a paragraph."
+  (interactive)
+  (replace-region-with-command-output "~/scripts/publishing/format_outline_into_paragraphs.js"))
+
 (defun markdown-strip-bullets ()
   "Removes any bullet point markers and indentation from lines.
    This is useful for converting a list into plain lines, for pasting into CSVs, emails,
