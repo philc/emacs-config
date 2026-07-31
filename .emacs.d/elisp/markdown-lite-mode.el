@@ -1222,9 +1222,9 @@ immediately  after a list item, return nil."
 
 (defun mlm/markdown-search-backward-baseline ()
   "Search backward to a baseline point with no indentation and not a list item.
-Limits the search to 10000 characters back to avoid O(position) font-lock cost."
+Limits the search to 100000 characters back to avoid O(position) font-lock cost."
   (end-of-line)
-  (let ((limit (max (point-min) (- (point) 10000)))
+  (let ((limit (max (point-min) (- (point) 100000)))
         stop)
     (while (not (or stop (bobp)))
       (if (re-search-backward mlm/markdown-regex-block-separator limit t)
