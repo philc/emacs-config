@@ -6,9 +6,12 @@
 ;; Performance notes:
 ;;
 ;; indent-rigidly fires after-change-functions once per line. The yascroll package hooks into
-;; after-change-functions and calls line-pixel-height, which forces synchronous jit-lock
-;; fontification on every line. To avoid this, use inhibit-modification-hooks around bulk
-;; indent-rigidly calls, followed by font-lock-flush to queue one lazy refontification pass.
+;; after-change-functions and synchronously redraws the scroll bar on every line.
+;; yascroll:window-height is advised (in init.el) to avoid one expensive part of that redraw
+;; (line-pixel-height forcing jit-lock fontification), but yascroll:show-scroll-bar-internal's
+;; positioning of the thumb overlay adds up across thousands of lines. To avoid this, use
+;; inhibit-modification-hooks around bulk indent-rigidly calls, followed by font-lock-flush to queue
+;; one lazy refontification pass.
 ;;
 
 (provide 'markdown-lite-mode)
@@ -205,8 +208,9 @@
           (setq region-end (line-end-position)))
         (forward-line 1)))
     ;; Use inhibit-modification-hooks to prevent after-change hooks (notably yascroll) from firing
-    ;; once per line during indent-rigidly. Without this, yascroll calls line-pixel-height which
-    ;; forces synchronous jit-lock fontification on every line change.
+    ;; once per line during indent-rigidly. Without this, yascroll redraws the scroll bar
+    ;; synchronously on every line, and that redraw's move-to-window-line call (positioning the
+    ;; thumb overlay) is expensive enough on its own to add up across a large subtree.
     (let ((inhibit-modification-hooks t))
       (indent-rigidly region-start (min (1+ region-end) (point-max)) indent-amount))
     ;; inhibit-modification-hooks prevents jit-lock from being notified of the change, so

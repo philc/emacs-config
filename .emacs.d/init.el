@@ -281,8 +281,15 @@
 ;; Note: some report performance issues in some modes.
 ;; https://github.com/emacsorphanage/yascroll/issues/38
 (setq-default yascroll:delay-to-hide nil)
-;; magit-log-mode and others are slow due to yascroll:delay-to-hide. I don't need scrollbars when
-;; using Magit, so hide them.
+;; yascroll:window-height calls line-pixel-height for pixel-accurate scrollbar thumb sizing. Because
+;; yascroll:delay-to-hide is nil above, that runs synchronously on every buffer edit (via
+;; after-change-functions), and line-pixel-height forces jit-lock to fontify whatever line point is
+;; on right then. This makes evil-shift-right and other bulk edits very slow in modes with expensive
+;; font-lock. Since my buffers are almost always monospace text and each line is the same height,
+;; pixel accuracy doesn't matter. A plain line count is just as good and never touches font-lock.
+(advice-add 'yascroll:window-height :override (lambda () (window-height)))
+;; magit-log-mode and others are very slow due to yascroll. I don't need scrollbars when using
+;; Magit, so hide them.
 (setq yascroll:disabled-modes '(magit-log-mode
                                 magit-mode
                                 magit-log-select-mode
