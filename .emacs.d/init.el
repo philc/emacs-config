@@ -1446,8 +1446,8 @@
 (define-leader-keys 'mustache-mode-map
   "rr" 'reload-active-browser-tab)
 
-(setq browser-app "Google Chrome")
-;; (setq browser-app "Google Chrome Beta")
+;; (setq browser-app "Google Chrome")
+(setq browser-app "Google Chrome Beta")
 (setq browser-cli "chrome-cli")
 
 (defun reload-active-browser-tab ()

@@ -55,6 +55,14 @@
 ;; ["//", ";;", "/*", "* ", "*/"].
 (setq evil-ext/comment-regexp "^[\t ]*\\(\/\/\\|;;\\|\\/\\*\\|\\*\\/\\|\\* \\).*$")
 
+;; Matches a line which contains only a comment marker and optional trailing whitespace, e.g. ";;"
+;; or "//". Used to treat such lines as paragraph breaks when filling a comment block, so that
+;; blank comment lines (used to visually separate paragraphs within a comment) are preserved
+;; instead of being folded into the surrounding text. Modes like js-mode already get this for free
+;; because cc-mode reconfigures `paragraph-start`/`paragraph-separate` for comments; lisp-mode does
+;; not, so we do it ourselves here.
+(setq evil-ext/blank-comment-line-regexp "^[\t ]*\\(\/\/\\|;;\\|\\/\\*\\|\\*\\/\\|\\*\\)[\t ]*$")
+
 ;; I couldn't get "comment block" working as a first-class evil text object. The code below didn't
 ;; work as intended when writing this in a similar style to forward-evil-paragraph-from-newlines.
 ;; Probably because I don't understand how evil-motion-loop is working. However, for my purposes,
@@ -83,7 +91,11 @@
 
 (defun evil-ext/fill-comment-block ()
   (interactive)
-  (let ((region (evil-ext/get-comment-block-region)))
+  (let ((region (evil-ext/get-comment-block-region))
+        ;; Treat a comment-only line (e.g. ";;" or "//") as a paragraph break, so filling preserves
+        ;; blank comment lines that separate paragraphs, instead of merging everything into one.
+        (paragraph-start (concat paragraph-start "\\|" evil-ext/blank-comment-line-regexp))
+        (paragraph-separate (concat paragraph-separate "\\|" evil-ext/blank-comment-line-regexp)))
     (evil-ext/preserve-cursor-after-fill
      (lambda ()
        (evil-fill (cl-first region) (cl-second region))))))
