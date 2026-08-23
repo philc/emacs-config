@@ -186,7 +186,8 @@ Date: %ad
    "e" 'magit-show-level-4-all ; e for exapnd
    "d" 'magit-discard
    "s" 'magit-stage
-   "S" (lambda () (interactive) (util/without-confirmation 'magit-stage-all))
+   ;; Stage everything
+   "S" (lambda () (interactive) (util/without-confirmation 'magit-stage-modified t))
    "d" 'magit-discard
    "u" 'magit-unstage
    "U" (lambda () (interactive (util/without-confirmation 'magit-unstage-all)))
