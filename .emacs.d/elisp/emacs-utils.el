@@ -413,3 +413,45 @@
   (when (and last-paste-start last-paste-end)
     ;; Make it so the selection grows downward when navigating in visual mode.
     (evil-visual-select last-paste-end last-paste-start "SELECTION" -1)))
+
+(defun util/clipboard-yank-and-remove-query-string ()
+  "Assumes the clipboard contents are a URL, and strips everything after a query string and hash
+   mark before inserting it. This exists because I often paste URLs into my notes and I don't want
+   the extra clutter due to the URL's trackers, campaign IDs, etc."
+  (interactive)
+  (let ((clipboard nil))
+    (with-temp-buffer
+      (yank)
+      (setq clipboard (buffer-string)))
+    ;; NOTE(philc): We could check if this is a URL and avoid mangling the clipboard if it's not.
+    ;; For now, assume it's a URL.
+    (let ((trimmed-url (->> clipboard
+                            (s-split "?")
+                            cl-first
+                            (s-split "#")
+                            cl-first)))
+      (insert trimmed-url))))
+
+(defun util/clipboard-yank-and-remove-email-headers ()
+  "Pastes the clipboard's contents at point, stripping any leading email
+   headers (From, To, Date, Subject, etc.), e.g. when copying an email from
+   Superhuman and wanting only the body."
+  (interactive)
+  ;; Expected clipboard shape, e.g. as copied from Superhuman:
+  ;; From: Alice <alice@example.com>
+  ;; To:   bob@example.com
+  ;; Date: Sunday, August 23 2026 at 12:57 PM PDT
+  ;;
+  ;; Subject: Some subject line
+  ;;
+  ;; This is the actual email body.
+  (let ((header-re "^[A-Za-z][A-Za-z0-9-]*:[ \t]")
+        (lines (split-string (current-kill 0) "\n")))
+    (while (and lines
+                (or (string-match-p "^[ \t]*$" (car lines)) ; A blank (or whitespace-only) line.
+                    (string-match-p header-re (car lines)))) ; A "Header-Name: value" line.
+      (setq lines (cdr lines)))
+    (->> lines
+         (s-join "\n")
+         string-trim
+         insert)))

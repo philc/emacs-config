@@ -671,7 +671,8 @@
                   (kbd "M-a") 'mark-whole-buffer
                   (kbd "M-h") 'ns-do-hide-emacs
                   (kbd "M-v") 'clipboard-yank
-                  (kbd "M-V") 'clipboard-yank-and-remove-query-string
+                  (kbd "M-V") 'util/clipboard-yank-and-remove-query-string
+                  (kbd "A-v") 'util/clipboard-yank-and-remove-email-headers
                   (kbd "M-c") 'clipboard-kill-ring-save
                   (kbd "M-m") 'iconify-or-deiconify-frame
                   (kbd "M--") 'text-zoom-out
@@ -709,24 +710,6 @@
   (if (y-or-n-p "Quit Emacs?")
       (save-buffers-kill-emacs)
     (message "Quit cancelled")))
-
-(defun clipboard-yank-and-remove-query-string ()
-  "Assumes the clipboard contents are a URL, and strips everything after a query string and hash
-   mark before inserting it. This exists because I often paste URLs into my notes and I don't want
-   the extra clutter due to the URL's trackers, campaign IDs, etc."
-  (interactive)
-  (let ((clipboard nil))
-    (with-temp-buffer
-      (yank)
-      (setq clipboard (buffer-string)))
-    ;; NOTE(philc): We could check if this is a URL and avoid mangling the clipboard if it's not.
-    ;; For now, assume it's a URL.
-    (let ((trimmed-url (->> clipboard
-                            (s-split "?")
-                            cl-first
-                            (s-split "#")
-                            cl-first)))
-      (insert trimmed-url))))
 
 (define-minor-mode macos-keys-minor-mode
   "A minor-mode for emulating MacOS keyboard shortcuts."
