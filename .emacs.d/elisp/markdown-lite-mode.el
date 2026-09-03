@@ -26,6 +26,13 @@
   (set (make-local-variable 'mlm/markdown-mode-font-lock-keywords) nil)
   (set (make-local-variable 'font-lock-defaults) nil)
   (set (make-local-variable 'font-lock-multiline) t)
+
+  ;; Spell checking. Don't spell check the URL portion of inline image links, e.g. the
+  ;; "images/keylayout-column-staggered.svg" in
+  ;; ![Column-staggered](images/keylayout-column-staggered.svg). That text is fontified with
+  ;; markdown-url-face by mlm/markdown-mode-font-lock-keywords-basic, below.
+  (set (make-local-variable 'spell-fu-faces-exclude)
+       (cons 'markdown-url-face spell-fu-faces-exclude))
   ;; TODO(philc): re-fontifys buffer
   ;; (markdown-reload-extensions)
 
@@ -406,6 +413,11 @@ fragment is not a backquote.")
 (defconst mlm/markdown-regex-pre
   "^\\(    \\|\t\\).*$"
   "Regular expression for matching preformatted text sections.")
+
+(defconst mlm/markdown-regex-image-url
+  "!\\[[^]\n]*\\](\\([^)\n]*\\))"
+  "Regular expression matching the URL portion of an inline image link,
+e.g. the \"images/foo.svg\" in ![alt](images/foo.svg).")
 
 (defconst mlm/markdown-regex-line-break
   "[^ \n\t][ \t]*\\(  \\)$"
@@ -1092,6 +1104,7 @@ If we are at the first line, then consider the previous line to be blank."
    ;; (cons mlm/markdown-regex-hr 'markdown-header-face)
    ;; (cons 'mlm/markdown-match-comments '((0 markdown-comment-face)))
    (cons 'mlm/markdown-match-code '((0 markdown-inline-code-face)))
+   (cons mlm/markdown-regex-image-url '((1 markdown-url-face)))
    ;; (cons mlm/markdown-regex-angle-uri 'markdown-link-face)
    ;; (cons mlm/markdown-regex-uri 'markdown-link-face)
    ;; (cons mlm/markdown-regex-email 'markdown-link-face)
