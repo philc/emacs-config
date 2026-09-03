@@ -18,11 +18,15 @@
 ;; Package management
 ;;
 (require 'package)
-;; I'm using melpa-stable as the only source for packages. That's where I install all packages from.
-;; Allowing other respositories like melpa would cause an error which installing swift-mode, which
-;; has a date version in melpa but a version number in melpa-stable. This happened even after
-;; setting package-archive-priorities.
-(setq package-archives '(("melpa-stable" . "http://stable.melpa.org/packages/")))
+(setq package-archives '(
+                         ;; I prefer melpa-stable over melpa.
+                         ("melpa-stable" . "http://stable.melpa.org/packages/")
+                         ;; GNU-devel ELPA is included as a source, because it contains recent
+                         ;; versions of the compat package, which jinx relies on. The priorities are
+                         ;; set so melpa-stable always wins when a package is in both.
+                         ("gnu-devel" . "https://elpa.gnu.org/devel/")))
+(setq package-archive-priorities '(("melpa-stable" . 10)
+                                   ("gnu-devel" . 5)))
 
 (package-initialize)
 (when (not package-archive-contents)
@@ -43,6 +47,7 @@
                       go-mode ; For editing Go files.
                       less-css-mode ; Syntax highlighting for LESS CSS files.
                       inf-clojure ; Clojure REPL mode
+                      jinx ; Spell checker
                       magit ; A mode for committing to git repositories and viewing Git history.
                       org ; For outlining. It's bundled with Emacs, but I'm using the latest version
                       powerline ; Improve the appearance & density of the Emacs status bar.
@@ -51,7 +56,6 @@
                       s ; A strings library.
                       scss-mode ; For editing SCSS files.
                       smartparens ; For editing expressions in parentheses.
-                      spell-fu ; Spell checking
                       swift-mode ; Swift syntax highlighting
                       tempel ;; Insert snippets
                       vertico ; Nicely show menu completions
@@ -1138,37 +1142,28 @@
 ;;   mirrors aspell and my personal aspell dictionary, and so it becomes stale if I edit those
 ;;   files. The API contract for many functions which should be user-facing is not ideal (they
 ;;   require somewhat elaborate data structures).
+;; * 2026: Migrated to jinx. It talks to aspell (via enchant) directly instead of keeping its own
+;;   cache, so there's nothing to go stale, and its jit-lock-based checking is noticeably lighter
+;;   while typing than spell-fu's was.
 ;;
 ;; TODO(philc): Consider only checking spelling upon save. That will result in less noise as I type.
 ;;
 ;; You may need to install aspell and enchant (e.g. `brew install aspell enchant` on Mac).
 
-(require 'spell-fu)
+(require 'jinx)
 
 (setq ispell-personal-dictionary "~/.aspell.en.pws")
 
-;; Don't spell check code blocks in Markdown.
-;; This is used by spell-fu as a buffer-local variable, so we set a default value for it.
-(setq-default spell-fu-faces-exclude '(markdown-pre-face))
-
-(add-hook 'text-mode-hook 'spell-fu-mode)
+(add-hook 'text-mode-hook 'jinx-mode)
 
 (define-key evil-normal-state-map (kbd "zg") 'add-word-to-dictionary)
 
 ;; Use a less distracting color when underlining mispelled words.
-(set-face-attribute 'spell-fu-incorrect-face nil :underline '(:color "#E99265" :style wave))
+(set-face-attribute 'jinx-misspelled nil :underline '(:color "#E99265" :style wave))
 
-(defun disable-spell-checking-for-html-attributes ()
-  ;; It's distracting to see attribute names and values marked as mispelled, so disable spell-fu on
-  ;; those faces. Another way to do this is by modifying spell-fu-skip-region-function, but that
-  ;; seems overkill and less efficient.
-  (setq-local spell-fu-faces-exclude
-              '(;; The names of attributes, like href in <a href>
-                font-lock-variable-name-face
-                ;; Attribute values, like "foo" in <a href="foo">
-                font-lock-string-face)))
-
-(add-hook 'html-mode-hook 'disable-spell-checking-for-html-attributes)
+;; It's distracting to see HTML attribute names and values (e.g. href in <a href="foo">) marked as
+;; mispelled, so don't spell check them.
+(add-to-list 'jinx-exclude-faces '(html-mode font-lock-variable-name-face font-lock-string-face))
 
 (defun add-word-to-dictionary ()
   "Adds the word under the cursor to your personal dictionary. Also re-spellchecks the buffer to
@@ -1182,9 +1177,14 @@
           (insert word) (newline)
           (append-to-file (point-min) (point-max) ispell-personal-dictionary))
         (message "Added word \"%s\" to %s" word ispell-personal-dictionary)
-        ;; Toggle spell-fu to rebuild its cache of my personal dictionary.
-        (spell-fu-mode)
-        (spell-fu-mode)))))
+        ;; Jinx keeps its loaded aspell/enchant dictionary handles in a global, weakly-held cache
+        ;; (jinx--dicts-hash) keyed by language. Toggling jinx-mode off and on isn't enough; it
+        ;; looks up that same cached handle, so the word we just appended to the on-disk local
+        ;; dictionary still shows as misspelled. Clearing the cache first forces jinx-mode to
+        ;; re-read the personal dictionary file from disk.
+        (clrhash jinx--dicts-hash)
+        (jinx-mode -1)
+        (jinx-mode 1)))))
 
 ;;
 ;; Diminish - hide or shorten the names of minor modes in your modeline.
@@ -1568,7 +1568,7 @@
       (visual-line-mode 1)
       (word-wrap-whitespace-mode 1)
       ;; Turn off spell checking.
-      (spell-fu-mode -1)
+      (jinx-mode -1)
       (princ output))))
 
 (defun save-and-compile (f)

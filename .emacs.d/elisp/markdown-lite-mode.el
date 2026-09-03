@@ -19,6 +19,13 @@
 (require 's)
 (require 'markdown-tables)
 
+;; Spell checking. Don't spell check preformatted/code blocks (markdown-pre-face), or the URL
+;; portion of inline image links, e.g. the "images/keylayout-column-staggered.svg" in
+;; ![Column-staggered](images/keylayout-column-staggered.svg). That text is fontified with
+;; markdown-url-face by mlm/markdown-mode-font-lock-keywords-basic, below.
+(with-eval-after-load 'jinx
+  (add-to-list 'jinx-exclude-faces '(markdown-lite-mode markdown-pre-face markdown-url-face)))
+
 (define-derived-mode markdown-lite-mode text-mode "Markdown-lite"
   "Major mode for editing Markdown files."
   (setq tab-width 4)
@@ -27,12 +34,6 @@
   (set (make-local-variable 'font-lock-defaults) nil)
   (set (make-local-variable 'font-lock-multiline) t)
 
-  ;; Spell checking. Don't spell check the URL portion of inline image links, e.g. the
-  ;; "images/keylayout-column-staggered.svg" in
-  ;; ![Column-staggered](images/keylayout-column-staggered.svg). That text is fontified with
-  ;; markdown-url-face by mlm/markdown-mode-font-lock-keywords-basic, below.
-  (set (make-local-variable 'spell-fu-faces-exclude)
-       (cons 'markdown-url-face spell-fu-faces-exclude))
   ;; TODO(philc): re-fontifys buffer
   ;; (markdown-reload-extensions)
 
