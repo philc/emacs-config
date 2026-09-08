@@ -608,16 +608,10 @@ upon failure."
     (setq indent (current-indentation))
     (while
         (cond
-         ;; Stop at beginning of buffer
-         ((bobp) (setq prev nil))
-         ;; Continue if current line is blank
-         ((mlm/markdown-cur-line-blank-p) t)
          ;; List item
          ((and (looking-at mlm/markdown-regex-list)
                (setq bounds (mlm/markdown-cur-list-item-bounds)))
           (cond
-           ;; Continue at item with greater indentation
-           ((> (nth 3 bounds) level) t)
            ;; Stop and return point at item of equal indentation
            ((= (nth 3 bounds) level)
             (setq prev (point))
@@ -625,7 +619,15 @@ upon failure."
            ;; Stop and return nil at item with lesser indentation
            ((< (nth 3 bounds) level)
             (setq prev nil)
-            nil)))
+            nil)
+           ;; Continue at item with greater indentation, unless we've
+           ;; hit the beginning of the buffer and can't go further
+           ((bobp) (setq prev nil))
+           (t t)))
+         ;; Stop at beginning of buffer
+         ((bobp) (setq prev nil))
+         ;; Continue if current line is blank
+         ((mlm/markdown-cur-line-blank-p) t)
          ;; Continue while indentation is the same or greater
          ((>= indent level) t)
          ;; Stop if current indentation is less than list item
