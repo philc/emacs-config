@@ -194,7 +194,9 @@
           (outline-hide-subtree))
       (let ((inhibit-modification-hooks t))
         (indent-rigidly (cl-first region) (cl-second region) indent-amount))
-      (font-lock-flush (cl-first region) (cl-second region)))))
+      ;; Note: Don't cache (point-max) before indent-rigidly. When promoting, indent-rigidly shrinks
+      ;; the buffer, and so a cached point-max could we be stale.
+      (font-lock-flush (cl-first region) (min (cl-second region) (point-max))))))
 
 (defun mlm/markdown-perform-promote-subtree (should-promote)
   "Promotes the list item under the cursor, and also promotes all subtrees."

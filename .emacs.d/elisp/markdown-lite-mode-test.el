@@ -44,6 +44,22 @@
                            "        aaa bbb\n"
                            "        ccc ddd\n")))))
 
+(ert-deftest markdown-lite-mode-test/promote-last-list-item-in-buffer ()
+  (with-temp-buffer
+    (insert "* A\n  * B\n")
+    (markdown-lite-mode)
+    ;; Simulate the font-lock state of a real file buffer (with-temp-buffer's buffer name
+    ;; starts with a space, so global-font-lock-mode never turns font-lock on in it, and the bug
+    ;; only manifests once font-lock-flush actually attempts to refontify via jit-lock).
+    (setq-local font-lock-mode t)
+    (setq-local font-lock-fontified t)
+    (setq-local font-lock-flush-function #'jit-lock-refontify)
+    (goto-char (point-min))
+    (search-forward "B")
+    (mlm/markdown-promote)
+    (should (equal (buffer-substring-no-properties (point-min) (point-max))
+                   "* A\n* B\n"))))
+
 (ert-deftest markdown-lite-mode-test/fill-aligns-list-item-continuation-to-marker ()
   "Sanity/regression check for the normal case the code above also handles: a continuation paragraph
    that's indented to align with the list item's own text (not indented deeper, i.e. not a nested
