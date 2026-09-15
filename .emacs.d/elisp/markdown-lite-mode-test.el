@@ -9,7 +9,6 @@
 (setq global-leader-prefix ";")
 (require 'general)
 (require 'evil)
-(require 'emacs-utils) ; Defines `define-leader-keys`, used when markdown-lite-mode.el is loaded below.
 (require 'evil-ext)
 (require 'markdown-lite-mode)
 

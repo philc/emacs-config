@@ -18,6 +18,7 @@
 (require 'evil)
 (require 's)
 (require 'markdown-tables)
+(require 'emacs-utils)
 
 ;; Spell checking. Don't spell check preformatted/code blocks (markdown-pre-face), or the URL
 ;; portion of inline image links, e.g. the "images/keylayout-column-staggered.svg" in
