@@ -2202,7 +2202,7 @@
         ("\x2019" . "'")
         ("\x2011" . "-") ; Non-breaking hyphen
         ("\x2013" . "-") ; en-dash
-        ("\x2014" . "-"))) ; em-dash
+        ("\x2014" . "--"))) ; em-dash
 
 (defun replace-smart-quotes (beg end)
   "Replace any fancy non-ascii quote characters with plain ones. Fancy quotes can be introduced
