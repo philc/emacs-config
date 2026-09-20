@@ -1159,14 +1159,10 @@ If we are at the first line, then consider the previous line to be blank."
   ;; (interactive)
   "Match Markdown pre blocks from point to LAST."
   (let ((levels (mlm/markdown-calculate-list-levels))
-        indent pre-regexp end-regexp begin end stop)
+        required-column begin end)
     (while (and (< (point) last) (not end))
-      ;; Search for a region with sufficient indentation
-      (if (null levels)
-          (setq indent 1)
-        (setq indent (1+ (length levels))))
-      (setq pre-regexp (format "^\\(    \\|\t\\)\\{%d\\}" indent))
-      (setq end-regexp (format "^\\(    \\|\t\\)\\{0,%d\\}\\([^ \t]\\)" (1- indent)))
+      ;; The column a line must be indented to in order to count as pre-formatted text here.
+      (setq required-column (mlm/markdown-required-pre-column levels))
 
       (cond
        ;; If not at the beginning of a line, move forward
@@ -1176,20 +1172,21 @@ If we are at the first line, then consider the previous line to be blank."
        ;; At headers and horizontal rules, reset levels
        ((mlm/markdown-new-baseline-p) (forward-line) (setq levels nil))
        ;; If the current line has sufficient indentation, mark out pre block
-       ((looking-at pre-regexp)
-        (setq begin (match-beginning 0))
-        (while (and (or (looking-at pre-regexp) (mlm/markdown-cur-line-blank-p))
+       ((>= (current-indentation) required-column)
+        (setq begin (point))
+        (while (and (or (>= (current-indentation) required-column)
+                        (mlm/markdown-cur-line-blank-p))
                     (not (eobp)))
           (forward-line))
         (setq end (point)))
        ;; If current line has a list marker, update levels, move to end of block
        ((looking-at mlm/markdown-regex-list)
         (setq levels (mlm/markdown-update-list-levels
-                      (match-string 2) (current-indentation) levels))
+                      (mlm/markdown-cur-non-list-indent) (current-indentation) levels))
         (mlm/markdown-end-of-block-element))
        ;; If this is the end of the indentation level, adjust levels accordingly.
        ;; Only match end of indentation level if levels is not the empty list.
-       ((and (car levels) (looking-at end-regexp))
+       ((and (car levels) (< (current-indentation) required-column))
         (setq levels (mlm/markdown-update-list-levels
                       nil (current-indentation) levels))
         (mlm/markdown-end-of-block-element))
@@ -1217,32 +1214,29 @@ Stops at blank lines, list items, headers, and horizontal rules."
     (forward-line)))
 
 (defun mlm/markdown-calculate-list-levels ()
-  "Calculate list levels at point.
-Return a list of the form (n1 n2 n3 ...) where n1 is the
-indentation of the deepest nested list item in the branch of
-the list at the point, n2 is the indentation of the parent
-list item, and so on.  The depth of the list item is therefore
-the length of the returned list.  If the point is not at or
-immediately  after a list item, return nil."
+  "Calculate list levels at point. Return a list of (MARKER-COLUMN . CONTENT-COLUMN) pairs (see
+   `mlm/markdown-update-list-levels'), one per open list level: the first pair is the deepest
+   nested list item in the branch of the list at the point, the second is its parent list item, and
+   so on. The depth of the list item is therefore the length of the returned list. If the point is
+   not at or immediately after a list item, return nil."
   (save-excursion
-    (let ((first (point)) levels indent pre-regexp)
+    (let ((first (point)) levels indent)
       ;; Find a baseline point with zero list indentation
       (mlm/markdown-search-backward-baseline)
       ;; Search for all list items between baseline and LOC
       (while (and (< (point) first)
                   (re-search-forward mlm/markdown-regex-list first t))
-        (setq pre-regexp (format "^\\(    \\|\t\\)\\{%d\\}" (1+ (length levels))))
         (beginning-of-line)
         (cond
          ;; Make sure this is not a header or hr
          ((mlm/markdown-new-baseline-p) (setq levels nil))
          ;; Make sure this is not a line from a pre block
-         ((looking-at pre-regexp))
+         ((>= (current-indentation) (mlm/markdown-required-pre-column levels)))
          ;; If not, then update levels
          (t
           (setq indent (current-indentation))
-          (setq levels (mlm/markdown-update-list-levels (match-string 2)
-                                                        indent levels))))
+          (setq levels (mlm/markdown-update-list-levels
+                        (mlm/markdown-cur-non-list-indent) indent levels))))
         (end-of-line))
       levels)))
 
@@ -1263,35 +1257,52 @@ Limits the search to 100000 characters back to avoid O(position) font-lock cost.
         (goto-char limit)
         (setq stop t)))))
 
-(defun mlm/markdown-update-list-levels (marker indent levels)
-  "Update list levels given list MARKER, block INDENT, and current LEVELS.
-Here, MARKER is a string representing the type of list, INDENT is an integer
-giving the indentation, in spaces, of the current block, and LEVELS is a
-list of the indentation levels of parent list items.  When LEVELS is nil,
-it means we are at baseline (not inside of a nested list)."
+(defun mlm/markdown-update-list-levels (content-column indent levels)
+  "Update the stack of open list levels given a new line at column INDENT.
+
+   LEVELS is a list of (MARKER-COLUMN . CONTENT-COLUMN) pairs, one per currently open list level,
+   innermost first. CONTENT-COLUMN is the column at which a nested list item or code block must
+   start to belong to that level. This is computed per level from that level's own marker and
+   trailing whitespace (see `mlm/markdown-cur-non-list-indent'), rather than assumed to be a fixed
+   number of columns past the marker: list markers are not all the same width (\"* \" is 2 columns,
+   \"10. \" is 4), and nesting conventions vary (this project nests lists 2 columns per level, via
+   dprint, rather than the traditional 4). LEVELS is nil at baseline (outside of any list).
+
+   If CONTENT-COLUMN (the argument) is non-nil, the current line is itself a new list item marker,
+   whose own content begins at that column; INDENT is its marker's column. Otherwise, the current
+   line is plain, non-marker text, used only to detect that indentation has dropped below an open
+   level's content column, ending it."
   (cond
-   ;; New list item at baseline.
-   ((and marker (null levels))
-    (setq levels (list indent)))
-   ;; List item with greater indentation (four or more spaces).
-   ;; Increase list level.
-   ((and marker (>= indent (+ (car levels) 4)))
-    (setq levels (cons indent levels)))
-   ;; List item with greater or equal indentation (less than four spaces).
-   ;; Do not increase list level.
-   ((and marker (>= indent (car levels)))
+   ;; A new list item at baseline (no list open yet): open the first level.
+   ((and content-column (null levels))
+    (list (cons indent content-column)))
+   ;; A new list item whose marker starts at or past the innermost open
+   ;; level's content column: it's a child of that level. Open a new, deeper
+   ;; level.
+   ((and content-column (>= indent (cdar levels)))
+    (cons (cons indent content-column) levels))
+   ;; A new list item whose marker starts at the same column as the
+   ;; innermost open level's own marker: a sibling item at the same level.
+   ;; Leave the stack as-is.
+   ((and content-column (>= indent (caar levels)))
     levels)
-   ;; Lesser indentation level.
-   ;; Pop appropriate number of elements off LEVELS list (e.g., lesser
-   ;; indentation could move back more than one list level).  Note
-   ;; that this block need not be the beginning of list item.
-   ((< indent (car levels))
+   ;; Indentation has dropped below the innermost open level's own marker
+   ;; column (whether or not this line is itself a list item): close levels
+   ;; until we reach one this line still belongs to.
+   ((and levels (< indent (caar levels)))
     (while (and (> (length levels) 1)
-                (< indent (+ (cadr levels) 4)))
+                (< indent (car (cadr levels))))
       (setq levels (cdr levels)))
     levels)
    ;; Otherwise, do nothing.
    (t levels)))
+
+(defun mlm/markdown-required-pre-column (levels)
+  "Return the column at which an indented code block must start, given the currently open list
+   LEVELS (see `mlm/markdown-update-list-levels'). Per CommonMark, a code block nested in a list
+   item requires 4 columns past that item's own content column; outside of any list, the ordinary
+   top-level rule of 4 columns applies."
+  (+ 4 (if levels (cdar levels) 0)))
 
 (defun mlm/markdown-new-baseline-p ()
   "Determine if the current line begins a new baseline level."

@@ -73,3 +73,89 @@
                            "\n"
                            "  aaa bbb ccc\n"
                            "  ddd\n")))))
+
+(defun mlm-test/pre-block-line-ranges (text)
+  "Inserts TEXT into a new temp buffer and returns the (START . END) line ranges of every Markdown
+   pre block that mlm/markdown-match-pre-blocks finds in it, in the order found. END is the last
+   line included in the block (inclusive)."
+  (with-temp-buffer
+    (insert text)
+    (goto-char (point-min))
+    (let (ranges)
+      (while (mlm/markdown-match-pre-blocks (point-max))
+        (push (cons (line-number-at-pos (match-beginning 0))
+                    (1- (line-number-at-pos (match-end 0))))
+              ranges))
+      (nreverse ranges))))
+
+(ert-deftest markdown-lite-mode-test/pre-block-in-two-space-nested-list ()
+  "A code block nested two list levels deep in a 2-space-indented list (dprint's convention) is
+   recognized as a pre block at the CommonMark-correct indentation: the innermost item's content
+   column (6, for a bullet at column 4) plus 4."
+  (should (equal
+           (mlm-test/pre-block-line-ranges
+            (concat "* one\n"
+                    "  * two\n"
+                    "    * three\n"
+                    "\n"
+                    "          code\n"))
+           '((5 . 5)))))
+
+(ert-deftest markdown-lite-mode-test/pre-block-in-two-space-nested-list-rejects-under-indentation ()
+  (should (equal
+           (mlm-test/pre-block-line-ranges
+            (concat "* one\n"
+                    "  * two\n"
+                    "    * three\n"
+                    "\n"
+                    ;; This code block is one column less than the required code indent level.
+                    "         code\n"))
+           nil)))
+
+(ert-deftest markdown-lite-mode-test/pre-block-in-four-space-nested-list ()
+  (should (equal
+           (mlm-test/pre-block-line-ranges
+            (concat "* one\n"
+                    "    * two\n"
+                    "        * three\n"
+                    "\n"
+                    "              code\n"))
+           '((5 . 5)))))
+
+(ert-deftest markdown-lite-mode-test/pre-block-in-four-space-nested-list-rejects-under-indentation ()
+  (should (equal
+           (mlm-test/pre-block-line-ranges
+            (concat "* one\n"
+                    "    * two\n"
+                    "        * three\n"
+                    "\n"
+                    "             code\n"))
+           nil)))
+
+(ert-deftest markdown-lite-mode-test/pre-block ()
+  "An indented code block outside of any list just needs the ordinary 4 columns."
+  (should (equal
+           (mlm-test/pre-block-line-ranges
+            (concat "text\n"
+                    "\n"
+                    "    code\n"))
+           '((3 . 3)))))
+
+(ert-deftest markdown-lite-mode-test/pre-block-accounts-for-marker-width ()
+  "A list item's required child/content column depends on its own marker's width, not a fixed
+   constant -- an ordered-list marker like \"1. \" is wider than \"* \", so a code block nested two
+   levels into an ordered list needs more indentation than the same nesting in an asterisk list."
+  (should (equal
+           (mlm-test/pre-block-line-ranges
+            (concat "1. one\n"
+                    "   1. two\n"
+                    "\n"
+                    "          code\n"))
+           '((4 . 4))))
+  (should (equal
+           (mlm-test/pre-block-line-ranges
+            (concat "1. one\n"
+                    "   1. two\n"
+                    "\n"
+                    "         code\n"))
+           nil)))
