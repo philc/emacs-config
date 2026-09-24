@@ -1337,8 +1337,9 @@ Return nil if the current line is not the beginning of a list item."
     (setq font-lock-defaults '(mlm/markdown-mode-font-lock-keywords-basic))
     (font-lock-refresh-defaults)))
 
-(defvar mlm/heading-regexp "^\s*\\* ")
-(defvar mlm/top-heading-regexp "^\\* ")
+;; Headings are either top-level list items ("* foo") or ATX headings ("# foo", "## foo").
+(defvar mlm/heading-regexp "^\\( *\\* \\|#+ \\)")
+(defvar mlm/top-heading-regexp "^\\(\\* \\|# \\)")
 
 (defun mlm/get-headings (regexp)
   (let ((headings '()))

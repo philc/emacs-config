@@ -159,3 +159,27 @@
                     "\n"
                     "         code\n"))
            nil)))
+
+(ert-deftest markdown-lite-mode-test/get-headings ()
+  (with-temp-buffer
+    (insert (concat "# h1\n"
+                    "## h2\n"
+                    "### h3\n"
+                    "* item\n"
+                    "  * sub\n"
+                    ;; These are not headings:
+                    "#nospace\n"
+                    "text # x\n"))
+    (markdown-lite-mode)
+    (should (equal (mlm/get-headings mlm/top-heading-regexp)
+                   '("# h1" "* item")))
+    (should (equal (mlm/get-headings mlm/heading-regexp)
+                   '("# h1" "## h2" "### h3" "* item" "  * sub")))))
+
+(ert-deftest markdown-lite-mode-test/goto-heading ()
+  (with-temp-buffer
+    (insert "intro\n# h1\ntext\n## h2\n")
+    (markdown-lite-mode)
+    (goto-char (point-min))
+    (mlm/goto-heading "## h2")
+    (should (equal (line-number-at-pos) 4))))
