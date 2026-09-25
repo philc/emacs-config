@@ -19,6 +19,8 @@
 (require 's)
 (require 'markdown-tables)
 (require 'emacs-utils)
+(require 'outline)
+(require 'cl-lib)
 
 ;; Spell checking. Don't spell check preformatted/code blocks (markdown-pre-face), or the URL
 ;; portion of inline image links, e.g. the "images/keylayout-column-staggered.svg" in
@@ -59,12 +61,13 @@
 
   ;; Outline mode
   (make-local-variable 'outline-regexp)
-  ;; markdown-mode has support for outline mode, but in that implementations, headings are folded.
-  ;; My preference is to instead fold subtrees in bulleted lists, akin to Org mode and Workflowly.
-  (setq outline-regexp "[ ]*\\*") ; matches a leading bullet point
+  ;; markdown-mode has support for outline mode, but in that implementations, only headings are
+  ;; folded. My preference is to also fold subtrees in bulleted lists, akin to Org mode and
+  ;; Workflowy.
+  (setq outline-regexp "[ ]*\\*\\|#+ ") ; matches a leading bullet point, or an ATX heading
 
   (make-local-variable 'outline-level)
-  (setq outline-level 'lisp-outline-level)
+  (setq outline-level 'mlm/outline-level)
 
   ;; Cause use of ellipses for invisible text.
   (add-to-invisibility-spec '(outline . t))
@@ -355,9 +358,80 @@
 
 (mlm/setup-markdown-mode)
 
-(defun mlm/show-level (indent-level)
-  "Show all list items which are less than or equal to `indent-level`."
-  (outline-hide-sublevels (* indent-level 2)))
+(defun mlm/atx-heading-level (hashes)
+  "The outline level of an ATX heading beginning with HASHES. \"#\" and \"##\" are both treated as
+   level 1, since \"#\" is typically only used for the document's title, and \"##\" for its
+   sections."
+  (pcase hashes
+    ("#" 1)
+    ("##" 1)
+    (_ (1- (length hashes)))))
+
+(defvar-local mlm/atx-headings-cache nil
+  "(TICK . HEADINGS). This is a cache of `mlm/atx-headings'. It becomes stale when the buffer is
+   modified and (buffer-chars-modified-tick) advances.
+
+   HEADINGS is a vector with a (POS . LEVEL) pair for each ATX heading in the buffer. POS is the
+   position of the start of the heading's line, and LEVEL is its outline level, per
+   `mlm/atx-heading-level'. E.g. for this buffer:
+
+     # Title
+     ## A
+     * a1
+     ### A.1
+
+   HEADINGS is [(1 . 1) (9 . 1) (19 . 2)].")
+
+(defun mlm/atx-headings ()
+  "A vector of (POS . LEVEL) for each of the buffer's ATX headings, in buffer order."
+  (let ((tick (buffer-chars-modified-tick)))
+    (unless (eql (car mlm/atx-headings-cache) tick)
+      (let ((headings
+             (save-excursion
+               (save-match-data
+                 (goto-char (point-min))
+                 (cl-loop while (re-search-forward "^\\(#+\\) " nil t)
+                          collect (cons (line-beginning-position)
+                                        (mlm/atx-heading-level (match-string 1))))))))
+        (setq mlm/atx-headings-cache (cons tick (vconcat headings)))))
+    (cdr mlm/atx-headings-cache)))
+
+(defun mlm/enclosing-atx-heading-level (pos)
+  "The level of the last ATX heading before POS, or 0 if there isn't one."
+  ;; Binary search, since outline commands call this for every list item in the buffer.
+  (let* ((headings (mlm/atx-headings))
+         (lo 0)
+         (hi (length headings))) ; Invariant: headings before lo are before POS; from hi on aren't.
+    (while (< lo hi)
+      (let ((mid (/ (+ lo hi) 2)))
+        (if (< (car (aref headings mid)) pos)
+            (setq lo (1+ mid))
+          (setq hi mid))))
+    (if (> lo 0) (cdr (aref headings (1- lo))) 0)))
+
+(defun mlm/outline-level ()
+  "The `outline-level' of the heading or list item on the current line. List items are considered
+   to be on the level of the ATX heading they appear under, and then further based on their indentation.
+
+   Outline modes commands call this function for every heading and list item they visit, so this
+   function needs to be fast. Most of a line's level can be read off the line itself: a heading's
+   \"#\"s, or a list item's indentation. The one exception is the heading a list item appears under,
+   which could be anywhere earlier in the buffer. That's the only part which isn't local to the
+   line, and so it's looked up from a per-buffer cache of the headings; see
+   `mlm/atx-headings-cache'."
+  (save-excursion
+    (save-match-data
+      (beginning-of-line)
+      (if (looking-at "\\(#+\\) ")
+          (mlm/atx-heading-level (match-string 1))
+        (+ (mlm/enclosing-atx-heading-level (point))
+           1
+           (/ (current-indentation) 2))))))
+
+(defun mlm/show-level (level)
+  "Show all headings and list items at or above LEVEL. Level 1 is the top-level headings, or the
+   top-level list items if the doc has no headings. Each list item's indentation adds another level."
+  (outline-hide-sublevels level))
 
 (defun mlm/markdown-cycle ()
   "Cycle the visibility of the list under the cursor."

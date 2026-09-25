@@ -183,3 +183,55 @@
     (goto-char (point-min))
     (mlm/goto-heading "## h2")
     (should (equal (line-number-at-pos) 4))))
+
+(defun mlm-test/visible-lines-at-level (text level)
+  "Inserts TEXT into a markdown-lite-mode buffer, folds it to LEVEL with `mlm/show-level', and
+   returns the lines which remain visible."
+  (with-temp-buffer
+    (insert text)
+    (markdown-lite-mode)
+    (mlm/show-level level)
+    (goto-char (point-min))
+    (let ((lines nil))
+      (while (not (eobp))
+        (unless (outline-invisible-p (line-beginning-position))
+          (push (buffer-substring-no-properties (line-beginning-position) (line-end-position))
+                lines))
+        (forward-line 1))
+      (nreverse lines))))
+
+(ert-deftest markdown-lite-mode-test/outline-folds-atx-headings ()
+  "\"#\" and \"##\" headings are both top-level. Deeper headings, and the list items under a heading,
+   are nested beneath it."
+  (let ((text (concat "# Title\n"
+                      "intro\n"
+                      "## A\n"
+                      "* a1\n"
+                      "  * a2\n"
+                      "### A.1\n"
+                      "* a3\n"
+                      "## B\n"
+                      "text\n")))
+    (should (equal (mlm-test/visible-lines-at-level text 1)
+                   '("# Title" "## A" "## B")))
+    (should (equal (mlm-test/visible-lines-at-level text 2)
+                   '("# Title" "## A" "* a1" "### A.1" "## B")))
+    (should (equal (mlm-test/visible-lines-at-level text 3)
+                   '("# Title" "## A" "* a1" "  * a2" "### A.1" "* a3" "## B")))))
+
+(ert-deftest markdown-lite-mode-test/outline-folds-list-items-without-headings ()
+  (let ((text "* a\n  * b\n    * c\n* d\n"))
+    (should (equal (mlm-test/visible-lines-at-level text 1) '("* a" "* d")))
+    (should (equal (mlm-test/visible-lines-at-level text 2) '("* a" "  * b" "* d")))))
+
+(ert-deftest markdown-lite-mode-test/outline-level-updates-after-edit ()
+  "The cached heading positions used by `mlm/outline-level' are refreshed when the buffer changes."
+  (with-temp-buffer
+    (insert "* a\n")
+    (markdown-lite-mode)
+    (goto-char (point-max))
+    (forward-line -1)
+    (should (equal (mlm/outline-level) 1))
+    (goto-char (point-min))
+    (insert "### h\n")
+    (should (equal (mlm/outline-level) 3))))
