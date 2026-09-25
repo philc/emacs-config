@@ -1440,37 +1440,18 @@ Return nil if the current line is not the beginning of a list item."
     (when heading-line-number
       (util/goto-line heading-line-number))))
 
-(defun mlm/navigate-to-heading (top-level)
-  "Show a menu of headings and jump to the one selected."
-  (interactive)
-  (let* ((regexp (if top-level mlm/top-heading-regexp mlm/heading-regexp))
-         (headings (mlm/get-headings regexp))
-         (vertico-original-styles completion-styles)
-         (vertico-original-sort-function vertico-sort-function)
-         (selected-string nil))
-    ;; Normally, Vertico will match completions using fuzzy matching. For headings
-    ;; in Markdown, that's not appropriate, given the headings can be very long.
-    ;; Use plain substring matching instead.
-    (setq completion-styles (list 'substring))
-    ;; Disable Vertico sorting: show the headings in the order they are supplied.
-    (setq vertico-sort-function nil)
-    (unwind-protect
-        (setq selected-string (completing-read "Heading: " headings nil t))
-      (setq completion-styles vertico-original-styles)
-      (setq vertico-sort-function vertico-original-sort-function))
-    (let ((selected-heading (-first (lambda (s) (s-ends-with? selected-string s))
-                                    headings)))
-      (mlm/goto-heading selected-heading)
-      (recenter))))
+(defun mlm/consult-outline (&optional level)
+  "Show a menu of outline headings (from `mlm/outline-level') and jump to the one selected. If
+   LEVEL is given, the menu starts out narrowed to headings at or above that level."
+  ;; Normally, Vertico will match completions using fuzzy matching. For headings in Markdown, that's
+  ;; not appropriate, given the headings can be very long. Use plain substring matching instead.
+  (let ((completion-styles '(substring)))
+    (consult-outline level)))
 
 (defun mlm/navigate-to-top-level-heading ()
   (interactive)
-  (mlm/navigate-to-heading t))
+  (mlm/consult-outline 1))
 
 (defun mlm/navigate-to-any-heading ()
   (interactive)
-  (mlm/navigate-to-heading nil))
-
-(defun mlm/testing ()
-  (interactive)
-  (mlm/navigate-to-heading "Cursor position"))
+  (mlm/consult-outline))
