@@ -211,3 +211,11 @@
     (goto-char (point-min))
     (insert "### h\n")
     (should (equal (mlm/outline-level) 3))))
+
+(ert-deftest markdown-lite-mode-test/bisect-left ()
+  (should (equal (mlm/bisect-left [] 5) 0))
+  (should (equal (mlm/bisect-left [10 20 30] 5) 0))
+  (should (equal (mlm/bisect-left [10 20 30] 20) 1)) ; Equal elements aren't counted as less.
+  (should (equal (mlm/bisect-left [10 20 30] 25) 2))
+  (should (equal (mlm/bisect-left [10 20 30] 35) 3))
+  (should (equal (mlm/bisect-left [(10 . a) (20 . b)] 15 #'car) 1)))

@@ -396,18 +396,27 @@
         (setq mlm/atx-headings-cache (cons tick (vconcat headings)))))
     (cdr mlm/atx-headings-cache)))
 
-(defun mlm/enclosing-atx-heading-level (pos)
-  "The level of the last ATX heading before POS, or 0 if there isn't one."
-  ;; Binary search, since outline commands call this for every list item in the buffer.
-  (let* ((headings (mlm/atx-headings))
-         (lo 0)
-         (hi (length headings))) ; Invariant: headings before lo are before POS; from hi on aren't.
+(defun mlm/bisect-left (vec value &optional key)
+  "Returns the number of elements of the sorted vector VEC which are less than VALUE, i.e. the index
+   at which VALUE must be inserted to keep VEC sorted. KEY, if given, is applied to each element to
+   get the number to compare with VALUE. Modeled after Python's bisect.bisect_left."
+  (let ((lo 0)
+        ;; Invariant: elements before lo are < VALUE; elements from hi on aren't.
+        (hi (length vec)))
     (while (< lo hi)
-      (let ((mid (/ (+ lo hi) 2)))
-        (if (< (car (aref headings mid)) pos)
+      (let* ((mid (/ (+ lo hi) 2))
+             (elem (aref vec mid)))
+        (if (< (if key (funcall key elem) elem) value)
             (setq lo (1+ mid))
           (setq hi mid))))
-    (if (> lo 0) (cdr (aref headings (1- lo))) 0)))
+    lo))
+
+(defun mlm/enclosing-atx-heading-level (pos)
+  "The level of the last ATX heading before POS, or 0 if there isn't one."
+  ;; A binary search is materially faster than a linear search in a document with many headings.
+  (let* ((headings (mlm/atx-headings))
+         (i (mlm/bisect-left headings pos #'car)))
+    (if (> i 0) (cdr (aref headings (1- i))) 0)))
 
 (defun mlm/outline-level ()
   "The `outline-level' of the heading or list item on the current line. List items are considered
