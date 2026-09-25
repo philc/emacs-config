@@ -7,8 +7,7 @@
 (require 'evil)
 (require 'org)
 (require 's)
-;; This org mode customization uses functions from my markdown-lite-mode.
-(require 'markdown-lite-mode)
+(require 'emacs-utils)
 
 (provide 'org-mode-personal)
 
@@ -172,7 +171,7 @@
        (lambda ()
          (util/preserve-scroll-position
           (lambda ()
-            (mlm/goto-heading (concat "* " heading))
+            (org/goto-top-level-heading-named heading)
             ;; NOTE(philc): We can't just insert a new line here, because if the heading is
             ;; folded, the insertion behavior becomes incorrect. I don't understand the mechanics
             ;; of folded outline-mode headings, but moving to the first sub-item under the current
@@ -187,17 +186,23 @@
         (move-to-column former-col))
       (message "Added"))))
 
-(defvar org/top-heading-regexp "^\\* ")
+(defun org/top-level-headings ()
+  "An alist of (TEXT . POS) for each top-level heading in the buffer. TEXT excludes
+   the heading's stars, TODO keyword, priority, and tags."
+  (org-map-entries (lambda () (cons (org-get-heading t t t t) (point)))
+                   "LEVEL=1"))
+
+(defun org/goto-top-level-heading-named (heading)
+  "Moves to the start of the first top-level heading whose text is HEADING."
+  (let ((pos (cdr (assoc heading (org/top-level-headings)))))
+    (unless pos (user-error "No top-level heading named %s" heading))
+    (goto-char pos)))
 
 (defun org-goto-top-level-heading (&optional heading-arg)
-  (interactive)
   "Prompts for the name of a top-level heading and jumps to there."
-  (let* ((heading
-          (or heading-arg
-              (let* ((headings (mlm/get-headings org/top-heading-regexp))
-                     (headings (mapcar (lambda (s) (replace-regexp-in-string org/top-heading-regexp "" s))
-                                       headings)))
-                (completing-read "Heading: " headings nil t))))
-         (heading-with-prefix (concat "* " heading)))
-    (mlm/goto-heading heading-with-prefix)
+  (interactive)
+  (let ((heading
+         (or heading-arg
+             (completing-read "Heading: " (mapcar #'car (org/top-level-headings)) nil t))))
+    (org/goto-top-level-heading-named heading)
     (recenter-no-redraw)))

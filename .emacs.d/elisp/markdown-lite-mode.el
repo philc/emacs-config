@@ -1411,35 +1411,6 @@ Return nil if the current line is not the beginning of a list item."
     (setq font-lock-defaults '(mlm/markdown-mode-font-lock-keywords-basic))
     (font-lock-refresh-defaults)))
 
-;; Headings are either top-level list items ("* foo") or ATX headings ("# foo", "## foo").
-(defvar mlm/heading-regexp "^\\( *\\* \\|#+ \\)")
-(defvar mlm/top-heading-regexp "^\\(\\* \\|# \\)")
-
-(defun mlm/get-headings (regexp)
-  (let ((headings '()))
-    (save-excursion
-      (goto-char (point-min))
-      (while (re-search-forward regexp nil t)
-        (let ((heading-text (buffer-substring-no-properties
-                             (line-beginning-position)
-                             (line-end-position))))
-          (push heading-text headings))))
-    (nreverse headings)))
-
-(defun mlm/goto-heading (heading-text)
-  "Navigates to the given heading, if it exists. `heading` should include the list item character."
-  (let ((heading-line-number nil))
-    (save-excursion
-      (goto-char (point-min))
-      (while (and (null heading-line-number)
-                  (re-search-forward mlm/heading-regexp nil t))
-        (let ((text (buffer-substring-no-properties
-                     (line-beginning-position) (line-end-position))))
-          (when (string= heading-text text)
-            (setq heading-line-number (line-number-at-pos))))))
-    (when heading-line-number
-      (util/goto-line heading-line-number))))
-
 (defun mlm/consult-outline (&optional level)
   "Show a menu of outline headings (from `mlm/outline-level') and jump to the one selected. If
    LEVEL is given, the menu starts out narrowed to headings at or above that level."
