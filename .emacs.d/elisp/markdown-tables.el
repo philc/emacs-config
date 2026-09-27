@@ -1,5 +1,7 @@
 ;;; -*- lexical-binding: t; -*-
 (provide 'markdown-tables)
+(require 'dash)
+(require 's)
 
 (defun tables/parse-columns (row)
   (let* ((lines (->> (s-split "\n" row)
@@ -48,8 +50,8 @@
 ;;      ;; (-map 'tables/parse-columns)
 
 
-(setq tables/max-width 30)
-(setq tables/cell-padding 0)
+(defvar tables/max-width 30)
+(defvar tables/cell-padding 0)
 
 (defun tables/reflow-table (rows)
   ;; (let* ((column-count (->> rows cl-first length))

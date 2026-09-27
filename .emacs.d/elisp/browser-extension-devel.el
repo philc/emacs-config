@@ -2,8 +2,10 @@
 ;; Commands for reloading a browser extension in either Chrome or Firefox during development.
 
 (provide 'browser-extension-devel)
+(require 'dash)
+(require 's)
 
-(setq ext-dev/browser-app "Firefox")
+(defvar ext-dev/browser-app "Firefox")
 
 (defun ext-dev/set-browser-app-to-firefox ()
   (interactive)

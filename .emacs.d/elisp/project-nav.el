@@ -3,18 +3,17 @@
 ;; Project navigation functions for jumping to different projects/workspaces.
 ;;
 (provide 'project-nav)
+(require 'cl-lib)
+(require 'dash)
 (require 's)
 
 ;; Customize this to include the paths of folders containing projects, and notes.
-(setq project-nav/project-folders '())
-(setq project-nav/notes-directories '())
+(defvar project-nav/project-folders '())
+(defvar project-nav/notes-directories '())
 
 ;; This is set to 600 by default. It shouldn't be the case, but for some reason, the
 ;; filter-files-in-directory function hits this limit.
 (setq max-lisp-eval-depth 9999)
-;; This is set to 1300 by default. Emacs randomly exceeds this limit sometimes. Restarting Emacs
-;; resolves it temporarily.
-(setq max-specpdl-size 13000)
 
 (defun project-nav/filter-files-in-directory (directory filter-fn include-subdirectories)
   "Filters the files in the given directory and subdirectories using filter-fn. Excludes .git
@@ -30,7 +29,7 @@
          flatten-tree
          (-filter filter-fn))))
 
-(setq project-nav/notes-file-extensions '(".md" ".sql" ".txt"))
+(defvar project-nav/notes-file-extensions '(".md" ".sql" ".txt"))
 
 (defun project-nav/open-file-from-notes-folder ()
   "Prompts for the name of a notes file to open."

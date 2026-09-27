@@ -1,10 +1,18 @@
 ;;; -*- lexical-binding: t; -*-
 ;; Functions for working with Javascript source and evaluating it in a REPL.
 (provide 'javascript-repl)
+(require 'lisp-utils)
 (require 'repl) ; For connecting to and evaluating code in a Deno REPL.
 
-(setq js/program-command "deno")
-(setq js/program-arguments '())
+(defvar js/program-command "deno")
+(defvar js/program-arguments '())
+
+;; The JS action that was last run. It's a tuple of (buffer, function-name).
+(defvar js/last-run-command nil)
+
+;; The JS action that has been saved (via js/save-last-run-command) for invoking again in the
+;; future. It's a tuple of (buffer, function-name).
+(defvar js/saved-run-command nil)
 
 (defun js/get-repl-buffer ()
   ; TODO(philc): Make this fail if a REPL doesn't exist.
@@ -48,18 +56,18 @@
   ;; pollutes the color used in the terminal from then on. I'm not sure why. This obviates the
   ;; issue, but it would be nice to have color.
   (setenv "NO_COLOR" "1")
-  (let* ((repl-buffer (get-buffer-create repl/buffer-name)))
-    ;; Launch the REPL process in the project's directory, rather than starting it from the
-    ;; directory of the current buffer's file.
-    (repl/start js/program-command js/program-arguments (js/project-root))
-    ;; Using with-current-buffer here prevents display-buffer from changing the current buffer.
-    ;; Code invoking js/start-or-switch-to-repl expects that the buffer doesn't change.
-    (util/preserve-selected-frame
-     (lambda ()
-       (with-current-buffer (current-buffer)
-         (display-buffer (get-buffer-create repl/buffer-name)))))))
+  (get-buffer-create repl/buffer-name)
+  ;; Launch the REPL process in the project's directory, rather than starting it from the
+  ;; directory of the current buffer's file.
+  (repl/start js/program-command js/program-arguments (js/project-root))
+  ;; Using with-current-buffer here prevents display-buffer from changing the current buffer.
+  ;; Code invoking js/start-or-switch-to-repl expects that the buffer doesn't change.
+  (util/preserve-selected-frame
+   (lambda ()
+     (with-current-buffer (current-buffer)
+       (display-buffer (get-buffer-create repl/buffer-name))))))
 
-(setq js/load-file-counter 1)
+(defvar js/load-file-counter 1)
 
 (defun js/load-current-file ()
   (interactive)
@@ -122,13 +130,6 @@
                              "/"
                              (match-string-no-properties 2))))
       result)))
-
-;; The JS action that was last run. It's a tuple of (buffer, function-name).
-(setq js/last-run-command nil)
-
-;; The JS action that has been saved (via js/save-last-run-command) for invoking again in the
-;; future. It's a tuple of (buffer, function-name).
-(setq js/saved-run-command nil)
 
 (defun js/save-last-run-command ()
   "Save the last high-level run command for future invocation."

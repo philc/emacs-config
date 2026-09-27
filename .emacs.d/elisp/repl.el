@@ -2,6 +2,8 @@
 ;; This provides functions for interacting with an external REPL: starting and restarting the REPL
 ;; program, and sending and receiving text.
 
+(require 'dash)
+
 ;; It's similar to Emacs' comint mode. But unlike comint mode, this does not provide an interactive
 ;; readline-style REPL UI within Emacs. Instead, lines and paragraphs from any buffer can be sent to
 ;; the REPL process, and the output is shown in the *REPL* buffer. As a result, this implementation
