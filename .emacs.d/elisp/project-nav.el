@@ -1,3 +1,4 @@
+;;; -*- lexical-binding: t; -*-
 ;;
 ;; Project navigation functions for jumping to different projects/workspaces.
 ;;

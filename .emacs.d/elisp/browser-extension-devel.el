@@ -1,3 +1,4 @@
+;;; -*- lexical-binding: t; -*-
 ;; Commands for reloading a browser extension in either Chrome or Firefox during development.
 
 (provide 'browser-extension-devel)

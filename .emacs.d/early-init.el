@@ -1,3 +1,4 @@
+;;; -*- lexical-binding: t; -*-
 ;;
 ;; Load graphical settings, so we have less UI flicker as Emacs starts up.
 ;;

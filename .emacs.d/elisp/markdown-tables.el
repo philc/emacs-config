@@ -1,3 +1,4 @@
+;;; -*- lexical-binding: t; -*-
 (provide 'markdown-tables)
 
 (defun tables/parse-columns (row)

@@ -1,3 +1,4 @@
+;;; -*- lexical-binding: t; -*-
 ;; This provides functions for interacting with an external REPL: starting and restarting the REPL
 ;; program, and sending and receiving text.
 
@@ -68,8 +69,8 @@
          (replace-regexp-in-string re-naked-prompt "-----\n")
          (replace-regexp-in-string re-undefined ""))))
 
-(defun repl/append-to-process-buffer (str)
-  "Appends `str` to the end of the REPL process buffer, and scrolls all windows showing this buffer
+(defun repl/append-to-process-buffer (process str)
+  "Appends `str` to the end of `process`'s buffer, and scrolls all windows showing this buffer
    to the bottom."
   (let* ((buffer (process-buffer process))
          (windows (get-buffer-window-list buffer nil t)))
@@ -98,7 +99,7 @@
   ;; interpret those sequences using `ansi-color-apply`. But this is a bit delicate to do as the
   ;; output is spread across chunks. I looked into getting this working with color output from Deno
   ;; for an hour, and had several problems along the way.
-  (repl/append-to-process-buffer (repl/filter-noisy-output str)))
+  (repl/append-to-process-buffer process (repl/filter-noisy-output str)))
 
 (defun repl/clear ()
   (interactive)

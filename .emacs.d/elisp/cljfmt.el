@@ -1,3 +1,4 @@
+;;; -*- lexical-binding: t; -*-
 ;; These functions are minor modifications of code taken from go-mode.el
 ;; (version 1.3.1), which includes the following copyright notice and license
 ;; information:

@@ -1,3 +1,4 @@
+;;; -*- lexical-binding: t; -*-
 ;; Functions for working with Javascript source and evaluating it in a REPL.
 (provide 'javascript-repl)
 (require 'repl) ; For connecting to and evaluating code in a Deno REPL.

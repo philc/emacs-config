@@ -1,3 +1,4 @@
+;;; -*- lexical-binding: t; -*-
 ;; Emac's "customize" system is a way of declaring settings which can be edited via a UI. Some plugins use
 ;; this, like elscreen. See here for more:
 ;; http://ergoemacs.org/emacs/emacs_custom_system.html
