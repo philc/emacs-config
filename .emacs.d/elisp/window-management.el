@@ -162,7 +162,7 @@
   (interactive)
   (save-excursion
     (let ((original-window (selected-window)))
-      (when-let ((w (cl-first (wm/get-ephemeral-windows))))
+      (when-let* ((w (cl-first (wm/get-ephemeral-windows))))
         (quit-window nil w))
       (select-window original-window))))
 
@@ -226,7 +226,7 @@
   (let ((current-tab-name (->> (tab-bar--current-tab)
                                (alist-get 'name))))
     (if (= 1 (length (window-list)))
-        (when-let ((config (gethash current-tab-name tab-name->window-config)))
+        (when-let* ((config (gethash current-tab-name tab-name->window-config)))
           (set-window-configuration config t)
           (remhash current-tab-name tab-name->window-config))
       (progn
@@ -364,7 +364,7 @@
   (if (/= n (wm/column-number))
       (wm/switch-to-column n)
     (progn
-      (if-let ((split-below (window-in-direction 'below (selected-window))))
+      (if-let* ((split-below (window-in-direction 'below (selected-window))))
           (select-window split-below)
         (select-window (wm/topmost-window (selected-window))))
       (evil-change-to-initial-state))))
@@ -473,7 +473,7 @@
                            (buffer-list)))
          (buffer-names (-map #'buffer-name buffers)))
     (setq-temporarily vertico-sort-override-function #'identity
-                      (when-let (selection (completing-read "Switch to: " buffer-names nil t))
+                      (when-let* ((selection (completing-read "Switch to: " buffer-names nil t)))
                         (switch-to-buffer selection)))))
 
 (defun wm/kill-buffer-in-buffer-selection-menu ()

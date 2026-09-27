@@ -135,7 +135,7 @@
   (interactive)
   (save-excursion
     (outline-up-heading 4)
-    (show-children)))
+    (outline-show-children)))
 
 (defun org-text-of-current-line ()
   (buffer-substring-no-properties (line-beginning-position)
@@ -152,17 +152,17 @@
   (interactive)
   ;; NOTE(philc): These are personalized to the way I organize my org mode TODO list.
   (message "[L] Liftoff  [B] Base  [S] Study  [N] Entertainment  [M] Emacs [J] Journal")
-  (when-let ((heading
-              (or heading-arg
-                  (pcase (read-char)
-                    (?l "Liftoff")
-                    (?b "Base")
-                    (?s "Study")
-                    (?j "Journal")
-                    (?n "Entertainment")
-                    (?m "Emacs")
-                    (?h "Handbook")
-                    (?v "Vimium")))))
+  (when-let* ((heading
+               (or heading-arg
+                   (pcase (read-char)
+                     (?l "Liftoff")
+                     (?b "Base")
+                     (?s "Study")
+                     (?j "Journal")
+                     (?n "Entertainment")
+                     (?m "Emacs")
+                     (?h "Handbook")
+                     (?v "Vimium")))))
     (let* ((former-line (util/get-line))
            (former-col (current-column))
            (new-todo (or todo-arg
