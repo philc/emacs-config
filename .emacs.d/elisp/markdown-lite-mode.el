@@ -76,6 +76,9 @@
   (make-local-variable 'fill-nobreak-predicate)
   (add-hook 'fill-nobreak-predicate 'mlm/markdown-nobreak-p)
 
+  ;; Compute and store list levels, used by mlm/markdown-calculate-list-levels.
+  (setq-local syntax-propertize-function 'mlm/syntax-propertize)
+
   )
 
 (add-to-list 'auto-mode-alist '("\\.markdown$" . markdown-lite-mode))
@@ -198,6 +201,9 @@
           (outline-hide-subtree))
       (let ((inhibit-modification-hooks t))
         (indent-rigidly (cl-first region) (cl-second region) indent-amount))
+      ;; inhibit-modification-hooks also bypasses the invalidation of syntax properties, including
+      ;; the list levels set by mlm/syntax-propertize.
+      (syntax-ppss-flush-cache (cl-first region))
       ;; Note: Don't cache (point-max) before indent-rigidly. When promoting, indent-rigidly shrinks
       ;; the buffer, and so a cached point-max could we be stale.
       (font-lock-flush (cl-first region) (min (cl-second region) (point-max))))))
@@ -227,6 +233,9 @@
     ;; thumb overlay) is expensive enough on its own to add up across a large subtree.
     (let ((inhibit-modification-hooks t))
       (indent-rigidly region-start (min (1+ region-end) (point-max)) indent-amount))
+    ;; inhibit-modification-hooks also bypasses the invalidation of syntax properties, including
+    ;; the list levels set by mlm/syntax-propertize.
+    (syntax-ppss-flush-cache region-start)
     ;; inhibit-modification-hooks prevents jit-lock from being notified of the change, so
     ;; manually queue a lazy refontification of the modified region.
     ;; Note: (point-max) is intentionally not cached before indent-rigidly. When promoting,
@@ -1239,7 +1248,6 @@ If we are at the first line, then consider the previous line to be blank."
         (t nil)))
 
 (defun mlm/markdown-match-pre-blocks (last)
-  ;; (interactive)
   "Match Markdown pre blocks from point to LAST."
   (let ((levels (mlm/markdown-calculate-list-levels))
         required-column begin end)
@@ -1303,42 +1311,126 @@ Stops at blank lines, list items, headers, and horizontal rules."
    so on. The depth of the list item is therefore the length of the returned list. If the point is
    not at or immediately after a list item, return nil."
   (save-excursion
-    (let ((first (point)) levels indent)
-      ;; Find a baseline point with zero list indentation
-      (mlm/markdown-search-backward-baseline)
-      ;; Search for all list items between baseline and LOC
-      (while (and (< (point) first)
-                  (re-search-forward mlm/markdown-regex-list first t))
-        (beginning-of-line)
-        (cond
-         ;; Make sure this is not a header or hr
-         ((mlm/markdown-new-baseline-p) (setq levels nil))
-         ;; Make sure this is not a line from a pre block
-         ((>= (current-indentation) (mlm/markdown-required-pre-column levels)))
-         ;; If not, then update levels
-         (t
-          (setq indent (current-indentation))
-          (setq levels (mlm/markdown-update-list-levels
-                        (mlm/markdown-cur-non-list-indent) indent levels))))
-        (end-of-line))
-      levels)))
+    (if (and (eq syntax-propertize-function 'mlm/syntax-propertize)
+             (bolp)
+             (< (point) (point-max))
+             ;; syntax-propertize can't propertize text outside of a narrowed region.
+             (not (buffer-narrowed-p)))
+        (let ((pos (point)))
+          (if (or (< pos syntax-propertize--done)
+                  ;; Before propertizing up to pos, look for a baseline after the propertized
+                  ;; region. If there's one, replaying from it is cheaper than propertizing the rest
+                  ;; of the region, e.g. when a large buffer is first opened at its end.
+                  (not (mlm/markdown-search-backward-baseline
+                        (max (point-min) (1- syntax-propertize--done)))))
+              (progn
+                (syntax-propertize (1+ pos))
+                (get-text-property pos 'mlm-list-levels))
+            (mlm/markdown-replay-list-levels pos nil)))
+      (let ((end (point)))
+        (mlm/markdown-search-backward-baseline)
+        (mlm/markdown-replay-list-levels end nil)))))
 
-(defun mlm/markdown-search-backward-baseline ()
-  "Search backward to a baseline point with no indentation and not a list item.
-Limits the search to 100000 characters back to avoid O(position) font-lock cost."
+;; Computing the list levels at a position from scratch requires replaying every list item from the
+;; preceding baseline, which in a long list (e.g. a notes file which is one big outline) can be the
+;; start of the buffer. Font-lock needs the list levels for every region it fontifies (see
+;; `mlm/markdown-match-pre-blocks'), which makes fontifying a large list quadratic.
+;;
+;; Instead, `mlm/syntax-propertize' computes the list levels in a single forward pass, and stores
+;; them as a text property on each line. Emacs runs it lazily, from the last propertized position up
+;; to wherever is needed, and discards the results from the start of a buffer change onward (see
+;; `syntax-propertize'). The list levels at a line depend only on that line and the text before it,
+;; so the results before a change remain valid.
+;;
+;; Changes made with `inhibit-modification-hooks' bound bypass that invalidation, so after such
+;; changes, call `syntax-ppss-flush-cache' from the start of the change.
+
+(defun mlm/syntax-propertize (start end)
+  "The `syntax-propertize-function' for markdown-lite-mode. For each line from START to END, sets
+   the `mlm-list-levels' text property on the line to the value of
+   `mlm/markdown-calculate-list-levels' at the start of the line."
+  (goto-char start) ; `syntax-propertize-wholelines' ensures this is the start of a line.
+  (let (;; When first viewing the end of a large buffer, this propertizes all of it. Most of that
+        ;; time would be spent garbage collecting at the default threshold.
+        (gc-cons-threshold (max gc-cons-threshold (* 64 1024 1024)))
+        (levels (if (bobp)
+                    nil
+                  ;; Continue from the previous line, which has already been propertized.
+                  (save-excursion
+                    (forward-line -1)
+                    (mlm/markdown-list-levels-after-line
+                     (get-text-property (point) 'mlm-list-levels))))))
+    (while (< (point) end)
+      (let ((line-start (point)))
+        (when (mlm/markdown-baseline-line-p)
+          (setq levels nil))
+        (let ((line-levels levels))
+          (setq levels (mlm/markdown-list-levels-after-line levels))
+          (forward-line 1)
+          ;; Set the property on the whole line, not just its first character. Consecutive lines
+          ;; often have the same (eq) levels, and then Emacs merges them into a single text
+          ;; property interval. With one interval per line, operations which scan text
+          ;; properties, like skipping over folded text during redisplay, get noticeably slower in
+          ;; large buffers.
+          (put-text-property line-start (max (point) (1+ line-start)) 'mlm-list-levels
+                             line-levels))))))
+
+(defun mlm/markdown-baseline-line-p ()
+  "Whether the line at point is a baseline: one where list levels reset to nil. This is where
+   `mlm/markdown-search-backward-baseline' stops: an unindented line after a blank line, which is a
+   header or not a list item."
+  (and (looking-at "[^\n \t]")
+       (save-excursion
+         (and (= 0 (forward-line -1))
+              (looking-at "[ \t]*$")
+              ;; The blank line can't be the first line; `mlm/markdown-regex-block-separator'
+              ;; requires a newline before it.
+              (not (bobp))))
+       (or (mlm/markdown-new-baseline-p)
+           (not (looking-at mlm/markdown-regex-list)))))
+
+(defun mlm/markdown-list-levels-after-line (levels)
+  "Given the LEVELS at the start of the line at point, returns the levels after that line."
+  (if (not (looking-at mlm/markdown-regex-list))
+      levels
+    (cond
+     ;; Make sure this is not a header or hr
+     ((mlm/markdown-new-baseline-p) nil)
+     ;; Make sure this is not a line from a pre block
+     ((>= (current-indentation) (mlm/markdown-required-pre-column levels)) levels)
+     ;; If not, then update levels
+     (t (mlm/markdown-update-list-levels
+         (mlm/markdown-cur-non-list-indent) (current-indentation) levels)))))
+
+(defun mlm/markdown-replay-list-levels (end levels)
+  "Update LEVELS (see `mlm/markdown-calculate-list-levels') for each of the list items from point
+   to END, and return the result. Point should be at a baseline, or at a position where LEVELS were
+   the list levels."
+  ;; Search for all list items between the start and END.
+  (while (and (< (point) end)
+              (re-search-forward mlm/markdown-regex-list end t))
+    (beginning-of-line)
+    (setq levels (mlm/markdown-list-levels-after-line levels))
+    (end-of-line))
+  levels)
+
+(defun mlm/markdown-search-backward-baseline (&optional limit)
+  "Search backward to a baseline point with no indentation and not a list item. Returns non-nil,
+   with point at the baseline, if one is found (the start of the buffer counts as one). If LIMIT is
+   given and the search reaches it first, returns nil, with point at LIMIT."
   (end-of-line)
-  (let ((limit (max (point-min) (- (point) 100000)))
-        stop)
-    (while (not (or stop (bobp)))
+  (let (found)
+    (while (not (or found (bobp)))
       (if (re-search-backward mlm/markdown-regex-block-separator limit t)
           (when (match-end 2)
             (goto-char (match-end 2))
             (cond
-             ((mlm/markdown-new-baseline-p) (setq stop t))
+             ((mlm/markdown-new-baseline-p) (setq found t))
              ((looking-at mlm/markdown-regex-list))
-             (t (setq stop t))))
+             (t (setq found t))))
         (goto-char limit)
-        (setq stop t)))))
+        (setq found 'limit)))
+    (not (eq found 'limit))))
 
 (defun mlm/markdown-update-list-levels (content-column indent levels)
   "Update the stack of open list levels given a new line at column INDENT.

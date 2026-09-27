@@ -219,3 +219,91 @@
   (should (equal (mlm/bisect-left [10 20 30] 25) 2))
   (should (equal (mlm/bisect-left [10 20 30] 35) 3))
   (should (equal (mlm/bisect-left [(10 . a) (20 . b)] 15 #'car) 1)))
+
+(defun mlm-test/uncached-list-levels (pos)
+  "The list levels at POS, computed without `mlm/markdown-calculate-list-levels's cache."
+  (save-excursion
+    (goto-char pos)
+    (mlm/markdown-search-backward-baseline)
+    (mlm/markdown-replay-list-levels pos nil)))
+
+(defun mlm-test/list-levels-mismatches ()
+  "Returns the line numbers where the cached and uncached list levels differ, checking every line
+   in order, then in reverse order."
+  (let ((line-starts nil)
+        (mismatches nil))
+    (save-excursion
+      (goto-char (point-min))
+      (while (not (eobp))
+        (push (point) line-starts)
+        (forward-line 1)))
+    (dolist (pos (append (reverse line-starts) line-starts))
+      (unless (equal (save-excursion (goto-char pos) (mlm/markdown-calculate-list-levels))
+                     (mlm-test/uncached-list-levels pos))
+        (push (line-number-at-pos pos) mismatches)))
+    mismatches))
+
+(ert-deftest markdown-lite-mode-test/list-levels-propertized-match-uncached ()
+  "The list levels stored by `mlm/syntax-propertize' match the ones computed from scratch, including
+   after edits, and after edits made with the change hooks inhibited (followed by
+   `syntax-ppss-flush-cache')."
+  (progn
+    (with-temp-buffer
+      (dotimes (_ 5)
+        (insert (concat "* a\n"
+                        "  * b\n"
+                        "    * c\n"
+                        "\n"
+                        "        code\n"
+                        "\n"
+                        "  * d\n"
+                        "text\n"
+                        "\n"
+                        "Paragraph\n"
+                        "1. one\n"
+                        "   1. two\n"
+                        "## Heading\n"
+                        "* e\n"
+                        "---\n")))
+      (markdown-lite-mode)
+      (should (null (mlm-test/list-levels-mismatches)))
+      ;; Edits which change the nesting of the list items after them.
+      (goto-char (point-min))
+      (search-forward "  * b")
+      (beginning-of-line)
+      (insert "\nBaseline\n\n")
+      (should (null (mlm-test/list-levels-mismatches)))
+      (search-forward "* d")
+      (let ((inhibit-modification-hooks t))
+        (indent-rigidly (line-beginning-position) (line-end-position) 4))
+      (syntax-ppss-flush-cache (line-beginning-position))
+      (should (null (mlm-test/list-levels-mismatches)))
+      (goto-char (point-min))
+      (delete-region (point) (progn (forward-line 3) (point)))
+      (should (null (mlm-test/list-levels-mismatches))))))
+
+(ert-deftest markdown-lite-mode-test/list-levels-updated-after-demote ()
+  "Demoting a list item changes the list levels after it, although it edits with the change hooks
+   inhibited."
+  (with-temp-buffer
+    (insert "* a\n* b\n* c\n")
+    (markdown-lite-mode)
+    (should (null (mlm-test/list-levels-mismatches)))
+    (goto-char (point-min))
+    (search-forward "* b")
+    (mlm/markdown-demote)
+    (should (equal (buffer-string) "* a\n  * b\n* c\n"))
+    (should (null (mlm-test/list-levels-mismatches)))))
+
+(ert-deftest markdown-lite-mode-test/pre-block-deep-in-long-list ()
+  "The list levels used to find pre blocks account for list items arbitrarily far back. Here, the
+   nested list items near the end are over 100,000 characters from their parent, \"* a\". If the
+   parent were ignored, they'd be indented enough to count as a pre block."
+  (with-temp-buffer
+    (insert "* a\n")
+    (dotimes (_ 15000) (insert "    * c\n"))
+    (markdown-lite-mode)
+    (goto-char (point-max))
+    (forward-line -2)
+    (should (equal (mlm/markdown-calculate-list-levels) '((4 . 6) (0 . 2))))
+    (should (null (mlm/markdown-match-pre-blocks (point-max))))))
