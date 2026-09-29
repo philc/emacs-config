@@ -160,6 +160,31 @@
                     "         code\n"))
            nil)))
 
+(ert-deftest markdown-lite-mode-test/pre-block-after-dedent-to-sibling ()
+  "When a list dedents, the deeper levels close. \"* d\" is a sibling of \"* b\", so a code block
+   under it needs its content column (4) plus 4, not the content column of \"* c\" plus 4."
+  (let ((list (concat "* a\n"
+                      "  * b\n"
+                      "    * c\n"
+                      "  * d\n"
+                      "\n")))
+    (should (equal (mlm-test/pre-block-line-ranges (concat list "        code\n"))
+                   '((6 . 6))))
+    (should (equal (mlm-test/pre-block-line-ranges (concat list "       code\n"))
+                   nil))))
+
+(ert-deftest markdown-lite-mode-test/pre-block-after-dedent-to-top-level ()
+  "Dedenting to a top-level item closes all of the deeper levels."
+  (let ((list (concat "* a\n"
+                      "  * b\n"
+                      "    * c\n"
+                      "* e\n"
+                      "\n")))
+    (should (equal (mlm-test/pre-block-line-ranges (concat list "      code\n"))
+                   '((6 . 6))))
+    (should (equal (mlm-test/pre-block-line-ranges (concat list "     code\n"))
+                   nil))))
+
 (defun mlm-test/visible-lines-at-level (text level)
   "Inserts TEXT into a markdown-lite-mode buffer, folds it to LEVEL with `mlm/show-level', and
    returns the lines which remain visible."

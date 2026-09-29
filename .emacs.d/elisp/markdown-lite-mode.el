@@ -1463,10 +1463,12 @@ Stops at blank lines, list items, headers, and horizontal rules."
     levels)
    ;; Indentation has dropped below the innermost open level's own marker
    ;; column (whether or not this line is itself a list item): close levels
-   ;; until we reach one this line still belongs to.
+   ;; until we reach one this line still belongs to. A level is closed when
+   ;; the line isn't indented enough to be nested inside that level's parent,
+   ;; i.e. it's to the left of the parent's content column.
    ((and levels (< indent (caar levels)))
     (while (and (> (length levels) 1)
-                (< indent (car (cadr levels))))
+                (< indent (cdr (cadr levels))))
       (setq levels (cdr levels)))
     levels)
    ;; Otherwise, do nothing.
