@@ -76,6 +76,17 @@
   (dolist (pair (partition key-and-fn-pairs 2))
     (define-key keymap (cl-first pair) (cl-second pair))))
 
+(defun util/revert-buffers-changed-on-disk ()
+  "Revert every unmodified buffer whose file was changed on disk, e.g. by an external script. This
+   is immediate, whereas `global-auto-revert-mode` reverts buffers after a delay."
+  (dolist (buf (buffer-list))
+    (with-current-buffer buf
+      (when (and buffer-file-name
+                 (not (buffer-modified-p))
+                 (file-exists-p buffer-file-name)
+                 (not (verify-visited-file-modtime buf)))
+        (revert-buffer t t t)))))
+
 (defun util/save-buffer-if-dirty ()
   (when (and buffer-file-name (buffer-modified-p))
     (util/save-buffer-silently)))
