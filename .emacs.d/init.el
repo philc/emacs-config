@@ -132,10 +132,15 @@
 
 ;; Auto revert mode
 ;; Reload an open file from disk if it is changed outside of Emacs.
-(global-auto-revert-mode 1)
+
+;; Rely on file-change notifications (kqueue on macOS) rather than polling. Note that changes
+;; made by others to files on network mounts (NFS, SMB) will not be seen. If I ever use network
+;; mounts, I can put those dirs in auto-revert-notify-exclude-dir-regexp, to enable polling.
+(setq auto-revert-avoid-polling t)
 ;; Allow non-file buffers to auto-revert. This is necessary for dired mode to auto-refresh its
 ;; listing when a file is created or removed.
 (setq global-auto-revert-non-file-buffers t)
+(global-auto-revert-mode 1)
 (add-hook 'dired-mode-hook 'auto-revert-mode)
 
 (setq mac-option-modifier 'alt)
