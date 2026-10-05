@@ -18,7 +18,9 @@ export function getSymbols(text) {
     const line = lines[i];
     for (const re of regexps) {
       const groups = line.match(re);
-      if (groups == null) continue;
+      if (groups == null) {
+        continue;
+      }
       const symbol = groups[1];
       const lineNum = i + 1;
       const column = line.indexOf(symbol);

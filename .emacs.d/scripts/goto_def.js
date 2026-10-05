@@ -28,7 +28,9 @@ export function getModuleImports(fileContents) {
       importMap[symbol] = path;
     } else {
       matches = line.match(importSpecificRegexp);
-      if (matches == null) continue;
+      if (matches == null) {
+        continue;
+      }
 
       // `names` is the content inside the import statement's curly braces.
       const names = matches[1].split(",").map((s) => s.trim());
@@ -50,8 +52,12 @@ export function getModuleImports(fileContents) {
 }
 
 async function runRipgrep(query, args, file, projectRoot) {
-  if (!query) throw new Error("query is required.");
-  if (!file && !projectRoot) throw new Error("file or projectRoot is required.");
+  if (!query) {
+    throw new Error("query is required.");
+  }
+  if (!file && !projectRoot) {
+    throw new Error("file or projectRoot is required.");
+  }
 
   let additionalArgs = [
     // --no-unicode makes rg's character classes simpler. Do I want this?
@@ -149,7 +155,9 @@ export async function search(query, startingFile, projectRoot) {
 
   // Search the current file.
   let lines = await runRipgrep(query, rgArgs, startingFile, null);
-  if (lines.length > 0) return lines;
+  if (lines.length > 0) {
+    return lines;
+  }
 
   // If the query is a single word, see if it's a symbol imported from the module import statements.
   if (!isMultipartQuery) {
@@ -163,7 +171,9 @@ export async function search(query, startingFile, projectRoot) {
       lines = await runRipgrep(query, rgArgs, startingFile, null);
     }
   }
-  if (lines.length > 0) return lines;
+  if (lines.length > 0) {
+    return lines;
+  }
 
   // Search all of the project's files.
   if (projectRoot != null) {
@@ -183,12 +193,16 @@ export function parseQueryFromCursorPos(fileContents, lineNum, column) {
   const word = /^[A-Za-z0-9.]+$/;
   // Extract the word surrounding the cursor.
   for (let i = column; i >= 0; i--) {
-    if (!word.test(line[i])) break;
+    if (!word.test(line[i])) {
+      break;
+    }
     start = i;
   }
   for (let i = column; i < line.length; i++) {
     // When traversing right, don't step over periods. In the case of f_oo.bar, return foo.
-    if (!word.test(line[i]) || line[i] == ".") break;
+    if (!word.test(line[i]) || line[i] == ".") {
+      break;
+    }
     end = i;
   }
   const query = line.substring(start, end + 1);
