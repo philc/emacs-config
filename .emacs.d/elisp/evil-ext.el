@@ -45,8 +45,8 @@
   ;; triggered this command, so you don't need to navigate back there if you want to continue
   ;; typing. This tries to estimate where your cursor should be after lines get wrapped.
   (let* ((estimated-col (mod (current-column) fill-column))
-                 (estimated-line (+ (line-number-at-pos)
-                                    (/ (current-column) fill-column))))
+         (estimated-line (+ (line-number-at-pos)
+                            (/ (current-column) fill-column))))
     (funcall f)
     (util/goto-line estimated-line)
     (move-to-column estimated-col)))
@@ -110,8 +110,8 @@
   "Fills (reflows/linewraps) the current paragraph. Equivalent to gqip in vim."
   (interactive)
   (let ((region (if (use-region-p)
-                            (list (region-beginning) (region-end))
-                          (util/preserve-line-and-column 'evil-inner-paragraph))))
+                    (list (region-beginning) (region-end))
+                  (util/preserve-line-and-column 'evil-inner-paragraph))))
     (evil-ext/preserve-cursor-after-fill
      (lambda ()
        (evil-fill (cl-first region) (cl-second region))))))

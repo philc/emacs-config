@@ -32,8 +32,8 @@
         "*eldoc*"
         "*Completions*"))
 (setq wm/ephemeral-buffer-regexps '("\\*cider.*"
-                                     "magit-process.*"
-                                     "\\*ghelp.*"))
+                                    "magit-process.*"
+                                    "\\*ghelp.*"))
 ;; I don't want these windows to be opened using my standard window opening logic, because I have
 ;; dedicated specific places that I like to place them, but I do want them to be closed by
 ;; wm/dismiss-ephemeral-windows.
@@ -422,28 +422,28 @@
    vertical."
   (let ((window (or window (selected-window))))
     (or (and (window-splittable-p window t)
-       ;; Split window horizontally.
-       (with-selected-window window
-         (split-window-right)))
-  (and (window-splittable-p window)
-       ;; Split window vertically.(column-marker-1 80)
-       (with-selected-window window
-         (split-window-below)))
-  (and (eq window (frame-root-window (window-frame window)))
-       (not (window-minibuffer-p window))
-       ;; If WINDOW is the only window on its frame and is not the minibuffer window, try to split
-       ;; it vertically disregarding the value of `split-height-threshold'.
-       (let ((split-height-threshold 0))
-         (when (window-splittable-p window)
-     (with-selected-window window
-       (split-window-below))))))))
+             ;; Split window horizontally.
+             (with-selected-window window
+               (split-window-right)))
+        (and (window-splittable-p window)
+             ;; Split window vertically.(column-marker-1 80)
+             (with-selected-window window
+               (split-window-below)))
+        (and (eq window (frame-root-window (window-frame window)))
+             (not (window-minibuffer-p window))
+             ;; If WINDOW is the only window on its frame and is not the minibuffer window, try to split
+             ;; it vertically disregarding the value of `split-height-threshold'.
+             (let ((split-height-threshold 0))
+               (when (window-splittable-p window)
+                 (with-selected-window window
+                   (split-window-below))))))))
 
 ;; TODO(philc): Remove this if I don't use it often enough.
 (defun wm/quarter-height ()
   "Set the current window to be a quarter of the frame height."
   (interactive)
-   (let ((quarter-height (/ (frame-height) 4)))
-     (enlarge-window (- quarter-height (window-height)))))
+  (let ((quarter-height (/ (frame-height) 4)))
+    (enlarge-window (- quarter-height (window-height)))))
 
 (defun wm/include-in-buffer-list? (buf)
   "Whether a buffer should be shown in the buffer switcher."

@@ -122,13 +122,13 @@
          )))
 
 
-   ;; (setq bds (bounds-of-thing-at-point 'word)) )
-   ;;  (setq p1 (car bds) )
-   ;;  (setq p2 (cdr bds) )
-   ;;  ;; grab the string
-   ;;  (setq inputStr (buffer-substring-no-properties p1 p2)  )
-   ;;  (setq resultStr (s-lower-camel-case inputStr))
-   ;;  (message inputStr)
+;; (setq bds (bounds-of-thing-at-point 'word)) )
+;;  (setq p1 (car bds) )
+;;  (setq p2 (cdr bds) )
+;;  ;; grab the string
+;;  (setq inputStr (buffer-substring-no-properties p1 p2)  )
+;;  (setq resultStr (s-lower-camel-case inputStr))
+;;  (message inputStr)
 
-    ;; (delete-region p1 p2 ) ; delete the region
-    ;; (insert resultStr) ; insert new string
+;; (delete-region p1 p2 ) ; delete the region
+;; (insert resultStr) ; insert new string

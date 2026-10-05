@@ -241,7 +241,7 @@
 
 (defun backward-delete-word ()
   "Deletes the word behind the cursor, and does not yank the contents to the clipboard."
-  ; This implementation is based on backward-kill-word.
+  ;; This implementation is based on backward-kill-word.
   (interactive)
   (delete-region (point) (progn (forward-word -1) (point))))
 
@@ -363,9 +363,9 @@
 (define-key evil-normal-state-map (kbd "k") 'evil-previous-visual-line)
 (define-key evil-normal-state-map (kbd "K") 'describe-symbol-at-point)
 (define-key evil-normal-state-map (kbd "J")
-  (lambda ()
-    (interactive)
-    (util/preserve-line-and-column (lambda () (call-interactively 'evil-join)))))
+            (lambda ()
+              (interactive)
+              (util/preserve-line-and-column (lambda () (call-interactively 'evil-join)))))
 
 (define-key evil-normal-state-map (kbd "C-k") 'move-to-previous-paragraph-start)
 (define-key evil-normal-state-map (kbd "C-j") 'move-to-next-paragraph-start)
@@ -427,7 +427,7 @@
 
 (define-key evil-motion-state-map "gg" 'evil-goto-point-min)
 
-; These keybindings conflict with nothing else, which allows me to pull up help from within any mode.
+;; These keybindings conflict with nothing else, which allows me to pull up help from within any mode.
 (global-set-key (kbd "C-A-M-h") 'help)
 (global-set-key (kbd "C-A-M-b") 'describe-bindings)
 
@@ -493,13 +493,13 @@
 
 (defun show-git-status-in-left-column ()
   (interactive)
-    ;; We want to show the git status for the current buffer's repo. We first get that repo before
-    ;; switching to the first column's window, because it may contain a buffer from a different git
-    ;; repo.
-    (let ((dir (magit-toplevel)))
-      (wm/switch-to-column 0)
-      (magit-status dir)
-      (magit-status-and-focus-unstaged)))
+  ;; We want to show the git status for the current buffer's repo. We first get that repo before
+  ;; switching to the first column's window, because it may contain a buffer from a different git
+  ;; repo.
+  (let ((dir (magit-toplevel)))
+    (wm/switch-to-column 0)
+    (magit-status dir)
+    (magit-status-and-focus-unstaged)))
 
 (defun backward-kill-line (arg)
   "Delete backward (Ctrl-u) as in Bash, and save the contents to the clipboard."
@@ -604,7 +604,7 @@
   This function definition is based on isearch-del-char, from isearch.el."
   (interactive "p")
   (if (= 0 (length isearch-string))
-    (ding)
+      (ding)
     (setq isearch-string (trim-last-word-of-string isearch-string)
           isearch-message (mapconcat 'isearch-text-char-description
                                      isearch-string "")))
@@ -773,20 +773,20 @@
   (let ((one-tab (= 1 (length (tab-bar-tabs))))
         (one-window (one-window-p)))
     (cond
-       ;; If the current tab has multiple windows in it, close the current window.
-       ((not one-window)
-        (delete-window)
-        (balance-windows)
-        nil)
-       ;; If there are multiple tabs, close the current tab.
-       ((not one-tab)
-        (tab-bar-close-tab)
-        nil)
-       ;; If there is only one tab remaining, just try to quit Emacs.
-       ;; Calling tab-bar-close-tab will fail when there's only one tab in the frame.
-       (one-tab
-        (evil-quit)
-        nil))))
+     ;; If the current tab has multiple windows in it, close the current window.
+     ((not one-window)
+      (delete-window)
+      (balance-windows)
+      nil)
+     ;; If there are multiple tabs, close the current tab.
+     ((not one-tab)
+      (tab-bar-close-tab)
+      nil)
+     ;; If there is only one tab remaining, just try to quit Emacs.
+     ;; Calling tab-bar-close-tab will fail when there's only one tab in the frame.
+     (one-tab
+      (evil-quit)
+      nil))))
 
 ;;
 ;; Filename completions (i.e. CTRL-P or CMD-T in other editors)
@@ -1045,10 +1045,10 @@
   "Useful to call after reloading the project cache while the find file dialog still open."
   (interactive)
   (let ((file (projectile-completing-read "Find file: "
-                                            (projectile-current-project-files)
-                                            :initial-input initial-val)))
-      (find-file (expand-file-name file (projectile-project-root)))
-      (run-hooks 'projectile-find-file-hook)))
+                                          (projectile-current-project-files)
+                                          :initial-input initial-val)))
+    (find-file (expand-file-name file (projectile-project-root)))
+    (run-hooks 'projectile-find-file-hook)))
 
 ;; Bind "M-r" when the find-files minibuffer is open to refresh Projectile's cache. This is a common
 ;; need when you open a find files dialog and realize a newly added file is not there due to a stale
@@ -1057,14 +1057,14 @@
 ;; has M-r bound already. Also, minor note: for some reason, typing this keybinding recursively
 ;; fails with "Error in post-command hook..."
 (define-key minibuffer-local-map (kbd "M-r")
-  (lambda ()
-    (interactive)
-    (setq previous-projectile-input (minibuffer-contents))
-    (projectile-invalidate-cache nil)
-    ;; Reference for running code after `minibuffer-keyboard-quit`:
-    ;; http://stackoverflow.com/q/21000540/46237
-    (add-hook 'post-command-hook 'restart-projectile-find-file-hook)
-    (minibuffer-keyboard-quit)))
+            (lambda ()
+              (interactive)
+              (setq previous-projectile-input (minibuffer-contents))
+              (projectile-invalidate-cache nil)
+              ;; Reference for running code after `minibuffer-keyboard-quit`:
+              ;; http://stackoverflow.com/q/21000540/46237
+              (add-hook 'post-command-hook 'restart-projectile-find-file-hook)
+              (minibuffer-keyboard-quit)))
 
 ;; Tab-bar-mode (built into Emacs)
 ;; I use one tab per "workspace" -- a set of Emacs windows representing a project. The list of tabs
@@ -1106,8 +1106,8 @@
                                      (switch-to-evil-normal-state)))
 
 (global-set-key (kbd "<A-M-right>") (lambda () (interactive)
-                                     (call-interactively 'tab-bar-switch-to-next-tab)
-                                     (switch-to-evil-normal-state)))
+                                      (call-interactively 'tab-bar-switch-to-next-tab)
+                                      (switch-to-evil-normal-state)))
 
 (defun open-current-buffer-in-new-tab ()
   (interactive)
@@ -1592,12 +1592,12 @@
   ;; I could also configure "compilation-ask-about-save", which saves all modified buffers if set to
   ;; false.
   (save-and-compile
-     (lambda ()
-       (message command)
-       (util/without-confirmation
-        ;; `compile` will use the current file's directory to execute the command, rather than the
-        ;; project's root, so override that.
-        (lambda () (compile (concat "cd " (projectile-project-root) " && " command)))))))
+   (lambda ()
+     (message command)
+     (util/without-confirmation
+      ;; `compile` will use the current file's directory to execute the command, rather than the
+      ;; project's root, so override that.
+      (lambda () (compile (concat "cd " (projectile-project-root) " && " command)))))))
 
 (defun get-makefile-targets (project-dir)
   "Return a list of Makefile targets in PROJECT-DIR. If no Makefile exists, return an empty list."
@@ -2145,18 +2145,18 @@
 (setq better-jumper-new-window-behavior 'empty)
 
 (define-key evil-normal-state-map (kbd "C-o")
-  (lambda () (interactive)
-    (better-jumper-jump-backward)
-    ;; (recenter-no-redraw)
-    ))
+            (lambda () (interactive)
+              (better-jumper-jump-backward)
+              ;; (recenter-no-redraw)
+              ))
 
 ;; Note that "<C-i>" is a special annotation for binding "i". See <C-i> elsewhere in this file for
 ;; details.
 (define-key evil-normal-state-map (kbd "<C-i>")
-  (lambda () (interactive)
-    (better-jumper-jump-forward)
-    ;; (recenter-no-redraw)
-    ))
+            (lambda () (interactive)
+              (better-jumper-jump-forward)
+              ;; (recenter-no-redraw)
+              ))
 
 (defun show-jump-list ()
   "Prints the jump ring to *messages*. Useful for debugging purposes."

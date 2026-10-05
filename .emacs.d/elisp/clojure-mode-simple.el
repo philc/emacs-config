@@ -91,7 +91,7 @@
 (add-hook 'comint-exec-hook
           (lambda () (set-process-query-on-exit-flag (get-buffer-process (current-buffer)) nil)))
 
-; "A saved function to execute later. Saved via `mark-current-buffer`"
+;; "A saved function to execute later. Saved via `mark-current-buffer`"
 (setq marked-function nil)
 
 (defun clj/mark-current-buffer ()
@@ -204,7 +204,7 @@
 ;; detect the closest ancestor directory of the current buffer that has a project.clj. Our projects don't have
 ;; project.clj files, so here I'm hardcoding where to start the REPL.
 (defun inf-clojure-project-root ()
-  ; NOTE(philc): Consider using our mono repl.
+  ;; NOTE(philc): Consider using our mono repl.
   "/Users/phil/src/liftoff/workbench")
 
 (defun clj/restart-repl ()
@@ -358,7 +358,7 @@
     (setq str (clj/wrap-sexp-in-current-ns str)))
   str)
 ;; (catch RuntimeException
-                             ;; (catch CompilerException e (intern 'user '_last-exception e) (println \"BB!\") (throw e))
+;; (catch CompilerException e (intern 'user '_last-exception e) (println \"BB!\") (throw e))
 
 (defun clj/wrap-with-repl-helpers-file (str)
   ;; TODO(philc): Make this path relative/configurable.
@@ -511,7 +511,7 @@
   (let ((b (get-buffer-create "*clojure-simple*")))
     (with-current-buffer b
       (setq-local scroll-margin 1)
-    b)))
+      b)))
 
 (defun clj/in-repl-buffer (fn)
   (with-current-buffer (clj/repl-buffer)
@@ -548,16 +548,16 @@ but doesn't treat single semicolons as right-hand-side comments."
 ;; Clojure indentation rules
 (with-eval-after-load "clojure-mode"
   (define-clojure-indent
-    (send-off 1) (cli 1) (go-loop 1) (assoc 1)                        ; Core
-    (ANY 2) (GET 2) (POST 2) (PUT 2) (PATCH 2) (DELETE 2) (context 2) ; Compojure
-    (OPTIONS 2)
-    (select 1) (insert 1) (update 1) (where 1) (set-fields 1)         ; Korma
-    (values 1) (delete 1) (upsert 1) (subselect 1)
-    (clone-for 1)                                                     ; Enlive
-    (cache-get 1) (time 1)                                            ; Workbench
-    (with-eligible-values 1) (when-eligible 1) (check 4)              ; Personal
-    (url-of-form 1) (construct-partial 1)                             ; Personal
-    ))
+   (send-off 1) (cli 1) (go-loop 1) (assoc 1)                        ; Core
+   (ANY 2) (GET 2) (POST 2) (PUT 2) (PATCH 2) (DELETE 2) (context 2) ; Compojure
+   (OPTIONS 2)
+   (select 1) (insert 1) (update 1) (where 1) (set-fields 1)         ; Korma
+   (values 1) (delete 1) (upsert 1) (subselect 1)
+   (clone-for 1)                                                     ; Enlive
+   (cache-get 1) (time 1)                                            ; Workbench
+   (with-eligible-values 1) (when-eligible 1) (check 4)              ; Personal
+   (url-of-form 1) (construct-partial 1)                             ; Personal
+   ))
 
 (defun move-to-start-of-word ()
   (let ((word-boundary (bounds-of-space-delimitted-word)))
@@ -585,7 +585,7 @@ but doesn't treat single semicolons as right-hand-side comments."
      (forward-char)
      (sp-forward-slurp-sexp))))
 
-; (evil-define-key 'normal clojure-mode-map "gb" 'cider-jump-back)
+;; (evil-define-key 'normal clojure-mode-map "gb" 'cider-jump-back)
 (evil-define-key 'normal clojure-mode-map "K" 'clj/show-doc-for-symbol-at-point)
 (evil-define-key 'normal clojure-mode-map "gf" 'clj/jump-to-var)
 (evil-define-key 'normal clojure-mode-map "gb" 'clj/jump-back)
@@ -625,7 +625,7 @@ but doesn't treat single semicolons as right-hand-side comments."
 ;; Functions for working with clojure.test mode.
 ;;
 
-; TODO(philc): Consider removing this. Do I use it?
+;; TODO(philc): Consider removing this. Do I use it?
 (defun clj/run-all-tests ()
   (interactive)
   (util/save-buffer-if-dirty)

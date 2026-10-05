@@ -9,6 +9,7 @@
 (defmacro define-leader-keys (keymaps &rest keybindings)
   "A shorthand for defining leader keys using the `general` keybinding package.
    `global-leader-key` must be defined as a top-level variable."
+  (declare (indent 1))
   `(general-define-key :prefix global-leader-prefix :states '(normal visual) :keymaps ,keymaps ,@keybindings))
 
 (defun util/call-process-with-exit-status (program stdin &rest args)
@@ -38,8 +39,8 @@
 (defun util/replace-current-line (new-line)
   "Replaces the current line with the new one."
   (save-excursion
-   (delete-region (line-beginning-position) (line-end-position))
-   (insert new-line)))
+    (delete-region (line-beginning-position) (line-end-position))
+    (insert new-line)))
 
 (defun util/replace-buffer-text (new-text)
   "Replaces the entire buffer with the new text."
@@ -55,8 +56,8 @@
 (defun util/replace-region (new-text)
   "Replaces the entire buffer with the new text."
   (save-excursion
-   (delete-region (region-beginning) (region-end))
-   (insert new-text)))
+    (delete-region (region-beginning) (region-end))
+    (insert new-text)))
 
 (defun util/get-line (&optional offset)
   "Returns the text (without string properties) of the line offset by `offset` from the current.

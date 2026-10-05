@@ -15,7 +15,7 @@
 (defvar js/saved-run-command nil)
 
 (defun js/get-repl-buffer ()
-  ; TODO(philc): Make this fail if a REPL doesn't exist.
+  ;; TODO(philc): Make this fail if a REPL doesn't exist.
   (get-buffer repl/buffer-name))
 
 (defun js/show-repl ()

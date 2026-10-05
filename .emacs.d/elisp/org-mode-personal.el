@@ -50,8 +50,8 @@
   ">" 'org-metaright
   "gh" 'org-goto-top-level-heading
   "gu" 'outline-up-heading
-  ; Normally these go backwards-and-forward by paragraphs but skipping between headings is more
-  ; useful.
+  ;; Normally these go backwards-and-forward by paragraphs but skipping between headings is more
+  ;; useful.
   "{" 'org-backward-heading-same-level
   "}" 'org-forward-heading-same-level
   (kbd "<C-tab>") 'org-expand-top-level-parent
@@ -87,7 +87,7 @@
           (kbd "C-S-J") 'org-metadown
           (kbd "C-S-A-H") 'org-promote-subtree
           (kbd "C-S-A-L") 'org-demote-subtree
-          ; M-return creates a new todo item and enters insert mode.
+          ;; M-return creates a new todo item and enters insert mode.
           (kbd "<C-return>") '(lambda () (interactive)
                                 (org-insert-heading-after-current)
                                 (evil-append nil))))
