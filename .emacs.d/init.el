@@ -445,6 +445,21 @@
 
 (setq general-default-keymaps 'evil-normal-state-map)
 
+;;
+;; which-key-mode
+;;
+;; After typing a prefix key (e.g. the leader key), show a popup listing the available
+;; continuations. Bindings can be given descriptive labels with general's `:which-key` keyword.
+(setq which-key-idle-delay 0.3) ; The default of 1s feels sluggish.
+;; By default which-key shows bindings on a dense horizontal line. Use a vertical menu instead.
+(setq which-key-max-display-columns 1
+      ;; The menu can take up to 40% of the frame's height.
+      which-key-side-window-max-height 0.4
+      which-key-separator " "
+      ;; Allow commands to be up to 40 chars long. The default is 27.
+      which-key-max-description-length 40)
+(which-key-mode)
+
 (general-define-key
  :keymaps '(normal visual)
  :prefix global-leader-prefix
@@ -1815,25 +1830,33 @@
 (define-leader-keys 'js-mode-map
   "l" 'log-word-under-cursor
   "L" 'log-word-under-cursor-without-value
+  "r" '(:ignore t :which-key "reload")
   "rr" 'reload-active-browser-tab
-  "re" (util/save-and-call 'ext-dev/reload-extension-in-browser)
-  "rs" (util/save-and-call 'js/save-last-run-command)
-  "eb" (util/save-and-call 'js/load-current-file)
-  "eB" (lambda ()
-         (interactive)
-         (js/restart-repl)
-         (js/load-current-file))
+  "re" (cons "reload extension" (util/save-and-call 'ext-dev/reload-extension-in-browser))
+  "rs" (cons "save last run command" (util/save-and-call 'js/save-last-run-command))
+  "e" '(:ignore t :which-key "eval")
+  "eb" (cons "eval buffer" (util/save-and-call 'js/load-current-file))
+  "eB" (cons "restart REPL + eval buffer"
+             (lambda ()
+               (interactive)
+               (js/restart-repl)
+               (js/load-current-file)))
   "ee" 'js/show-repl
   "ek" 'js/clear
-  "clf" 'js/lint-file
-  "clp" 'js/lint-project
+  "en" 'js/restart-repl
+  "t" '(:ignore t :which-key "test")
   "tf" 'js/run-file-as-shoulda-test
   "tF" 'js/restart-and-run-file-as-shoulda-test
-  "en" 'js/restart-repl
   "i" 'js/format-buffer
-  "cc" (go-save-and-compile-fn "make")
+  ;; "c" is the prefix for code-related commands: compiling, linting, refactoring.
+  "c" '(:ignore t :which-key "code")
+  "cc" (cons "make" (go-save-and-compile-fn "make"))
+  "cl" '(:ignore t :which-key "lint")
+  "clf" 'js/lint-file
+  "clp" 'js/lint-project
   "cn" 'next-error
-  "cp" 'previous-error)
+  "cp" 'previous-error
+  "cr" (cons "rename" 'util/replace-string-in-buffer))
 
 (defun my-repl-mode-init ()
   (visual-line-mode))
