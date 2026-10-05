@@ -1798,7 +1798,7 @@
 ;; Recognize shell scripts written with Deno as JavaScript files, based on the shebang line.
 (add-to-list 'interpreter-mode-alist '("deno" . js-mode))
 
-(require 'javascript-repl)
+(require 'js-repl)
 
 (setq js-indent-level 2)
 

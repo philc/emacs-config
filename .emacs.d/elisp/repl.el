@@ -54,7 +54,7 @@
                        (concat str "\n")))
 
 (defun repl/filter-noisy-output (str)
-  (let (;; TODO(philc): Move this filtering logic into javascript-repl.el; it's specific to Deno.
+  (let (;; TODO(philc): Move this filtering logic into js-repl.el; it's specific to Deno.
         ;; re-undefined cleans up two cases of noise:
         ;; * When sending multi-line output to the subprocess, each line of output is followed by
         ;;   "undefined" for some reason.
