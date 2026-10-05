@@ -948,7 +948,7 @@
   "gh" 'elisp/navigate-to-defun)
 
 (define-leader-keys 'emacs-lisp-mode-map
-  "l" 'log-word-under-cursor
+  "l" 'util/log-word-under-cursor
   ;; Note that I'm saving the buffer before each eval because otherwise, the buffer gets saved after
   ;; the eval (due to save-when-switching-windows setup) and the output from the buffer save
   ;; overwrites the eval results in the minibuffer.
@@ -1292,21 +1292,6 @@
 ;;
 (require 'markdown-lite-mode)
 
-(defun replace-region-with-command-output (command-string)
-  (let ((input (if (region-active-p)
-                   (buffer-substring-no-properties (region-beginning) (region-end))
-                 (buffer-substring-no-properties (point-min) (point-max)))))
-    (condition-case err
-        ;; This will throw an error if the command exits with an error status.
-        (let ((out (util/call-process-and-check "/bin/bash" input "-c" command-string)))
-          (if (region-active-p)
-              (util/replace-region out)
-            (util/replace-buffer-text out)))
-      (error
-       (message "%s failed: %s"
-                (cl-first (s-split " " command-string))
-                (error-message-string err))))))
-
 (defun markdown-format-outline-into-sections ()
   "In a document formatted as an outline of nested lists, convert the top-level list items into
    section headers. When writing a doc, it's nicer to organize it as one big list/outline. But when
@@ -1314,17 +1299,17 @@
    the doc is divided into clear sections."
   (interactive)
   ;; NOTE(philc): This is a script I've written to perform this transformation.
-  (replace-region-with-command-output "~/scripts/publishing/format_outline_into_sections.rb"))
+  (util/replace-region-with-command-output "~/scripts/publishing/format_outline_into_sections.rb"))
 
 (defun markdown-format-outline-into-bold-sections ()
   "See markdown-format-outline-into-sections. This uses bolded text as headings, rather than h2s."
   (interactive)
-  (replace-region-with-command-output "~/scripts/publishing/format_outline_into_sections.rb --bold"))
+  (util/replace-region-with-command-output "~/scripts/publishing/format_outline_into_sections.rb --bold"))
 
 (defun markdown-format-outline-into-paragraphs ()
   "See markdown-format-outline-into-sections. This converts each list item into a paragraph."
   (interactive)
-  (replace-region-with-command-output "~/scripts/publishing/format_outline_into_paragraphs.js"))
+  (util/replace-region-with-command-output "~/scripts/publishing/format_outline_into_paragraphs.js"))
 
 (defun markdown-strip-bullets ()
   "Removes any bullet point markers and indentation from lines.
@@ -1332,15 +1317,15 @@
    spreadsheets."
   (interactive)
   ;; NOTE(philc): This is a script I've written to perform this transformation.
-  (replace-region-with-command-output "~/scripts/publishing/strip_bullets.rb"))
+  (util/replace-region-with-command-output "~/scripts/publishing/strip_bullets.rb"))
 
 (defun markdown-convert-to-org ()
   (interactive)
-  (replace-region-with-command-output "~/scripts/publishing/convert_markdown_to_org.rb"))
+  (util/replace-region-with-command-output "~/scripts/publishing/convert_markdown_to_org.rb"))
 
 (defun org-convert-to-markdown()
   (interactive)
-  (replace-region-with-command-output "~/scripts/publishing/convert_org_to_markdown.rb"))
+  (util/replace-region-with-command-output "~/scripts/publishing/convert_org_to_markdown.rb"))
 
 (defun mlm/markdown-insert-date ()
   (interactive)
@@ -1350,11 +1335,11 @@
 
 (defun swap-female-pronouns ()
   (interactive)
-  (replace-region-with-command-output "~/scripts/publishing/swap_pronouns.rb female"))
+  (util/replace-region-with-command-output "~/scripts/publishing/swap_pronouns.rb female"))
 
 (defun swap-male-pronouns ()
   (interactive)
-  (replace-region-with-command-output "~/scripts/publishing/swap_pronouns.rb male"))
+  (util/replace-region-with-command-output "~/scripts/publishing/swap_pronouns.rb male"))
 
 ;;
 ;; Ruby
@@ -1431,14 +1416,10 @@
   (interactive)
   (call-process-region (point-min) (point-max) "/bin/bash" nil nil nil "-c" "browser"))
 
-(defun run-deno-fmt (ext)
-  (setenv "NO_COLOR" "1")
-  (replace-region-with-command-output (format "deno fmt --ext %s -" ext)))
-
 (defun format-html-buffer ()
   "Format and replace the current buffer's contents with `deno fmt`."
   (interactive)
-  (run-deno-fmt "html"))
+  (util/run-deno-fmt "html"))
 
 (define-leader-keys 'html-mode-map
   "i" 'format-html-buffer
@@ -1502,7 +1483,7 @@
   (let ((ext (or (-> (buffer-file-name) (file-name-extension))
                  ;; The file might not have an extension. Assume css.
                  "css")))
-    (run-deno-fmt ext)))
+    (util/run-deno-fmt ext)))
 
 ;; prettier makes more aggressive changes than deno fmt, and generates files that deno fmt will make
 ;; changes to. Since they're not compatible, and I use deno fmt for javascript, I'm not generally
@@ -1510,7 +1491,7 @@
 (defun css/format-buffer-with-prettier ()
   "Format and replace the current buffer's contents using `prettier`."
   (interactive)
-  (replace-region-with-command-output "prettier --no-color --parser css"))
+  (util/replace-region-with-command-output "prettier --no-color --parser css"))
 
 ;; `brace-block` is a text object which can be operated on by `thing-at-point`. (thing-at-point
 ;; 'brace-block) will return all text between and including the set of curly braces surrounding the
@@ -1544,14 +1525,14 @@
 (define-leader-keys 'rust-mode-map
   "cc" (lambda () (interactive) (save-and-compile 'rust-compile))
   "rr" (lambda () (interactive) (save-and-compile 'rust-run))
-  "l" 'log-word-under-cursor
+  "l" 'util/log-word-under-cursor
   "i" 'rust/format-buffer)
 
 (defun rust/format-buffer ()
   "Format and replace the current buffer's contents with `rustfmt`."
   (interactive)
   (save-buffer)
-  (replace-region-with-command-output "rustfmt"))
+  (util/replace-region-with-command-output "rustfmt"))
 
 ;;
 ;; Go mode, for writing golang code
@@ -1672,7 +1653,7 @@
         (lambda () (compile (concat "cd " dir " && " command))))))))
 
 (define-leader-keys 'go-mode-map
-  "l" 'log-word-under-cursor
+  "l" 'util/log-word-under-cursor
   ;; "r" is a namespace for run-related commands.
   "rr" (go-save-and-compile-fn "go run .") ;; make run
   ;; Run file.
@@ -1799,42 +1780,25 @@
 (add-to-list 'interpreter-mode-alist '("deno" . js-mode))
 
 (require 'js-repl)
+(require 'js-editing)
 
 (setq js-indent-level 2)
-
-(defun js/format-buffer ()
-  "Format and replace the current buffer's contents using `deno fmt`."
-  (interactive)
-  (let ((ext (or (-> (buffer-file-name) (file-name-extension))
-                 ;; The file might not have an extension. Assume javascript.
-                 "js")))
-    (run-deno-fmt ext)))
-
-(defun js/lint-file ()
-  (interactive)
-  (save-buffer)
-  (compile (format "deno lint %s" (buffer-file-name))))
-
-(defun js/lint-project ()
-  (interactive)
-  (save-buffer)
-  (compile (format "deno lint %s" (projectile-project-root))))
 
 (require 'js)
 (util/define-keys js-mode-map
                   (kbd "M-r") (util/save-and-call 'js/run-saved-command))
 
 (evil-define-key 'normal js-mode-map
-  "gd" 'js-goto-def
-  "gh" 'js-goto-def-in-file)
+  "gd" 'js/goto-def
+  "gh" 'js/goto-def-in-file)
 
 (evil-define-key 'visual js-mode-map
-  "gd" 'js-goto-def
-  "gh" 'js-goto-def-in-file)
+  "gd" 'js/goto-def
+  "gh" 'js/goto-def-in-file)
 
 (define-leader-keys 'js-mode-map
-  "l" 'log-word-under-cursor
-  "L" 'log-word-under-cursor-without-value
+  "l" 'util/log-word-under-cursor
+  "L" 'util/log-word-under-cursor-without-value
   "r" '(:ignore t :which-key "reload")
   "rr" 'reload-active-browser-tab
   "re" (cons "reload extension" (util/save-and-call 'ext-dev/reload-extension-in-browser))
@@ -1861,178 +1825,12 @@
   "clp" 'js/lint-project
   "cn" 'next-error
   "cp" 'previous-error
-  "cr" (cons "rename" 'js-rename-symbol))
+  "cr" (cons "rename" 'js/rename-symbol))
 
 (defun my-repl-mode-init ()
   (visual-line-mode))
 
-(defun log-word-under-cursor (&optional omit-the-value)
-  "Inserts a logging statement for the word under the cursor, or the current selection.
-   * omit-the-value: only log the string under the cursor, but don't log its value as a variable.
-     This is useful when you want to print some tracing statements."
-  (interactive)
-  (let* ((word
-          (if (region-active-p)
-              (buffer-substring-no-properties (region-beginning) (region-end))
-            (thing-at-point 'word t)))
-         (word (->> word
-                    s-trim
-                    (s-replace "\n" "")
-                    (s-chop-suffix ";")))
-         (format-str
-          (if omit-the-value
-              (pcase major-mode
-                ('js-mode "console.log(\"%s\");")
-                ('go-mode "fmt.Println(\"%s\");")
-                ('rust-mode "println!(\"%s\");")
-                ('emacs-lisp-mode "(printall \"%s\"))"))
-            (pcase major-mode
-              ('js-mode "console.log(\"%s:\", %s);")
-              ('go-mode "fmt.Println(\"%s:\", %s);")
-              ('rust-mode "println!(\"%s: {:?}\", %s);")
-              ('emacs-lisp-mode "(printall \"%s\" %s)"))))
-         (statement
-          (format format-str
-                  ;; Escape any quotes.
-                  (s-replace "\"" "\\\"" word)
-                  word)))
-    (end-of-line)
-    (insert "\n")
-    (indent-according-to-mode)
-    (insert statement)))
-
-(defun log-word-under-cursor-without-value ()
-  (interactive)
-  (log-word-under-cursor t))
-
 (add-hook 'repl-mode-hook 'my-repl-mode-init)
-
-(defun evil-column-of-last-char ()
-  "Column of the last selected character when in visual state, or `current-column' otherwise."
-  ;; This is necessary because when in visual mode, (current-column) returns the column one after
-  ;; the last character in the selection, but in normal mode, it returns the column of the character
-  ;; under the crusor.
-  (interactive)
-  (if (evil-visual-state-p)
-      (let* ((range (evil-visual-range))
-             (end   (evil-range-end range)))
-        ;; `end' is the buffer position *after* the last char; convert to column.
-        (save-excursion
-          (goto-char (1- end))
-          (current-column)))
-    (current-column)))
-
-(defun js-goto-def-in-file ()
-  (interactive)
-  (let* ((bin (expand-file-name "scripts/list_symbols.js" user-emacs-directory))
-         (lines (->> (util/call-process-and-check bin
-                                                  nil
-                                                  (buffer-file-name)
-                                                  (projectile-project-root))
-                     s-trim
-                     (s-split "\n")))
-         (symbols (mapcar (lambda (s)
-                            (cl-second (s-split " " s)))
-                          lines))
-         (selected (completing-read "fn: " symbols nil t))
-         (index (-elem-index selected symbols))
-         (line-col (->> lines
-                        (nth index)
-                        (s-split " ")
-                        cl-first
-                        (s-split ":")))
-         (line (-> line-col cl-first string-to-number))
-         (col (-> line-col cl-second string-to-number)))
-    (util/goto-line line)
-    (move-to-column col)))
-
-(defun js-goto-def ()
-  (interactive)
-  (let* ((bin (expand-file-name "scripts/goto_def.js" user-emacs-directory))
-         (filename-arg (format "%s:%s:%s"
-                               (buffer-file-name)
-                               (line-number-at-pos)
-                               (evil-column-of-last-char)))
-         (result (util/call-process-with-exit-status bin nil filename-arg))
-         (exit-code (cl-first result))
-         (lines (-?>> result
-                      cl-second
-                      s-trim
-                      (s-split "\n"))))
-    (if (= exit-code 1)
-        (message (s-join "\n" lines))
-      (let*
-          ;; TODO(philc): If there are multiple matches, handle that.
-          ((result (cl-first lines))
-           (components (s-split ":" result))
-           (path (nth 0 components))
-           (line (->> components (nth 1) string-to-number))
-           (col (->> components (nth 2) string-to-number)))
-        ;; Before moving the cursor, exit visual mode if there is a selection.
-        (evil-normal-state)
-        (when (not (string= path (buffer-file-name)))
-          (find-file path))
-        (util/goto-line line)
-        ;; move-to-column uses zero-based column numbers.
-        (move-to-column col)
-        (evil-scroll-line-to-center nil)))))
-
-(defun js-nearest-symbol-position (name)
-  "Return the start of the occurrence of the symbol `name` which is nearest to the cursor."
-  (let* ((re (concat "\\_<" (regexp-quote name) "\\_>"))
-         (before (save-excursion (when (re-search-backward re nil t) (point))))
-         (after (save-excursion (when (re-search-forward re nil t) (match-beginning 0)))))
-    (if (and before after)
-        (if (< (- (point) before) (- after (point)))
-            before
-          after)
-      (or before after))))
-
-(defun js-rename-symbol ()
-  "Rename a JS variable everywhere it's in scope: within its block or function, its file, or
-   across the project's files. If text is selected, that's the variable to rename. Otherwise,
-   prompt for the variable's name, defaulting to the symbol under the cursor. See
-   scripts/rename.js."
-  (interactive)
-  (let* ((script (expand-file-name "scripts/rename.js" user-emacs-directory))
-         ;; Outside of a project, use the directory of the current buffer's file.
-         (project-root (expand-file-name (or (projectile-project-root) default-directory)))
-         ;; The selection, as (beginning . end). Evil's visual range includes the character under
-         ;; the cursor, unlike Emacs's region.
-         (selection (cond ((evil-visual-state-p)
-                           (let ((range (evil-visual-range)))
-                             (cons (evil-range-beginning range) (evil-range-end range))))
-                          ((use-region-p)
-                           (cons (region-beginning) (region-end)))))
-         (symbol-bounds (bounds-of-thing-at-point 'symbol))
-         (old-name (if selection
-                       (buffer-substring-no-properties (car selection) (cdr selection))
-                     (read-string "Rename: " (thing-at-point 'symbol t))))
-         (new-name (read-string (format "Rename %s to: " old-name)))
-         ;; The script needs the position of an occurrence of the variable, to determine its scope.
-         (pos (cond (selection (car selection))
-                    ((and symbol-bounds
-                          (string= old-name (buffer-substring-no-properties (car symbol-bounds)
-                                                                            (cdr symbol-bounds))))
-                     (car symbol-bounds))
-                    (t (or (js-nearest-symbol-position old-name)
-                           (user-error "%s doesn't appear in this buffer." old-name))))))
-    (when (evil-visual-state-p)
-      (evil-normal-state))
-    ;; The script edits the files on disk, so unsaved changes in the project must be saved first.
-    (save-some-buffers t (lambda ()
-                           (string-prefix-p project-root (expand-file-name buffer-file-name))))
-    (let* ((line (line-number-at-pos pos t))
-           (column (- pos (save-excursion (goto-char pos) (line-beginning-position))))
-           (filename-arg (format "%s:%s:%s" (buffer-file-name) line column))
-           (result (util/call-process-with-exit-status
-                    script nil filename-arg old-name new-name project-root)))
-      ;; Revert the changed buffers now, rather than leaving it to `global-auto-revert-mode`. That
-      ;; mode can't revert until this command returns, so the buffers would briefly show the old
-      ;; name and could be edited before reverting.
-      (when (= (cl-first result) 0)
-        (util/revert-buffers-changed-on-disk))
-      (message "%s" (s-trim (cl-second result))))))
 
 ;; Detect files in the Deno backtrace format in the compilation buffer, so that files and line
 ;; numbers can be navigated to when the compilation buffer is showing compile or runtime backtraces
@@ -2237,7 +2035,7 @@
   "Format and replace the current buffer's contents with `swift-format`."
   (interactive)
   (save-buffer)
-  (replace-region-with-command-output "swift-format format --ignore-unparsable-files"))
+  (util/replace-region-with-command-output "swift-format format --ignore-unparsable-files"))
 
 ;;
 ;; eglot - Emacs LSP
@@ -2324,7 +2122,7 @@
 (defun sql/format-buffer ()
   (interactive)
   ;; Get this with `brew install sql-formatter`.
-  (replace-region-with-command-output "sql-formatter --language postgresql"))
+  (util/replace-region-with-command-output "sql-formatter --language postgresql"))
 
 (define-leader-keys 'sql-mode-map
   "i" 'sql/format-buffer)

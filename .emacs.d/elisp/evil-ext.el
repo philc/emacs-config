@@ -142,3 +142,18 @@
   :move-point nil
   :type line
   (util/preserve-line-and-column (lambda () (evil-indent beg end))))
+
+(defun evil-column-of-last-char ()
+  "Column of the last selected character when in visual state, or `current-column' otherwise."
+  ;; This is necessary because when in visual mode, (current-column) returns the column one after
+  ;; the last character in the selection, but in normal mode, it returns the column of the character
+  ;; under the crusor.
+  (interactive)
+  (if (evil-visual-state-p)
+      (let* ((range (evil-visual-range))
+             (end   (evil-range-end range)))
+        ;; `end' is the buffer position *after* the last char; convert to column.
+        (save-excursion
+          (goto-char (1- end))
+          (current-column)))
+    (current-column)))

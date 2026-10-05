@@ -466,3 +466,61 @@
          (s-join "\n")
          string-trim
          insert)))
+
+(defun util/replace-region-with-command-output (command-string)
+  (let ((input (if (region-active-p)
+                   (buffer-substring-no-properties (region-beginning) (region-end))
+                 (buffer-substring-no-properties (point-min) (point-max)))))
+    (condition-case err
+        ;; This will throw an error if the command exits with an error status.
+        (let ((out (util/call-process-and-check "/bin/bash" input "-c" command-string)))
+          (if (region-active-p)
+              (util/replace-region out)
+            (util/replace-buffer-text out)))
+      (error
+       (message "%s failed: %s"
+                (cl-first (s-split " " command-string))
+                (error-message-string err))))))
+
+(defun util/run-deno-fmt (ext)
+  (setenv "NO_COLOR" "1")
+  (util/replace-region-with-command-output (format "deno fmt --ext %s -" ext)))
+
+(defun util/log-word-under-cursor (&optional omit-the-value)
+  "Inserts a logging statement for the word under the cursor, or the current selection.
+   * omit-the-value: only log the string under the cursor, but don't log its value as a variable.
+     This is useful when you want to print some tracing statements."
+  (interactive)
+  (let* ((word
+          (if (region-active-p)
+              (buffer-substring-no-properties (region-beginning) (region-end))
+            (thing-at-point 'word t)))
+         (word (->> word
+                    s-trim
+                    (s-replace "\n" "")
+                    (s-chop-suffix ";")))
+         (format-str
+          (if omit-the-value
+              (pcase major-mode
+                ('js-mode "console.log(\"%s\");")
+                ('go-mode "fmt.Println(\"%s\");")
+                ('rust-mode "println!(\"%s\");")
+                ('emacs-lisp-mode "(printall \"%s\"))"))
+            (pcase major-mode
+              ('js-mode "console.log(\"%s:\", %s);")
+              ('go-mode "fmt.Println(\"%s:\", %s);")
+              ('rust-mode "println!(\"%s: {:?}\", %s);")
+              ('emacs-lisp-mode "(printall \"%s\" %s)"))))
+         (statement
+          (format format-str
+                  ;; Escape any quotes.
+                  (s-replace "\"" "\\\"" word)
+                  word)))
+    (end-of-line)
+    (insert "\n")
+    (indent-according-to-mode)
+    (insert statement)))
+
+(defun util/log-word-under-cursor-without-value ()
+  (interactive)
+  (util/log-word-under-cursor t))
