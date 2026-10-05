@@ -12,8 +12,8 @@
 (defun js/format-buffer ()
   "Format and replace the current buffer's contents using `deno fmt`."
   (interactive)
-  (let ((ext (or (-> (buffer-file-name) (file-name-extension))
-                 ;; The file might not have an extension. Assume javascript.
+  (let ((ext (or (-some-> (buffer-file-name) file-name-extension)
+                 ;; If the buffer is not visiting a file, or there's no extension, assume .js
                  "js")))
     (util/run-deno-fmt ext)))
 
