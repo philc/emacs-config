@@ -1,14 +1,21 @@
 {
-  "version": "4",
+  "version": "5",
   "specifiers": {
+    "jsr:@philc/lint-rules@0.1": "0.1.0",
     "jsr:@philc/shoulda@2": "2.0.0",
     "jsr:@std/fs@*": "1.0.19",
+    "jsr:@std/fs@^1.0.18": "1.0.19",
     "jsr:@std/internal@^1.0.10": "1.0.10",
     "jsr:@std/internal@^1.0.9": "1.0.10",
     "jsr:@std/path@^1.1.1": "1.1.2",
-    "jsr:@std/path@^1.1.2": "1.1.2"
+    "jsr:@std/path@^1.1.2": "1.1.2",
+    "npm:eslint-scope@^9.1.2": "9.1.2",
+    "npm:espree@^11.2.0": "11.2.0"
   },
   "jsr": {
+    "@philc/lint-rules@0.1.0": {
+      "integrity": "fcd4bfdb32ed89884395d0425a2687acc2cef3d990653d9e97db1ed8c9e20560"
+    },
     "@philc/shoulda@2.0.0": {
       "integrity": "2bc8b2eb9e5dee41fcd77760b009d3b3527980edf5b29cbf9f25443489a5faa9"
     },
@@ -29,11 +36,60 @@
       ]
     }
   },
+  "npm": {
+    "@types/esrecurse@4.3.1": {
+      "integrity": "sha512-xJBAbDifo5hpffDBuHl0Y8ywswbiAp/Wi7Y/GtAgSlZyIABppyurxVueOPE8LUQOxdlgi6Zqce7uoEpqNTeiUw=="
+    },
+    "@types/estree@1.0.9": {
+      "integrity": "sha512-GhdPgy1el4/ImP05X05Uw4cw2/M93BCUmnEvWZNStlCzEKME4Fkk+YpoA5OiHNQmoS7Cafb8Xa3Pya8m1Qrzeg=="
+    },
+    "acorn-jsx@5.3.2_acorn@8.18.0": {
+      "integrity": "sha512-rq9s+JNhf0IChjtDXxllJ7g41oZk5SlXtp0LHwyA5cejwn7vKmKp4pPri6YEePv2PU65sAsegbXtIinmDFDXgQ==",
+      "dependencies": [
+        "acorn"
+      ]
+    },
+    "acorn@8.18.0": {
+      "integrity": "sha512-lGq+9yr1/GuAWaVYIHRjvvySG5/4VfKIvC8EWxStPdcDh/Ka7FG3twP6v4d5BkravUilhIAsG4Qj83t02LWUPQ==",
+      "bin": true
+    },
+    "eslint-scope@9.1.2": {
+      "integrity": "sha512-xS90H51cKw0jltxmvmHy2Iai1LIqrfbw57b79w/J7MfvDfkIkFZ+kj6zC3BjtUwh150HsSSdxXZcsuv72miDFQ==",
+      "dependencies": [
+        "@types/esrecurse",
+        "@types/estree",
+        "esrecurse",
+        "estraverse"
+      ]
+    },
+    "eslint-visitor-keys@5.0.1": {
+      "integrity": "sha512-tD40eHxA35h0PEIZNeIjkHoDR4YjjJp34biM0mDvplBe//mB+IHCqHDGV7pxF+7MklTvighcCPPZC7ynWyjdTA=="
+    },
+    "espree@11.2.0": {
+      "integrity": "sha512-7p3DrVEIopW1B1avAGLuCSh1jubc01H2JHc8B4qqGblmg5gI9yumBgACjWo4JlIc04ufug4xJ3SQI8HkS/Rgzw==",
+      "dependencies": [
+        "acorn",
+        "acorn-jsx",
+        "eslint-visitor-keys"
+      ]
+    },
+    "esrecurse@4.3.0": {
+      "integrity": "sha512-KmfKL3b6G+RXvP8N1vr3Tq1kL/oCFgn2NYXEtqP8/L3pKapUA4G8cFVaoF3SU323CD4XypR/ffioHmkti6/Tag==",
+      "dependencies": [
+        "estraverse"
+      ]
+    },
+    "estraverse@5.3.0": {
+      "integrity": "sha512-MMdARuVEQziNTeJD8DgMqmhwR11BRQ/cBP+pLtYdSTnf3MIO8fFeiINEbX36ZdNlfU/7A9f3gUw49B3oQsvwBA=="
+    }
+  },
   "workspace": {
     "dependencies": [
       "jsr:@philc/shoulda@2",
       "jsr:@std/fs@^1.0.18",
-      "jsr:@std/path@^1.1.2"
+      "jsr:@std/path@^1.1.2",
+      "npm:eslint-scope@^9.1.2",
+      "npm:espree@^11.2.0"
     ]
   }
 }

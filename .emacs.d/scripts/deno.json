@@ -1,10 +1,18 @@
 {
+  "tasks": {
+    "fix": "deno fmt && deno lint --fix"
+  },
   "fmt": {
     "lineWidth": 100
+  },
+  "lint": {
+    "plugins": ["jsr:@philc/lint-rules@^0.1.0"]
   },
   "imports": {
     "@philc/shoulda": "jsr:@philc/shoulda@^2.0.0",
     "@std/fs": "jsr:@std/fs@^1.0.18",
-    "@std/path": "jsr:@std/path@^1.1.2"
+    "@std/path": "jsr:@std/path@^1.1.2",
+    "eslint-scope": "npm:eslint-scope@^9.1.2",
+    "espree": "npm:espree@^11.2.0"
   }
 }
