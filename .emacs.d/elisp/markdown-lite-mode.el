@@ -1350,6 +1350,11 @@ Stops at blank lines, list items, headers, and horizontal rules."
    the `mlm-list-levels' text property on the line to the value of
    `mlm/markdown-calculate-list-levels' at the start of the line."
   (goto-char start) ; `syntax-propertize-wholelines' ensures this is the start of a line.
+  ;; `syntax-propertize' turns this on before calling us. It makes every syntax-aware operation
+  ;; (e.g. a regexp search using \s-, as `delete-trailing-whitespace' does on save) propertize up to
+  ;; wherever it reaches, which in a large buffer can mean the rest of the buffer. This mode doesn't
+  ;; set `syntax-table' properties, so it doesn't need them looked up.
+  (setq-local parse-sexp-lookup-properties nil)
   (let (;; When first viewing the end of a large buffer, this propertizes all of it. Most of that
         ;; time would be spent garbage collecting at the default threshold.
         (gc-cons-threshold (max gc-cons-threshold (* 64 1024 1024)))
