@@ -859,7 +859,11 @@ If the point is not in a list item, do nothing."
     ;; whitespace only), just move to end of whitespace.
     (if (looking-back (concat mlm/markdown-regex-list "\\s-*") (line-beginning-position))
         (goto-char (match-end 3))
-      (skip-syntax-backward "-"))))
+      (skip-syntax-backward "-")
+      ;; If that backed up into an empty list item on a previous line, the skip also consumed the
+      ;; whitespace after its marker, which is where point usually sits. Include it in the item.
+      (when (looking-back "^[ \t]*\\([0-9]+\\.\\|[*+-]\\)" (line-beginning-position))
+        (skip-chars-forward " \t")))))
 
 (defun mlm/markdown-cur-line-blank-p ()
   "Return t if the current line is blank and nil otherwise."

@@ -58,6 +58,19 @@
     (should (equal (buffer-substring-no-properties (point-min) (point-max))
                    "* A\n* B\n"))))
 
+(ert-deftest markdown-lite-mode-test/move-empty-list-item-down ()
+  "An empty list item (just a marker and a space) should be movable when point is after the space,
+   which is where point sits right after inserting a new item."
+  (with-temp-buffer
+    (insert "* Hey\n  * \n  * One\n")
+    (markdown-lite-mode)
+    (goto-char (point-min))
+    (forward-line 1)
+    (end-of-line)
+    (mlm/markdown-move-list-item-down)
+    (should (equal (buffer-substring-no-properties (point-min) (point-max))
+                   "* Hey\n  * One\n  * \n"))))
+
 (ert-deftest markdown-lite-mode-test/fill-aligns-list-item-continuation-to-marker ()
   "Sanity/regression check for the normal case the code above also handles: a continuation paragraph
    that's indented to align with the list item's own text (not indented deeper, i.e. not a nested
