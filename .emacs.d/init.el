@@ -1058,7 +1058,8 @@
 (setq tab-bar-tab-hints t)
 ;; Show no gap between tabs. I notice that if this is set to nil, " " gets used.
 (setq tab-bar-separator "")
-(setq tab-bar-new-button-show nil)
+;; Hide the "+" button for creating a new tab.
+(setq tab-bar-format (remq 'tab-bar-format-add-tab tab-bar-format))
 (setq tab-bar-close-button-show nil)
 ;; Which tab to select when a tab is closed. The default value for this is 'recent, but that
 ;; behavior doesn't match most MacOS applications, notably Chrome and Safari.
