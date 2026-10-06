@@ -391,8 +391,8 @@
   (interactive)
   (beginning-of-line)
   (when (and (not (bobp))
-             (not (looking-at-p paragraph-start))
-             (forward-line -1)))
+             (not (looking-at-p paragraph-start)))
+    (forward-line -1))
   (backward-paragraph)
   (skip-chars-forward "\n\t "))
 
@@ -411,7 +411,7 @@
 ;; We're defining an evil motion function here, rather than a simple function which does (goto-char
 ;; (point-min)) because the latter will do nothing in Evil's visual line mode, for
 ;; reasons I don't understand.
-(evil-define-motion evil-goto-point-min (count)
+(evil-define-motion evil-goto-point-min (_count)
   "Go to the min point in the buffer."
   ;; Adapted from the implementation of evil-goto-first-line.
   :jump t
@@ -543,7 +543,8 @@
 ;; http://stackoverflow.com/a/10166400/46237
 ;; Note that when Emacs becomes unresponsive (e.g. because I accidentally grepped through qmy home
 ;; directory), I might still need to hold C-g (the Emacs esc/cancel key) to bring it back.
-(defun minibuffer-keyboard-quit ()
+;; This is named so it doesn't clash with the built-in `minibuffer-keyboard-quit` in delsel.el.
+(defun my-minibuffer-keyboard-quit ()
   "Abort recursive edit. In Delete Selection mode, if the mark is active, just deactivate it;
    then it takes a second \\[keyboard-quit] to abort the minibuffer."
   (interactive)
@@ -554,10 +555,10 @@
 
 (define-key evil-normal-state-map [escape] 'keyboard-quit)
 (define-key evil-visual-state-map [escape] 'keyboard-quit)
-(define-key minibuffer-local-map [escape] 'minibuffer-keyboard-quit)
-(define-key minibuffer-local-ns-map [escape] 'minibuffer-keyboard-quit)
-(define-key minibuffer-local-completion-map [escape] 'minibuffer-keyboard-quit)
-(define-key minibuffer-local-must-match-map [escape] 'minibuffer-keyboard-quit)
+(define-key minibuffer-local-map [escape] 'my-minibuffer-keyboard-quit)
+(define-key minibuffer-local-ns-map [escape] 'my-minibuffer-keyboard-quit)
+(define-key minibuffer-local-completion-map [escape] 'my-minibuffer-keyboard-quit)
+(define-key minibuffer-local-must-match-map [escape] 'my-minibuffer-keyboard-quit)
 (global-set-key [escape] 'evil-exit-emacs-state)
 
 ;;
@@ -593,7 +594,7 @@
         ""
       (substring string 0 (dec i)))))
 
-(defun isearch-del-word (&optional arg)
+(defun isearch-del-word (&optional _arg)
   "Delete word from end of search string and search again. If search string is empty, just beep.
   This function definition is based on isearch-del-char, from isearch.el."
   (interactive "p")
@@ -609,19 +610,12 @@
   (isearch-push-state)
   (isearch-update))
 
-;; Taken from https://groups.google.com/forum/#!topic/gnu.emacs.help/vASrP0P-tXM
-(defun recenter-no-redraw (&optional arg)
-  "Centers the viewport around the cursor."
-  (interactive "P")
-  (let ((recenter-redisplay nil))
-    (recenter arg)))
-
 ;; When pressing enter to confirm a search, or jumping to the next result, scroll the result into
 ;; the center of the window. This removes the UX problem of the result appearing at the bottom of
 ;; the screen with little context around it.
-(advice-add 'evil-search-next :after (lambda (&rest _) (recenter-no-redraw)))
-(advice-add 'evil-search-previous :after (lambda (&rest _) (recenter-no-redraw)))
-(advice-add 'isearch-exit :before (lambda (&rest _) (recenter-no-redraw)))
+(advice-add 'evil-search-next :after (lambda (&rest _) (util/recenter-no-redraw)))
+(advice-add 'evil-search-previous :after (lambda (&rest _) (util/recenter-no-redraw)))
+(advice-add 'isearch-exit :before (lambda (&rest _) (util/recenter-no-redraw)))
 
 ;;
 ;; Changing font sizes - text-scale-mode
@@ -638,7 +632,8 @@
 ;; Here we define a global minor mode which runs on all buffers. This is needed because we must set
 ;; the text zoom level for newly created buffers, since text-scale-set works on a per-buffer basis.
 (define-globalized-minor-mode global-text-scale-mode text-scale-mode
-  (lambda () (text-scale-set current-text-zoom-level)))
+  (lambda () (text-scale-set current-text-zoom-level))
+  :group 'display)
 
 (global-text-scale-mode 1)
 
@@ -648,7 +643,7 @@
   (dolist (buffer (buffer-list))
     ;; Avoid resizing the echo area. Otherwise, the Emacs status bar will move up and down to make
     ;; room for echo area whenever a message is printed. This is annoying.
-    (when (not (string-match "*Echo Area.+" (buffer-name buffer)))
+    (when (not (string-match "\\*Echo Area.+" (buffer-name buffer)))
       (with-current-buffer buffer
         (text-scale-set current-text-zoom-level)))))
 
@@ -763,7 +758,7 @@
   (util/save-buffer-if-dirty)
   ;; If we're in insert mode and we come back to this buffer again later, we want the buffer to be
   ;; in normal mode.
-  (switch-to-evil-normal-state)
+  (evil-ext/switch-to-normal-state)
   (let ((one-tab (= 1 (length (tab-bar-tabs))))
         (one-window (one-window-p)))
     (cond
@@ -1055,10 +1050,10 @@
               (interactive)
               (setq previous-projectile-input (minibuffer-contents))
               (projectile-invalidate-cache nil)
-              ;; Reference for running code after `minibuffer-keyboard-quit`:
+              ;; Reference for running code after `my-minibuffer-keyboard-quit`:
               ;; http://stackoverflow.com/q/21000540/46237
               (add-hook 'post-command-hook 'restart-projectile-find-file-hook)
-              (minibuffer-keyboard-quit)))
+              (my-minibuffer-keyboard-quit)))
 
 ;; Tab-bar-mode (built into Emacs)
 ;; I use one tab per "workspace" -- a set of Emacs windows representing a project. The list of tabs
@@ -1092,16 +1087,16 @@
 (defun switch-to-tab (n)
   "Switch to the Nth tab in tab-bar-mode. N is 1-based index."
   (tab-bar-select-tab n)
-  (switch-to-evil-normal-state))
+  (evil-ext/switch-to-normal-state))
 
 ;; I have Karabiner-Elements configured to translate M-j and M-k to these keys.
 (global-set-key (kbd "<A-M-left>") (lambda () (interactive)
                                      (call-interactively 'tab-bar-switch-to-prev-tab)
-                                     (switch-to-evil-normal-state)))
+                                     (evil-ext/switch-to-normal-state)))
 
 (global-set-key (kbd "<A-M-right>") (lambda () (interactive)
                                       (call-interactively 'tab-bar-switch-to-next-tab)
-                                      (switch-to-evil-normal-state)))
+                                      (evil-ext/switch-to-normal-state)))
 
 (defun open-current-buffer-in-new-tab ()
   (interactive)
@@ -2141,7 +2136,7 @@
 (define-key evil-normal-state-map (kbd "C-o")
             (lambda () (interactive)
               (better-jumper-jump-backward)
-              ;; (recenter-no-redraw)
+              ;; (util/recenter-no-redraw)
               ))
 
 ;; Note that "<C-i>" is a special annotation for binding "i". See <C-i> elsewhere in this file for
@@ -2149,7 +2144,7 @@
 (define-key evil-normal-state-map (kbd "<C-i>")
             (lambda () (interactive)
               (better-jumper-jump-forward)
-              ;; (recenter-no-redraw)
+              ;; (util/recenter-no-redraw)
               ))
 
 (defun show-jump-list ()
