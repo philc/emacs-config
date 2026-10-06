@@ -344,3 +344,74 @@
     (forward-line -2)
     (should (equal (mlm/markdown-calculate-list-levels) '((4 . 6) (0 . 2))))
     (should (null (mlm/markdown-match-pre-blocks (point-max))))))
+
+(defun mlm-test/line-faces ()
+  "Returns (LINE . FACE) for each line in the current buffer, where FACE is the face of the line's
+   first non-whitespace character."
+  (save-excursion
+    (goto-char (point-min))
+    (let (result)
+      (while (not (eobp))
+        (back-to-indentation)
+        (push (cons (buffer-substring-no-properties (line-beginning-position) (line-end-position))
+                    (get-text-property (point) 'face))
+              result)
+        (forward-line 1))
+      (nreverse result))))
+
+(defmacro mlm-test/with-fontified-buffer (text &rest body)
+  "Runs BODY in a markdown-lite-mode buffer containing TEXT, after fontifying all of it."
+  (declare (indent 1))
+  `(with-temp-buffer
+     (insert ,text)
+     (markdown-lite-mode)
+     (mlm/markdown-reload-extensions)
+     (font-lock-ensure)
+     ,@body))
+
+(ert-deftest markdown-lite-mode-test/list-item-continuation-lines-highlighted ()
+  "The continuation lines of a list item are highlighted with the item's face, when they're indented
+   to the item's text. A paragraph after the list isn't, nor is a line after a blank line."
+  (mlm-test/with-fontified-buffer (concat "* one\n"
+                                          "  wrapped\n"
+                                          "  * two\n"
+                                          "    wrapped\n"
+                                          "    wrapped\n"
+                                          "  under-indented\n"
+                                          "\n"
+                                          "  after blank\n"
+                                          "- dash\n"
+                                          "  wrapped\n"
+                                          "text\n"
+                                          "text\n")
+    (should (equal (mlm-test/line-faces)
+                   '(("* one" . markdown-list-item1-face)
+                     ("  wrapped" . markdown-list-item1-face)
+                     ("  * two" . markdown-list-item2-face)
+                     ("    wrapped" . markdown-list-item2-face)
+                     ("    wrapped" . markdown-list-item2-face)
+                     ("  under-indented" . nil)
+                     ("" . nil)
+                     ("  after blank" . nil)
+                     ("- dash" . nil)
+                     ("  wrapped" . nil)
+                     ("text" . nil)
+                     ("text" . nil))))))
+
+(ert-deftest markdown-lite-mode-test/list-item-continuation-line-refontified-alone ()
+  "A continuation line is highlighted when it's refontified without its marker line, e.g. after
+   it's edited, or when it's at the start of a jit-lock chunk."
+  (mlm-test/with-fontified-buffer "* one\n  two\n  three\n"
+    (font-lock-unfontify-buffer)
+    (goto-char (point-min))
+    (forward-line 2)
+    (font-lock-fontify-region (point) (line-end-position))
+    (should (equal (cdr (nth 2 (mlm-test/line-faces))) 'markdown-list-item1-face))))
+
+(ert-deftest markdown-lite-mode-test/list-item-continuation-lines-not-multiline ()
+  "Continuation lines are matched one line at a time. If they were matched as one multiline match,
+   font-lock would refontify the whole of a long list item on every keystroke in it."
+  (mlm-test/with-fontified-buffer (concat "* one\n" (apply #'concat (make-list 5 "  two\n")))
+    (should (equal (mapcar #'cdr (mlm-test/line-faces))
+                   (make-list 6 'markdown-list-item1-face)))
+    (should-not (text-property-any (point-min) (point-max) 'font-lock-multiline t))))

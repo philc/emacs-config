@@ -497,6 +497,20 @@
   "^\\([ \t]*\\)\\([0-9]+\\.\\|[*+-]\\)\\([ \t]+\\)"
   "Regular expression for matching list items.")
 
+(defconst mlm/markdown-regex-list-or-blank-line
+  "^[ \t]*\\(?:$\\|\\(?:[0-9]+\\.\\|[*+-]\\)[ \t]\\)"
+  "Regular expression matching a list item's marker line, or a blank line. These are the lines which
+   end a run of list item continuation lines (see `mlm/markdown-match-list-item-continuation').")
+
+(defconst mlm/markdown-list-item-faces
+  `((,mlm/markdown-regex-list-item1 . markdown-list-item1-face)
+    (,mlm/markdown-regex-list-item2 . markdown-list-item2-face)
+    (,mlm/markdown-regex-list-item3 . markdown-list-item3-face)
+    (,mlm/markdown-regex-list-item4 . markdown-list-item4-face)
+    (,mlm/markdown-regex-list-item5 . markdown-list-item5-face)
+    (,mlm/markdown-regex-list-item6 . markdown-list-item6-face))
+  "The regexps which match the marker lines of highlighted list items, and the face of each.")
+
 (defconst mlm/markdown-regex-code
   "\\(\\`\\|[^\\]\\)\\(\\(`+\\)\\(\\(.\\|\n[^\n]\\)*?[^`]\\)\\3\\)\\([^`]\\|\\'\\)"
   "Regular expression for matching inline code fragments.
@@ -1204,6 +1218,7 @@ If we are at the first line, then consider the previous line to be blank."
    (cons mlm/markdown-regex-list-item4 '((0 'markdown-list-item4-face)))
    (cons mlm/markdown-regex-list-item5 '((0 'markdown-list-item5-face)))
    (cons mlm/markdown-regex-list-item6 '((0 'markdown-list-item6-face)))
+   (cons 'mlm/markdown-match-list-item-continuation '((0 mlm/markdown-list-item-continuation-face)))
    ;; (cons 'mlm/markdown-match-multimarkdown-metadata '((1 markdown-metadata-key-face)
    ;;                                                (2 markdown-metadata-value-face)))
    ;; (cons 'mlm/markdown-match-pandoc-metadata '((1 markdown-comment-face)
@@ -1242,6 +1257,43 @@ If we are at the first line, then consider the previous line to be blank."
          (goto-char (match-end 0))
          t)
         (t (forward-char 2) nil)))
+
+;; A list item's text can continue onto the lines after its marker line, e.g. when it's wrapped.
+;; These continuation lines are highlighted with the item's face. A continuation line is in the run
+;; of non-blank, non-marker lines after the item's marker line, and is indented at least to the
+;; item's text. A paragraph after a blank line within an item isn't highlighted.
+;;
+;; Editing a marker line can change the highlighting of the lines after it. font-lock doesn't
+;; refontify those lines right away, but jit-lock does after `jit-lock-context-time': this mode's
+;; font-lock does syntactic fontification, which turns on `jit-lock-contextually'.
+
+(defvar mlm/markdown-list-item-continuation-face nil
+  "The face for the line matched by `mlm/markdown-match-list-item-continuation'.")
+
+(defun mlm/markdown-match-list-item-continuation (last)
+  "Match the next list item continuation line from point to LAST, and set
+   `mlm/markdown-list-item-continuation-face' to the item's face. This matches one line at a time,
+   and leaves point at the end of the line, because font-lock refontifies a multiline match as a
+   whole when any part of it is edited (see `font-lock-multiline')."
+  (let (face)
+    (while (and (not face) (re-search-forward "^[ \t]+[^ \t\n]" last t))
+      (let ((indent (current-indentation)))
+        (save-excursion
+          (forward-line 0)
+          (when (and (not (looking-at mlm/markdown-regex-list))
+                     (not (bobp))
+                     ;; Find the line which starts this run of lines.
+                     (progn (backward-char)
+                            (re-search-backward mlm/markdown-regex-list-or-blank-line nil t))
+                     (looking-at mlm/markdown-regex-list)
+                     (>= indent (mlm/markdown-cur-non-list-indent)))
+            (setq face (cl-loop for (regexp . f) in mlm/markdown-list-item-faces
+                                when (looking-at regexp) return f))))))
+    (when face
+      (set-match-data (list (line-beginning-position) (line-end-position)))
+      (end-of-line)
+      (setq mlm/markdown-list-item-continuation-face face)
+      t)))
 
 (defun mlm/markdown-match-fenced-code-blocks (last)
   "Match fenced code blocks from the point to LAST."
