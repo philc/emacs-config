@@ -266,17 +266,14 @@
 (recentf-mode)
 (define-key recentf-mode-map (kbd "C-w") 'backward-delete-word)
 
-;; When switching focus out of the Emacs app, save the buffer.
-(add-hook 'focus-out-hook 'util/save-buffer-if-dirty)
+(defun on-focus-change ()
+  "When switching focus out of the Emacs app, exit insert mode, so when we return to Emacs, we're
+   in normal mode. Also save the buffer."
+  (unless (frame-focus-state)
+    (evil-ext/switch-to-normal-state)
+    (util/save-buffer-if-dirty)))
 
-(defun switch-to-evil-normal-state ()
-  ;; Don't switch to the normal state in a minibuffer. In the minibuffer we should always be in
-  ;; insert mode. Otheriwse the UX becomes confusing.
-  (when (not (window-minibuffer-p))
-    (evil-normal-state)))
-
-;; Exit insert mode when unfocusing Emacs, so when we return to Emacs, we're in normal mode.
-(add-hook 'focus-out-hook 'switch-to-evil-normal-state)
+(add-function :after after-focus-change-function #'on-focus-change)
 
 ;;
 ;; Scrollbars, in the right fringe. Provided by yascroll mode.
