@@ -825,6 +825,9 @@
 ;; Dired mode - using the Emacs file browser.
 ;;
 
+(require 'dired)
+(require 'dired-aux) ; For dired-add-file.
+
 (defun configure-dired-mode ()
   ;; For some reason, dired's keymap overrides the keys of Evil mode's leader keys, and my global
   ;; macos-keys-minor-mode. To avoid fighting with it, I'm clearing the default dired keymap,
@@ -855,7 +858,7 @@
     "ed" 'dired-do-flagged-delete
     "em" 'dired-do-rename))
 
-(with-eval-after-load 'dired (configure-dired-mode))
+(configure-dired-mode)
 
 ;; By default dired mode shows the file's permissions, access time, size, etc. I just want to see
 ;; the file names.
