@@ -217,7 +217,7 @@
        (clj/quit)
        (message "Starting REPL...")
        (clj/show-repl)
-       (run-clojure inf-clojure-program)
+       (inf-clojure inf-clojure-program)
        ;; Hide the inf-clojure buffer which pops up.
        (with-selected-window (get-buffer-window inf-clojure-buffer t)
          (quit-window))))))
@@ -452,11 +452,6 @@
   ;; (clj/print-any-exceptions)
   )
 
-(defun clj/load-buffer ()
-  (interactive)
-  (util/save-buffer-if-dirty)
-  (clj/load-file (buffer-file-name)))
-
 (defun clj/get-last-sexp-str ()
   (buffer-substring-no-properties (save-excursion (backward-sexp) (point))
                                   (point)))
@@ -559,8 +554,10 @@ but doesn't treat single semicolons as right-hand-side comments."
    (url-of-form 1) (construct-partial 1)                             ; Personal
    ))
 
+(declare-function mlm/bounds-of-space-delimitted-word "markdown-lite-mode")
+
 (defun move-to-start-of-word ()
-  (let ((word-boundary (bounds-of-space-delimitted-word)))
+  (let ((word-boundary (mlm/bounds-of-space-delimitted-word)))
     (if (not (= (car word-boundary) (cdr word-boundary)))
         (goto-char (car word-boundary)))))
 

@@ -901,10 +901,6 @@ If the point is not in a list item, do nothing."
 This variable is defined as a buffer-local variable for dynamic
 extension support.")
 
-(defvar markdown-lite-mode-map
-  "Keymap for Markdown lite major mode."
-  (mark-keymap))
-
 (defun mlm/markdown-prev-line-blank-p ()
   "Return t if the previous line is blank and nil otherwise.
 If we are at the first line, then consider the previous line to be blank."
