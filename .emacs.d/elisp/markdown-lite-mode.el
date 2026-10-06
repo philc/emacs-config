@@ -81,8 +81,8 @@
 
   )
 
-(add-to-list 'auto-mode-alist '("\\.markdown$" . markdown-lite-mode))
-(add-to-list 'auto-mode-alist '("\\.md$" . markdown-lite-mode))
+(add-to-list 'auto-mode-alist '("\\.markdown\\'" . markdown-lite-mode))
+(add-to-list 'auto-mode-alist '("\\.md\\'" . markdown-lite-mode))
 
 (defun mlm/get-next-list-marker (list-marker)
   "When appending a new item to an existing list, this returns the character to be used for that
@@ -92,7 +92,7 @@
    ((string-match "[0-9]" list-marker)
     (concat (int-to-string (+ 1 (string-to-number list-marker))) "."))
    ;; Unordered list
-   ((string-match "[\\*\\+-]" list-marker)
+   ((string-match "[*+-]" list-marker)
     (concat (s-trim-right list-marker)))))
 
 (defun mlm/insert-list-item-below ()
@@ -493,7 +493,7 @@
   "^\\(  \\|\t\\)\\{5,\\}\\* .*$")
 
 (defconst mlm/markdown-regex-list
-  "^\\([ \t]*\\)\\([0-9]+\\.\\|[\\*\\+-]\\)\\([ \t]+\\)"
+  "^\\([ \t]*\\)\\([0-9]+\\.\\|[*+-]\\)\\([ \t]+\\)"
   "Regular expression for matching list items.")
 
 (defconst mlm/markdown-regex-code
@@ -526,6 +526,14 @@ e.g. the \"images/foo.svg\" in ![alt](images/foo.svg).")
 (defconst mlm/markdown-regex-block-separator
   "\\(\\`\\|\\(\n[ \t]*\n\\)[^\n \t]\\)"
   "Regular expression for matching block boundaries.")
+
+(defconst mlm/markdown-regex-hr
+  (rx line-start
+      (group (or (and (repeat 3 (and "*" (? " "))) (* (any "* ")))
+                 (and (repeat 3 (and "-" (? " "))) (* (any "- ")))
+                 (and (repeat 3 (and "_" (? " "))) (* (any "_ ")))))
+      line-end)
+  "Regular expression for matching Markdown horizontal rules.")
 
 (defconst mlm/markdown-regex-header
   "^\\(?:\\(.+\\)\n\\(=+\\)\\|\\(.+\\)\n\\(-+\\)\\|\\(#+\\)\\s-*\\(.*?\\)\\s-*?\\(#*\\)\\)$"
@@ -649,7 +657,7 @@ increase the indentation by one level."
                             (int-to-string (1+ (string-to-number (match-string 1))))
                             ". "))))
          ;; Unordered list
-         ((string-match "[\\*\\+-]" marker)
+         ((string-match "[*+-]" marker)
           (insert new-indent marker)))))))
 
 (defun mlm/markdown-move-list-item-up ()

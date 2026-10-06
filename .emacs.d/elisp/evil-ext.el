@@ -16,8 +16,8 @@
   ;; which is defined below.
   ;; NOTE(philc): I used to change `paragraph-start` and `paragraph-separate`, but that approach is
   ;; more complicated and didn't work in go-mode. See http://stackoverflow.com/q/9923540.
-  (let ((paragraph-start "\f\\|[     ]*$")
-        (paragraph-separate "[  ]*$"))
+  (let ((paragraph-start "\f\\|[ \t]*$")
+        (paragraph-separate "[ \t\f]*$"))
     (evil-select-an-object 'evil-paragraph-from-newlines beg end type count)))
 
 (defun forward-evil-paragraph-from-newlines (&optional count)

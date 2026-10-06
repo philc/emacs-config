@@ -1344,13 +1344,13 @@
 ;;
 ;; Ruby
 ;;
-(add-to-list 'auto-mode-alist '("\\.rake$" . ruby-mode))
-(add-to-list 'auto-mode-alist '("\\.gemspec$" . ruby-mode))
-(add-to-list 'auto-mode-alist '("\\.ru$" . ruby-mode))
-(add-to-list 'auto-mode-alist '("Rakefile$" . ruby-mode))
-(add-to-list 'auto-mode-alist '("Gemfile$" . ruby-mode))
-(add-to-list 'auto-mode-alist '("Capfile$" . ruby-mode))
-(add-to-list 'auto-mode-alist '("Vagrantfile$" . ruby-mode))
+(add-to-list 'auto-mode-alist '("\\.rake\\'" . ruby-mode))
+(add-to-list 'auto-mode-alist '("\\.gemspec\\'" . ruby-mode))
+(add-to-list 'auto-mode-alist '("\\.ru\\'" . ruby-mode))
+(add-to-list 'auto-mode-alist '("Rakefile\\'" . ruby-mode))
+(add-to-list 'auto-mode-alist '("Gemfile\\'" . ruby-mode))
+(add-to-list 'auto-mode-alist '("Capfile\\'" . ruby-mode))
+(add-to-list 'auto-mode-alist '("Vagrantfile\\'" . ruby-mode))
 
 (with-eval-after-load "ruby-mode"
   ;; Ruby mode defines this as "next block". I define it globally as "next window".
@@ -1403,7 +1403,7 @@
 ;; html-beautify is used for indentation in these commands. It's here:
 ;; https://github.com/beautify-web/js-beautify
 ;; To install: cd ~; npm install js-beautify; add ~/node_modules/.bin to your PATH.
-(add-to-list 'auto-mode-alist '("\\.erb$" . html-mode))
+(add-to-list 'auto-mode-alist '("\\.erb\\'" . html-mode))
 
 ;; This is a list of tags that have special font treatment, and looks like this:
 ;; '(("h1" bold underline) ...)
@@ -1516,7 +1516,7 @@
 ;; YAML mode, for editing YAML files
 ;;
 (require 'yaml-mode)
-(add-to-list 'auto-mode-alist '("\\.yml$" . yaml-mode))
+(add-to-list 'auto-mode-alist '("\\.yml\\'" . yaml-mode))
 
 ;;
 ;; Rust mode - currently unused.
@@ -1713,7 +1713,7 @@
   "Returns the go package name defined in the current buffer. Returns nil if no package has been
    defined."
   (let ((file-contents (buffer-string)))
-    (let ((match-exists (string-match "^package \\(.+\\)\w*" file-contents)))
+    (let ((match-exists (string-match "^package \\(.+\\)" file-contents)))
       (when match-exists
         (buffer-substring-no-properties (+ 1 (match-beginning 1))
                                         (+ 1 (match-end 1)))))))
@@ -1853,13 +1853,13 @@
 ;; To quickly and easily develop this, get a deno backtrace in a buffer, and use re-builder.
 (setq deno-error-regexp1
       '(deno-error-1
-        "[ ]+at file://\\([^:]+\\):\\([0-9+\\):\\([0-9]+\\)$"
+        "[ ]+at file://\\([^:]+\\):\\([0-9]+\\):\\([0-9]+\\)$"
         ;; These are match group indices which extract the file, line, and column, respectively.
         1 2 3))
 
 (setq deno-error-regexp2
       '(deno-error-2
-        "[ ]+at [^ ]+ \(file://\\([^:]+\\):\\([0-9+\\):\\([0-9]+\\)\)$"
+        "[ ]+at [^ ]+ \(file://\\([^:]+\\):\\([0-9]+\\):\\([0-9]+\\)\)$"
         ;; These are match group indices which extract the file, line, and column, respectively.
         1 2 3))
 
@@ -2074,7 +2074,7 @@
   (call-interactively 'info))
 
 ;; Ensure .mustache files are opened and edited using mustache mode.
-(add-to-list 'auto-mode-alist '("\\.mustache$" . mustache-mode))
+(add-to-list 'auto-mode-alist '("\\.mustache\\'" . mustache-mode))
 
 ;; This is unbound and invoked with M-x.
 ;; https://emacs.stackexchange.com/a/3446/2278
