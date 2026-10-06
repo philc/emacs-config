@@ -849,7 +849,6 @@
     "!" 'dired-do-shell-command
     "u" 'dired-unmark
     "U" 'dired-unmark-all-marks
-    ;; TODO(philc): dired-details-toggle no longer exists.
     "v" 'dired-hide-details-mode
     ;; Copy the filename(s) at point (or marked) to the kill ring, without the ls -l details that
     ;; dired-hide-details-mode merely hides rather than removes from the buffer.
@@ -1011,6 +1010,7 @@
 ;;
 ;; Projectile (find file from the root of the current project).
 ;;
+(require 'projectile)
 (projectile-mode)
 ;; NOTE(philc): Using this cache is annoying because it gets stale if files appear on disk after a
 ;; git pull. However, in my large repos, without it, projectile-find-file takes about 1s to open,
