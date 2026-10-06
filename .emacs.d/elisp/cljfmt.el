@@ -14,7 +14,7 @@
 (require 'cl-lib)
 
 (defvar cljfmt-command "cljfmt"
-  "The 'cljfmt' command.")
+  "The `cljfmt' command.")
 
 (defvar cljfmt-show-errors 'buffer
   "Where to display cljfmt error output.
@@ -155,11 +155,8 @@ function."
       (kill-buffer errbuf))))
 
 (defun cljfmt-before-save ()
-  "Add this to .emacs to run cljfmt on the current buffer when saving:
- (add-hook 'before-save-hook 'cljfmt-before-save).
-
-Note that this will cause go-mode to get loaded the first time
-you save any file, kind of defeating the point of autoloading."
+  "Run cljfmt on the current buffer if it's a Clojure buffer. To run it when saving, add
+`cljfmt-before-save' to `before-save-hook'."
 
   (interactive)
   (when (or (eq major-mode 'clojure-mode)

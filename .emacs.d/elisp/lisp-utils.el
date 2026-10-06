@@ -15,7 +15,7 @@
 
 (defun constantly (x)
   (let ((x x))
-    (lambda (&rest args) x)))
+    (lambda (&rest _args) x)))
 
 ;;
 ;; Threading (thrush) macros, ported from Clojure.
@@ -54,8 +54,8 @@
   (plist-get plist prop))
 
 (defmacro setq-temporarily (var value form)
-  "Uses setq to set the variable `var` temporarily for the duration of form, and then restores it to its
-   former value. Returns the value that `form` returns."
+  "Uses setq to set the variable `var` temporarily for the duration of form, and then restores it to
+   its former value. Returns the value that `form` returns."
   `(let* ((old-val (symbol-value ',var))
           (_ (setq ,var ,value))
           (ret-val ,form))

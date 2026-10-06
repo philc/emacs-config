@@ -9,7 +9,7 @@
 ;; instance, in Markdown mode, a single item in a bulleted list consistutes a paragraph. Instead,
 ;; I've defined a paragraph to be hunks of text separated by newlines. That's typically what I would
 ;; expect of a paragraph.
-(evil-define-text-object evil-paragraph-from-newlines (count &optional beg end type)
+(evil-define-text-object evil-paragraph-from-newlines (count &optional beg end _type)
   "Select a paragraph separated by newlines."
   :type line
   ;; The implementation of evil-select-an-object will invoke 'forward-evil-paragraph-from-newlines,
@@ -53,7 +53,7 @@
 
 ;; This regexp matches lines starting with these chars:
 ;; ["//", ";;", "/*", "* ", "*/"].
-(setq evil-ext/comment-regexp "^[\t ]*\\(\/\/\\|;;\\|\\/\\*\\|\\*\\/\\|\\* \\).*$")
+(setq evil-ext/comment-regexp "^[\t ]*\\(//\\|;;\\|/\\*\\|\\*/\\|\\* \\).*$")
 
 ;; Matches a line which contains only a comment marker and optional trailing whitespace, e.g. ";;"
 ;; or "//". Used to treat such lines as paragraph breaks when filling a comment block, so that
@@ -61,7 +61,7 @@
 ;; instead of being folded into the surrounding text. Modes like js-mode already get this for free
 ;; because cc-mode reconfigures `paragraph-start`/`paragraph-separate` for comments; lisp-mode does
 ;; not, so we do it ourselves here.
-(setq evil-ext/blank-comment-line-regexp "^[\t ]*\\(\/\/\\|;;\\|\\/\\*\\|\\*\\/\\|\\*\\)[\t ]*$")
+(setq evil-ext/blank-comment-line-regexp "^[\t ]*\\(//\\|;;\\|/\\*\\|\\*/\\|\\*\\)[\t ]*$")
 
 ;; I couldn't get "comment block" working as a first-class evil text object. The code below didn't
 ;; work as intended when writing this in a similar style to forward-evil-paragraph-from-newlines.
@@ -157,3 +157,9 @@
           (goto-char (1- end))
           (current-column)))
     (current-column)))
+
+(defun evil-ext/switch-to-normal-state ()
+  ;; Don't switch to the normal state in a minibuffer. In the minibuffer we should always be in
+  ;; insert mode. Otherwise the UX becomes confusing.
+  (when (not (window-minibuffer-p))
+    (evil-normal-state)))

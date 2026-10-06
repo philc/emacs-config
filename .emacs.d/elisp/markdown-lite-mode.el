@@ -147,8 +147,8 @@
       (insert (concat "\n" setext-str)))))
 
 (defun mlm/preview-markdown (&optional markdown-stylesheet show-in-browser)
-  (interactive)
   "Pipes the buffer's contents into a script which renders the markdown as HTML."
+  (interactive)
   (let* ((beg (if (use-region-p)
                   (region-beginning)
                 (point-min)))
@@ -173,7 +173,7 @@
       (util/call-process-and-check "browser" html))))
 
 (defun mlm/markdown-get-list-item-region ()
-  "Returns '(start, end) for the markdown list item under the cursor, excluding subtrees."
+  "Returns (start end) for the markdown list item under the cursor, excluding subtrees."
   (interactive)
   (save-excursion
     (let ((start (line-beginning-position))
@@ -254,7 +254,7 @@
   (back-to-indentation)) ; Move the cursor to the first non-whitespace character.
 
 (defun mlm/bounds-of-space-delimitted-word ()
-  "Returns a cons list of coordinates of the boundary of the word under the cursor, where 'word' is
+  "Returns a cons list of coordinates of the boundary of the word under the cursor, where a word is
    defined as any sequence of non-whitespace characters."
   (let* ((start nil)
          (end nil))
@@ -429,7 +429,8 @@
 
 (defun mlm/outline-level ()
   "The `outline-level' of the heading or list item on the current line. List items are considered
-   to be on the level of the ATX heading they appear under, and then further based on their indentation.
+   to be on the level of the ATX heading they appear under, and then further based on their
+   indentation.
 
    Outline modes commands call this function for every heading and list item they visit, so this
    function needs to be fast. Most of a line's level can be read off the line itself: a heading's
@@ -760,14 +761,14 @@ upon failure."
   "Search forward from point for the next list item with indentation LEVEL.
 Set point to the beginning of the item, and return point, or nil
 upon failure."
-  (let (bounds indent prev next)
+  (let (bounds indent next)
     (setq next (point))
     (forward-line)
     (setq indent (current-indentation))
     (while
         (cond
          ;; Stop at end of the buffer.
-         ((eobp) (setq prev nil))
+         ((eobp) nil)
          ;; Continue if the current line is blank
          ((mlm/markdown-cur-line-blank-p) t)
          ;; List item
@@ -856,7 +857,7 @@ If the point is not in a list item, do nothing."
       (setq indent (current-indentation)))
     ;; Don't skip over whitespace for empty list items (marker and
     ;; whitespace only), just move to end of whitespace.
-    (if (looking-back (concat mlm/markdown-regex-list "\\s-*"))
+    (if (looking-back (concat mlm/markdown-regex-list "\\s-*") (line-beginning-position))
         (goto-char (match-end 3))
       (skip-syntax-backward "-"))))
 
@@ -869,7 +870,7 @@ If the point is not in a list item, do nothing."
 (defun mlm/markdown-nobreak-p ()
   "Return nil if it is acceptable to break the current line at the point."
   ;; inside in square brackets (e.g., link anchor text)
-  (looking-back "\\[[^]]*"))
+  (looking-back "\\[[^]]*" (line-beginning-position)))
 
 (defun mlm/markdown-adaptive-fill-function ()
   "Return prefix for filling paragraph or nil if not determined."

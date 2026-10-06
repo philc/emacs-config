@@ -8,7 +8,7 @@
                      (-map (lambda (s) (s-chop-prefix "|" s)))))
          (columns (list)))
     (dolist (line lines)
-      (let* ((column-values (s-split "\|" line)))
+      (let* ((column-values (s-split "|" line)))
         ;; (progn (print ">>>> line") (prin1 line t))
         ;; (progn (print ">>>> column-values") (prin1 column-values t))
         (dotimes (i (length column-values))
@@ -22,7 +22,7 @@
 
 (defun tables/parse-rows (text)
   "Returns a list of rows, each containing cells."
-  (let* ((rows (s-split "\n?\|[\-\|]+\n" text)))
+  (let* ((rows (s-split "\n?|[-|]+\n" text)))
     ;; Remove any table borders at the very bottom of the table.
     (if (string= (car (last rows)) "")
         (-drop-last 1 rows)

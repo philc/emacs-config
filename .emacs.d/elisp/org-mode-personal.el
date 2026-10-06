@@ -205,4 +205,4 @@
          (or heading-arg
              (completing-read "Heading: " (mapcar #'car (org/top-level-headings)) nil t))))
     (org/goto-top-level-heading-named heading)
-    (recenter-no-redraw)))
+    (util/recenter-no-redraw)))

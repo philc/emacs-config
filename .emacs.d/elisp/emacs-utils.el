@@ -15,8 +15,9 @@
   `(general-define-key :prefix global-leader-prefix :states '(normal visual) :keymaps ,keymaps ,@keybindings))
 
 (defun util/call-process-with-exit-status (program stdin &rest args)
-  "Runs a command and returns a list containing the status code and output string.
-   E.g.: (call-process-with-exit-status 'ls' '-h' '-l' '-a') ;; => (0 '-r-w-r-- 1 ...')"
+  "Runs PROGRAM with ARGS, passing STDIN as its input if non-nil. Returns a list containing the exit
+   status and the output string."
+  ;; E.g. (util/call-process-with-exit-status "ls" nil "-h" "-l") ;; => (0 "-rw-r--r-- 1 ...")
   (with-temp-buffer
     (when stdin
       (insert stdin))
@@ -527,3 +528,10 @@
 (defun util/log-word-under-cursor-without-value ()
   (interactive)
   (util/log-word-under-cursor t))
+
+;; Taken from https://groups.google.com/forum/#!topic/gnu.emacs.help/vASrP0P-tXM
+(defun util/recenter-no-redraw (&optional arg)
+  "Centers the viewport around the cursor."
+  (interactive "P")
+  (let ((recenter-redisplay nil))
+    (recenter arg)))

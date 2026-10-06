@@ -6,6 +6,7 @@
 (require 'cl-lib)
 (require 'dash)
 (require 's)
+(require 'evil-ext)
 
 ;; Customize this to include the paths of folders containing projects, and notes.
 (defvar project-nav/project-folders '())
@@ -48,7 +49,7 @@
            find-file))
     ;; When that file is shown, ensure it's in normal mode. If the file is open in another window in
     ;; insert mode, then it will remain in insert mode in this current window.
-    (switch-to-evil-normal-state)))
+    (evil-ext/switch-to-normal-state)))
 
 (defun project-nav/sort-by-file-mtime (paths)
   "Returns the paths, sorted by mtime descending."
@@ -71,7 +72,7 @@
     sorted-names))
 
 (defun project-nav/open-root-of-project (project-path)
-  "Opens the project at path. If it's a clojure project, find the project's 'main' file and open
+  "Opens the project at path. If it's a clojure project, find the project's main file and open
    that. Otherwise, used dired to open the file in `path`."
   ;; NOTE(philc): This function opens the "main" files in the project types that I typically work
   ;; on. Customzie this to meet your needs if you want this functionality.

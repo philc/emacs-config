@@ -58,13 +58,16 @@
 ;; This redefines the inf-clojure-preoutput-filter defined in inf-clojure.
 ;; TODO(philc): Can I get rid of this? If not, I can just declare my own function and add it as a preoutput
 ;; filter to the proc.
+(defvar clj/debug-preoutput nil
+  "The last output passed to `inf-clojure-preoutput-filter', stored for debugging.")
+
 (defun inf-clojure-preoutput-filter (str)
   "Preprocess the output (`str`) from the clojure process, removing whitespace etc.."
   ;; NOTE(philc): When debugging this function, you can't write to stdout using print, because it will mess up
   ;; the process filter... until I find a better way, my strategy for debugging this is to store intermediate
   ;; values into variables for later inspection outside of this function.
   (let ((str (remove-junk-from-inf-clojure-output str)))
-    (setq output-debug str)
+    (setq clj/debug-preoutput str)
     (let* ((exception-output-token (format "%sexception-occurred\n" clojure-simple-output-prefix))
            (exception-occurred (s-contains? exception-output-token str)))
       (when exception-occurred
@@ -208,7 +211,8 @@
   "/Users/phil/src/liftoff/workbench")
 
 (defun clj/restart-repl ()
-  "Starts the REPL if it's not running; otherwise resetarts it by killing and recreating the REPL buffer."
+  "Starts the REPL if it's not running; otherwise restarts it by killing and recreating the REPL
+   buffer."
   (interactive)
   (save-excursion
     (util/preserve-selected-window
@@ -254,8 +258,8 @@
   (-?>> s s-lines (-drop-last 1) (s-join "\n")))
 
 (defun clj/eval-and-capture-output (command &optional silence)
-  "This will run the command, progressively output its stdout to our clj buffer as it comes in, and return the
-   full output string once the command has finished executing."
+  "This will run the command, progressively output its stdout to our clj buffer as it comes in, and
+   return the full output string once the command has finished executing."
   ;; NOTE(philc): Warning: this can return no/incomplete output after a timeout, to keep Emacs responsive. I
   ;; should signal this with an exception.
   (interactive)
@@ -270,25 +274,25 @@
          (last-string "")
          (exception-output-token (format "%sexception-occurred\n" clojure-simple-output-prefix))
          ;; Taken from inf-clojure-show-arglist.
-         (process-fn (lambda (proc string)
-                       (setq last-string string)
-                       (let* ((s (remove-junk-from-inf-clojure-output string))
-                              (exception-occurred (s-contains? exception-output-token s)))
-                         (progn (print ">>>> s") (prin1 s t))
-                         ;; (when exception-occurred
-                         ;;   (setq s (s-replace exception-output-token "" s)))
-                         ;; (clj/print-any-exceptions)
-                         ;; TODO(philc): describe the asynchronous nature here
-                         ;; (when (not silence)
-                         (clj/append-to-repl-buffer s)
-                         (setq kept (concat kept s))
-                         ;; (when (and exception-occurred)
-                         ;;   (print "elisp: found an exception which occured")
-                         ;;   (clj/print-any-exceptions)
-                         ;;   )
-                         ))))
+         (_process-fn (lambda (_proc string)
+                        (setq last-string string)
+                        (let* ((s (remove-junk-from-inf-clojure-output string))
+                               (exception-occurred (s-contains? exception-output-token s)))
+                          (progn (print ">>>> s") (prin1 s t))
+                          ;; (when exception-occurred
+                          ;;   (setq s (s-replace exception-output-token "" s)))
+                          ;; (clj/print-any-exceptions)
+                          ;; TODO(philc): describe the asynchronous nature here
+                          ;; (when (not silence)
+                          (clj/append-to-repl-buffer s)
+                          (setq kept (concat kept s))
+                          ;; (when (and exception-occurred)
+                          ;;   (print "elisp: found an exception which occured")
+                          ;;   (clj/print-any-exceptions)
+                          ;;   )
+                          ))))
     ;; (progn (print ">>>> command") (prin1 command t))
-    ;; (set-process-filter proc process-fn)
+    ;; (set-process-filter proc _process-fn)
     (let* ((result (unwind-protect
                        (progn
                          (process-send-string proc command)
@@ -311,7 +315,8 @@
   (clj/load-file (buffer-file-name)))
 
 (defun clj/ns-of-buffer (&optional buffer)
-  "Returns the namespace of the clojure file (as defined in the `(ns)` form) or nil if none could be found."
+  "Returns the namespace of the clojure file (as defined in the `(ns)` form) or nil if none could be
+   found."
   (-let* ((b (or buffer (current-buffer)))
           (contents (with-current-buffer b
                       (buffer-substring-no-properties (point-min) (point-max)))))
@@ -320,7 +325,6 @@
 
 (defun clj/wrap-sexp-in-current-ns (str)
   (-let* ((ns (or (clj/ns-of-buffer) "user"))
-          (s (format "(binding [*ns* '%s] %s)" ns str))
           (require-statement (format "(clojure.core/require '%s)" ns)))
     ;; We first require the namespace before switching to it in case it hasn't yet been loaded.
     (format "(do %s (clojure.core/in-ns '%s) %s)" require-statement ns str)))
@@ -337,7 +341,7 @@
   (format "(with-open [f (clojure.java.io/writer \"%s\")]
              (binding [*out* f *err* f] (println %s)))" path str))
 
-(defun clj/wrap-sexp (str pprint wrap-ns &optional dont-record-exceptions file-to-redirect-output)
+(defun clj/wrap-sexp (str pprint wrap-ns &optional dont-record-exceptions)
   "Wraps the given sexp with pretty printing, execution in the current file's namespace, and sets
    the `_last-exception` var in the clojure process if this statement causes an exception.
    - dont-record-exceptions: don't modify _last-exception as a result of evaluating `str`."
@@ -390,7 +394,7 @@
 
 (defun clj/file-of-backtrace-line (line)
   "`line` should be of the form:
-    'the-ns.class/the-fn-name (the-file-name.clj:213)'.
+    `the-ns.class/the-fn-name (the-file-name.clj:213)`.
     Returns a list containing file name and line number."
   (string-match ".+ (\\(.+\\))" line)
   (let* ((tuple-str (match-string 1 line))
@@ -442,9 +446,9 @@
   )
 
 (defun clj/load-file (file-name)
-  "Load and run a Clojure file. This uses clojure.core/load-file. This is better than evaluating the string
-   contents of a file, because load-file preserves file and line-number metadata, which makes exception
-   backtraces intelligible."
+  "Load and run a Clojure file. This uses clojure.core/load-file. This is better than evaluating the
+   string contents of a file, because load-file preserves file and line-number metadata, which makes
+   exception backtraces intelligible."
   (clj/print-separator)
   (-> (format "(clojure.core/load-file \"%s\")\n" file-name)
       (clj/wrap-sexp t nil)
@@ -464,7 +468,7 @@
 
 (defun clj/correct-defn-file-metadata (exp thing)
   "If exp starts with a defn, this will wrap exp and set its file metadata.
-   - thing: the same arg you would pass to thing-at-point (e.g. 'list, 'sexp, 'defun)."
+   - thing: the same arg you would pass to thing-at-point (e.g. `list`, `sexp`, `defun`)."
   (let ((fn-name (clj/parse-fn-name-from-defn exp)))
     (if fn-name
         (format "(do %s (alter-meta! #'%s assoc :file \"%s\" :line %s :column 0))"
@@ -494,8 +498,8 @@
       clj/eval-in-current-ns))
 
 (defun clj/on-inf-clojure-buffer-created ()
-  "Perform any setup you desire to newly created inf-clojure buffers. This exists because the inf clojure
-   buffer has no major mode, so it's hard to customize."
+  "Perform any setup you desire to newly created inf-clojure buffers. This exists because the inf
+   clojure buffer has no major mode, so it's hard to customize."
   ;; (print "setting up")
   ;; (print inf-clojure-buffer)
   (with-current-buffer inf-clojure-buffer
@@ -516,11 +520,11 @@
 ;; Indenting and moving sexps.
 ;;
 
-(defun lisp-indent-line-single-semicolon-fix (&optional whole-exp)
+(defun lisp-indent-line-single-semicolon-fix (&optional _whole-exp)
   "Identical to the built-in function lisp-indent-line,
 but doesn't treat single semicolons as right-hand-side comments."
   (interactive "P")
-  (let ((indent (calculate-lisp-indent)) shift-amt end
+  (let ((indent (calculate-lisp-indent)) shift-amt
         (pos (- (point-max) (point)))
         (beg (progn (beginning-of-line) (point))))
     (skip-chars-forward " \t")
@@ -648,7 +652,8 @@ but doesn't treat single semicolons as right-hand-side comments."
       (match-string 1 form))))
 
 (defun clj/run-test-at-point ()
-  "Runs the clojure.test under the cursor by invoking the function defined by the test in the cider repl."
+  "Runs the clojure.test under the cursor by invoking the function defined by the test in the cider
+   repl."
   (interactive)
   ;; Note that prior to running the test, we eval the test's definition in case we've edited its source since
   ;; our last eval. We load the entire buffer rather than just evaling the test's definition because loading

@@ -11,10 +11,10 @@
 (require 'evil-ext)
 
 (defun evil-ext-test/fill-at-marker (text)
-  "Inserts TEXT into a new emacs-lisp-mode buffer, removes the \"|\" marker in it (which marks where
-   point should be), and runs evil-ext/fill-inside-paragraph-or-comment-block from there. Returns the
-   buffer's contents afterwards. This mimics a user pressing `SPC` (gqip) with their cursor inside a
-   comment."
+  "Inserts TEXT into a new emacs-lisp-mode buffer, removes the \"|\" marker in it (which marks
+   where point should be), and runs evil-ext/fill-inside-paragraph-or-comment-block from there.
+   Returns the buffer's contents afterwards. This mimics a user pressing `SPC` (gqip) with their
+   cursor inside a comment."
   (with-temp-buffer
     (insert text)
     (emacs-lisp-mode)

@@ -81,7 +81,7 @@ Date: %ad
                          (util/preserve-selected-window
                           (lambda ()
                             (select-window w)
-                            (beginning-of-buffer)))))))))
+                            (goto-char (point-min))))))))))
 
 ;; Magit mode feels twitchy because every key has a binding, and some are very destructive or
 ;; disorienting. I'm defining a whitelist of keys that I actually use, so this mode feels less
