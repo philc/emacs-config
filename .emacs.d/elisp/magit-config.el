@@ -14,6 +14,7 @@
 (require 's)
 (require 'view) ; for View-scroll-half-page-backward.
 (require 'magit)
+(require 'window-management)
 (provide 'magit-config)
 
 ;; When committing, don't have Magit show the diff of what's changed. This feature is annoying
@@ -254,3 +255,13 @@ Date: %ad
       (magit-section-show section)))
   ;; Put the cursor on the unstaged section.
   (call-interactively #'magit-jump-to-unstaged))
+
+(defun show-git-status-in-left-column ()
+  (interactive)
+  ;; We want to show the git status for the current buffer's repo. We first get that repo before
+  ;; switching to the first column's window, because it may contain a buffer from a different git
+  ;; repo.
+  (let ((dir (magit-toplevel)))
+    (wm/switch-to-column 0)
+    (magit-status-setup-buffer dir)
+    (magit-status-and-focus-unstaged)))

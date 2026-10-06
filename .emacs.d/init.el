@@ -485,16 +485,6 @@
  ;; "View Emacs init.el"
  "ve" (util/save-and-call (lambda () (find-file "~/.emacs.d/init.el"))))
 
-(defun show-git-status-in-left-column ()
-  (interactive)
-  ;; We want to show the git status for the current buffer's repo. We first get that repo before
-  ;; switching to the first column's window, because it may contain a buffer from a different git
-  ;; repo.
-  (let ((dir (magit-toplevel)))
-    (wm/switch-to-column 0)
-    (magit-status dir)
-    (magit-status-and-focus-unstaged)))
-
 (defun backward-kill-line (arg)
   "Delete backward (Ctrl-u) as in Bash, and save the contents to the clipboard."
   (interactive "p")
