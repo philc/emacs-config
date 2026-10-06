@@ -1011,7 +1011,7 @@
 ;;
 ;; Projectile (find file from the root of the current project).
 ;;
-(projectile-global-mode)
+(projectile-mode)
 ;; NOTE(philc): Using this cache is annoying because it gets stale if files appear on disk after a
 ;; git pull. However, in my large repos, without it, projectile-find-file takes about 1s to open,
 ;; which is an unacceptable delay.
