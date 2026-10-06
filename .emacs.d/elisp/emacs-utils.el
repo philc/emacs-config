@@ -48,12 +48,12 @@
 (defun util/replace-buffer-text (new-text)
   "Replaces the entire buffer with the new text."
   (save-excursion
-    ;; We're using replace-buffer-contents because it very helpfully preserves the scroll positions
+    ;; We're using replace-region-contents because it very helpfully preserves the scroll positions
     ;; of all windows displaying this buffer.
     ;; https://emacs.stackexchange.com/a/47889/2278
     (let ((tmp-buf (generate-new-buffer " *temp*")))
       (with-current-buffer tmp-buf (insert new-text))
-      (replace-buffer-contents tmp-buf)
+      (replace-region-contents (point-min) (point-max) tmp-buf)
       (kill-buffer tmp-buf))))
 
 (defun util/replace-region (new-text)
@@ -97,7 +97,7 @@
 
 (defun util/save-buffer-silently ()
   "Saves the buffer while suppressing output to the *Messages* buffer. This avoids cluttering up the
-   Messages buffer with lots of 'save' output."
+   Messages buffer with lots of save output."
   (interactive)
   ;; NOTE(philc): Saving files generates messages in the *Messages* buffer of the form "Wrote file
   ;; xyz". However, note that if there's an issue saving a file, it's possible the error will be
@@ -174,8 +174,7 @@
 
 (defun util/preserve-scroll-position (f)
   (let ((point-pos (point))
-        (start-pos (window-start))
-        (end-pos (window-end)))
+        (start-pos (window-start)))
     (unwind-protect
         (funcall f)
       (goto-char point-pos)
@@ -203,10 +202,10 @@
                  (let (p0 p1 p2)
                    (setq p0 (point))
                    ;; chars that are likely to be delimiters of full path, e.g. space, tabs, brakets.
-                   (skip-chars-backward "^  \"\t\n'|()[]{}<>〔〕“”〈〉《》【】〖〗«»‹›·。\\`")
+                   (skip-chars-backward "^ \"\t\n'|()[]{}<>〔〕“”〈〉《》【】〖〗«»‹›·。`")
                    (setq p1 (point))
                    (goto-char p0)
-                   (skip-chars-forward "^  \"\t\n'|()[]{}<>〔〕“”〈〉《》【】〖〗«»‹›·。\\'")
+                   (skip-chars-forward "^ \"\t\n'|()[]{}<>〔〕“”〈〉《》【】〖〗«»‹›·。")
                    (setq p2 (point))
                    (goto-char p0)
                    (buffer-substring-no-properties p1 p2))))
@@ -287,8 +286,8 @@
 ;; Calling this interactively can be very helpful in determining why a key isn't getting bound
 ;; by evil. Evil may be getting overriden by a keybinding on a text property.
 (defun util/keymaps-at-point ()
-  (interactive)
   "List keymaps that are active at the current point."
+  (interactive)
   (let ((keymaps (list)))
     (if (get-char-property (point) 'keymap)
         (push (get-char-property (point) 'keymap) keymaps))
@@ -352,8 +351,18 @@
                  (read-string "Replace string: "))))
      (list from (read-string (format "Replace '%s' with: " from)))))
   (deactivate-mark)
-  (save-excursion
-    (replace-string from to nil (point-min) (point-max))))
+  ;; This mirrors `replace-string`'s case handling, which we can't call non-interactively: the search
+  ;; is case-insensitive if FROM has no uppercase letters, and the replacement then matches the case
+  ;; of the text it replaces.
+  (let ((case-fold-search (and case-fold-search search-upper-case
+                               (isearch-no-upper-case-p from nil)))
+        (count 0))
+    (save-excursion
+      (goto-char (point-min))
+      (while (search-forward from nil t)
+        (replace-match to (not (and case-fold-search case-replace)) t)
+        (setq count (1+ count))))
+    (message "Replaced %d occurrence%s" count (if (= count 1) "" "s"))))
 
 (defun util/time (fn)
   "Executes fn, prints how long it took, and returns its value."
@@ -441,7 +450,7 @@
     ;; NOTE(philc): We could check if this is a URL and avoid mangling the clipboard if it's not.
     ;; For now, assume it's a URL.
     (let ((trimmed-url (->> clipboard
-                            (s-split "?")
+                            (s-split "[?]")
                             cl-first
                             (s-split "#")
                             cl-first)))
