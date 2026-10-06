@@ -65,6 +65,17 @@ Date: %ad
 ;; https://magit.vc/manual/magit/Performance.html
 (setq magit-revision-insert-related-refs nil)
 
+;; Magit runs git in a pty, so tools invoked by git hooks (e.g. deno) think they're writing to a
+;; terminal and emit cursor-movement and erase-line escape sequences to draw progress indicators.
+;; Magit's process buffer only interprets color (SGR) sequences, so the others show up as garbage.
+;; Strip all non-SGR CSI sequences from process output.
+(defun magit-strip-cursor-escapes (args)
+  (let ((proc (car args))
+        (string (cadr args)))
+    (list proc (replace-regexp-in-string "\e\\[[0-9;?]*[A-HJKSTfhl]" "" string))))
+
+(advice-add 'magit-process-filter :filter-args #'magit-strip-cursor-escapes)
+
 (defun show-commit-and-preserve-window ()
   (interactive)
   (util/preserve-selected-window
