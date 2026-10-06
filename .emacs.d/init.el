@@ -152,10 +152,6 @@
 (setq use-short-answers t)
 
 ;; Increase the maximum stack depth (the default is 1000).
-;; Without this, some of the iterative functions I've written (like
-;; project-nav/project-nav/open-file-from-notes-folder) trigger a stack overflow exception.
-(setq max-specpdl-size 2000)
-
 ;; Turn off backups and autosaves so we don't have ~ and # files strewn about the working directory.
 ;; I've tried storing backups in my home directory as suggested by
 ;; http://stackoverflow.com/q/151945/46237, but still I see the occasional backup file in the
