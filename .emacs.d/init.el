@@ -1210,11 +1210,13 @@
 ;; The faces mode-line and mode-line-inactive are customized in my theme file.
 (defface powerline-active-buffer-id
   '((t (:foreground "orange" :weight bold :inherit mode-line)))
-  "Powerline face")
+  "Powerline face"
+  :group 'powerline)
 
 (defface powerline-inactive-buffer-id
   '((t (:foreground "orange" :weight bold :inherit mode-line-inactive)))
-  "Powerline face")
+  "Powerline face"
+  :group 'powerline)
 
 (defun powerline-personal-theme ()
   "My customized powerline, copied and slightly modified from the default theme in powerline.el."
@@ -1609,10 +1611,7 @@
 (defun go-test-file ()
   "Runs go test with the path of the current buffer's file."
   (interactive)
-  (let* ((path (file-relative-name
-                (file-truename (buffer-file-name))
-                (projectile-project-root)))
-         (dir (file-name-directory (buffer-file-name)))
+  (let* ((dir (file-name-directory (buffer-file-name)))
          (file-name (file-name-nondirectory (buffer-file-name)))
          ;; If this command was run on x_test.go, run that test. If it was run from x.go, then run
          ;; x_test.go
@@ -1670,7 +1669,7 @@
 (defun gofmt-ignoring-errors ()
   (interactive)
   (cl-letf (((symbol-function #'gofmt--process-errors)
-             (lambda (&rest args)
+             (lambda (&rest _args)
                (message "gofmt error in %s" (buffer-name)) t)))
     (gofmt)))
 
@@ -1842,7 +1841,7 @@
 
 (setq deno-error-regexp2
       '(deno-error-2
-        "[ ]+at [^ ]+ \(file://\\([^:]+\\):\\([0-9]+\\):\\([0-9]+\\)\)$"
+        "[ ]+at [^ ]+ (file://\\([^:]+\\):\\([0-9]+\\):\\([0-9]+\\))$"
         ;; These are match group indices which extract the file, line, and column, respectively.
         1 2 3))
 
@@ -1885,7 +1884,7 @@
 
 ;; Use Projectile to determine what the current project is when invoking ag-project. Normally, AG
 ;; will simply find the surrounding .git directory and use that as the project.
-(setq ag-project-root-function (lambda (f) (projectile-project-root)))
+(setq ag-project-root-function (lambda (_f) (projectile-project-root)))
 
 ;; Note that ag mode configures itself to start in Evil's "motion" state.
 (evil-define-key 'normal ag-mode-map
@@ -1907,7 +1906,8 @@
   ;; which aren't ag-mode.
   (set (make-local-variable 'compilation-button-map)
        (let ((map (copy-keymap compilation-button-map)))
-         (define-key compilation-button-map (kbd "RET") 'ag/open-search-result-in-same-window))))
+         (define-key map (kbd "RET") 'ag/open-search-result-in-same-window)
+         map)))
 
 (add-hook 'ag-mode-hook 'my-ag-mode-setup)
 
@@ -1923,9 +1923,9 @@
                                 (condition-case nil (windmove-right)
                                   (error (progn (split-window-right) (windmove-right)))))))
     (util/with-patch-function
-     'pop-to-buffer (buffer &rest args) (progn
-                                          (funcall move-right-or-create)
-                                          (switch-to-buffer buffer))
+     'pop-to-buffer (buffer &rest _args) (progn
+                                           (funcall move-right-or-create)
+                                           (switch-to-buffer buffer))
      (compile-goto-error))))
 
 (defun ag-project-in-current-window ()
@@ -1939,7 +1939,7 @@
                           (read-from-minibuffer "Search: " (ag/dwim-at-point)))))
     (if project-dir
         (util/with-patch-function
-         'display-buffer (buffer &rest args) (progn (switch-to-buffer buffer) (selected-window))
+         'display-buffer (buffer &rest _args) (progn (switch-to-buffer buffer) (selected-window))
          (ag/search search-string project-dir))
       ;; ag/search will fail if project-dir is nil.
       (message (format "%s does not belong to a project; it's not in a version control repo."
@@ -1984,6 +1984,8 @@
 ;;
 ;; Emacs built-in profiler mode
 ;;
+
+(declare-function profiler-report-expand-entry "profiler")
 
 (evil-define-key 'normal profiler-report-mode-map
   (kbd "TAB") 'profiler-report-toggle-entry
