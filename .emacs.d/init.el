@@ -215,6 +215,12 @@
 
 ;; When showing long lines, truncate them and require horizontal scrolling, rather than wrapping.
 (set-default 'truncate-lines t)
+;; When the cursor nears the window edge, horizontally scroll only the current line, not the whole
+;; window. With the default (t), typing a long word past the fill-column in a window only slightly
+;; wider fill-column scrolls the window right; auto-fill then wraps the word onto a new line, but
+;; the window stays scrolled because auto-hscroll only scrolls back once point enters the left
+;; hscroll-margin. This behavior is annoying! With 'current-line, the new line starts unscrolled.
+(setq auto-hscroll-mode 'current-line)
 
 ;; Highlight the line the cursor is on. This is mostly to make it easier to tell which split is
 ;; active.
