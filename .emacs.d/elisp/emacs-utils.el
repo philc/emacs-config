@@ -6,9 +6,11 @@
 (require 'lisp-utils)
 (require 'browse-url)
 
+(defvar global-leader-prefix ";"
+  "The key sequence which prefixes the keybindings defined by `define-leader-keys`.")
+
 (defmacro define-leader-keys (keymaps &rest keybindings)
-  "A shorthand for defining leader keys using the `general` keybinding package.
-   `global-leader-key` must be defined as a top-level variable."
+  "A shorthand for defining leader keys using the `general` keybinding package."
   (declare (indent 1))
   `(general-define-key :prefix global-leader-prefix :states '(normal visual) :keymaps ,keymaps ,@keybindings))
 

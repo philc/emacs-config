@@ -14,8 +14,6 @@
 
 (setq-default indent-tabs-mode nil)
 (setq make-backup-files nil)
-;; This must be set before markdown-lite-mode.el loads; it's normally set in init.el.
-(defvar global-leader-prefix ";")
 
 (defun format-elisp--load-indent-specs ()
   "Load the libraries the current buffer requires, and apply its indent declarations."

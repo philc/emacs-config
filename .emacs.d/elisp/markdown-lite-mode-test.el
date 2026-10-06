@@ -6,7 +6,6 @@
 
 (require 'ert)
 (require 'cl-lib)
-(setq global-leader-prefix ";")
 (require 'general)
 (require 'evil)
 (require 'evil-ext)

@@ -53,6 +53,7 @@
                       powerline ; Improve the appearance & density of the Emacs status bar.
                       projectile ; Find file in project (ala Vim's CTRL-P or Textmate's Cmd-T)
                       rainbow-delimiters ; Highlight parentheses in rainbow colors.
+                      relint ; Lints regexps. Used by `make check`.
                       s ; A strings library.
                       scss-mode ; For editing SCSS files.
                       smartparens ; For editing expressions in parentheses.
