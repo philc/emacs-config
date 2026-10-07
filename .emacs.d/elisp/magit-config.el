@@ -224,6 +224,8 @@ Date: %ad
 
 (add-hook 'git-commit-mode-hook 'init-git-commit-mode)
 (defun init-git-commit-mode ()
+  ;; Wrap commit message bodies at 72 chars, the git convention, rather than the global 100.
+  (setq-local fill-column 72)
   ;; Enter insert mode when the git commit window is shown. evil-set-initial-state doesn't work here
   ;; because the git commit window's major mode is text-mode, and not git-commit-mode, for some
   ;; reason.
