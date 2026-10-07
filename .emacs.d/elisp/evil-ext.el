@@ -109,12 +109,17 @@
 (defun evil-ext/fill-inside-paragraph ()
   "Fills (reflows/linewraps) the current paragraph. Equivalent to gqip in vim."
   (interactive)
-  (let ((region (if (use-region-p)
-                    (list (region-beginning) (region-end))
-                  (util/preserve-line-and-column 'evil-inner-paragraph))))
-    (evil-ext/preserve-cursor-after-fill
-     (lambda ()
-       (evil-fill (cl-first region) (cl-second region))))))
+  (if (use-region-p)
+      ;; When filling a selection, put the cursor at the start of the filled text.
+      ;; `evil-ext/preserve-cursor-after-fill' estimates from the cursor's position, which in visual
+      ;; state is the end of the selection, so its estimate isn't meaningful here.
+      (let ((beg (region-beginning)))
+        (evil-fill beg (region-end))
+        (goto-char beg))
+    (let ((region (util/preserve-line-and-column 'evil-inner-paragraph)))
+      (evil-ext/preserve-cursor-after-fill
+       (lambda ()
+         (evil-fill (cl-first region) (cl-second region)))))))
 
 (defun evil-ext/fill-inside-paragraph-or-comment-block ()
   "If the cursor is inside a comment block in a programming mode, fill the surrounding comment.
@@ -142,6 +147,45 @@
   :move-point nil
   :type line
   (util/preserve-line-and-column (lambda () (evil-indent beg end))))
+
+;; Make `gv' (evil-visual-restore) reselect text after it's been reflowed or reindented, so I can
+;; select a hunk of text, operate on it, then reselect it with gv and operate on it again.
+;;
+;; Evil remembers the last selection as two markers, `evil-visual-mark' and `evil-visual-point'.
+;; Markers follow the characters they sit next to, so after an edit that rewrites the selection,
+;; they can end up somewhere unrelated to the edited text. E.g. filling a single long line into three
+;; lines leaves gv selecting only the first line, and filling a charwise selection can leave gv
+;; extending into the following paragraph. Separately, when visual state exits at the end of a
+;; command, Evil resets those markers from wherever the cursor is, and the fill commands in this
+;; file move the cursor after filling.
+;;
+;; This advice fixes that by explicitly pointing the markers at the rewritten text. It relies on these
+;; operations not touching any text after END, so the distance from END to the end of the buffer
+;; is the same before and after the operation. It applies only when invoked on a visual selection,
+;; so that e.g. reflowing the current paragraph from normal mode doesn't clobber the remembered
+;; selection. This works for any operator taking (beg end ...) that rewrites its region in place.
+(defun evil-ext/remember-edited-region (orig-fn beg end &rest args)
+  "Around advice which makes `gv' reselect the region rewritten by ORIG-FN."
+  (if (not (evil-visual-state-p))
+      (apply orig-fn beg end args)
+    (let ((beg-marker (copy-marker beg))
+          (distance-from-end (- (point-max) end))
+          (type (evil-visual-type)))
+      (prog1 (apply orig-fn beg end args)
+        (let ((new-end (- (point-max) distance-from-end)))
+          ;; Exit visual state now, so that Evil doesn't overwrite our markers from the cursor
+          ;; position when it exits visual state at the end of the command.
+          (evil-exit-visual-state)
+          ;; Fill and indent operate on whole lines, so restore a charwise selection as linewise.
+          (setq evil-visual-selection (if (eq type 'block) 'block 'line))
+          (set-marker evil-visual-mark beg-marker)
+          ;; For a linewise selection, NEW-END is the start of the line after the rewritten text.
+          ;; Back up one char so the marker is on the last rewritten line, not the line after it.
+          (set-marker evil-visual-point (max beg-marker (1- new-end)))
+          (set-marker beg-marker nil))))))
+
+(advice-add 'evil-fill :around #'evil-ext/remember-edited-region)
+(advice-add 'evil-indent :around #'evil-ext/remember-edited-region)
 
 (defun evil-column-of-last-char ()
   "Column of the last selected character when in visual state, or `current-column' otherwise."
