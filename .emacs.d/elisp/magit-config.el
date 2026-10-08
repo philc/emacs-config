@@ -65,16 +65,30 @@ Date: %ad
 ;; https://magit.vc/manual/magit/Performance.html
 (setq magit-revision-insert-related-refs nil)
 
-;; Magit runs git in a pty, so tools invoked by git hooks (e.g. deno) think they're writing to a
-;; terminal and emit cursor-movement and erase-line escape sequences to draw progress indicators.
-;; Magit's process buffer only interprets color (SGR) sequences, so the others show up as garbage.
-;; Strip all non-SGR CSI sequences from process output.
-(defun magit-strip-cursor-escapes (args)
+;; Magit runs git in a pty, so tools invoked by git hooks (e.g. deno, dprint) think they're writing
+;; to a terminal and emit ANSI escape sequences: colors, plus cursor-movement and erase-line
+;; sequences for progress indicators. Magit's process buffer interprets none of these as output
+;; arrives, so they show up as garbage. Convert colors into faces and delete all other sequences.
+;; `ansi-color-apply' keeps state between calls (sequences split across output chunks, and the
+;; current color) in the buffer-local `ansi-color-context', so it must run in the process buffer
+;; rather than whatever buffer happens to be current when output arrives.
+(defun magit-apply-ansi-escapes (args)
   (let ((proc (car args))
         (string (cadr args)))
-    (list proc (replace-regexp-in-string "\e\\[[0-9;?]*[A-HJKSTfhl]" "" string))))
+    (list proc (with-current-buffer (process-buffer proc)
+                 (ansi-color-apply string)))))
 
-(advice-add 'magit-process-filter :filter-args #'magit-strip-cursor-escapes)
+(advice-add 'magit-process-filter :filter-args #'magit-apply-ansi-escapes)
+
+;; The process buffer is shared by every git command in the repo, so if a command exits without
+;; resetting its color (or mid-sequence), that state would leak into the next command's output.
+(defun magit-reset-ansi-context (process _event)
+  (when (and (memq (process-status process) '(exit signal))
+             (buffer-live-p (process-buffer process)))
+    (with-current-buffer (process-buffer process)
+      (setq ansi-color-context nil))))
+
+(advice-add 'magit-process-sentinel :after #'magit-reset-ansi-context)
 
 (defun show-commit-and-preserve-window ()
   (interactive)
