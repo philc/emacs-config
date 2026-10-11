@@ -1126,10 +1126,24 @@
 (require 'tempel)
 (setq tempel-path "~/.emacs.d/tempel-snippets.el")
 
+;; Tempel uses the whole symbol around point as the template name, so "todo|x" (| is the cursor)
+;; looks up "todox" and fails. Only consider the part of the symbol before point.
+(advice-add 'tempel--prefix-bounds :filter-return
+            (lambda (bounds)
+              (when bounds (cons (car bounds) (min (cdr bounds) (point))))))
+
 (defun tempel-expand-or-next ()
   (interactive)
   (if tempel--active
       (tempel-next 1)
+    ;; If the template ends in whitespace, e.g. "TODO(philc): ", remove any whitespace after point,
+    ;; so that "todo|   x" expands to "TODO(philc): x".
+    (when-let* ((bounds (tempel--prefix-bounds))
+                (name (intern-soft (buffer-substring-no-properties (car bounds) (cdr bounds))))
+                (template (alist-get name (tempel--templates)))
+                (last-elt (car (last (seq-take-while (lambda (e) (not (keywordp e))) template))))
+                ((and (stringp last-elt) (string-match-p "[ \t]\\'" last-elt))))
+      (delete-region (point) (progn (skip-chars-forward " \t") (point))))
     (tempel-expand t)))
 
 ;; TAB was originally bound to 'indent-for-tab-command.
