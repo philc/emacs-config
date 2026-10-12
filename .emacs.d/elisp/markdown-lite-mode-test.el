@@ -453,3 +453,64 @@
     (should (equal (mapcar #'cdr (mlm-test/line-faces))
                    (make-list 6 'markdown-list-item1-face)))
     (should-not (text-property-any (point-min) (point-max) 'font-lock-multiline t))))
+
+(ert-deftest markdown-lite-mode-test/fenced-code-block-highlighted ()
+  "A fenced code block is highlighted, including its fence lines, and a line in it which would
+   otherwise be a heading. The text after it isn't."
+  (mlm-test/with-fontified-buffer "```bash\n# comment\n```\ntext\n"
+    (should (equal (mapcar #'cdr (mlm-test/line-faces))
+                   '(markdown-pre-face markdown-pre-face markdown-pre-face nil)))))
+
+(ert-deftest markdown-lite-mode-test/fenced-code-block-closing-fence ()
+  "A block is closed only by a fence of the same character, at least as long as its opening fence."
+  (mlm-test/with-fontified-buffer "~~~~\n```\n~~~\n~~~~~\ntext\n"
+    (should (equal (mapcar #'cdr (mlm-test/line-faces))
+                   '(markdown-pre-face markdown-pre-face markdown-pre-face markdown-pre-face nil)))))
+
+(ert-deftest markdown-lite-mode-test/fenced-code-block-in-list-item ()
+  "A fenced code block can be indented, e.g. inside a list item."
+  (mlm-test/with-fontified-buffer "* item\n  ```\n  code\n  ```\n"
+    (should (equal (mapcar #'cdr (mlm-test/line-faces))
+                   '(markdown-list-item1-face
+                     markdown-pre-face markdown-pre-face markdown-pre-face)))))
+
+(ert-deftest markdown-lite-mode-test/fenced-code-block-unclosed ()
+  "A block with no closing fence runs to the end of the buffer."
+  (mlm-test/with-fontified-buffer "```\ncode\n"
+    (should (equal (mapcar #'cdr (mlm-test/line-faces))
+                   '(markdown-pre-face markdown-pre-face)))))
+
+(ert-deftest markdown-lite-mode-test/inline-code-is-not-a-fence ()
+  "A line which starts with inline code written with three backticks doesn't open a block."
+  (mlm-test/with-fontified-buffer "```x``` is inline\ntext\n"
+    (should (equal (cdr (nth 1 (mlm-test/line-faces))) nil))))
+
+(ert-deftest markdown-lite-mode-test/fenced-code-block-refontified-alone ()
+  "A line in the middle of a block is highlighted when it's refontified without the rest of the
+   block, e.g. when it's at the start of a jit-lock chunk."
+  (mlm-test/with-fontified-buffer "```\none\ntwo\n```\n"
+    (font-lock-unfontify-buffer)
+    (goto-char (point-min))
+    (forward-line 2)
+    (font-lock-fontify-region (point) (line-end-position))
+    (should (equal (cdr (nth 2 (mlm-test/line-faces))) 'markdown-pre-face))))
+
+(ert-deftest markdown-lite-mode-test/fenced-code-block-in-narrowed-buffer ()
+  "A block is highlighted in a narrowed buffer, where the stored text properties can't be used."
+  (mlm-test/with-fontified-buffer "```\none\ntwo\n```\n"
+    (font-lock-unfontify-buffer)
+    (goto-char (point-min))
+    (forward-line 2)
+    (save-restriction
+      (narrow-to-region (point-min) (line-end-position))
+      (font-lock-fontify-region (point) (line-end-position)))
+    (should (equal (cdr (nth 2 (mlm-test/line-faces))) 'markdown-pre-face))))
+
+(ert-deftest markdown-lite-mode-test/fenced-code-block-updated-after-edit ()
+  "Deleting a block's closing fence extends the block, so the text after it becomes highlighted."
+  (mlm-test/with-fontified-buffer "```\ncode\n```\ntext\n"
+    (goto-char (point-min))
+    (forward-line 2)
+    (delete-region (point) (line-beginning-position 2))
+    (font-lock-ensure)
+    (should (equal (cdr (nth 2 (mlm-test/line-faces))) 'markdown-pre-face))))

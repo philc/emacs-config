@@ -529,6 +529,12 @@ e.g. the \"images/foo.svg\" in ![alt](images/foo.svg).")
       line-end)
   "Regular expression for matching Markdown horizontal rules.")
 
+(defconst mlm/markdown-regex-fence
+  "^[ \t]*\\(?:\\(`\\{3,\\}\\)[^`\n]*$\\|\\(~\\{3,\\}\\)\\)"
+  "Regular expression for matching the line which opens a fenced code block. Group 1 or 2 is the
+   fence. A backtick fence can't be followed by another backtick on its line, so that e.g. ```x```
+   at the start of a line is inline code.")
+
 (defconst mlm/markdown-regex-header
   "^\\(?:\\(.+\\)\n\\(=+\\)\\|\\(.+\\)\n\\(-+\\)\\|\\(#+\\)[ \t]+\\(.*?\\)\\s-*?\\(#*\\)\\)$"
   "Regexp identifying Markdown headers.")
@@ -969,18 +975,67 @@ If we are at the first line, then consider the previous line to be blank."
       (setq mlm/markdown-list-item-continuation-face face)
       t)))
 
+;; A fenced code block starts at a line of 3 or more backticks or tildes, and ends at a line of at
+;; least as many of the same character, or at the end of the buffer if there's no such line. Whether
+;; a line is in a fenced code block depends on all of the lines before it, so `mlm/syntax-propertize'
+;; stores the fence each line starts in, in an `mlm-fence' text property.
+;;
+;; Like `mlm/markdown-match-list-item-continuation', the font-lock matcher matches one line at a
+;; time, so that an edit refontifies only its own line, and a block can be highlighted in jit-lock
+;; chunks. Editing a fence line changes the highlighting of the lines after it, which jit-lock
+;; refontifies after `jit-lock-context-time'.
+
+(defun mlm/markdown-fence-after-line (fence)
+  "Given the FENCE at the start of the line at point (the string of backticks or tildes which opened
+   the enclosing fenced code block, or nil if there isn't one), returns the fence after that line."
+  (cond
+   ((null fence)
+    (when (looking-at mlm/markdown-regex-fence)
+      (or (match-string-no-properties 1) (match-string-no-properties 2))))
+   ((looking-at (concat "[ \t]*" (regexp-quote fence) (substring fence 0 1) "*[ \t]*$"))
+    nil)
+   (t fence)))
+
+(defun mlm/markdown-fence-at-line-start ()
+  "The fence (see `mlm/markdown-fence-after-line') at the start of the line at point."
+  (if (and (eq syntax-propertize-function 'mlm/syntax-propertize)
+           (< (point) (point-max))
+           ;; syntax-propertize can't propertize text outside of a narrowed region.
+           (not (buffer-narrowed-p)))
+      (progn
+        (syntax-propertize (1+ (point)))
+        (get-text-property (point) 'mlm-fence))
+    (let ((end (point))
+          fence)
+      (save-excursion
+        (goto-char (point-min))
+        (while (< (point) end)
+          (setq fence (mlm/markdown-fence-after-line fence))
+          (forward-line 1)))
+      fence)))
+
 (defun mlm/markdown-match-fenced-code-blocks (last)
-  "Match fenced code blocks from the point to LAST."
-  (cond ((search-forward-regexp "^\\([~]\\{3,\\}\\)" last t)
-         (beginning-of-line)
-         (let ((beg (point)))
-           (forward-line)
-           (cond ((search-forward-regexp
-                   (concat "^" (match-string 1) "~*") last t)
-                  (set-match-data (list beg (point)))
-                  t)
-                 (t nil))))
-        (t nil)))
+  "Match the next non-blank line of a fenced code block, including its fence lines, from point to
+   LAST. This matches one line at a time, and leaves point at the end of the line."
+  (unless (bolp)
+    (forward-line 1))
+  (let ((fence (when (< (point) last) (mlm/markdown-fence-at-line-start)))
+        found)
+    (while (and (not found) (< (point) last))
+      (cond
+       ;; Outside of a block, skip to the line which opens the next one. Most text isn't in a block,
+       ;; and one regexp search is much faster than checking each line.
+       ((null fence)
+        (if (re-search-forward mlm/markdown-regex-fence last t)
+            (progn (beginning-of-line)
+                   (setq found t))
+          (goto-char last)))
+       ((looking-at "[ \t]*$") (forward-line 1))
+       (t (setq found t))))
+    (when found
+      (set-match-data (list (point) (line-end-position)))
+      (end-of-line)
+      t)))
 
 (defun mlm/markdown-match-pre-blocks (last)
   "Match Markdown pre blocks from point to LAST."
@@ -1083,7 +1138,9 @@ Stops at blank lines, list items, headers, and horizontal rules."
 (defun mlm/syntax-propertize (start end)
   "The `syntax-propertize-function' for markdown-lite-mode. For each line from START to END, sets
    the `mlm-list-levels' text property on the line to the value of
-   `mlm/markdown-calculate-list-levels' at the start of the line."
+   `mlm/markdown-calculate-list-levels' at the start of the line, and the `mlm-fence' text property
+   to the fenced code block's fence at the start of the line (see
+   `mlm/markdown-fence-after-line')."
   (goto-char start) ; `syntax-propertize-wholelines' ensures this is the start of a line.
   ;; `syntax-propertize' turns this on before calling us. It makes every syntax-aware operation
   ;; (e.g. a regexp search using \s-, as `delete-trailing-whitespace' does on save) propertize up to
@@ -1093,27 +1150,30 @@ Stops at blank lines, list items, headers, and horizontal rules."
   (let (;; When first viewing the end of a large buffer, this propertizes all of it. Most of that
         ;; time would be spent garbage collecting at the default threshold.
         (gc-cons-threshold (max gc-cons-threshold (* 64 1024 1024)))
-        (levels (if (bobp)
-                    nil
-                  ;; Continue from the previous line, which has already been propertized.
-                  (save-excursion
-                    (forward-line -1)
-                    (mlm/markdown-list-levels-after-line
-                     (get-text-property (point) 'mlm-list-levels))))))
+        levels fence)
+    (unless (bobp)
+      ;; Continue from the previous line, which has already been propertized.
+      (save-excursion
+        (forward-line -1)
+        (setq levels (mlm/markdown-list-levels-after-line
+                      (get-text-property (point) 'mlm-list-levels)))
+        (setq fence (mlm/markdown-fence-after-line (get-text-property (point) 'mlm-fence)))))
     (while (< (point) end)
       (let ((line-start (point)))
         (when (mlm/markdown-baseline-line-p)
           (setq levels nil))
-        (let ((line-levels levels))
+        (let ((line-levels levels)
+              (line-fence fence))
           (setq levels (mlm/markdown-list-levels-after-line levels))
+          (setq fence (mlm/markdown-fence-after-line fence))
           (forward-line 1)
-          ;; Set the property on the whole line, not just its first character. Consecutive lines
-          ;; often have the same (eq) levels, and then Emacs merges them into a single text
+          ;; Set the properties on the whole line, not just its first character. Consecutive lines
+          ;; often have the same (eq) properties, and then Emacs merges them into a single text
           ;; property interval. With one interval per line, operations which scan text
           ;; properties, like skipping over folded text during redisplay, get noticeably slower in
           ;; large buffers.
-          (put-text-property line-start (max (point) (1+ line-start)) 'mlm-list-levels
-                             line-levels))))))
+          (add-text-properties line-start (max (point) (1+ line-start))
+                               (list 'mlm-list-levels line-levels 'mlm-fence line-fence)))))))
 
 (defun mlm/markdown-baseline-line-p ()
   "Whether the line at point is a baseline: one where list levels reset to nil. This is where
