@@ -818,101 +818,10 @@ If we are at the first line, then consider the previous line to be blank."
 
 ;;; Font Lock =================================================================
 
-(defvar markdown-italic-face 'markdown-italic-face
-  "Face name to use for italic text.")
-
-(defvar markdown-bold-face 'markdown-bold-face
-  "Face name to use for bold text.")
-
-(defvar markdown-header-delimiter-face 'markdown-header-delimiter-face
-  "Face name to use as a base for header delimiters.")
-
-(defvar markdown-header-rule-face 'markdown-header-rule-face
-  "Face name to use as a base for header rules.")
-
-(defvar markdown-header-face 'markdown-header-face
-  "Face name to use as a base for headers.")
-
-(defvar markdown-header-face-1 'markdown-header-face-1
-  "Face name to use for level-1 headers.")
-
-(defvar markdown-header-face-2 'markdown-header-face-2
-  "Face name to use for level-2 headers.")
-
-(defvar markdown-header-face-3 'markdown-header-face-3
-  "Face name to use for level-3 headers.")
-
-(defvar markdown-header-face-4 'markdown-header-face-4
-  "Face name to use for level-4 headers.")
-
-(defvar markdown-header-face-5 'markdown-header-face-5
-  "Face name to use for level-5 headers.")
-
-(defvar markdown-header-face-6 'markdown-header-face-6
-  "Face name to use for level-6 headers.")
-
-(defvar markdown-inline-code-face 'markdown-inline-code-face
-  "Face name to use for inline code.")
-
-(defvar markdown-list-face 'markdown-list-face
-  "Face name to use for list markers.")
-
-(defvar markdown-blockquote-face 'markdown-blockquote-face
-  "Face name to use for blockquote.")
-
-(defvar markdown-pre-face 'markdown-pre-face
-  "Face name to use for preformatted text.")
-
-(defvar markdown-language-keyword-face 'markdown-language-keyword-face
-  "Face name to use for programming language identifiers.")
-
-(defvar markdown-link-face 'markdown-link-face
-  "Face name to use for links.")
-
-(defvar markdown-missing-link-face 'markdown-missing-link-face
-  "Face name to use for links where the linked file does not exist.")
-
-(defvar markdown-reference-face 'markdown-reference-face
-  "Face name to use for reference.")
-
-(defvar markdown-footnote-face 'markdown-footnote-face
-  "Face name to use for footnote identifiers.")
-
-(defvar markdown-url-face 'markdown-url-face
-  "Face name to use for URLs.")
-
-(defvar markdown-link-title-face 'markdown-link-title-face
-  "Face name to use for reference link titles.")
-
-(defvar markdown-line-break-face 'markdown-line-break-face
-  "Face name to use for hard line breaks.")
-
-(defvar markdown-comment-face 'markdown-comment-face
-  "Face name to use for HTML comments.")
-
-(defvar markdown-math-face 'markdown-math-face
-  "Face name to use for LaTeX expressions.")
-
-(defvar markdown-metadata-key-face 'markdown-metadata-key-face
-  "Face name to use for metadata keys.")
-
-(defvar markdown-metadata-value-face 'markdown-metadata-value-face
-  "Face name to use for metadata values.")
-
 (defgroup markdown-faces nil
   "Faces used in Markdown Mode"
   :group 'markdown
   :group 'faces)
-
-(defface markdown-italic-face
-  '((t (:inherit font-lock-variable-name-face :slant italic)))
-  "Face for italic text."
-  :group 'markdown-faces)
-
-(defface markdown-bold-face
-  '((t (:inherit font-lock-variable-name-face :weight bold)))
-  "Face for bold text."
-  :group 'markdown-faces)
 
 (defface markdown-header-rule-face
   '((t (:inherit font-lock-function-name-face :weight bold)))
@@ -964,79 +873,14 @@ If we are at the first line, then consider the previous line to be blank."
   "Face for inline code."
   :group 'markdown-faces)
 
-(defface markdown-list-face
-  '((t (:inherit font-lock-builtin-face)))
-  "Face for list item markers."
-  :group 'markdown-faces)
-
-(defface markdown-blockquote-face
-  '((t (:inherit font-lock-doc-face)))
-  "Face for blockquote sections."
-  :group 'markdown-faces)
-
 (defface markdown-pre-face
   '((t (:inherit font-lock-constant-face)))
   "Face for preformatted text."
   :group 'markdown-faces)
 
-(defface markdown-language-keyword-face
-  '((t (:inherit font-lock-type-face)))
-  "Face for programming language identifiers."
-  :group 'markdown-faces)
-
-(defface markdown-link-face
-  '((t (:inherit font-lock-keyword-face)))
-  "Face for links."
-  :group 'markdown-faces)
-
-(defface markdown-missing-link-face
-  '((t (:inherit font-lock-warning-face)))
-  "Face for missing links."
-  :group 'markdown-faces)
-
-(defface markdown-reference-face
-  '((t (:inherit font-lock-type-face)))
-  "Face for link references."
-  :group 'markdown-faces)
-
-(defface markdown-footnote-face
-  '((t (:inherit font-lock-keyword-face)))
-  "Face for footnote markers."
-  :group 'markdown-faces)
-
 (defface markdown-url-face
   '((t (:inherit font-lock-string-face)))
   "Face for URLs."
-  :group 'markdown-faces)
-
-(defface markdown-link-title-face
-  '((t (:inherit font-lock-comment-face)))
-  "Face for reference link titles."
-  :group 'markdown-faces)
-
-(defface markdown-line-break-face
-  '((t (:inherit font-lock-constant-face :underline t)))
-  "Face for hard line breaks."
-  :group 'markdown-faces)
-
-(defface markdown-comment-face
-  '((t (:inherit font-lock-comment-face)))
-  "Face for HTML comments."
-  :group 'markdown-faces)
-
-(defface markdown-math-face
-  '((t (:inherit font-lock-string-face)))
-  "Face for LaTeX expressions."
-  :group 'markdown-faces)
-
-(defface markdown-metadata-key-face
-  '((t (:inherit font-lock-variable-name-face)))
-  "Face for metadata keys."
-  :group 'markdown-faces)
-
-(defface markdown-metadata-value-face
-  '((t (:inherit font-lock-string-face)))
-  "Face for metadata values."
   :group 'markdown-faces)
 
 ;; TODO(philc):
@@ -1072,30 +916,30 @@ If we are at the first line, then consider the previous line to be blank."
 
 (defvar mlm/markdown-mode-font-lock-keywords-basic
   (list
-   (cons 'mlm/markdown-match-pre-blocks '((0 markdown-pre-face)))
-   (cons 'mlm/markdown-match-fenced-code-blocks '((0 markdown-pre-face)))
-   (cons mlm/markdown-regex-header-1-setext '((1 markdown-header-face-1)
-                                              (2 markdown-header-rule-face)))
-   (cons mlm/markdown-regex-header-2-setext '((1 markdown-header-face-2)
-                                              (2 markdown-header-rule-face)))
-   (cons mlm/markdown-regex-header-6-atx '((1 markdown-header-delimiter-face)
-                                           (2 markdown-header-face-6)
-                                           (3 markdown-header-delimiter-face)))
-   (cons mlm/markdown-regex-header-5-atx '((1 markdown-header-delimiter-face)
-                                           (2 markdown-header-face-5)
-                                           (3 markdown-header-delimiter-face)))
-   (cons mlm/markdown-regex-header-4-atx '((1 markdown-header-delimiter-face)
-                                           (2 markdown-header-face-4)
-                                           (3 markdown-header-delimiter-face)))
-   (cons mlm/markdown-regex-header-3-atx '((1 markdown-header-delimiter-face)
-                                           (2 markdown-header-face-3)
-                                           (3 markdown-header-delimiter-face)))
-   (cons mlm/markdown-regex-header-2-atx '((1 markdown-header-delimiter-face)
-                                           (2 markdown-header-face-2)
-                                           (3 markdown-header-delimiter-face)))
-   (cons mlm/markdown-regex-header-1-atx '((1 markdown-header-delimiter-face)
-                                           (2 markdown-header-face-1)
-                                           (3 markdown-header-delimiter-face)))
+   (cons 'mlm/markdown-match-pre-blocks '((0 'markdown-pre-face)))
+   (cons 'mlm/markdown-match-fenced-code-blocks '((0 'markdown-pre-face)))
+   (cons mlm/markdown-regex-header-1-setext '((1 'markdown-header-face-1)
+                                              (2 'markdown-header-rule-face)))
+   (cons mlm/markdown-regex-header-2-setext '((1 'markdown-header-face-2)
+                                              (2 'markdown-header-rule-face)))
+   (cons mlm/markdown-regex-header-6-atx '((1 'markdown-header-delimiter-face)
+                                           (2 'markdown-header-face-6)
+                                           (3 'markdown-header-delimiter-face)))
+   (cons mlm/markdown-regex-header-5-atx '((1 'markdown-header-delimiter-face)
+                                           (2 'markdown-header-face-5)
+                                           (3 'markdown-header-delimiter-face)))
+   (cons mlm/markdown-regex-header-4-atx '((1 'markdown-header-delimiter-face)
+                                           (2 'markdown-header-face-4)
+                                           (3 'markdown-header-delimiter-face)))
+   (cons mlm/markdown-regex-header-3-atx '((1 'markdown-header-delimiter-face)
+                                           (2 'markdown-header-face-3)
+                                           (3 'markdown-header-delimiter-face)))
+   (cons mlm/markdown-regex-header-2-atx '((1 'markdown-header-delimiter-face)
+                                           (2 'markdown-header-face-2)
+                                           (3 'markdown-header-delimiter-face)))
+   (cons mlm/markdown-regex-header-1-atx '((1 'markdown-header-delimiter-face)
+                                           (2 'markdown-header-face-1)
+                                           (3 'markdown-header-delimiter-face)))
    (cons mlm/markdown-regex-list-item1 '((0 'markdown-list-item1-face)))
    (cons mlm/markdown-regex-list-item2 '((0 'markdown-list-item2-face)))
    (cons mlm/markdown-regex-list-item3 '((0 'markdown-list-item3-face)))
@@ -1103,8 +947,8 @@ If we are at the first line, then consider the previous line to be blank."
    (cons mlm/markdown-regex-list-item5 '((0 'markdown-list-item5-face)))
    (cons mlm/markdown-regex-list-item6 '((0 'markdown-list-item6-face)))
    (cons 'mlm/markdown-match-list-item-continuation '((0 mlm/markdown-list-item-continuation-face)))
-   (cons 'mlm/markdown-match-code '((0 markdown-inline-code-face)))
-   (cons mlm/markdown-regex-image-url '((1 markdown-url-face))))
+   (cons 'mlm/markdown-match-code '((0 'markdown-inline-code-face)))
+   (cons mlm/markdown-regex-image-url '((1 'markdown-url-face))))
   "Syntax highlighting for Markdown files.")
 
 (defun mlm/markdown-match-code (last)
