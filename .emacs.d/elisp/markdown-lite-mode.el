@@ -29,6 +29,13 @@
 (with-eval-after-load 'jinx
   (add-to-list 'jinx-exclude-faces '(markdown-lite-mode markdown-pre-face markdown-url-face)))
 
+(defconst mlm/outline-regexp "[ ]*\\*\\|#+ "
+  "The `outline-regexp' for markdown-lite-mode. It matches a leading bullet point, or an ATX
+   heading.")
+
+(defconst mlm/outline-search-regexp (concat "^\\(?:" mlm/outline-regexp "\\)")
+  "`mlm/outline-regexp' at the start of a line.")
+
 (define-derived-mode markdown-lite-mode text-mode "Markdown-lite"
   "Major mode for editing Markdown files."
   (setq tab-width 4)
@@ -51,14 +58,14 @@
        'mlm/markdown-adaptive-fill-function)
 
   ;; Outline mode
-  (make-local-variable 'outline-regexp)
   ;; markdown-mode has support for outline mode, but in that implementations, only headings are
   ;; folded. My preference is to also fold subtrees in bulleted lists, akin to Org mode and
   ;; Workflowy.
-  (setq outline-regexp "[ ]*\\*\\|#+ ") ; matches a leading bullet point, or an ATX heading
+  (setq-local outline-regexp mlm/outline-regexp)
 
   (make-local-variable 'outline-level)
   (setq outline-level 'mlm/outline-level)
+  (setq-local outline-search-function 'mlm/outline-search)
 
   ;; Cause use of ellipses for invisible text.
   (add-to-invisibility-spec '(outline . t))
@@ -367,9 +374,9 @@
     ("##" 1)
     (_ (1- (length hashes)))))
 
-(defvar-local mlm/atx-headings-cache nil
-  "(TICK . HEADINGS). This is a cache of `mlm/atx-headings'. It becomes stale when the buffer is
-   modified and (buffer-chars-modified-tick) advances.
+(defvar-local mlm/outline-cache nil
+  "(TICK HEADINGS . FENCED-BLOCKS). This is a cache of `mlm/outline-structure'. It becomes stale
+   when the buffer is modified and (buffer-chars-modified-tick) advances.
 
    HEADINGS is a vector with a (POS . LEVEL) pair for each ATX heading in the buffer. POS is the
    position of the start of the heading's line, and LEVEL is its outline level, per
@@ -380,21 +387,73 @@
      * a1
      ### A.1
 
-   HEADINGS is [(1 . 1) (9 . 1) (19 . 2)].")
+   HEADINGS is [(1 . 1) (9 . 1) (19 . 2)].
+
+   FENCED-BLOCKS is a vector with a (START . END) pair for each fenced code block, from the start of
+   its opening fence's line to the end of its closing fence's line, including the newline.")
+
+(defun mlm/outline-structure ()
+  "Returns (HEADINGS . FENCED-BLOCKS); see `mlm/outline-cache'. A \"#\" line in a fenced code block
+   isn't a heading."
+  (let ((tick (buffer-chars-modified-tick)))
+    (unless (eql (car mlm/outline-cache) tick)
+      (let (headings blocks fence block-start)
+        (save-excursion
+          (save-match-data
+            (goto-char (point-min))
+            ;; Visit each line which could be a heading or a fence.
+            (while (re-search-forward "^\\(?:#+ \\|[ \t]*\\(?:```\\|~~~\\)\\)" nil t)
+              (beginning-of-line)
+              (if (and (null fence) (looking-at "\\(#+\\) "))
+                  (push (cons (point) (mlm/atx-heading-level (match-string 1))) headings)
+                (let ((fence-after (mlm/markdown-fence-after-line fence)))
+                  (cond ((and (null fence) fence-after)
+                         (setq block-start (point)))
+                        ((and fence (null fence-after))
+                         (push (cons block-start (line-beginning-position 2)) blocks)))
+                  (setq fence fence-after)))
+              (forward-line 1))
+            (when fence
+              (push (cons block-start (point-max)) blocks))))
+        (setq mlm/outline-cache (cons tick (cons (vconcat (nreverse headings))
+                                                 (vconcat (nreverse blocks))))))))
+  (cdr mlm/outline-cache))
 
 (defun mlm/atx-headings ()
   "A vector of (POS . LEVEL) for each of the buffer's ATX headings, in buffer order."
-  (let ((tick (buffer-chars-modified-tick)))
-    (unless (eql (car mlm/atx-headings-cache) tick)
-      (let ((headings
-             (save-excursion
-               (save-match-data
-                 (goto-char (point-min))
-                 (cl-loop while (re-search-forward "^\\(#+\\) " nil t)
-                          collect (cons (line-beginning-position)
-                                        (mlm/atx-heading-level (match-string 1))))))))
-        (setq mlm/atx-headings-cache (cons tick (vconcat headings)))))
-    (cdr mlm/atx-headings-cache)))
+  (car (mlm/outline-structure)))
+
+(defun mlm/in-fenced-code-block-p (pos blocks)
+  "Whether POS is in one of BLOCKS, the buffer's fenced code blocks (see `mlm/outline-cache')."
+  ;; The number of blocks which start at or before POS.
+  (let ((i (mlm/bisect-left blocks (1+ pos) #'car)))
+    (and (> i 0) (< pos (cdr (aref blocks (1- i)))))))
+
+(defun mlm/outline-search (&optional bound move backward looking-at)
+  "The `outline-search-function' for markdown-lite-mode. It searches for `mlm/outline-regexp' like
+   outline-mode does by default, but skips the lines in fenced code blocks."
+  ;; outline-mode calls this for every heading, e.g. when folding the whole buffer with
+  ;; `mlm/show-level', and so does the `gh' menu. Since this file isn't byte-compiled, every form
+  ;; here costs noticeably, and so most buffers, which have no fenced code blocks, take a fast path.
+  ;; Neither path needs `save-match-data': `mlm/outline-structure' wraps its own searches in it.
+  (let ((blocks (cdr (mlm/outline-structure)))
+        (noerror (if move 'move t)))
+    (cond
+     ((= (length blocks) 0)
+      (cond (looking-at (looking-at mlm/outline-regexp))
+            (backward (re-search-backward mlm/outline-search-regexp bound noerror))
+            (t (re-search-forward mlm/outline-search-regexp bound noerror))))
+     (looking-at
+      (and (looking-at mlm/outline-regexp)
+           (not (mlm/in-fenced-code-block-p (point) blocks))))
+     (t
+      (let (found)
+        (while (and (not found)
+                    (if backward
+                        (re-search-backward mlm/outline-search-regexp bound noerror)
+                      (re-search-forward mlm/outline-search-regexp bound noerror)))
+          (setq found (not (mlm/in-fenced-code-block-p (match-beginning 0) blocks))))
+        found)))))
 
 (defun mlm/bisect-left (vec value &optional key)
   "Returns the number of elements of the sorted vector VEC which are less than VALUE, i.e. the index
@@ -428,7 +487,7 @@
    \"#\"s, or a list item's indentation. The one exception is the heading a list item appears under,
    which could be anywhere earlier in the buffer. That's the only part which isn't local to the
    line, and so it's looked up from a per-buffer cache of the headings; see
-   `mlm/atx-headings-cache'."
+   `mlm/outline-cache'."
   (save-excursion
     (save-match-data
       (beginning-of-line)

@@ -243,6 +243,20 @@
     (should (equal (mlm-test/visible-lines-at-level text 3)
                    '("# Title" "## A" "* a1" "  * a2" "### A.1" "* a3" "## B")))))
 
+(ert-deftest markdown-lite-mode-test/outline-skips-fenced-code-blocks ()
+  "Lines in a fenced code block aren't headings or list items, so they're folded with the block."
+  (let ((text "## A\n```\n# comment\n* not an item\n```\n## B\n"))
+    (should (equal (mlm-test/visible-lines-at-level text 1) '("## A" "## B")))))
+
+(ert-deftest markdown-lite-mode-test/outline-level-ignores-fenced-code-blocks ()
+  "A \"#\" line in a fenced code block doesn't change the level of the list items after it."
+  (with-temp-buffer
+    (insert "### A\n```\n# comment\n```\n* a1\n")
+    (markdown-lite-mode)
+    (goto-char (point-max))
+    (forward-line -1)
+    (should (equal (mlm/outline-level) 3))))
+
 (ert-deftest markdown-lite-mode-test/outline-folds-list-items-without-headings ()
   (let ((text "* a\n  * b\n    * c\n* d\n"))
     (should (equal (mlm-test/visible-lines-at-level text 1) '("* a" "* d")))

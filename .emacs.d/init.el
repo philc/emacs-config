@@ -478,6 +478,7 @@
  "D" (lambda () (interactive) (-> (buffer-file-name) file-name-directory dired))
  "gs" (util/save-and-call 'show-git-status-in-left-column)
  "gl" 'magit-log-current
+ "gb" 'magit-blame-addition
  "o" (util/save-and-call 'util/open-file-at-cursor)
  "wc" 'count-chars-region
  ;; Grep (using the "ag" command) for files in the current directory.
