@@ -534,27 +534,27 @@ e.g. the \"images/foo.svg\" in ![alt](images/foo.svg).")
   "Regexp identifying Markdown headers.")
 
 (defconst mlm/markdown-regex-header-1-atx
-  "^\\(#\\)[ \t]*\\(.+?\\)[ \t]*\\(#*\\)$"
+  "^\\(#\\)[ \t]+\\(.+?\\)[ \t]*\\(#*\\)$"
   "Regular expression for level 1 atx-style (hash mark) headers.")
 
 (defconst mlm/markdown-regex-header-2-atx
-  "^\\(##\\)[ \t]*\\(.+?\\)[ \t]*\\(#*\\)$"
+  "^\\(##\\)[ \t]+\\(.+?\\)[ \t]*\\(#*\\)$"
   "Regular expression for level 2 atx-style (hash mark) headers.")
 
 (defconst mlm/markdown-regex-header-3-atx
-  "^\\(###\\)[ \t]*\\(.+?\\)[ \t]*\\(#*\\)$"
+  "^\\(###\\)[ \t]+\\(.+?\\)[ \t]*\\(#*\\)$"
   "Regular expression for level 3 atx-style (hash mark) headers.")
 
 (defconst mlm/markdown-regex-header-4-atx
-  "^\\(####\\)[ \t]*\\(.+?\\)[ \t]*\\(#*\\)$"
+  "^\\(####\\)[ \t]+\\(.+?\\)[ \t]*\\(#*\\)$"
   "Regular expression for level 4 atx-style (hash mark) headers.")
 
 (defconst mlm/markdown-regex-header-5-atx
-  "^\\(#####\\)[ \t]*\\(.+?\\)[ \t]*\\(#*\\)$"
+  "^\\(#####\\)[ \t]+\\(.+?\\)[ \t]*\\(#*\\)$"
   "Regular expression for level 5 atx-style (hash mark) headers.")
 
 (defconst mlm/markdown-regex-header-6-atx
-  "^\\(######\\)[ \t]*\\(.+?\\)[ \t]*\\(#*\\)$"
+  "^\\(######\\)[ \t]+\\(.+?\\)[ \t]*\\(#*\\)$"
   "Regular expression for level 6 atx-style (hash mark) headers.")
 
 (defconst mlm/markdown-regex-header-1-setext

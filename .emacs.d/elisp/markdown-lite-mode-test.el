@@ -397,6 +397,19 @@
                      ("text" . nil)
                      ("text" . nil))))))
 
+(ert-deftest markdown-lite-mode-test/atx-heading-requires-space-after-hashes ()
+  "An ATX heading's \"#\"s must be followed by whitespace, so e.g. a #hashtag isn't highlighted as a
+   heading."
+  (mlm-test/with-fontified-buffer (concat "# Title\n"
+                                          "## Section\n"
+                                          "#hashtag\n"
+                                          "##notaheading\n")
+    (should (equal (mlm-test/line-faces)
+                   '(("# Title" . markdown-header-delimiter-face)
+                     ("## Section" . markdown-header-delimiter-face)
+                     ("#hashtag" . nil)
+                     ("##notaheading" . nil))))))
+
 (ert-deftest markdown-lite-mode-test/list-item-continuation-line-refontified-alone ()
   "A continuation line is highlighted when it's refontified without its marker line, e.g. after
    it's edited, or when it's at the start of a jit-lock chunk."
