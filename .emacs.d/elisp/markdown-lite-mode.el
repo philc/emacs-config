@@ -32,16 +32,9 @@
 (define-derived-mode markdown-lite-mode text-mode "Markdown-lite"
   "Major mode for editing Markdown files."
   (setq tab-width 4)
-  ;; Comments
-  (set (make-local-variable 'mlm/markdown-mode-font-lock-keywords) nil)
   (set (make-local-variable 'font-lock-defaults) nil)
   (set (make-local-variable 'font-lock-multiline) t)
 
-  ;; TODO(philc): re-fontifys buffer
-  ;; (markdown-reload-extensions)
-
-  ;; Extensions
-  (make-local-variable 'mlm/markdown-enable-math)
   (add-hook 'hack-local-variables-hook 'mlm/markdown-reload-extensions)
 
   ;; Paragraph filling
@@ -521,22 +514,10 @@ character, including newlines, but not two newlines in a row.
 The final group requires that the character following the code
 fragment is not a backquote.")
 
-(defconst mlm/markdown-regex-pre
-  "^\\(    \\|\t\\).*$"
-  "Regular expression for matching preformatted text sections.")
-
 (defconst mlm/markdown-regex-image-url
   "!\\[[^]\n]*\\](\\([^)\n]*\\))"
   "Regular expression matching the URL portion of an inline image link,
 e.g. the \"images/foo.svg\" in ![alt](images/foo.svg).")
-
-(defconst mlm/markdown-regex-line-break
-  "[^ \n\t][ \t]*\\(  \\)$"
-  "Regular expression for matching line breaks.")
-
-(defconst mlm/markdown-regex-blockquote
-  "^[ \t]*\\(>\\).*$"
-  "Regular expression for matching blockquote lines.")
 
 (defconst mlm/markdown-regex-block-separator
   "\\(\\`\\|\\(\n[ \t]*\n\\)[^\n \t]\\)"
@@ -585,18 +566,6 @@ e.g. the \"images/foo.svg\" in ![alt](images/foo.svg).")
 (defconst mlm/markdown-regex-header-2-setext
   "^\\(.*\\)\n\\(-+\\)$"
   "Regular expression for level 2 setext-style (underline) headers.")
-
-(defconst mlm/markdown-regex-header-setext
-  "^\\(.+\\)\n\\(\\(?:=\\|-\\)+\\)$"
-  "Regular expression for generic setext-style (underline) headers.")
-
-(defconst mlm/markdown-regex-header-atx
-  "^\\(#+\\)[ \t]*\\(.*?\\)[ \t]*\\(#*\\)$"
-  "Regular expression for generic atx-style (hash mark) headers.")
-
-;; (defconst markdown-regex-line-break
-;;   "[^ \n\t][ \t]*\\(  \\)$"
-;;   "Regular expression for matching line breaks.")
 
 (defun mlm/markdown-move-list-item-up ()
   "Move the current list item up in the list when possible."
@@ -838,11 +807,6 @@ If the point is not in a list item, do nothing."
    ;; No match
    (t nil)))
 
-(defvar mlm/markdown-mode-font-lock-keywords nil
-  "Default highlighting expressions for Markdown mode.
-This variable is defined as a buffer-local variable for dynamic
-extension support.")
-
 (defun mlm/markdown-prev-line-blank-p ()
   "Return t if the previous line is blank and nil otherwise.
 If we are at the first line, then consider the previous line to be blank."
@@ -853,8 +817,6 @@ If we are at the first line, then consider the previous line to be blank."
 
 
 ;;; Font Lock =================================================================
-
-(require 'font-lock)
 
 (defvar markdown-italic-face 'markdown-italic-face
   "Face name to use for italic text.")
@@ -1112,7 +1074,6 @@ If we are at the first line, then consider the previous line to be blank."
   (list
    (cons 'mlm/markdown-match-pre-blocks '((0 markdown-pre-face)))
    (cons 'mlm/markdown-match-fenced-code-blocks '((0 markdown-pre-face)))
-   ;; (cons markdown-regex-blockquote 'markdown-blockquote-face)
    (cons mlm/markdown-regex-header-1-setext '((1 markdown-header-face-1)
                                               (2 markdown-header-rule-face)))
    (cons mlm/markdown-regex-header-2-setext '((1 markdown-header-face-2)
@@ -1142,32 +1103,8 @@ If we are at the first line, then consider the previous line to be blank."
    (cons mlm/markdown-regex-list-item5 '((0 'markdown-list-item5-face)))
    (cons mlm/markdown-regex-list-item6 '((0 'markdown-list-item6-face)))
    (cons 'mlm/markdown-match-list-item-continuation '((0 mlm/markdown-list-item-continuation-face)))
-   ;; (cons 'mlm/markdown-match-multimarkdown-metadata '((1 markdown-metadata-key-face)
-   ;;                                                (2 markdown-metadata-value-face)))
-   ;; (cons 'mlm/markdown-match-pandoc-metadata '((1 markdown-comment-face)
-   ;;                                         (2 markdown-metadata-value-face)))
-   ;; (cons mlm/markdown-regex-hr 'markdown-header-face)
-   ;; (cons 'mlm/markdown-match-comments '((0 markdown-comment-face)))
    (cons 'mlm/markdown-match-code '((0 markdown-inline-code-face)))
-   (cons mlm/markdown-regex-image-url '((1 markdown-url-face)))
-   ;; (cons mlm/markdown-regex-angle-uri 'markdown-link-face)
-   ;; (cons mlm/markdown-regex-uri 'markdown-link-face)
-   ;; (cons mlm/markdown-regex-email 'markdown-link-face)
-   ;; (cons mlm/markdown-regex-list '(2 markdown-list-face))
-   ;; (cons mlm/markdown-regex-footnote 'markdown-footnote-face)
-   ;; (cons mlm/markdown-regex-link-inline '((1 markdown-link-face t t)
-   ;;                                    (2 markdown-link-face t)
-   ;;                                    (4 markdown-url-face t)
-   ;;                                    (6 markdown-link-title-face t t)))
-   ;; (cons mlm/markdown-regex-link-reference '((1 markdown-link-face t t)
-   ;;                                       (2 markdown-link-face t)
-   ;;                                       (4 markdown-reference-face t)))
-   ;; (cons mlm/markdown-regex-reference-definition '((1 markdown-reference-face t)
-   ;;                                             (2 markdown-url-face t)
-   ;;                                             (3 markdown-link-title-face t)))
-   ;; (cons mlm/markdown-regex-bold '(2 markdown-bold-face))
-   ;; (cons mlm/markdown-regex-line-break '(1 markdown-line-break-face prepend))
-   )
+   (cons mlm/markdown-regex-image-url '((1 markdown-url-face))))
   "Syntax highlighting for Markdown files.")
 
 (defun mlm/markdown-match-code (last)
@@ -1494,12 +1431,6 @@ Return nil if the current line is not the beginning of a list item."
   "Check settings, update font-lock keywords, and re-fontify buffer."
   (interactive)
   (when (eq major-mode 'markdown-lite-mode)
-    ;; (setq mlm/markdown-mode-font-lock-keywords
-    ;;       (append
-    ;;        (when mlm/markdown-enable-math
-    ;;          markdown-mode-font-lock-keywords-math)
-    ;;        markdown-mode-font-lock-keywords-basic
-    ;;        markdown-mode-font-lock-keywords-core))
     (setq font-lock-defaults '(mlm/markdown-mode-font-lock-keywords-basic))
     (font-lock-refresh-defaults)))
 
