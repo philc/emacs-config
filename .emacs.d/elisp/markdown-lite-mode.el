@@ -533,29 +533,15 @@ e.g. the \"images/foo.svg\" in ![alt](images/foo.svg).")
   "^\\(?:\\(.+\\)\n\\(=+\\)\\|\\(.+\\)\n\\(-+\\)\\|\\(#+\\)[ \t]+\\(.*?\\)\\s-*?\\(#*\\)\\)$"
   "Regexp identifying Markdown headers.")
 
-(defconst mlm/markdown-regex-header-1-atx
-  "^\\(#\\)[ \t]+\\(.+?\\)[ \t]*\\(#*\\)$"
-  "Regular expression for level 1 atx-style (hash mark) headers.")
+(defconst mlm/markdown-regex-header-atx
+  "^\\(#\\{1,6\\}\\)[ \t]+\\(.+?\\)[ \t]*\\(#*\\)$"
+  "Regular expression for atx-style (hash mark) headers. The number of \"#\"s in group 1 is the
+   header's level.")
 
-(defconst mlm/markdown-regex-header-2-atx
-  "^\\(##\\)[ \t]+\\(.+?\\)[ \t]*\\(#*\\)$"
-  "Regular expression for level 2 atx-style (hash mark) headers.")
-
-(defconst mlm/markdown-regex-header-3-atx
-  "^\\(###\\)[ \t]+\\(.+?\\)[ \t]*\\(#*\\)$"
-  "Regular expression for level 3 atx-style (hash mark) headers.")
-
-(defconst mlm/markdown-regex-header-4-atx
-  "^\\(####\\)[ \t]+\\(.+?\\)[ \t]*\\(#*\\)$"
-  "Regular expression for level 4 atx-style (hash mark) headers.")
-
-(defconst mlm/markdown-regex-header-5-atx
-  "^\\(#####\\)[ \t]+\\(.+?\\)[ \t]*\\(#*\\)$"
-  "Regular expression for level 5 atx-style (hash mark) headers.")
-
-(defconst mlm/markdown-regex-header-6-atx
-  "^\\(######\\)[ \t]+\\(.+?\\)[ \t]*\\(#*\\)$"
-  "Regular expression for level 6 atx-style (hash mark) headers.")
+(defconst mlm/markdown-header-faces
+  [markdown-header-face-1 markdown-header-face-2 markdown-header-face-3
+   markdown-header-face-4 markdown-header-face-5 markdown-header-face-6]
+  "The face for each level of header, from level 1 to 6.")
 
 (defconst mlm/markdown-regex-header-1-setext
   "^\\(.*\\)\n\\(=+\\)$"
@@ -920,24 +906,10 @@ If we are at the first line, then consider the previous line to be blank."
                                               (2 'markdown-header-rule-face)))
    (cons mlm/markdown-regex-header-2-setext '((1 'markdown-header-face-2)
                                               (2 'markdown-header-rule-face)))
-   (cons mlm/markdown-regex-header-6-atx '((1 'markdown-header-delimiter-face)
-                                           (2 'markdown-header-face-6)
-                                           (3 'markdown-header-delimiter-face)))
-   (cons mlm/markdown-regex-header-5-atx '((1 'markdown-header-delimiter-face)
-                                           (2 'markdown-header-face-5)
-                                           (3 'markdown-header-delimiter-face)))
-   (cons mlm/markdown-regex-header-4-atx '((1 'markdown-header-delimiter-face)
-                                           (2 'markdown-header-face-4)
-                                           (3 'markdown-header-delimiter-face)))
-   (cons mlm/markdown-regex-header-3-atx '((1 'markdown-header-delimiter-face)
-                                           (2 'markdown-header-face-3)
-                                           (3 'markdown-header-delimiter-face)))
-   (cons mlm/markdown-regex-header-2-atx '((1 'markdown-header-delimiter-face)
-                                           (2 'markdown-header-face-2)
-                                           (3 'markdown-header-delimiter-face)))
-   (cons mlm/markdown-regex-header-1-atx '((1 'markdown-header-delimiter-face)
-                                           (2 'markdown-header-face-1)
-                                           (3 'markdown-header-delimiter-face)))
+   (cons mlm/markdown-regex-header-atx
+         '((1 'markdown-header-delimiter-face)
+           (2 (aref mlm/markdown-header-faces (1- (length (match-string 1)))))
+           (3 'markdown-header-delimiter-face)))
    (cons mlm/markdown-regex-list-item1 '((0 'markdown-list-item1-face)))
    (cons mlm/markdown-regex-list-item2 '((0 'markdown-list-item2-face)))
    (cons mlm/markdown-regex-list-item3 '((0 'markdown-list-item3-face)))

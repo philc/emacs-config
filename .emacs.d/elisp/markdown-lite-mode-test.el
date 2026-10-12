@@ -421,6 +421,21 @@
                      ("#hashtag" . nil)
                      ("##notaheading" . nil))))))
 
+(ert-deftest markdown-lite-mode-test/atx-heading-faces-by-level ()
+  "Each ATX heading's text gets the face for its level, and its \"#\"s get the delimiter face. More
+   than six \"#\"s isn't a heading."
+  (mlm-test/with-fontified-buffer (concat "# h1\n" "## h2\n" "### h3\n" "#### h4\n" "##### h5\n"
+                                          "###### h6 ##\n" "####### h7\n")
+    (should (equal (cl-loop for text in '("h1" "h2" "h3" "h4" "h5" "h6" "h7")
+                            collect (progn (goto-char (point-min))
+                                           (search-forward text)
+                                           (get-text-property (match-beginning 0) 'face)))
+                   '(markdown-header-face-1 markdown-header-face-2 markdown-header-face-3
+                     markdown-header-face-4 markdown-header-face-5 markdown-header-face-6 nil)))
+    (goto-char (point-min))
+    (search-forward "h6 ")
+    (should (eq (get-text-property (point) 'face) 'markdown-header-delimiter-face))))
+
 (ert-deftest markdown-lite-mode-test/list-item-continuation-line-refontified-alone ()
   "A continuation line is highlighted when it's refontified without its marker line, e.g. after
    it's edited, or when it's at the start of a jit-lock chunk."
