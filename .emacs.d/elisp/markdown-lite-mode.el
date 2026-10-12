@@ -32,10 +32,8 @@
 (define-derived-mode markdown-lite-mode text-mode "Markdown-lite"
   "Major mode for editing Markdown files."
   (setq tab-width 4)
-  (set (make-local-variable 'font-lock-defaults) nil)
-  (set (make-local-variable 'font-lock-multiline) t)
-
-  (add-hook 'hack-local-variables-hook 'mlm/markdown-reload-extensions)
+  (setq-local font-lock-defaults '(mlm/markdown-mode-font-lock-keywords-basic))
+  (setq-local font-lock-multiline t)
 
   ;; Paragraph filling
   (set (make-local-variable 'paragraph-start)
@@ -1270,13 +1268,6 @@ Return nil if the current line is not the beginning of a list item."
       (beginning-of-line)
       (when (re-search-forward mlm/markdown-regex-list (line-end-position) t)
         (current-column)))))
-
-(defun mlm/markdown-reload-extensions ()
-  "Check settings, update font-lock keywords, and re-fontify buffer."
-  (interactive)
-  (when (eq major-mode 'markdown-lite-mode)
-    (setq font-lock-defaults '(mlm/markdown-mode-font-lock-keywords-basic))
-    (font-lock-refresh-defaults)))
 
 (defun mlm/consult-outline (&optional level)
   "Show a menu of outline headings (from `mlm/outline-level') and jump to the one selected. If

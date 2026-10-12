@@ -365,7 +365,6 @@
   `(with-temp-buffer
      (insert ,text)
      (markdown-lite-mode)
-     (mlm/markdown-reload-extensions)
      (font-lock-ensure)
      ,@body))
 
