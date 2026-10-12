@@ -71,6 +71,17 @@
     (should (equal (buffer-substring-no-properties (point-min) (point-max))
                    "* Hey\n  * One\n  * \n"))))
 
+(ert-deftest markdown-lite-mode-test/hashtag-line-does-not-end-list-item ()
+  "A line starting with a #hashtag isn't a heading, so it doesn't end the list item before it."
+  (with-temp-buffer
+    (insert "* a\n#tag\n* b\n")
+    (markdown-lite-mode)
+    (goto-char (point-min))
+    (forward-line 2)
+    (mlm/markdown-move-list-item-up)
+    (should (equal (buffer-substring-no-properties (point-min) (point-max))
+                   "* b\n* a\n#tag\n"))))
+
 (ert-deftest markdown-lite-mode-test/fill-aligns-list-item-continuation-to-marker ()
   "Sanity/regression check for the normal case the code above also handles: a continuation paragraph
    that's indented to align with the list item's own text (not indented deeper, i.e. not a nested

@@ -530,7 +530,7 @@ e.g. the \"images/foo.svg\" in ![alt](images/foo.svg).")
   "Regular expression for matching Markdown horizontal rules.")
 
 (defconst mlm/markdown-regex-header
-  "^\\(?:\\(.+\\)\n\\(=+\\)\\|\\(.+\\)\n\\(-+\\)\\|\\(#+\\)\\s-*\\(.*?\\)\\s-*?\\(#*\\)\\)$"
+  "^\\(?:\\(.+\\)\n\\(=+\\)\\|\\(.+\\)\n\\(-+\\)\\|\\(#+\\)[ \t]+\\(.*?\\)\\s-*?\\(#*\\)\\)$"
   "Regexp identifying Markdown headers.")
 
 (defconst mlm/markdown-regex-header-1-atx
