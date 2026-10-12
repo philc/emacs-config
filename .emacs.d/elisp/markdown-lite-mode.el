@@ -303,11 +303,11 @@
   (interactive)
   (define-leader-keys 'markdown-lite-mode-map
     "0" 'outline-show-all
-    "1" '(lambda () (interactive) (mlm/show-level 1))
-    "2" '(lambda () (interactive) (mlm/show-level 2))
-    "3" '(lambda () (interactive) (mlm/show-level 3))
-    "4" '(lambda () (interactive) (mlm/show-level 4))
-    "5" '(lambda () (interactive) (mlm/show-level 5))
+    "1" (lambda () (interactive) (mlm/show-level 1))
+    "2" (lambda () (interactive) (mlm/show-level 2))
+    "3" (lambda () (interactive) (mlm/show-level 3))
+    "4" (lambda () (interactive) (mlm/show-level 4))
+    "5" (lambda () (interactive) (mlm/show-level 5))
     "l" 'mlm/markdown-create-link
     "ad" 'mlm/markdown-insert-date
     "re" (lambda ()
@@ -325,8 +325,8 @@
 
   (evil-define-key 'normal markdown-lite-mode-map
     ;; Autocomplete setext headers by typing "==" or "--" on the header's line in normal mode.
-    (kbd "==") '(lambda () (interactive) (mlm/insert-markdown-setext-header "=="))
-    (kbd "--") '(lambda () (interactive) (mlm/insert-markdown-setext-header "--"))
+    (kbd "==") (lambda () (interactive) (mlm/insert-markdown-setext-header "=="))
+    (kbd "--") (lambda () (interactive) (mlm/insert-markdown-setext-header "--"))
     (kbd "C-k") 'mlm/backward-same-level
     (kbd "C-j") 'mlm/forward-same-level
     (kbd "A-h") 'outline-previous-visible-heading
