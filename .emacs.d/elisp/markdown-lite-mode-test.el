@@ -262,6 +262,21 @@
     (should (equal (mlm-test/visible-lines-at-level text 1) '("* a" "* d")))
     (should (equal (mlm-test/visible-lines-at-level text 2) '("* a" "  * b" "* d")))))
 
+(ert-deftest markdown-lite-mode-test/outline-ignores-lines-starting-with-bold ()
+  "A line starting with **bold** text isn't a list item, but a bare \"*\" (an empty item) is."
+  (let ((text "* a\n**Bold** text\n*\n  * b\n"))
+    (should (equal (mlm-test/visible-lines-at-level text 1) '("* a" "*")))))
+
+(ert-deftest markdown-lite-mode-test/demote-includes-indented-bold-line ()
+  "An indented line starting with **bold** text is part of the list item above it."
+  (with-temp-buffer
+    (insert "* a\n  **Bold** text\n* b\n")
+    (markdown-lite-mode)
+    (setq-local indent-tabs-mode nil)
+    (goto-char (point-min))
+    (mlm/markdown-demote)
+    (should (equal (buffer-string) "  * a\n    **Bold** text\n* b\n"))))
+
 (ert-deftest markdown-lite-mode-test/outline-level-updates-after-edit ()
   "The cached heading positions used by `mlm/outline-level' are refreshed when the buffer changes."
   (with-temp-buffer

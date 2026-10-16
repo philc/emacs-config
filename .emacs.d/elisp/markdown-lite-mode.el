@@ -31,9 +31,10 @@
 (with-eval-after-load 'jinx
   (add-to-list 'jinx-exclude-faces '(markdown-lite-mode mlm-pre mlm-url)))
 
-(defconst mlm/outline-regexp "[ ]*\\*\\|#+ "
+(defconst mlm/outline-regexp "[ ]*\\*\\(?: \\|$\\)\\|#+ "
   "The `outline-regexp' for markdown-lite-mode. It matches a leading bullet point, or an ATX
-   heading.")
+   heading. A bullet's \"*\" is followed by a space or the end of the line, so that a line starting
+   with **bold** text isn't a bullet.")
 
 (defconst mlm/outline-search-regexp (concat "^\\(?:" mlm/outline-regexp "\\)")
   "`mlm/outline-regexp' at the start of a line.")
@@ -183,8 +184,8 @@
       ;; Stop the search at left-aligned text (which is an approximation for detecting headings).
       (while (not (or ; (string/blank? (util/get-current-line)) ; TODO(philc): Remove this.
                    end-of-file
-                   (string-match "^[ ]*\\*" (util/get-current-line))
-                   (string-match "^[^ *]" (util/get-current-line))))
+                   (string-match "^[ ]*\\*\\(?: \\|$\\)" (util/get-current-line))
+                   (string-match "^[^ ]" (util/get-current-line))))
         (setq end (line-end-position))
         (when (> (forward-line 1) 0) (setq end-of-file t)))
       (list start end))))
