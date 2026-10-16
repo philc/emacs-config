@@ -537,24 +537,24 @@
    indentation, up to six. An indentation which isn't a whole number of levels, or a \"-\" item, gets
    no face."
   (mlm-test/with-fontified-buffer
-   (concat "* 1\n"
-           "  * 2\n"
-           "\t  * 3\n"
-           "      * 4\n"
-           "  \t  \t* 5\n"
-           "          * 6\n"
-           "            * 7\n"
-           "   * odd\n"
-           "- dash\n")
-   (should (equal (mapcar #'cdr (mlm-test/line-faces))
-                  '(mlm-list-item-1 mlm-list-item-2
-                                    mlm-list-item-3
-                                    mlm-list-item-4
-                                    mlm-list-item-5
-                                    mlm-list-item-6
-                                    mlm-list-item-6
-                                    nil
-                                    nil)))))
+      (concat "* 1\n"
+              "  * 2\n"
+              "\t  * 3\n"
+              "      * 4\n"
+              "  \t  \t* 5\n"
+              "          * 6\n"
+              "            * 7\n"
+              "   * odd\n"
+              "- dash\n")
+    (should (equal (mapcar #'cdr (mlm-test/line-faces))
+                   '(mlm-list-item-1 mlm-list-item-2
+                                     mlm-list-item-3
+                                     mlm-list-item-4
+                                     mlm-list-item-5
+                                     mlm-list-item-6
+                                     mlm-list-item-6
+                                     nil
+                                     nil)))))
 
 (ert-deftest markdown-lite-mode-test/atx-heading-faces-by-level ()
   "Each ATX heading's text gets the face for its level, and its \"#\"s get the delimiter face. More
@@ -566,7 +566,7 @@
                                            (search-forward text)
                                            (get-text-property (match-beginning 0) 'face)))
                    '(mlm-header-1 mlm-header-2 mlm-header-3
-                     mlm-header-4 mlm-header-5 mlm-header-6 nil)))
+                                  mlm-header-4 mlm-header-5 mlm-header-6 nil)))
     (goto-char (point-min))
     (search-forward "h6 ")
     (should (eq (get-text-property (point) 'face) 'mlm-header-delimiter))))

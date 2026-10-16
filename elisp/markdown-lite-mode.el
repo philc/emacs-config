@@ -543,8 +543,12 @@
    end a run of list item continuation lines (see `mlm/markdown-match-list-item-continuation').")
 
 (defconst mlm/markdown-list-item-faces
-  [mlm-list-item-1 mlm-list-item-2 mlm-list-item-3
-   mlm-list-item-4 mlm-list-item-5 mlm-list-item-6]
+  [mlm-list-item-1
+   mlm-list-item-2
+   mlm-list-item-3
+   mlm-list-item-4
+   mlm-list-item-5
+   mlm-list-item-6]
   "The face for each level of list item, from level 1 to 6. Deeper items get the level 6 face.")
 
 (defun mlm/markdown-list-item-face ()
@@ -596,8 +600,12 @@ e.g. the \"images/foo.svg\" in ![alt](images/foo.svg).")
    header's level.")
 
 (defconst mlm/markdown-header-faces
-  [mlm-header-1 mlm-header-2 mlm-header-3
-   mlm-header-4 mlm-header-5 mlm-header-6]
+  [mlm-header-1
+   mlm-header-2
+   mlm-header-3
+   mlm-header-4
+   mlm-header-5
+   mlm-header-6]
   "The face for each level of header, from level 1 to 6.")
 
 (defconst mlm/markdown-regex-header-1-setext

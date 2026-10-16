@@ -25,23 +25,23 @@
 ;; I manage my windows in a 4x4 grid. I want ephemeral or status-based buffers to always show in the
 ;; lower-right or right window, in that order of preference.
 (defvar wm/ephemeral-buffer-names
-      '("*Help*" "*compilation*" "COMMIT_EDITMSG" "*Messages*"
-        ;; Clojure
-        "*clojure-simple*" "*inf-clojure*" "*Cljfmt Errors*"
-        ;; Emacs lisp
-        "*Backtrace*"
-        ;; Coffeescript
-        "*coffee-compiled*"
-        ;; Go
-        "*Compile-Log*" "*Gofmt Errors*"
-        ;; Javascript
-        "*Javascript REPL*"
-        "*REPL*"
-        "*eldoc*"
-        "*Completions*"))
+  '("*Help*" "*compilation*" "COMMIT_EDITMSG" "*Messages*"
+    ;; Clojure
+    "*clojure-simple*" "*inf-clojure*" "*Cljfmt Errors*"
+    ;; Emacs lisp
+    "*Backtrace*"
+    ;; Coffeescript
+    "*coffee-compiled*"
+    ;; Go
+    "*Compile-Log*" "*Gofmt Errors*"
+    ;; Javascript
+    "*Javascript REPL*"
+    "*REPL*"
+    "*eldoc*"
+    "*Completions*"))
 (defvar wm/ephemeral-buffer-regexps '("\\*cider.*"
-                                    "magit-process.*"
-                                    "\\*ghelp.*"))
+                                      "magit-process.*"
+                                      "\\*ghelp.*"))
 ;; I don't want these windows to be opened using my standard window opening logic, because I have
 ;; dedicated specific places that I like to place them, but I do want them to be closed by
 ;; wm/dismiss-ephemeral-windows.
