@@ -9,9 +9,7 @@
 ;; top-level (put 'sym 'lisp-indent-function ...) forms in it are evaluated, and the (declare (indent
 ;; ...)) specs of the macros and functions it defines are applied.
 
-(require 'package)
-(setq package-user-dir (expand-file-name "~/.emacs.d/elpa"))
-(package-initialize)
+(load (expand-file-name "package-load-path.el" (file-name-directory load-file-name)) nil t)
 
 (setq-default indent-tabs-mode nil)
 (setq make-backup-files nil)

@@ -8,6 +8,9 @@
 ;; load the .el.
 (setq load-prefer-newer t)
 
+;; Packages are installed and activated by straight.el (see packages.el), not package.el.
+(setq package-enable-at-startup nil)
+
 ;; Keep the native-compilation cache in var/ with the other runtime state (see no-littering in
 ;; init.el). This has to happen in early-init.el, before anything is natively compiled.
 (when (fboundp 'startup-redirect-eln-cache)

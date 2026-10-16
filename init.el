@@ -17,59 +17,9 @@
 ;;
 ;; Package management
 ;;
-(require 'package)
-(setq package-archives '(
-                         ;; I prefer melpa-stable over melpa.
-                         ("melpa-stable" . "http://stable.melpa.org/packages/")
-                         ;; GNU-devel ELPA is included as a source, because it contains recent
-                         ;; versions of the compat package, which jinx relies on. The priorities are
-                         ;; set so melpa-stable always wins when a package is in both.
-                         ("gnu-devel" . "https://elpa.gnu.org/devel/")))
-(setq package-archive-priorities '(("melpa-stable" . 10)
-                                   ("gnu-devel" . 5)))
-
-(package-initialize)
-(when (not package-archive-contents)
-  (package-refresh-contents))
-
-(defvar my-packages '(avy ; Jump to any text on screen in a few keystrokes.
-                      ag ; Silver searcher integration for Emacs
-                      better-jumper ; A configurable jump implementation
-                      browse-at-remote ; Jump to the Github page for a given line in a file.
-                      clojure-mode ; For editing Clojure files.
-                      consult
-                      dash ; Dash provides modern functions for working with lists in Emacs Lisp.
-                      dash-functional ; Useful combinators for Emacs Lisp.
-                      diminish ; For hiding and shortening minor modes in the modeline
-                      evil ; Evil mode implements Vim's modal bindings and text object manipulation.
-                      evil-nerd-commenter
-                      general ; Functions for defining keybindings and leader keys. Complements Evil
-                      go-mode ; For editing Go files.
-                      less-css-mode ; Syntax highlighting for LESS CSS files.
-                      inf-clojure ; Clojure REPL mode
-                      jinx ; Spell checker
-                      magit ; A mode for committing to git repositories and viewing Git history.
-                      no-littering ; Keeps packages' state files in var/ and etc/
-                      org ; For outlining. It's bundled with Emacs, but I'm using the latest version
-                      powerline ; Improve the appearance & density of the Emacs status bar.
-                      projectile ; Find file in project (ala Vim's CTRL-P or Textmate's Cmd-T)
-                      rainbow-delimiters ; Highlight parentheses in rainbow colors.
-                      relint ; Lints regexps. Used by `make check`.
-                      s ; A strings library.
-                      scss-mode ; For editing SCSS files.
-                      smartparens ; For editing expressions in parentheses.
-                      swift-mode ; Swift syntax highlighting
-                      tempel ;; Insert snippets
-                      vertico ; Nicely show menu completions
-                      yaml-mode ; For editing YAML files
-                      yascroll ; For rendering scroll bars in the right fringe
-                      ))
-
-;; Ensure that every package above is installed. This is helpful when setting up Emacs on a new
-;; machine.
-(dolist (p my-packages)
-  (when (not (package-installed-p p))
-    (package-install p)))
+;; Packages are installed by straight.el, at the versions recorded in package-lock.el. See
+;; packages.el.
+(load (expand-file-name "packages.el" user-emacs-directory) nil t)
 
 ;; Store packages' history, cache and config files in var/ and etc/, instead of loose in
 ;; user-emacs-directory (which is this repo). This must come before any of those packages load.
@@ -1149,9 +1099,10 @@
       (tempel-next 1)
     ;; If the template ends in whitespace, e.g. "TODO(philc): ", remove any whitespace after point,
     ;; so that "todo|   x" expands to "TODO(philc): x".
-    (when-let* ((bounds (tempel--prefix-bounds))
+    (when-let* ((templates (tempel--templates))
+                (bounds (tempel--prefix-bounds templates))
                 (name (intern-soft (buffer-substring-no-properties (car bounds) (cdr bounds))))
-                (template (alist-get name (tempel--templates)))
+                (template (alist-get name templates))
                 (last-elt (car (last (seq-take-while (lambda (e) (not (keywordp e))) template))))
                 ((and (stringp last-elt) (string-match-p "[ \t]\\'" last-elt))))
       (delete-region (point) (progn (skip-chars-forward " \t") (point))))
@@ -1980,19 +1931,6 @@
                        (buffer-name))))))
 
 ;;
-;; Emacs' package manager. Invoke it via "M-x package-list-packages".
-;;
-
-(evil-set-initial-state 'package-menu-mode 'normal)
-(evil-define-key 'normal package-menu-mode-map
-  (kbd "d") 'package-menu-mark-delete
-  (kbd "r") 'package-menu-refresh
-  (kbd "x") 'package-menu-execute
-  (kbd "u") 'package-menu-mark-unmark
-  (kbd "U") 'package-menu-mark-upgrades
-  (kbd "i") 'package-menu-mark-install)
-
-;;
 ;; Lua mode
 ;;
 
@@ -2033,7 +1971,6 @@
 ;;
 
 (use-package swift-mode
-  :ensure t
   :defer t
   :mode "\\.swift\\'")
 

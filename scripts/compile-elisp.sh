@@ -24,7 +24,8 @@ if [ "${1:-}" = "--install" ]; then
   install=1
   shift
 fi
-elisp_dir=$(cd "$(dirname "$0")/../elisp" && pwd)
+repo_dir=$(cd "$(dirname "$0")/.." && pwd)
+elisp_dir=$repo_dir/elisp
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
 
@@ -36,15 +37,13 @@ for f in "$@"; do
   mkdir "$out"
   touch -r "$f" "$out/source-time"
   (
-    # - package-user-dir and package-initialize: the compiler loads each file's `require`d
-    #   packages, to know their macros and functions. -Q skips init.el, so the packages must be
-    #   activated here.
+    # - package-load-path.el: the compiler loads each file's `require`d packages, to know their
+    #   macros and functions. -Q skips init.el, so the packages must be put on the load-path here.
     # - load-prefer-newer: -Q skips early-init.el, which sets this. Without it, a stale .elc would be
     #   loaded instead of an edited .el.
     # - byte-compile-docstring-max-column: the default is 80, but this repo uses 100 columns.
     "$emacs" -Q --batch \
-      --eval '(setq package-user-dir (expand-file-name "~/.emacs.d/elpa"))' \
-      --eval '(package-initialize)' \
+      -l "$repo_dir/scripts/package-load-path.el" \
       --eval '(setq load-prefer-newer t)' \
       --eval '(setq byte-compile-docstring-max-column 100)' \
       --eval "(setq byte-compile-dest-file-function (lambda (_) \"$out/compiled.elc\"))" \

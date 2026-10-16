@@ -63,8 +63,7 @@ async function compileVersions(rev, tmp) {
 // mlm-bench-measure.el loaded.
 async function startDaemon(name, elc) {
   const init = `(progn
-    (setq package-user-dir (expand-file-name "~/.emacs.d/elpa"))
-    (package-initialize)
+    (load ${JSON.stringify(repo + "scripts/package-load-path.el")} nil t)
     (setq global-leader-prefix ";")
     (push ${JSON.stringify(repo + "elisp")} load-path)
     (load ${JSON.stringify(elc)} nil t)

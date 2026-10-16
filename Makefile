@@ -2,7 +2,8 @@ EMACS ?= /opt/homebrew/bin/emacs
 ELISP_DIR := elisp
 # Elisp files to format and lint. Excludes third-party code (plugins/), and generated or data files
 # (custom.el, tempel-snippets.el).
-ELISP_FILES := init.el early-init.el tangotango-theme.el \
+ELISP_FILES := init.el early-init.el packages.el tangotango-theme.el \
+	scripts/package-load-path.el \
 	scripts/bench/mlm-bench-measure.el \
 	$(wildcard $(ELISP_DIR)/*.el)
 
@@ -10,8 +11,7 @@ ELISP_FILES := init.el early-init.el tangotango-theme.el \
 .PHONY: test
 test:
 	$(EMACS) -Q --batch \
-		--eval '(setq package-user-dir (expand-file-name "~/.emacs.d/elpa"))' \
-		--eval '(package-initialize)' \
+		-l scripts/package-load-path.el \
 		--eval '(setq load-prefer-newer t)' \
 		-L $(ELISP_DIR) \
 		$(foreach f,$(wildcard $(ELISP_DIR)/*-test.el),-l $(f)) \
@@ -53,12 +53,32 @@ check-compile:
 	@EMACS=$(EMACS) scripts/compile-elisp.sh $(ELISP_FILES)
 
 # Checks regular expressions for mistakes, using relint. relint is installed via `my-packages` in
-# init.el.
+# packages.el.
 .PHONY: check-regexps
 check-regexps:
 	$(EMACS) -Q --batch \
-		--eval '(setq package-user-dir (expand-file-name "~/.emacs.d/elpa"))' \
-		--eval '(package-initialize)' \
+		-l scripts/package-load-path.el \
 		--eval '(setq load-prefer-newer t)' \
-		--eval "(unless (require 'relint nil t) (error \"relint isn't installed. Restart Emacs to install it\"))" \
+		--eval "(unless (require 'relint nil t) (error \"relint isn't installed. Run make sync-packages\"))" \
 		-f relint-batch $(ELISP_FILES)
+
+# Package management. Packages are installed by straight.el, at the versions in package-lock.el. See
+# packages.el and elisp/package-upgrade.el.
+PACKAGES := $(EMACS) -Q --batch -l packages.el -L $(ELISP_DIR) -l package-upgrade
+
+# Installs any missing packages, and checks out the versions in package-lock.el, e.g. after pulling
+# a change to it.
+.PHONY: sync-packages
+sync-packages:
+	$(PACKAGES) -f package-upgrade/sync
+
+# Moves each package to its latest release (or newest commit, for those in `my-packages-at-head`),
+# and records the new versions in package-lock.el.
+.PHONY: upgrade-packages
+upgrade-packages:
+	$(PACKAGES) -f package-upgrade/upgrade-all
+
+# Prints the version of each installed package.
+.PHONY: package-versions
+package-versions:
+	@$(PACKAGES) -f package-upgrade/print-versions
