@@ -11,6 +11,10 @@
 # each file which doesn't has its .elc deleted, so that a stale .elc is never loaded instead of it.
 # Otherwise, the .elc files are written to a temp dir and deleted.
 #
+# An installed .elc gets its file's modification time from before it was compiled. So if the file
+# changed during compilation (e.g. a git checkout changed it), it's newer than its .elc, and
+# `load-prefer-newer' and elisp-compile.el's startup check treat the .elc as stale.
+#
 # Usage: compile-elisp.sh [--install] FILE...
 
 set -u
@@ -30,6 +34,7 @@ for f in "$@"; do
   i=$((i + 1))
   out="$tmp/$i"
   mkdir "$out"
+  touch -r "$f" "$out/source-time"
   (
     # - package-user-dir and package-initialize: the compiler loads each file's `require`d
     #   packages, to know their macros and functions. -Q skips init.el, so the packages must be
@@ -61,7 +66,7 @@ for f in "$@"; do
     status=1
     [ -n "$install" ] && rm -f "${f}c"
   elif [ -n "$install" ]; then
-    cp "$out/compiled.elc" "${f}c" || status=1
+    cp "$out/compiled.elc" "${f}c" && touch -r "$out/source-time" "${f}c" || status=1
   fi
 done
 exit $status

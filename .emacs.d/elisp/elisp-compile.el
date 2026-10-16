@@ -76,9 +76,11 @@
                                  (with-current-buffer (process-buffer proc) (buffer-string)))))
       (dolist (file elisp-compile/files-to-reload)
         (let ((elc (concat file "c")))
-          ;; A file's .elc is only installed if it compiled without warnings.
+          ;; A file's .elc is only installed if it compiled without warnings. It has the file's
+          ;; modification time, unless the file changed again since (see compile-elisp.sh).
           (when (and (featurep (intern (file-name-base file)))
-                     (file-newer-than-file-p elc file))
+                     (file-exists-p elc)
+                     (not (file-newer-than-file-p file elc)))
             (load elc nil t)
             (message "Compiled and reloaded %s" (file-name-nondirectory elc)))))
       (setq elisp-compile/files-to-reload nil))))
