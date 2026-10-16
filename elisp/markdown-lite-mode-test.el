@@ -6,7 +6,6 @@
 
 (require 'ert)
 (require 'cl-lib)
-(require 'general)
 (require 'evil)
 (require 'evil-ext)
 (require 'markdown-lite-mode)

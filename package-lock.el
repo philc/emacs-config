@@ -13,7 +13,6 @@
  ("evil" . "6a3e1ddd04ac504a016590940d0af2a3361b9efd")
  ("evil-nerd-commenter" . "3b197a2b559b06a7cf39978704b196f53dac802a")
  ("f.el" . "931b6d0667fe03e7bf1c6c282d6d8d7006143c52")
- ("general.el" . "a48768f85a655fe77b5f45c2880b420da1b1b9c3")
  ("gnu-elpa-mirror" . "01092794cb0eaaf18ed44a50c6b84954feec581f")
  ("go-mode.el" . "3a71d28ab47df685e54ca6046a7a3dd3e28b682c")
  ("goto-chg" . "72f556524b88e9d30dc7fc5b0dc32078c166fda7")

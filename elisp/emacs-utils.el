@@ -5,10 +5,10 @@
 (provide 'emacs-utils)
 (require 'lisp-utils)
 (require 'browse-url)
-(require 'general) ; `define-leader-keys' expands to a call to general-define-key.
 
 ;; This file is loaded early in init.el, before these, so it declares the functions it uses from them
 ;; rather than requiring them.
+(declare-function evil-define-key* "evil-core")
 (declare-function evil-visual-select "evil-states")
 (declare-function View-scroll-to-buffer-end "view")
 (declare-function wm/show-buffer-rightward "window-management")
@@ -16,10 +16,32 @@
 (defvar global-leader-prefix ";"
   "The key sequence which prefixes the keybindings defined by `define-leader-keys`.")
 
-(defmacro define-leader-keys (keymaps &rest keybindings)
-  "A shorthand for defining leader keys using the `general` keybinding package."
+(defun define-leader-keys (keymap &rest bindings)
+  "Binds each key in BINDINGS, prefixed with `global-leader-prefix', in KEYMAP in Evil's normal and
+   visual states. KEYMAP is a keymap's symbol (e.g. \\='org-mode-map), a list of them, or \\='global
+   for Evil's global keymaps. If Evil isn't loaded yet, or the keymap isn't defined yet, the keys
+   are bound once they are, as `evil-define-key' does.
+
+   BINDINGS alternates keys, in `kbd' syntax, and their definitions. To give a prefix key a label in
+   which-key's popup, bind it to (cons \"label\" (make-sparse-keymap)) before the keys it prefixes."
   (declare (indent 1))
-  `(general-define-key :prefix global-leader-prefix :states '(normal visual) :keymaps ,keymaps ,@keybindings))
+  (if (consp keymap)
+      (dolist (k keymap)
+        (apply #'define-leader-keys k bindings))
+    (let ((args (cl-loop for (key def) on bindings by #'cddr
+                         append (list (kbd (concat global-leader-prefix " " key)) def))))
+      (cl-flet ((bind ()
+                  (apply #'evil-define-key* '(normal visual)
+                         (if (eq keymap 'global) keymap (symbol-value keymap))
+                         args)))
+        (with-eval-after-load 'evil
+          (if (or (eq keymap 'global) (boundp keymap))
+              (bind)
+            (letrec ((bind-when-defined (lambda (&rest _)
+                                          (when (boundp keymap)
+                                            (remove-hook 'after-load-functions bind-when-defined)
+                                            (bind)))))
+              (add-hook 'after-load-functions bind-when-defined))))))))
 
 (defun util/call-process-with-exit-status (program stdin &rest args)
   "Runs PROGRAM with ARGS, passing STDIN as its input if non-nil. Returns a list containing the exit

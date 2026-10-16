@@ -414,7 +414,8 @@
 ;; which-key-mode
 ;;
 ;; After typing a prefix key (e.g. the leader key), show a popup listing the available
-;; continuations. Bindings can be given descriptive labels with general's `:which-key` keyword.
+;; continuations. A binding can be given a label in the popup by binding a key to (cons "label"
+;; definition). See `define-leader-keys'.
 (setq which-key-idle-delay 0.3) ; The default of 1s feels sluggish.
 ;; By default which-key shows bindings on a dense horizontal line. Use a vertical menu instead.
 (setq which-key-max-display-columns 1
@@ -425,32 +426,30 @@
       which-key-max-description-length 40)
 (which-key-mode)
 
-(general-define-key
- :keymaps '(normal visual)
- :prefix global-leader-prefix
- "h" 'help
- "b" (util/save-and-call 'wm/switch-to-recent-buffer)
- "f" 'projectile-find-file
- "t" 'util/select-pasted-text
- "SPC" 'evil-ext/fill-inside-paragraph-or-comment-block ; Shortcut for Vim's gqip
- "i" 'evil-ext/indent-inside-paragraph ; Shortcut to Vim's =ip
- "d" 'projectile-dired
- "D" (lambda () (interactive) (-> (buffer-file-name) file-name-directory dired))
- "gs" (util/save-and-call 'show-git-status-in-left-column)
- "gl" 'magit-log-current
- "gb" 'magit-blame-addition
- "o" (util/save-and-call 'util/open-file-at-cursor)
- "wc" 'count-chars-region
- ;; Grep (using the "ag" command) for files in the current directory.
- "s" (util/save-and-call 'ag-project-in-current-window)
- ;; "v" is a mnemonic prefix for "view X".
- "vp" (util/save-and-call 'project-nav/navigate-to-project)
- ;; "vn" 'project-nav/open-file-from-notes-folder
- "vn" (util/save-and-call 'project-nav/open-file-from-notes-folder)
- ;; View my org-mode task list.
- "vo" (util/save-and-call (lambda () (find-file "~/Dropbox/notes/tasks/tasks.org")))
- ;; "View Emacs init.el"
- "ve" (util/save-and-call (lambda () (find-file "~/.emacs.d/init.el"))))
+(define-leader-keys 'global
+  "h" 'help
+  "b" (util/save-and-call 'wm/switch-to-recent-buffer)
+  "f" 'projectile-find-file
+  "t" 'util/select-pasted-text
+  "SPC" 'evil-ext/fill-inside-paragraph-or-comment-block ; Shortcut for Vim's gqip
+  "i" 'evil-ext/indent-inside-paragraph ; Shortcut to Vim's =ip
+  "d" 'projectile-dired
+  "D" (lambda () (interactive) (-> (buffer-file-name) file-name-directory dired))
+  "gs" (util/save-and-call 'show-git-status-in-left-column)
+  "gl" 'magit-log-current
+  "gb" 'magit-blame-addition
+  "o" (util/save-and-call 'util/open-file-at-cursor)
+  "wc" 'count-chars-region
+  ;; Grep (using the "ag" command) for files in the current directory.
+  "s" (util/save-and-call 'ag-project-in-current-window)
+  ;; "v" is a mnemonic prefix for "view X".
+  "vp" (util/save-and-call 'project-nav/navigate-to-project)
+  ;; "vn" 'project-nav/open-file-from-notes-folder
+  "vn" (util/save-and-call 'project-nav/open-file-from-notes-folder)
+  ;; View my org-mode task list.
+  "vo" (util/save-and-call (lambda () (find-file "~/Dropbox/notes/tasks/tasks.org")))
+  ;; "View Emacs init.el"
+  "ve" (util/save-and-call (lambda () (find-file "~/.emacs.d/init.el"))))
 
 (defun backward-kill-line (arg)
   "Delete backward (Ctrl-u) as in Bash, and save the contents to the clipboard."
@@ -482,19 +481,17 @@
 
 ;; Window-management keybindings. "w" is the namespace I use.
 ;; There are also some window switching keybindings set in macos-keys-minor-mode-map, below.
-(general-define-key
- :prefix global-leader-prefix
- :keymaps '(normal visual)
- "wn" 'wm/create-new-column
- "wv" 'wm/split-window-horizontally-and-focus
- "wh" 'wm/split-window-vertically-and-focus
- "wk" (lambda () (interactive) (kill-buffer (current-buffer)))
- "wm" 'wm/toggle-window-maximize
- "wr" 'evil-window-rotate-downwards
- "wR" 'evil-window-rotate-upwards
- "wb" 'balance-windows
- "wE" 'wm/toggle-maximize-lower-right-window
- "q" 'wm/dismiss-ephemeral-window)
+(define-leader-keys 'global
+  "wn" 'wm/create-new-column
+  "wv" 'wm/split-window-horizontally-and-focus
+  "wh" 'wm/split-window-vertically-and-focus
+  "wk" (lambda () (interactive) (kill-buffer (current-buffer)))
+  "wm" 'wm/toggle-window-maximize
+  "wr" 'evil-window-rotate-downwards
+  "wR" 'evil-window-rotate-upwards
+  "wb" 'balance-windows
+  "wE" 'wm/toggle-maximize-lower-right-window
+  "q" 'wm/dismiss-ephemeral-window)
 
 ;; Make it so Esc means quit, no matter the context.
 ;; http://stackoverflow.com/a/10166400/46237
@@ -1757,11 +1754,11 @@
 (define-leader-keys 'js-mode-map
   "l" 'util/log-word-under-cursor
   "L" 'util/log-word-under-cursor-without-value
-  "r" '(:ignore t :which-key "reload")
+  "r" (cons "reload" (make-sparse-keymap))
   "rr" 'reload-active-browser-tab
   "re" (cons "reload extension" (util/save-and-call 'ext-dev/reload-extension-in-browser))
   "rs" (cons "save last run command" (util/save-and-call 'js/save-last-run-command))
-  "e" '(:ignore t :which-key "eval")
+  "e" (cons "eval" (make-sparse-keymap))
   "eb" (cons "eval buffer" (util/save-and-call 'js/load-current-file))
   "eB" (cons "restart REPL + eval buffer"
              (lambda ()
@@ -1771,14 +1768,14 @@
   "ee" 'js/show-repl
   "ek" 'js/clear
   "en" 'js/restart-repl
-  "t" '(:ignore t :which-key "test")
+  "t" (cons "test" (make-sparse-keymap))
   "tf" 'js/run-file-as-shoulda-test
   "tF" 'js/restart-and-run-file-as-shoulda-test
   "i" 'js/format-buffer
   ;; "c" is the prefix for code-related commands: compiling, linting, refactoring.
-  "c" '(:ignore t :which-key "code")
+  "c" (cons "code" (make-sparse-keymap))
   "cc" (cons "make" (go-save-and-compile-fn "make"))
-  "cl" '(:ignore t :which-key "lint")
+  "cl" (cons "lint" (make-sparse-keymap))
   "clf" 'js/lint-file
   "clp" 'js/lint-project
   "cn" 'next-error

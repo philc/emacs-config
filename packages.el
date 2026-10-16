@@ -72,7 +72,6 @@
                       diminish ; For hiding and shortening minor modes in the modeline
                       evil ; Evil mode implements Vim's modal bindings and text object manipulation.
                       evil-nerd-commenter
-                      general ; Functions for defining keybindings and leader keys. Complements Evil
                       go-mode ; For editing Go files.
                       inf-clojure ; Clojure REPL mode
                       jinx ; Spell checker
@@ -103,8 +102,8 @@
                               yascroll)
   "Packages which `make upgrade-packages' moves to the newest commit on their default branch, rather
    than to their newest version tag. These are packages whose last release is years older than their
-   latest code. (Packages which have no version tags, e.g. general, are always moved to the newest
-   commit.)")
+   latest code. (Packages which have no version tags, e.g. better-jumper, are always moved to the
+   newest commit.)")
 
 ;; Use these packages' upstream repos, rather than their default recipes' GNU ELPA mirrors. compat's
 ;; mirror has no version tags, but its upstream repo tags releases. relint's and xr's mirrors have
