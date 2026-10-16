@@ -7,6 +7,7 @@
 (require 'lisp-utils)
 (require 'emacs-utils)
 (require 'evil)
+(require 'evil-ext) ; For evil-column-of-last-char.
 (require 'projectile)
 
 (defun js/format-buffer ()

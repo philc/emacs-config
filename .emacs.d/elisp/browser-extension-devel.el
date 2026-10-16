@@ -4,6 +4,7 @@
 (provide 'browser-extension-devel)
 (require 'dash)
 (require 's)
+(require 'emacs-utils)
 
 (defvar ext-dev/browser-app "Firefox")
 

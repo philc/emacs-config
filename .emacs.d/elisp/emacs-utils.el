@@ -6,6 +6,12 @@
 (require 'lisp-utils)
 (require 'browse-url)
 
+;; This file is loaded early in init.el, before these, so it declares the functions it uses from them
+;; rather than requiring them.
+(declare-function evil-visual-select "evil-states")
+(declare-function View-scroll-to-buffer-end "view")
+(declare-function wm/show-buffer-rightward "window-management")
+
 (defvar global-leader-prefix ";"
   "The key sequence which prefixes the keybindings defined by `define-leader-keys`.")
 

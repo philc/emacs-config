@@ -3,6 +3,9 @@
 (provide 'js-repl)
 (require 'lisp-utils)
 (require 'repl) ; For connecting to and evaluating code in a Deno REPL.
+(require 'emacs-utils)
+(require 'evil)
+(require 'projectile)
 
 (defvar js/program-command "deno")
 (defvar js/program-arguments '())

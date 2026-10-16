@@ -4,6 +4,14 @@
 ;;
 (provide 'window-management)
 (require 'dash)
+(require 's)
+(require 'evil)
+(require 'lisp-utils) ; For the -?> and setq-temporarily macros.
+(require 'emacs-utils)
+
+;; From vertico, which init.el loads after this file.
+(defvar vertico-sort-override-function)
+(declare-function vertico--candidate "vertico")
 
 ;; Settings for window splits.
 (setq split-height-threshold 40)
@@ -16,7 +24,7 @@
 
 ;; I manage my windows in a 4x4 grid. I want ephemeral or status-based buffers to always show in the
 ;; lower-right or right window, in that order of preference.
-(setq wm/ephemeral-buffer-names
+(defvar wm/ephemeral-buffer-names
       '("*Help*" "*compilation*" "COMMIT_EDITMSG" "*Messages*"
         ;; Clojure
         "*clojure-simple*" "*inf-clojure*" "*Cljfmt Errors*"
@@ -31,13 +39,13 @@
         "*REPL*"
         "*eldoc*"
         "*Completions*"))
-(setq wm/ephemeral-buffer-regexps '("\\*cider.*"
+(defvar wm/ephemeral-buffer-regexps '("\\*cider.*"
                                     "magit-process.*"
                                     "\\*ghelp.*"))
 ;; I don't want these windows to be opened using my standard window opening logic, because I have
 ;; dedicated specific places that I like to place them, but I do want them to be closed by
 ;; wm/dismiss-ephemeral-windows.
-(setq extra-ephemeral-window-regexps-to-close '("^magit-revision"))
+(defvar extra-ephemeral-window-regexps-to-close '("^magit-revision"))
 
 (defun wm/ephemeral-buffer-name-p (buffer-name &optional _action)
   "Returns non-nil if BUFFER-NAME is an ephemeral buffer."
@@ -60,11 +68,11 @@
 
 ;; A list of "special" (ephemeral) buffer names which should be focused after they are shown. Used
 ;; by wm/show-ephemeral-buffer-in-a-sensible-window
-(setq special-display-auto-focused-buffers '())
+(defvar special-display-auto-focused-buffers '())
 
 ;; Whether we can show an ephemeral buffer in other frames, if, say, another frame already contains
 ;; another ephemeral buffer that we want to replace with a new one.
-(setq show-ephemeral-buffer-in-other-frames t)
+(defvar show-ephemeral-buffer-in-other-frames t)
 
 (defun wm/ephemeral-window-p (w)
   "True if the given window is an ephemeral window."
@@ -178,7 +186,7 @@
        (select-window window)
        (shrink-window delta t)))))
 
-(setq buffer-underneath-maximized-ephemeral-window nil)
+(defvar buffer-underneath-maximized-ephemeral-window nil)
 
 (defun wm/toggle-maximize-lower-right-window ()
   "Toggles the vertical maximization of an ephemeral window, wherever it's showing. If there's a
@@ -219,7 +227,7 @@
 
 ;; When a window in a tab is maximized, we save its configuration per tab. Emacs doesn't give us an
 ;; ID number to identify a tab, so we make due by storing the window configuration by tab name.
-(setq tab-name->window-config (make-hash-table))
+(defvar tab-name->window-config (make-hash-table))
 
 (defun wm/toggle-window-maximize ()
   (interactive)

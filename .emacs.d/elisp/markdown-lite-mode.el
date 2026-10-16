@@ -26,6 +26,7 @@
 ;; portion of inline image links, e.g. the "images/keylayout-column-staggered.svg" in
 ;; ![Column-staggered](images/keylayout-column-staggered.svg). That text is fontified with
 ;; markdown-url-face by mlm/markdown-mode-font-lock-keywords-basic, below.
+(defvar jinx-exclude-faces)
 (with-eval-after-load 'jinx
   (add-to-list 'jinx-exclude-faces '(markdown-lite-mode markdown-pre-face markdown-url-face)))
 
