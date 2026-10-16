@@ -163,3 +163,5 @@ function."
             (eq major-mode 'clojurec-mode)
             (eq major-mode 'clojurescript-mode))
     (cljfmt)))
+
+(provide 'cljfmt)

@@ -19,15 +19,14 @@
 (require 's)
 (require 'smartparens)
 (require 'browse-url)
-
-;; Use clojure.pprint when printing data structures to the REPL.
-(setq use-pprint t)
+(require 'evil)
+(require 'cljfmt)
 
 ;;
 ;; Buffer setup
 ;;
 
-(setq clojure-simple-output-prefix "clojure-simple::")
+(defvar clojure-simple-output-prefix "clojure-simple::")
 
 (defun setup-clojure-buffer ()
   ;; Count hyphens, etc. as word characters in lisps
@@ -94,8 +93,8 @@
 (add-hook 'comint-exec-hook
           (lambda () (set-process-query-on-exit-flag (get-buffer-process (current-buffer)) nil)))
 
-;; "A saved function to execute later. Saved via `mark-current-buffer`"
-(setq marked-function nil)
+(defvar marked-function nil
+  "A saved function to execute later. Saved via `clj/mark-current-buffer'.")
 
 (defun clj/mark-current-buffer ()
   (interactive)
@@ -201,7 +200,8 @@
 
 ;; The default inf-clojure program is "lein repl". At Liftoff, we don't use lein.
 ;; NOTE(philc): don't invoke an nrepl here; just a repl. When I used an nrepl, all output was buffered.
-(customize-set-variable 'inf-clojure-program "clojure -A:liftoff:dev")
+;; inf-clojure no longer defines this variable, so it's defined here. `clj/restart-repl' uses it.
+(defvar inf-clojure-program "clojure -A:liftoff:dev")
 
 ;; The REPL defined by `inf-clojure-program` is run in the directory "inf-clojure-project-root". This tries to
 ;; detect the closest ancestor directory of the current buffer that has a project.clj. Our projects don't have
@@ -373,7 +373,7 @@
   (interactive)
   (clj/eval-str (clj/wrap-with-repl-helpers-file "(my-pst)")))
 
-(setq clj/backtrace-cursor-linenum nil)
+(defvar clj/backtrace-cursor-linenum nil)
 
 (defun clj/print-any-exceptions ()
   "If an exception was caused by the last evaled Clojure statement, print just its backtrace."
@@ -668,13 +668,11 @@ but doesn't treat single semicolons as right-hand-side comments."
 ;; cljfmt -- automatic formatting of Clojure code.
 ;;
 
-(load "/Users/phil/.emacs.d/elisp/cljfmt.el")
-
 (setq cljfmt-show-errors nil)
 
 ;; Note that `cljfmt-before-save` triggers this save-hook for some reason, so we lock on clj-in-progress to
 ;; to protect from infinite recurision.
-(setq cljfmt-in-progress nil)
+(defvar cljfmt-in-progress nil)
 (defun cljfmt-before-save-mutually-exclusive ()
   (interactive)
   (when (and (eq major-mode 'clojure-mode)
