@@ -156,6 +156,7 @@
                (or heading-arg
                    (pcase (read-char)
                      (?l "Liftoff")
+                     (?c "Civ")
                      (?b "Base")
                      (?s "Study")
                      (?j "Journal")
