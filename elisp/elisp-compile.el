@@ -13,7 +13,7 @@
 (require 'cl-lib)
 (require 'seq)
 
-(defvar elisp-compile/repo-dir (file-name-parent-directory (file-truename user-emacs-directory))
+(defvar elisp-compile/repo-dir (file-truename user-emacs-directory)
   "The emacs-config repo, which has the Makefile.")
 
 (defvar elisp-compile/elisp-dir (expand-file-name "elisp/" (file-truename user-emacs-directory)))

@@ -1,8 +1,8 @@
 EMACS ?= /opt/homebrew/bin/emacs
-ELISP_DIR := .emacs.d/elisp
+ELISP_DIR := elisp
 # Elisp files to format and lint. Excludes third-party code (plugins/), and generated or data files
 # (custom.el, tempel-snippets.el).
-ELISP_FILES := .emacs.d/init.el .emacs.d/early-init.el .emacs.d/tangotango-theme.el \
+ELISP_FILES := init.el early-init.el tangotango-theme.el \
 	scripts/bench/mlm-bench-measure.el \
 	$(wildcard $(ELISP_DIR)/*.el)
 

@@ -24,7 +24,7 @@ if [ "${1:-}" = "--install" ]; then
   install=1
   shift
 fi
-elisp_dir=$(cd "$(dirname "$0")/../.emacs.d/elisp" && pwd)
+elisp_dir=$(cd "$(dirname "$0")/../elisp" && pwd)
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
 

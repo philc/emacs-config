@@ -45,10 +45,15 @@ async function compileVersions(rev, tmp) {
   const newFile = `${tmp}/new/markdown-lite-mode.el`;
   await Deno.mkdir(`${tmp}/old`);
   await Deno.mkdir(`${tmp}/new`);
-  const fileRev = `${rev}:.emacs.d/elisp/markdown-lite-mode.el`;
-  const source = await run("git", ["-C", repo, "show", fileRev]);
+  // Revisions from before the config moved to the repo root have it under .emacs.d/.
+  let source;
+  try {
+    source = await run("git", ["-C", repo, "show", `${rev}:elisp/markdown-lite-mode.el`]);
+  } catch {
+    source = await run("git", ["-C", repo, "show", `${rev}:.emacs.d/elisp/markdown-lite-mode.el`]);
+  }
   await Deno.writeTextFile(oldFile, source);
-  await Deno.copyFile(`${repo}.emacs.d/elisp/markdown-lite-mode.el`, newFile);
+  await Deno.copyFile(`${repo}elisp/markdown-lite-mode.el`, newFile);
   await run(`${repo}scripts/compile-elisp.sh`, ["--install", oldFile, newFile], {
     env: { EMACS: emacs },
   });
@@ -61,7 +66,7 @@ async function startDaemon(name, elc) {
     (setq package-user-dir (expand-file-name "~/.emacs.d/elpa"))
     (package-initialize)
     (setq global-leader-prefix ";")
-    (push ${JSON.stringify(repo + ".emacs.d/elisp")} load-path)
+    (push ${JSON.stringify(repo + "elisp")} load-path)
     (load ${JSON.stringify(elc)} nil t)
     (load ${JSON.stringify(benchDir + "mlm-bench-measure.el")} nil t))`;
   await run(emacs, ["-Q", `--daemon=${name}`, "--eval", init]);

@@ -1,14 +1,25 @@
-.emacs.d/auto-save-list
-.emacs.d/bookmarks
-.emacs.d/history
-.emacs.d/projectile-bookmarks.eld
-.emacs.d/ido.last
-.emacs.d/recentf
-.emacs.d/smex-items
-.emacs.d/url
-projectile.cache
-/.emacs.d/ac-comphist.dat
+/auto-save-list
+/bookmarks
+/history
+/projectile-bookmarks.eld
+/ido.last
+/recentf
+/smex-items
+/url
+/projectile.cache
+/ac-comphist.dat
+/elpa
+# spell-fu uses this dir for cached intermediates -- huge files which we want to exclude from code search.
+/spell-fu/
+/.emacs.desktop
+/.emacs.desktop.lock
+# Cache directory for compiled elisp code
+/eln-cache
+# Magit uses the Transient library to store command history
+/transient
+# Used by lsp-mode to store session information
+/.lsp-session-v1
 # Compiled grammars for tree-sitter
-.emacs.d/tree-sitter
+/tree-sitter
 # Byte-compiled elisp, from `make compile`
 *.elc
