@@ -29,7 +29,6 @@
  ("rainbow-delimiters" . "7919681b0d883502155d5b26e791fec15da6aeca")
  ("relint" . "04515f5ffd2b0e4d8e638fbcd0af8954b8113d9b")
  ("s.el" . "7393fa6fa305403e628058c0ec78c35d610fab05")
- ("scss-mode" . "cf58dbec5394280503eb5502938f3b5445d1b53d")
  ("smartparens" . "82d2cf084a19b0c2c3812e0550721f8a61996056")
  ("straight.el" . "a784c61d88c7ed1eb58fc4d325954db44a2e98de")
  ("swift-mode" . "bf56866b98de2fd73029da2bca1035ca02f9e879")

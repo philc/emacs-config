@@ -83,7 +83,6 @@
                       rainbow-delimiters ; Highlight parentheses in rainbow colors.
                       relint ; Lints regexps. Used by `make check`.
                       s ; A strings library.
-                      scss-mode ; For editing SCSS files.
                       smartparens ; For editing expressions in parentheses.
                       swift-mode ; Swift syntax highlighting
                       tempel ;; Insert snippets
@@ -99,7 +98,6 @@
                               go-mode
                               goto-chg ; A dependency of evil.
                               powerline
-                              scss-mode
                               smartparens
                               yaml-mode
                               yascroll)

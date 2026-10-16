@@ -1474,12 +1474,6 @@
   "rr" (util/save-and-call 'reload-active-browser-tab))
 
 ;;
-;; SCSS mode, for editing SCSS files.
-;;
-(setq scss-compile-at-save nil)
-(add-to-list 'auto-mode-alist '("\\.scss\\'" . scss-mode))
-
-;;
 ;; YAML mode, for editing YAML files
 ;;
 (require 'yaml-mode)
