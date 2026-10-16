@@ -234,9 +234,10 @@ Date: %ad
 
 ;; Works like magit-diff-visible-file, except that it uses my custom function to select which window
 ;; to show the visited file in.
-(defun my-magit/diff-visit-file (file)
-  (interactive (list (magit-file-at-point t t)))
-  (magit-diff-visit-file--internal file nil #'wm/show-buffer-rightward))
+(defun my-magit/diff-visit-file ()
+  (interactive)
+  ;; Like magit's own magit-diff-visit-file-other-window, which also uses this internal function.
+  (magit-diff-visit-file--internal nil #'wm/show-buffer-rightward))
 
 (add-hook 'git-commit-mode-hook 'init-git-commit-mode)
 (defun init-git-commit-mode ()
