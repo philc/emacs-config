@@ -372,6 +372,88 @@
     (should (equal (buffer-string) "* a\n  * b\n* c\n"))
     (should (null (mlm-test/list-levels-mismatches)))))
 
+(defconst mlm-test/mixed-text
+  (concat "# Heading\n"
+          "\n"
+          "Paragraph text\n"
+          "which wraps.\n"
+          "\n"
+          "* one\n"
+          "  wrapped\n"
+          "  * two\n"
+          "    wrapped\n"
+          "\n"
+          "        pre block\n"
+          "        in an item\n"
+          "\n"
+          "    * three\n"
+          "  * four\n"
+          "**Bold** line\n"
+          "\n"
+          "```js\n"
+          "* not an item\n"
+          "# not a heading\n"
+          "```\n"
+          "* five\n"
+          "  ```\n"
+          "  fenced in an item\n"
+          "  ```\n"
+          "1. numbered\n"
+          "   1. nested\n"
+          "\n"
+          "    pre block\n"
+          "\n"
+          "## Subheading\n"
+          "* six\n"
+          "---\n")
+  "Text with most of the structures markdown-lite-mode highlights and tracks.")
+
+(defun mlm-test/random-generator (seed)
+  "Returns a function which takes N and returns a pseudo-random integer from 0 to N - 1. It returns
+   the same sequence for the same SEED, on every machine and Emacs version, unlike `random', whose
+   sequence depends on the platform's generator. It's a linear congruential generator, with glibc's
+   constants."
+  (let ((state seed))
+    (lambda (n)
+      (setq state (% (+ (* state 1103515245) 12345) 2147483648))
+      ;; The low bits of an LCG cycle with a short period, so use the high ones.
+      (% (/ state 65536) n))))
+
+(ert-deftest markdown-lite-mode-test/list-levels-match-uncached-after-random-edits ()
+  "The list levels stored by `mlm/syntax-propertize' match the ones computed from scratch after each
+   of a series of random edits, which insert and delete lines and change their indentation. A third
+   of the edits are made with the change hooks inhibited, followed by `syntax-ppss-flush-cache'. The
+   edits are the same on every run."
+  (with-temp-buffer
+    (insert mlm-test/mixed-text)
+    (markdown-lite-mode)
+    (let ((random (mlm-test/random-generator 1))
+          (lines ["* x\n"
+                  "  * y\n"
+                  "    * z\n"
+                  "\n"
+                  "text\n"
+                  "## H\n"
+                  "        code\n"
+                  "1. n\n"
+                  "---\n"]))
+      ;; Each edit takes ~1ms to check. A bug in how the list levels are kept up to date after an
+      ;; edit (e.g. `mlm/syntax-propertize' not continuing from the previous line's levels) makes
+      ;; most edits fail, so 15 is plenty.
+      (dotimes (i 15)
+        (goto-char (point-min))
+        (forward-line (funcall random (count-lines (point-min) (point-max))))
+        (let ((start (point))
+              (inhibit-modification-hooks (= 0 (% i 3))))
+          (pcase (funcall random 4)
+            (0 (insert (aref lines (funcall random (length lines)))))
+            (1 (delete-region (point) (min (point-max) (1+ (line-end-position)))))
+            (2 (insert "  "))
+            (3 (when (looking-at "  ") (delete-char 2))))
+          (when inhibit-modification-hooks
+            (syntax-ppss-flush-cache start)))
+        (should (null (mlm-test/list-levels-mismatches)))))))
+
 (ert-deftest markdown-lite-mode-test/pre-block-deep-in-long-list ()
   "The list levels used to find pre blocks account for list items arbitrarily far back. Here, the
    nested list items near the end are over 100,000 characters from their parent, \"* a\". If the
@@ -567,3 +649,31 @@
     (delete-region (point) (line-beginning-position 2))
     (font-lock-ensure)
     (should (equal (cdr (nth 2 (mlm-test/line-faces))) 'mlm-pre))))
+
+(defun mlm-test/char-faces ()
+  "Returns the face of each character in the current buffer."
+  (mapcar (lambda (pos) (get-text-property pos 'face))
+          (number-sequence (point-min) (1- (point-max)))))
+
+(defun mlm-test/char-faces-fontified-in-chunks (text chunk-size reverse)
+  "Returns the face of each character of TEXT, after fontifying it in chunks of CHUNK-SIZE
+   characters, as jit-lock does when scrolling through it. If REVERSE is non-nil, the chunks are
+   fontified from the end of the buffer to the start."
+  (with-temp-buffer
+    (insert text)
+    (markdown-lite-mode)
+    (let ((starts (number-sequence (point-min) (1- (point-max)) chunk-size)))
+      (dolist (start (if reverse (reverse starts) starts))
+        (font-lock-fontify-region start (min (point-max) (+ start chunk-size)))))
+    (mlm-test/char-faces)))
+
+(ert-deftest markdown-lite-mode-test/fontifying-in-chunks-matches-whole-buffer ()
+  "Fontifying a buffer in chunks, in either order, gives the same faces as fontifying all of it at
+   once. Small chunks start partway through list items, pre blocks and fenced code blocks.
+   Setext headings (a line underlined with \"===\") aren't tested, because they currently get
+   different faces when a chunk starts at the underline."
+  (let* ((text (concat mlm-test/mixed-text mlm-test/mixed-text mlm-test/mixed-text))
+         (whole (mlm-test/with-fontified-buffer text (mlm-test/char-faces))))
+    (dolist (chunk-size '(7 31 100))
+      (dolist (reverse '(nil t))
+        (should (equal (mlm-test/char-faces-fontified-in-chunks text chunk-size reverse) whole))))))
