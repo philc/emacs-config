@@ -3,10 +3,18 @@
     "fix": "deno fmt && deno lint --fix"
   },
   "fmt": {
+    "include": [
+      "scripts/"
+    ],
     "lineWidth": 100
   },
   "lint": {
-    "plugins": ["jsr:@philc/lint-rules@^0.1.0"]
+    "include": [
+      "scripts/"
+    ],
+    "plugins": [
+      "jsr:@philc/lint-rules@^0.1.0"
+    ]
   },
   "imports": {
     "@philc/shoulda": "jsr:@philc/shoulda@^2.0.0",
