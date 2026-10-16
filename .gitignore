@@ -1,6 +1,5 @@
 # Runtime state and generated config, which no-littering keeps in these two dirs. See init.el.
 /var
 /etc
-/elpa
 # Byte-compiled elisp, from `make compile`
 *.elc
