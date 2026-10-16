@@ -59,7 +59,7 @@ async function runRipgrep(query, args, file, projectRoot) {
     throw new Error("file or projectRoot is required.");
   }
 
-  let additionalArgs = [
+  const additionalArgs = [
     // --no-unicode makes rg's character classes simpler. Do I want this?
     // "--no-unicode",
     "--line-number",
@@ -226,7 +226,7 @@ if (test) {
   const projectRoot = null;
   // file = "/Users/phil/projects/vimium/pages/vomnibar_page.js";
   // query = "UIComponentMessenger.postMessage";
-  const lines = await search(query, path, projectRoot);
+  console.log((await search(query, path, projectRoot)).join("\n"));
 }
 
 const isUnitTesting = import.meta.url != Deno.mainModule;

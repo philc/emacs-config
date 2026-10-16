@@ -1,7 +1,6 @@
-import { assert, context, setup, should, teardown } from "@philc/shoulda";
+import { assert, context, should, teardown } from "@philc/shoulda";
 import { getModuleImports, parseQueryFromCursorPos, search } from "../goto_def.js";
-import * as fs from "jsr:@std/fs";
-import * as stdPath from "@std/path";
+import * as fs from "@std/fs";
 
 const fixturesDir = "tests/tmpFixtures";
 const fixture1 = fixturesDir + "/goto_def_fixture1.js";
@@ -107,7 +106,7 @@ context("goto_def_test", () => {
 
   should("search for the last part when no earlier part refers to a module", async () => {
     await writeFixture("function foo() {}", fixture1);
-    let got = await search("this.foo", fixture1);
+    const got = await search("this.foo", fixture1);
     assert.equal(1, got.length);
     assert.equal(fixture1 + ":1:9", got[0]);
   });
@@ -138,14 +137,14 @@ context("goto_def_test", () => {
         "function foo() {}",
       fixture2,
     );
-    let got = await search("foo", fixture2);
+    const got = await search("foo", fixture2);
     assert.equal(1, got.length);
     assert.equal(fixture2 + ":2:9", got[0]);
   });
 
   should("ignore references to imports on non-local file systems", async () => {
     await writeFixture('import { foo } from "@std/path";');
-    let got = await search("bar.foo", fixture1);
+    const got = await search("bar.foo", fixture1);
     assert.equal(0, got.length);
   });
 

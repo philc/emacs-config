@@ -1,4 +1,4 @@
-import { assert, context, setup, should, teardown } from "@philc/shoulda";
+import { assert, context, should } from "@philc/shoulda";
 import { getSymbols } from "../list_symbols.js";
 // import * as fs from "jsr:@std/fs";
 
