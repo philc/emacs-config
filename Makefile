@@ -9,7 +9,7 @@ ELISP_FILES := init.el early-init.el packages.el tangotango-theme.el \
 
 # -Q skips the real init.el, loading only what the test files themselves require.
 .PHONY: test
-test:
+test: ## Run the ERT tests in elisp/*-test.el
 	$(EMACS) -Q --batch \
 		-l scripts/package-load-path.el \
 		--eval '(setq load-prefer-newer t)' \
@@ -22,7 +22,7 @@ test:
 # than interpreting them. early-init.el sets `load-prefer-newer', so a .el edited since its .elc was
 # compiled is loaded instead of the .elc. A file with compile warnings doesn't get a new .elc.
 .PHONY: compile
-compile:
+compile: ## Byte-compile elisp/ (Emacs runs this at startup and on save)
 	@EMACS=$(EMACS) scripts/compile-elisp.sh --install $(filter-out %-test.el,$(wildcard $(ELISP_DIR)/*.el))
 
 # Benchmarks markdown-lite-mode at REV (default HEAD) against the working tree, on FILES, e.g.
@@ -30,17 +30,17 @@ compile:
 # scripts/bench/mlm-bench.js.
 REV ?= HEAD
 .PHONY: bench
-bench:
+bench: ## Benchmark markdown-lite-mode, e.g. make bench FILES='a.md b.md'
 	@EMACS=$(EMACS) scripts/bench/mlm-bench.js $(REV) $(FILES)
 
 # Reindents the elisp files and removes trailing whitespace.
 .PHONY: fmt
-fmt:
+fmt: ## Reindent the elisp files
 	$(EMACS) -Q --batch -L $(ELISP_DIR) -l scripts/format-elisp.el -f format-elisp-batch $(ELISP_FILES)
 
 # Runs all checks, and fails if any of them fail.
 .PHONY: check
-check:
+check: ## Run check-compile and check-regexps
 	@status=0; \
 	$(MAKE) --no-print-directory check-compile || status=1; \
 	$(MAKE) --no-print-directory check-regexps || status=1; \
@@ -49,13 +49,13 @@ check:
 # Byte-compiles each elisp file in its own fresh Emacs, and fails on any warning. See
 # scripts/compile-elisp.sh.
 .PHONY: check-compile
-check-compile:
+check-compile: ## Byte-compile each elisp file, failing on any warning
 	@EMACS=$(EMACS) scripts/compile-elisp.sh $(ELISP_FILES)
 
 # Checks regular expressions for mistakes, using relint. relint is installed via `my-packages` in
 # packages.el.
 .PHONY: check-regexps
-check-regexps:
+check-regexps: ## Lint regexps with relint
 	$(EMACS) -Q --batch \
 		-l scripts/package-load-path.el \
 		--eval '(setq load-prefer-newer t)' \
@@ -69,16 +69,21 @@ PACKAGES := $(EMACS) -Q --batch -l packages.el -L $(ELISP_DIR) -l package-upgrad
 # Installs any missing packages, and checks out the versions in package-lock.el, e.g. after pulling
 # a change to it.
 .PHONY: sync-packages
-sync-packages:
+sync-packages: ## Install missing packages, at the versions in package-lock.el
 	$(PACKAGES) -f package-upgrade/sync
 
 # Moves each package to its latest release (or newest commit, for those in `my-packages-at-head`),
 # and records the new versions in package-lock.el.
 .PHONY: upgrade-packages
-upgrade-packages:
+upgrade-packages: ## Upgrade packages to their newest releases, and update package-lock.el
 	$(PACKAGES) -f package-upgrade/upgrade-all
 
 # Prints the version of each installed package.
 .PHONY: package-versions
-package-versions:
+package-versions: ## Print the installed version of each package
 	@$(PACKAGES) -f package-upgrade/print-versions
+
+# Lists every target which has a "## description" after it.
+.PHONY: help
+help: ## List the targets and what they do
+	@awk -F':.*## ' '/^[a-z-]+:.*## / {printf "  make %-17s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
