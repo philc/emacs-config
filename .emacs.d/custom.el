@@ -23,11 +23,11 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(cider-error-highlight-face ((t (:inherit nil :underline "brown4"))))
- '(markdown-list-item1-face ((t (:foreground "#ECE27C"))))
- '(markdown-list-item2-face ((t (:foreground "#85C7FF"))))
- '(markdown-list-item3-face ((t (:foreground "#E4BDA7"))))
- '(markdown-list-item4-face ((t (:foreground "#87D952"))))
- '(markdown-list-item5-face ((t (:foreground "#C3D9C9"))))
+ '(mlm-list-item-1 ((t (:foreground "#ECE27C"))))
+ '(mlm-list-item-2 ((t (:foreground "#85C7FF"))))
+ '(mlm-list-item-3 ((t (:foreground "#E4BDA7"))))
+ '(mlm-list-item-4 ((t (:foreground "#87D952"))))
+ '(mlm-list-item-5 ((t (:foreground "#C3D9C9"))))
  '(mu4e-cited-1-face ((t (:inherit font-lock-builtin-face :weight normal))))
  '(mu4e-cited-2-face ((t (:inherit font-lock-type-face :weight normal))))
  '(mu4e-cited-3-face ((t (:inherit font-lock-variable-name-face :weight normal))))

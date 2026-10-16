@@ -409,11 +409,11 @@
                                           "text\n"
                                           "text\n")
     (should (equal (mlm-test/line-faces)
-                   '(("* one" . markdown-list-item1-face)
-                     ("  wrapped" . markdown-list-item1-face)
-                     ("  * two" . markdown-list-item2-face)
-                     ("    wrapped" . markdown-list-item2-face)
-                     ("    wrapped" . markdown-list-item2-face)
+                   '(("* one" . mlm-list-item-1)
+                     ("  wrapped" . mlm-list-item-1)
+                     ("  * two" . mlm-list-item-2)
+                     ("    wrapped" . mlm-list-item-2)
+                     ("    wrapped" . mlm-list-item-2)
                      ("  under-indented" . nil)
                      ("" . nil)
                      ("  after blank" . nil)
@@ -430,8 +430,8 @@
                                           "#hashtag\n"
                                           "##notaheading\n")
     (should (equal (mlm-test/line-faces)
-                   '(("# Title" . markdown-header-delimiter-face)
-                     ("## Section" . markdown-header-delimiter-face)
+                   '(("# Title" . mlm-header-delimiter)
+                     ("## Section" . mlm-header-delimiter)
                      ("#hashtag" . nil)
                      ("##notaheading" . nil))))))
 
@@ -444,11 +444,11 @@
                             collect (progn (goto-char (point-min))
                                            (search-forward text)
                                            (get-text-property (match-beginning 0) 'face)))
-                   '(markdown-header-face-1 markdown-header-face-2 markdown-header-face-3
-                     markdown-header-face-4 markdown-header-face-5 markdown-header-face-6 nil)))
+                   '(mlm-header-1 mlm-header-2 mlm-header-3
+                     mlm-header-4 mlm-header-5 mlm-header-6 nil)))
     (goto-char (point-min))
     (search-forward "h6 ")
-    (should (eq (get-text-property (point) 'face) 'markdown-header-delimiter-face))))
+    (should (eq (get-text-property (point) 'face) 'mlm-header-delimiter))))
 
 (ert-deftest markdown-lite-mode-test/list-item-continuation-line-refontified-alone ()
   "A continuation line is highlighted when it's refontified without its marker line, e.g. after
@@ -458,14 +458,14 @@
     (goto-char (point-min))
     (forward-line 2)
     (font-lock-fontify-region (point) (line-end-position))
-    (should (equal (cdr (nth 2 (mlm-test/line-faces))) 'markdown-list-item1-face))))
+    (should (equal (cdr (nth 2 (mlm-test/line-faces))) 'mlm-list-item-1))))
 
 (ert-deftest markdown-lite-mode-test/list-item-continuation-lines-not-multiline ()
   "Continuation lines are matched one line at a time. If they were matched as one multiline match,
    font-lock would refontify the whole of a long list item on every keystroke in it."
   (mlm-test/with-fontified-buffer (concat "* one\n" (apply #'concat (make-list 5 "  two\n")))
     (should (equal (mapcar #'cdr (mlm-test/line-faces))
-                   (make-list 6 'markdown-list-item1-face)))
+                   (make-list 6 'mlm-list-item-1)))
     (should-not (text-property-any (point-min) (point-max) 'font-lock-multiline t))))
 
 (ert-deftest markdown-lite-mode-test/fenced-code-block-highlighted ()
@@ -473,26 +473,26 @@
    otherwise be a heading. The text after it isn't."
   (mlm-test/with-fontified-buffer "```bash\n# comment\n```\ntext\n"
     (should (equal (mapcar #'cdr (mlm-test/line-faces))
-                   '(markdown-pre-face markdown-pre-face markdown-pre-face nil)))))
+                   '(mlm-pre mlm-pre mlm-pre nil)))))
 
 (ert-deftest markdown-lite-mode-test/fenced-code-block-closing-fence ()
   "A block is closed only by a fence of the same character, at least as long as its opening fence."
   (mlm-test/with-fontified-buffer "~~~~\n```\n~~~\n~~~~~\ntext\n"
     (should (equal (mapcar #'cdr (mlm-test/line-faces))
-                   '(markdown-pre-face markdown-pre-face markdown-pre-face markdown-pre-face nil)))))
+                   '(mlm-pre mlm-pre mlm-pre mlm-pre nil)))))
 
 (ert-deftest markdown-lite-mode-test/fenced-code-block-in-list-item ()
   "A fenced code block can be indented, e.g. inside a list item."
   (mlm-test/with-fontified-buffer "* item\n  ```\n  code\n  ```\n"
     (should (equal (mapcar #'cdr (mlm-test/line-faces))
-                   '(markdown-list-item1-face
-                     markdown-pre-face markdown-pre-face markdown-pre-face)))))
+                   '(mlm-list-item-1
+                     mlm-pre mlm-pre mlm-pre)))))
 
 (ert-deftest markdown-lite-mode-test/fenced-code-block-unclosed ()
   "A block with no closing fence runs to the end of the buffer."
   (mlm-test/with-fontified-buffer "```\ncode\n"
     (should (equal (mapcar #'cdr (mlm-test/line-faces))
-                   '(markdown-pre-face markdown-pre-face)))))
+                   '(mlm-pre mlm-pre)))))
 
 (ert-deftest markdown-lite-mode-test/inline-code-is-not-a-fence ()
   "A line which starts with inline code written with three backticks doesn't open a block."
@@ -507,7 +507,7 @@
     (goto-char (point-min))
     (forward-line 2)
     (font-lock-fontify-region (point) (line-end-position))
-    (should (equal (cdr (nth 2 (mlm-test/line-faces))) 'markdown-pre-face))))
+    (should (equal (cdr (nth 2 (mlm-test/line-faces))) 'mlm-pre))))
 
 (ert-deftest markdown-lite-mode-test/fenced-code-block-in-narrowed-buffer ()
   "A block is highlighted in a narrowed buffer, where the stored text properties can't be used."
@@ -518,7 +518,7 @@
     (save-restriction
       (narrow-to-region (point-min) (line-end-position))
       (font-lock-fontify-region (point) (line-end-position)))
-    (should (equal (cdr (nth 2 (mlm-test/line-faces))) 'markdown-pre-face))))
+    (should (equal (cdr (nth 2 (mlm-test/line-faces))) 'mlm-pre))))
 
 (ert-deftest markdown-lite-mode-test/fenced-code-block-updated-after-edit ()
   "Deleting a block's closing fence extends the block, so the text after it becomes highlighted."
@@ -527,4 +527,4 @@
     (forward-line 2)
     (delete-region (point) (line-beginning-position 2))
     (font-lock-ensure)
-    (should (equal (cdr (nth 2 (mlm-test/line-faces))) 'markdown-pre-face))))
+    (should (equal (cdr (nth 2 (mlm-test/line-faces))) 'mlm-pre))))

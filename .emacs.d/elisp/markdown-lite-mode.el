@@ -23,13 +23,13 @@
 (require 'cl-lib)
 (require 'consult) ; For consult-outline.
 
-;; Spell checking. Don't spell check preformatted/code blocks (markdown-pre-face), or the URL
+;; Spell checking. Don't spell check preformatted/code blocks (mlm-pre), or the URL
 ;; portion of inline image links, e.g. the "images/keylayout-column-staggered.svg" in
 ;; ![Column-staggered](images/keylayout-column-staggered.svg). That text is fontified with
-;; markdown-url-face by mlm/markdown-mode-font-lock-keywords-basic, below.
+;; mlm-url by mlm/markdown-mode-font-lock-keywords-basic, below.
 (defvar jinx-exclude-faces)
 (with-eval-after-load 'jinx
-  (add-to-list 'jinx-exclude-faces '(markdown-lite-mode markdown-pre-face markdown-url-face)))
+  (add-to-list 'jinx-exclude-faces '(markdown-lite-mode mlm-pre mlm-url)))
 
 (defconst mlm/outline-regexp "[ ]*\\*\\|#+ "
   "The `outline-regexp' for markdown-lite-mode. It matches a leading bullet point, or an ATX
@@ -555,12 +555,12 @@
    end a run of list item continuation lines (see `mlm/markdown-match-list-item-continuation').")
 
 (defconst mlm/markdown-list-item-faces
-  `((,mlm/markdown-regex-list-item1 . markdown-list-item1-face)
-    (,mlm/markdown-regex-list-item2 . markdown-list-item2-face)
-    (,mlm/markdown-regex-list-item3 . markdown-list-item3-face)
-    (,mlm/markdown-regex-list-item4 . markdown-list-item4-face)
-    (,mlm/markdown-regex-list-item5 . markdown-list-item5-face)
-    (,mlm/markdown-regex-list-item6 . markdown-list-item6-face))
+  `((,mlm/markdown-regex-list-item1 . mlm-list-item-1)
+    (,mlm/markdown-regex-list-item2 . mlm-list-item-2)
+    (,mlm/markdown-regex-list-item3 . mlm-list-item-3)
+    (,mlm/markdown-regex-list-item4 . mlm-list-item-4)
+    (,mlm/markdown-regex-list-item5 . mlm-list-item-5)
+    (,mlm/markdown-regex-list-item6 . mlm-list-item-6))
   "The regexps which match the marker lines of highlighted list items, and the face of each.")
 
 (defconst mlm/markdown-regex-code
@@ -606,8 +606,8 @@ e.g. the \"images/foo.svg\" in ![alt](images/foo.svg).")
    header's level.")
 
 (defconst mlm/markdown-header-faces
-  [markdown-header-face-1 markdown-header-face-2 markdown-header-face-3
-   markdown-header-face-4 markdown-header-face-5 markdown-header-face-6]
+  [mlm-header-1 mlm-header-2 mlm-header-3
+   mlm-header-4 mlm-header-5 mlm-header-6]
   "The face for each level of header, from level 1 to 6.")
 
 (defconst mlm/markdown-regex-header-1-setext
@@ -869,123 +869,122 @@ If we are at the first line, then consider the previous line to be blank."
 
 ;;; Font Lock =================================================================
 
-(defgroup markdown-faces nil
-  "Faces used in Markdown Mode"
-  :group 'markdown
+(defgroup mlm-faces nil
+  "Faces used in markdown-lite-mode."
   :group 'faces)
 
-(defface markdown-header-rule-face
+(defface mlm-header-rule
   '((t (:inherit font-lock-function-name-face :weight bold)))
   "Base face for headers rules."
-  :group 'markdown-faces)
+  :group 'mlm-faces)
 
-(defface markdown-header-delimiter-face
+(defface mlm-header-delimiter
   '((t (:inherit font-lock-function-name-face :weight bold)))
   "Base face for headers hash delimiter."
-  :group 'markdown-faces)
+  :group 'mlm-faces)
 
-(defface markdown-header-face
+(defface mlm-header
   '((t (:inherit font-lock-function-name-face :weight bold)))
   "Base face for headers."
-  :group 'markdown-faces)
+  :group 'mlm-faces)
 
-(defface markdown-header-face-1
-  '((t (:inherit markdown-header-face)))
+(defface mlm-header-1
+  '((t (:inherit mlm-header)))
   "Face for level-1 headers."
-  :group 'markdown-faces)
+  :group 'mlm-faces)
 
-(defface markdown-header-face-2
-  '((t (:inherit markdown-header-face)))
+(defface mlm-header-2
+  '((t (:inherit mlm-header)))
   "Face for level-2 headers."
-  :group 'markdown-faces)
+  :group 'mlm-faces)
 
-(defface markdown-header-face-3
-  '((t (:inherit markdown-header-face)))
+(defface mlm-header-3
+  '((t (:inherit mlm-header)))
   "Face for level-3 headers."
-  :group 'markdown-faces)
+  :group 'mlm-faces)
 
-(defface markdown-header-face-4
-  '((t (:inherit markdown-header-face)))
+(defface mlm-header-4
+  '((t (:inherit mlm-header)))
   "Face for level-4 headers."
-  :group 'markdown-faces)
+  :group 'mlm-faces)
 
-(defface markdown-header-face-5
-  '((t (:inherit markdown-header-face)))
+(defface mlm-header-5
+  '((t (:inherit mlm-header)))
   "Face for level-5 headers."
-  :group 'markdown-faces)
+  :group 'mlm-faces)
 
-(defface markdown-header-face-6
-  '((t (:inherit markdown-header-face)))
+(defface mlm-header-6
+  '((t (:inherit mlm-header)))
   "Face for level-6 headers."
-  :group 'markdown-faces)
+  :group 'mlm-faces)
 
-(defface markdown-inline-code-face
+(defface mlm-inline-code
   '((t (:inherit font-lock-constant-face)))
   "Face for inline code."
-  :group 'markdown-faces)
+  :group 'mlm-faces)
 
-(defface markdown-pre-face
+(defface mlm-pre
   '((t (:inherit font-lock-constant-face)))
   "Face for preformatted text."
-  :group 'markdown-faces)
+  :group 'mlm-faces)
 
-(defface markdown-url-face
+(defface mlm-url
   '((t (:inherit font-lock-string-face)))
   "Face for URLs."
-  :group 'markdown-faces)
+  :group 'mlm-faces)
 
 ;; TODO(philc):
-(defface markdown-list-item1-face
+(defface mlm-list-item-1
   '((t (:inherit font-lock-builtin-face)))
   "For first-level list items."
-  :group 'markdown-faces)
+  :group 'mlm-faces)
 
-(defface markdown-list-item2-face
+(defface mlm-list-item-2
   '((t (:inherit font-lock-type-face)))
   "For second-level list items."
-  :group 'markdown-faces)
+  :group 'mlm-faces)
 
-(defface markdown-list-item3-face
+(defface mlm-list-item-3
   '((t (:inherit font-lock-builtin-face)))
   "For second-level list items."
-  :group 'markdown-faces)
+  :group 'mlm-faces)
 
-(defface markdown-list-item4-face
+(defface mlm-list-item-4
   '((t (:inherit font-lock-type-face)))
   "For second-level list items."
-  :group 'markdown-faces)
+  :group 'mlm-faces)
 
-(defface markdown-list-item5-face
+(defface mlm-list-item-5
   '((t (:inherit font-lock-builtin-face)))
   "For second-level list items."
-  :group 'markdown-faces)
+  :group 'mlm-faces)
 
-(defface markdown-list-item6-face
+(defface mlm-list-item-6
   '((t (:inherit font-lock-type-face)))
   "For second-level list items."
-  :group 'markdown-faces)
+  :group 'mlm-faces)
 
 (defvar mlm/markdown-mode-font-lock-keywords-basic
   (list
-   (cons 'mlm/markdown-match-pre-blocks '((0 'markdown-pre-face)))
-   (cons 'mlm/markdown-match-fenced-code-blocks '((0 'markdown-pre-face)))
-   (cons mlm/markdown-regex-header-1-setext '((1 'markdown-header-face-1)
-                                              (2 'markdown-header-rule-face)))
-   (cons mlm/markdown-regex-header-2-setext '((1 'markdown-header-face-2)
-                                              (2 'markdown-header-rule-face)))
+   (cons 'mlm/markdown-match-pre-blocks '((0 'mlm-pre)))
+   (cons 'mlm/markdown-match-fenced-code-blocks '((0 'mlm-pre)))
+   (cons mlm/markdown-regex-header-1-setext '((1 'mlm-header-1)
+                                              (2 'mlm-header-rule)))
+   (cons mlm/markdown-regex-header-2-setext '((1 'mlm-header-2)
+                                              (2 'mlm-header-rule)))
    (cons mlm/markdown-regex-header-atx
-         '((1 'markdown-header-delimiter-face)
+         '((1 'mlm-header-delimiter)
            (2 (aref mlm/markdown-header-faces (1- (length (match-string 1)))))
-           (3 'markdown-header-delimiter-face)))
-   (cons mlm/markdown-regex-list-item1 '((0 'markdown-list-item1-face)))
-   (cons mlm/markdown-regex-list-item2 '((0 'markdown-list-item2-face)))
-   (cons mlm/markdown-regex-list-item3 '((0 'markdown-list-item3-face)))
-   (cons mlm/markdown-regex-list-item4 '((0 'markdown-list-item4-face)))
-   (cons mlm/markdown-regex-list-item5 '((0 'markdown-list-item5-face)))
-   (cons mlm/markdown-regex-list-item6 '((0 'markdown-list-item6-face)))
+           (3 'mlm-header-delimiter)))
+   (cons mlm/markdown-regex-list-item1 '((0 'mlm-list-item-1)))
+   (cons mlm/markdown-regex-list-item2 '((0 'mlm-list-item-2)))
+   (cons mlm/markdown-regex-list-item3 '((0 'mlm-list-item-3)))
+   (cons mlm/markdown-regex-list-item4 '((0 'mlm-list-item-4)))
+   (cons mlm/markdown-regex-list-item5 '((0 'mlm-list-item-5)))
+   (cons mlm/markdown-regex-list-item6 '((0 'mlm-list-item-6)))
    (cons 'mlm/markdown-match-list-item-continuation '((0 mlm/markdown-list-item-continuation-face)))
-   (cons 'mlm/markdown-match-code '((0 'markdown-inline-code-face)))
-   (cons mlm/markdown-regex-image-url '((1 'markdown-url-face))))
+   (cons 'mlm/markdown-match-code '((0 'mlm-inline-code)))
+   (cons mlm/markdown-regex-image-url '((1 'mlm-url))))
   "Syntax highlighting for Markdown files.")
 
 (defun mlm/markdown-match-code (last)
