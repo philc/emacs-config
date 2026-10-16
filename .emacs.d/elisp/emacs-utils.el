@@ -5,6 +5,7 @@
 (provide 'emacs-utils)
 (require 'lisp-utils)
 (require 'browse-url)
+(require 'general) ; `define-leader-keys' expands to a call to general-define-key.
 
 ;; This file is loaded early in init.el, before these, so it declares the functions it uses from them
 ;; rather than requiring them.

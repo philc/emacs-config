@@ -3,6 +3,7 @@
 ;; Utility functions for writing Emacs lisp.
 ;;
 (provide 'lisp-utils)
+(require 'cl-lib)
 (require 'dash)
 (require 's)
 

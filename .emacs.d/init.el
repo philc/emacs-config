@@ -455,8 +455,6 @@
   (interactive "r")
   (-> (buffer-substring beg end) length number-to-string message))
 
-(setq general-default-keymaps 'evil-normal-state-map)
-
 ;;
 ;; which-key-mode
 ;;

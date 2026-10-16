@@ -1,5 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 (provide 'markdown-tables)
+(require 'cl-lib)
 (require 'dash)
 (require 's)
 
