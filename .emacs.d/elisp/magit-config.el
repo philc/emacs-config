@@ -222,6 +222,8 @@ Date: %ad
    "-" 'magit-diff-smaller-hunks
    "+" 'magit-diff-larger-hunks
    "gu" 'magit-jump-to-unstaged
+   "zi" 'magit-stash-index
+   "zp" 'magit-stash-pop
    "K" 'magit-section-backward
    (kbd "TAB") 'magit-section-toggle
    "q" 'bury-buffer
