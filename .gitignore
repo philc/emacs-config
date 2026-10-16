@@ -10,3 +10,5 @@ projectile.cache
 /.emacs.d/ac-comphist.dat
 # Compiled grammars for tree-sitter
 .emacs.d/tree-sitter
+# Byte-compiled elisp, from `make compile`
+*.elc

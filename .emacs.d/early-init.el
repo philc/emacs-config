@@ -3,6 +3,10 @@
 ;; Load graphical settings, so we have less UI flicker as Emacs starts up.
 ;;
 
+;; The files in elisp/ are byte-compiled with `make compile'. When a .el file has been edited since it
+;; was compiled, load the .el rather than its stale .elc.
+(setq load-prefer-newer t)
+
 ;; This allows Emacs to occupy the full screen width and height, so that nothing below it (e.g. the
 ;; desktop) is visible. The default behavior in Emacs is to allow only resizing by whole
 ;; character-columns and rows.
