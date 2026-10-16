@@ -24,6 +24,11 @@
 ;; commit mode and don't need to see the changes again.
 (setq magit-commit-show-diff nil)
 
+;; Magit's commit menu enables --verbose by default, which makes git embed the full staged diff
+;; as a comment in the commit message buffer. That's slow to open for large diffs, so turn it off.
+(with-eval-after-load 'magit-commit
+  (oset (get 'magit-commit 'transient--prefix) default-value nil))
+
 ;; Disable Emacs' built-in VC package for git repositories. This prevents it from doing unnecessary
 ;; work when Magit is performing git operations. This was recommended by the Magit manual.
 ;; Empirically, I've noticed this greatly speeds up git rebasing with Magit.
