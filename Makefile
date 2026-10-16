@@ -3,6 +3,7 @@ ELISP_DIR := .emacs.d/elisp
 # Elisp files to format and lint. Excludes third-party code (plugins/), and generated or data files
 # (custom.el, tempel-snippets.el).
 ELISP_FILES := .emacs.d/init.el .emacs.d/early-init.el .emacs.d/tangotango-theme.el \
+	scripts/bench/mlm-bench-measure.el \
 	$(wildcard $(ELISP_DIR)/*.el)
 
 # -Q skips the real init.el, loading only what the test files themselves require.
@@ -23,6 +24,13 @@ test:
 .PHONY: compile
 compile:
 	@EMACS=$(EMACS) scripts/compile-elisp.sh --install $(filter-out %-test.el,$(wildcard $(ELISP_DIR)/*.el))
+
+# Benchmarks markdown-lite-mode at REV (default HEAD) against the working tree, on FILES, e.g.
+# make bench FILES='notes/a.md notes/b.md'. See scripts/bench/mlm-bench.js.
+REV ?= HEAD
+.PHONY: bench
+bench:
+	@EMACS=$(EMACS) scripts/bench/mlm-bench.js $(REV) $(FILES)
 
 # Reindents the elisp files and removes trailing whitespace.
 .PHONY: fmt
