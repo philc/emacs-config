@@ -14,6 +14,8 @@
 (require 's)
 (require 'view) ; for View-scroll-half-page-backward.
 (require 'magit)
+(require 'git-rebase) ; for git-rebase-mode-map.
+(require 'evil)
 (require 'window-management)
 (provide 'magit-config)
 
