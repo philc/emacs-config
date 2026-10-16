@@ -26,7 +26,8 @@ compile:
 	@EMACS=$(EMACS) scripts/compile-elisp.sh --install $(filter-out %-test.el,$(wildcard $(ELISP_DIR)/*.el))
 
 # Benchmarks markdown-lite-mode at REV (default HEAD) against the working tree, on FILES, e.g.
-# make bench FILES='notes/a.md notes/b.md'. See scripts/bench/mlm-bench.js.
+# make bench FILES='notes/a.md notes/b.md', or without FILES on generated files. See
+# scripts/bench/mlm-bench.js.
 REV ?= HEAD
 .PHONY: bench
 bench:

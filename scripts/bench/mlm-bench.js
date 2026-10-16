@@ -9,7 +9,11 @@
 // its range over the rounds; differences within the range are noise. It never touches the live
 // Emacs, and it shuts the daemons down afterwards.
 //
-// Usage: scripts/bench/mlm-bench.js REV FILE...
+// Usage: scripts/bench/mlm-bench.js REV [FILE...]
+//
+// Without FILEs, it runs on the synthetic files from write-synthetic-files.js.
+
+import { writeSyntheticFiles } from "./write-synthetic-files.js";
 
 const emacs = Deno.env.get("EMACS") ?? "/opt/homebrew/bin/emacs";
 const emacsclient = emacs.slice(0, emacs.lastIndexOf("/") + 1) + "emacsclient";
@@ -82,9 +86,15 @@ async function measure(daemon, file) {
 }
 
 function formatMs(ms) {
-  if (ms >= 1000) return `${(ms / 1000).toFixed(2)}s`;
-  if (ms >= 10) return `${ms.toFixed(0)}ms`;
-  if (ms >= 1) return `${ms.toFixed(1)}ms`;
+  if (ms >= 1000) {
+    return `${(ms / 1000).toFixed(2)}s`;
+  }
+  if (ms >= 10) {
+    return `${ms.toFixed(0)}ms`;
+  }
+  if (ms >= 1) {
+    return `${ms.toFixed(1)}ms`;
+  }
   return `${ms.toFixed(2)}ms`;
 }
 
@@ -95,8 +105,12 @@ function median(times) {
 
 // The median and range of `times`, e.g. "3.60s (3.56s-3.72s)".
 function summary(times) {
-  if (times == null) return "-";
-  if (times.length == 1) return formatMs(times[0]);
+  if (times == null) {
+    return "-";
+  }
+  if (times.length == 1) {
+    return formatMs(times[0]);
+  }
   const min = formatMs(Math.min(...times));
   const max = formatMs(Math.max(...times));
   return `${formatMs(median(times))} (${min}-${max})`;
@@ -125,10 +139,10 @@ function printTable(rev, files, ops, times) {
 
 async function main() {
   const [rev, ...fileArgs] = Deno.args;
-  if (rev == null || fileArgs.length == 0) {
-    throw new Error("Usage: mlm-bench.js REV FILE...");
+  if (rev == null) {
+    throw new Error("Usage: mlm-bench.js REV [FILE...]");
   }
-  const files = fileArgs.map((file) => {
+  let files = fileArgs.map((file) => {
     try {
       return Deno.realPathSync(file);
     } catch {
@@ -143,6 +157,10 @@ async function main() {
   // "version file op" -> the operation's times, one per round.
   const times = new Map();
   try {
+    if (files.length == 0) {
+      await Deno.mkdir(`${tmp}/files`);
+      files = await writeSyntheticFiles(`${tmp}/files`);
+    }
     await compileVersions(rev, tmp);
     for (const [version, daemon] of Object.entries(daemons)) {
       await startDaemon(daemon, `${tmp}/${version}/markdown-lite-mode.elc`);
@@ -152,10 +170,16 @@ async function main() {
       for (const file of files) {
         for (const [version, daemon] of Object.entries(daemons)) {
           for (const [op, ms] of await measure(daemon, file)) {
-            if (!ops.has(file)) ops.set(file, []);
-            if (!ops.get(file).includes(op)) ops.get(file).push(op);
+            if (!ops.has(file)) {
+              ops.set(file, []);
+            }
+            if (!ops.get(file).includes(op)) {
+              ops.get(file).push(op);
+            }
             const key = `${version} ${file} ${op}`;
-            if (!times.has(key)) times.set(key, []);
+            if (!times.has(key)) {
+              times.set(key, []);
+            }
             times.get(key).push(ms);
           }
         }
