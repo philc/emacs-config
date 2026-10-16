@@ -49,6 +49,7 @@
                       inf-clojure ; Clojure REPL mode
                       jinx ; Spell checker
                       magit ; A mode for committing to git repositories and viewing Git history.
+                      no-littering ; Keeps packages' state files in var/ and etc/
                       org ; For outlining. It's bundled with Emacs, but I'm using the latest version
                       powerline ; Improve the appearance & density of the Emacs status bar.
                       projectile ; Find file in project (ala Vim's CTRL-P or Textmate's Cmd-T)
@@ -69,6 +70,10 @@
 (dolist (p my-packages)
   (when (not (package-installed-p p))
     (package-install p)))
+
+;; Store packages' history, cache and config files in var/ and etc/, instead of loose in
+;; user-emacs-directory (which is this repo). This must come before any of those packages load.
+(require 'no-littering)
 
 ;;
 ;; General settings
@@ -1894,10 +1899,13 @@
       '((typescript . ("https://github.com/tree-sitter/tree-sitter-typescript"
                        nil
                        "typescript/src"))))
+;; Loading treesit makes no-littering add var/treesit/ to `treesit-extra-load-path'. Without it,
+;; `treesit-language-available-p' (a builtin) wouldn't find grammars installed there.
+(require 'treesit)
 (let ((lang 'typescript))
   (unless (treesit-language-available-p lang)
     (message "Installing Tree-sitter grammar for %s..." lang)
-    (treesit-install-language-grammar lang)))
+    (treesit-install-language-grammar lang (no-littering-expand-var-file-name "treesit/"))))
 
 ;;
 ;; Ag (silver searcher)
@@ -2111,7 +2119,7 @@
 
 ;;
 ;; Restore the buffers and tabs from the previous Emacs session.
-;; By default the desktop file is saved as .emacs.d/.emacs.desktop
+;; The desktop file is saved as var/desktop/.emacs.desktop (see no-littering).
 ;;
 
 ;; Note that I have two Emacs apps running on MacOS: one for editing files, and the other as my TODO

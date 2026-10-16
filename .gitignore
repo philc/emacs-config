@@ -1,17 +1,6 @@
-/auto-save-list
-/history
-/projectile-bookmarks.eld
-/recentf
-/url
-/projectile.cache
+# Runtime state and generated config, which no-littering keeps in these two dirs. See init.el.
+/var
+/etc
 /elpa
-/.emacs.desktop
-/.emacs.desktop.lock
-# Cache directory for compiled elisp code
-/eln-cache
-# Magit uses the Transient library to store command history
-/transient
-# Compiled grammars for tree-sitter
-/tree-sitter
 # Byte-compiled elisp, from `make compile`
 *.elc

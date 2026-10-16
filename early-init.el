@@ -8,6 +8,12 @@
 ;; load the .el.
 (setq load-prefer-newer t)
 
+;; Keep the native-compilation cache in var/ with the other runtime state (see no-littering in
+;; init.el). This has to happen in early-init.el, before anything is natively compiled.
+(when (fboundp 'startup-redirect-eln-cache)
+  (startup-redirect-eln-cache
+   (convert-standard-filename (expand-file-name "var/eln-cache/" user-emacs-directory))))
+
 ;; This allows Emacs to occupy the full screen width and height, so that nothing below it (e.g. the
 ;; desktop) is visible. The default behavior in Emacs is to allow only resizing by whole
 ;; character-columns and rows.
