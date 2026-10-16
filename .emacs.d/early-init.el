@@ -3,8 +3,9 @@
 ;; Load graphical settings, so we have less UI flicker as Emacs starts up.
 ;;
 
-;; The files in elisp/ are byte-compiled with `make compile'. When a .el file has been edited since it
-;; was compiled, load the .el rather than its stale .elc.
+;; The files in elisp/ are byte-compiled, and init.el recompiles them at startup and on save, so their
+;; .elc files should never be stale. This is a safety net: if a .el is ever newer than its .elc,
+;; load the .el.
 (setq load-prefer-newer t)
 
 ;; This allows Emacs to occupy the full screen width and height, so that nothing below it (e.g. the

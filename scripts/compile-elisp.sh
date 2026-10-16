@@ -7,7 +7,8 @@
 # a macro from a package it doesn't require. Compiled on its own, such a file compiles the macro call
 # as a function call, and its .elc fails when it's loaded.
 #
-# With --install, each file which compiles without warnings gets its .elc written next to it.
+# With --install, each file which compiles without warnings gets its .elc written next to it, and
+# each file which doesn't has its .elc deleted, so that a stale .elc is never loaded instead of it.
 # Otherwise, the .elc files are written to a temp dir and deleted.
 #
 # Usage: compile-elisp.sh [--install] FILE...
@@ -58,6 +59,7 @@ for f in "$@"; do
   [ -n "$log" ] && printf '%s\n' "$log"
   if [ "$(cat "$out/status")" -ne 0 ] || printf '%s\n' "$log" | grep -q 'Warning'; then
     status=1
+    [ -n "$install" ] && rm -f "${f}c"
   elif [ -n "$install" ]; then
     cp "$out/compiled.elc" "${f}c" || status=1
   fi

@@ -76,6 +76,13 @@
 (require 'cl-lib)
 (require 's)
 (add-to-list 'load-path "~/.emacs.d/elisp")
+
+;; Byte-compile elisp/ if it has changed since it was last compiled, and recompile it on save. This
+;; must come before anything in elisp/ is loaded. See elisp-compile.el.
+(require 'elisp-compile)
+(elisp-compile/compile-if-stale)
+(add-hook 'after-save-hook #'elisp-compile/compile-and-reload-on-save)
+
 (require 'lisp-utils)
 (require 'emacs-utils)
 
