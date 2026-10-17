@@ -71,7 +71,6 @@
                       dash ; Dash provides modern functions for working with lists in Emacs Lisp.
                       diminish ; For hiding and shortening minor modes in the modeline
                       evil ; Evil mode implements Vim's modal bindings and text object manipulation.
-                      evil-nerd-commenter
                       go-mode ; For editing Go files.
                       inf-clojure ; Clojure REPL mode
                       jinx ; Spell checker

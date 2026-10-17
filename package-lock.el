@@ -11,7 +11,6 @@
  ("el-get" . "5c1e9c10860f35a1ee6e56b8d19505913b1c2ff2")
  ("emacsmirror-mirror" . "e938d9d807d3ba13496b592a52f0721529e45481")
  ("evil" . "6a3e1ddd04ac504a016590940d0af2a3361b9efd")
- ("evil-nerd-commenter" . "3b197a2b559b06a7cf39978704b196f53dac802a")
  ("f.el" . "931b6d0667fe03e7bf1c6c282d6d8d7006143c52")
  ("gnu-elpa-mirror" . "01092794cb0eaaf18ed44a50c6b84954feec581f")
  ("go-mode.el" . "3a71d28ab47df685e54ca6046a7a3dd3e28b682c")

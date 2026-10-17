@@ -295,7 +295,6 @@
 (setq evil-undo-system 'undo-redo)
 (require 'evil)
 (require 'evil-ext)
-(require 'evil-nerd-commenter)
 (evil-mode t)
 
 ;; When opening new lines, indent according to the previous line.
@@ -465,9 +464,8 @@
                   (kbd "C-w") 'backward-delete-word
                   (kbd "C-d") 'delete-char)
 
-;; Commenting via NERD commentor.
-(define-key evil-normal-state-map "," 'evilnc-comment-operator)
-(define-key evil-visual-state-map "," 'evilnc-comment-operator)
+(define-key evil-normal-state-map "," 'evil-ext/comment-operator)
+(define-key evil-visual-state-map "," 'evil-ext/comment-operator)
 
 ;;
 ;; Window manipulation, switching, & management.

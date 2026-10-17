@@ -149,6 +149,15 @@
   :type line
   (util/preserve-line-and-column (lambda () (evil-indent beg end))))
 
+;; An operator for toggling comments, so they can be applied to motions and text objects, e.g. `,ip'
+;; to comment a paragraph. Emacs has commands for commenting (e.g. `comment-or-uncomment-region'),
+;; but they act on the region, not on a motion. Evil doesn't provide a comment operator because Vim
+;; doesn't have one built in; Vim users get one from plugins like vim-commentary, and Evil users
+;; from packages like evil-nerd-commenter, which I used before. This is all of what I used from it.
+(evil-define-operator evil-ext/comment-operator (beg end)
+  "Comment or uncomment the text from BEG to END."
+  (comment-or-uncomment-region beg end))
+
 ;; Make `gv' (evil-visual-restore) reselect text after it's been reflowed or reindented, so I can
 ;; select a hunk of text, operate on it, then reselect it with gv and operate on it again.
 ;;
