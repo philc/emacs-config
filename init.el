@@ -646,6 +646,9 @@
                   (kbd "M-t") 'open-current-buffer-in-new-tab
                   (kbd "M-T") 'clone-tab
                   (kbd "M-i") 'tab-bar-rename-tab
+                  ;; Cmd+< and Cmd+> move the current tab, as in my Ghostty config for tmux.
+                  (kbd "M-<") 'tab-bar-move-tab-backward
+                  (kbd "M->") 'tab-bar-move-tab
                   (kbd "M-x") 'my-execute-extended-command-mru
                   ;; These aren't specifically replicating MacOS shortcuts, but they manipulate the
                   ;; window, so I want them to take precedence over everything else.
