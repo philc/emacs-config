@@ -11,6 +11,11 @@
 # each file which doesn't has its .elc deleted, so that a stale .elc is never loaded instead of it.
 # Otherwise, the .elc files are written to a temp dir and deleted.
 #
+# When an installed .elc changes (or is deleted), the file's natively-compiled code in
+# var/eln-cache/ is deleted too, so Emacs natively compiles it again from the new .elc. Emacs finds a
+# file's .eln by a hash of the file's source, so without this, a file whose source didn't change
+# would keep running stale native code, e.g. the old expansion of a macro defined in another file.
+#
 # An installed .elc gets its file's modification time from before it was compiled. So if the file
 # changed during compilation (e.g. a git checkout changed it), it's newer than its .elc, and
 # `load-prefer-newer' and elisp-compile.el's startup check treat the .elc as stale.
@@ -54,6 +59,14 @@ for f in "$@"; do
 done
 wait
 
+# Deletes the natively-compiled code for the elisp file $1. Its .eln files are named
+# <name>-<hash>-<hash>.eln.
+delete_eln() {
+  local name
+  name=$(basename "$1" .el)
+  rm -f "$repo_dir"/var/eln-cache/*/"$name"-[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]-[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f].eln
+}
+
 status=0
 i=0
 for f in "$@"; do
@@ -63,8 +76,12 @@ for f in "$@"; do
   [ -n "$log" ] && printf '%s\n' "$log"
   if [ "$(cat "$out/status")" -ne 0 ] || printf '%s\n' "$log" | grep -q 'Warning'; then
     status=1
-    [ -n "$install" ] && rm -f "${f}c"
+    if [ -n "$install" ] && [ -e "${f}c" ]; then
+      rm -f "${f}c"
+      delete_eln "$f"
+    fi
   elif [ -n "$install" ]; then
+    cmp -s "$out/compiled.elc" "${f}c" || delete_eln "$f"
     cp "$out/compiled.elc" "${f}c" && touch -r "$out/source-time" "${f}c" || status=1
   fi
 done
