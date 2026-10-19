@@ -2055,10 +2055,58 @@
        (is-org-emacs (s-contains? "Org.app" emacs-app-path)))
   (when (not is-org-emacs)
     (setq desktop-save t) ; Always save without prompting.
-    ;; Limit the number of buffers that get restored, to reduce startup time. I haven't verified
-    ;; whether this is a material performance win given my usage patterns.
-    (setq desktop-restore-eager 15)
+    ;; Restore every saved buffer before restoring the windows. A window whose buffer doesn't exist
+    ;; yet gets an arbitrary buffer instead, and loses the history `quit-window' uses to decide what
+    ;; to show next.
+    (setq desktop-restore-eager t)
+    (setq desktop-buffers-not-to-save-function 'session/save-buffer-p)
+    (add-hook 'desktop-save-hook 'session/record-window-buffers)
     (desktop-save-mode 1)))
+
+;; By default, desktop saves every file buffer, which made restoring the session on startup a bit
+;; slow: I often have ~100 buffers open and it takes 20ms to restore each buffer in 2026. I only
+;; need the buffers my windows use, since I open other files with projectile or recentf rather than
+;; by using the buffer switcher. So save only the buffers shown in the windows of every tab, plus
+;; the few most recent ones in each window's history, which `quit-window' (q) returns to.
+;; This keeps my set of files to about ~40 rather than ~120.
+
+(defvar session/window-history-to-save 3
+  "How many buffers of each window's history to save in the desktop.")
+
+(defvar session/window-buffer-names nil
+  "Names of the buffers used by the windows of every tab, recorded when the desktop is saved.")
+
+(defun session/window-state-buffer-names (state)
+  "Names of the buffers shown in, or recently shown in, the windows in window STATE.
+STATE is from `window-state-get' with WRITABLE non-nil, so buffers are stored by name."
+  (when (proper-list-p state)
+    (mapcan (lambda (entry)
+              (cond
+               ;; (buffer NAME . PROPERTIES): the buffer shown in a window.
+               ((and (eq (car-safe entry) 'buffer) (consp (cdr entry)))
+                (list (cadr entry)))
+               ;; (prev-buffers (NAME START POINT) ...): the window's history, most recent first.
+               ((eq (car-safe entry) 'prev-buffers)
+                (mapcar #'car (seq-take (cdr entry) session/window-history-to-save)))
+               (t (session/window-state-buffer-names entry))))
+            state)))
+
+(defun session/record-window-buffers ()
+  "Record the buffers used by the windows of every tab, in every frame."
+  (setq session/window-buffer-names
+        (delete-dups
+         (mapcan (lambda (frame)
+                   (mapcan (lambda (tab)
+                             (session/window-state-buffer-names
+                              (if (eq (car tab) 'current-tab)
+                                  (window-state-get (frame-root-window frame) t)
+                                (alist-get 'ws (cdr tab)))))
+                           (funcall tab-bar-tabs-function frame)))
+                 (frame-list)))))
+
+(defun session/save-buffer-p (_filename bufname &rest _)
+  "Whether to save buffer BUFNAME in the desktop. See `desktop-buffers-not-to-save-function'."
+  (member bufname session/window-buffer-names))
 
 ;;
 ;; Sql mode
