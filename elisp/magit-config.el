@@ -302,3 +302,53 @@ Date: %ad
     (wm/switch-to-column 0)
     (magit-status-setup-buffer dir)
     (magit-status-and-focus-unstaged)))
+
+;;
+;; Restore Magit buffers when Emacs restarts (see desktop in init.el). Desktop only saves file
+;; buffers unless a buffer says how to recreate it, so a window that showed a Magit buffer used to
+;; come back showing an arbitrary buffer. For each mode below, save the buffer's repo and the
+;; arguments of the function that sets the buffer up, and call that function again on restore.
+;;
+
+(defvar desktop-buffer-major-mode) ; Bound by desktop while it restores each buffer.
+
+(defvar magit-config/desktop-setup-functions
+  '((magit-status-mode . magit-status-setup-buffer)
+    (magit-log-mode . magit-log-setup-buffer)
+    (magit-revision-mode . magit-revision-setup-buffer)
+    (magit-diff-mode . magit-diff-setup-buffer))
+  "Magit modes whose buffers are restored by desktop, and the functions which recreate them.")
+
+(defun magit-config/desktop-buffer-data (_desktop-dirname)
+  "The state desktop saves for the current Magit buffer: its repo, and its setup function's args."
+  (list default-directory
+        (pcase major-mode
+          ('magit-status-mode nil)
+          ('magit-log-mode
+           (list magit-buffer-log-revisions magit-buffer-log-args magit-buffer-log-files))
+          ('magit-revision-mode
+           (list magit-buffer-revision magit-buffer-diff-args magit-buffer-diff-files))
+          ('magit-diff-mode
+           (list magit-buffer-diff-range magit-buffer-diff-typearg magit-buffer-diff-args
+                 magit-buffer-diff-files magit-buffer-diff-type)))))
+
+(defun magit-config/desktop-restore-buffer (_file-name _buffer-name data)
+  "Recreate a Magit buffer from DATA, saved by `magit-config/desktop-buffer-data'."
+  (seq-let (dir args) data
+    (when (file-directory-p dir)
+      (let ((default-directory dir)
+            ;; Only create the buffer. Desktop puts it back in its windows.
+            (magit-display-buffer-function #'ignore)
+            (magit-display-buffer-noselect t))
+        (apply (alist-get desktop-buffer-major-mode magit-config/desktop-setup-functions)
+               args)))))
+
+(add-hook 'magit-mode-hook
+          (lambda ()
+            (when (assq major-mode magit-config/desktop-setup-functions)
+              (setq-local desktop-save-buffer #'magit-config/desktop-buffer-data))))
+
+(with-eval-after-load 'desktop
+  (dolist (entry magit-config/desktop-setup-functions)
+    (add-to-list 'desktop-buffer-mode-handlers
+                 (cons (car entry) #'magit-config/desktop-restore-buffer))))
