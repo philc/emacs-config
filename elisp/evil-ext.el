@@ -197,6 +197,22 @@
 (advice-add 'evil-fill :around #'evil-ext/remember-edited-region)
 (advice-add 'evil-indent :around #'evil-ext/remember-edited-region)
 
+;; Select the text just pasted, like the common Vim mapping for gp. I use this to paste some
+;; paragraphs or list items and then select them so I can reindent them. Evil's paste commands
+;; record the pasted text's bounds in the `[ and `] marks. The selection type comes from the latest
+;; kill, so it can be wrong after pasting from a register of a different type. It's a motion, like
+;; `gv', because otherwise Evil exits a block selection when the command ends.
+(evil-define-motion evil-ext/select-pasted-text ()
+  "Visually select the most recently pasted text."
+  (let ((beg (evil-get-marker ?\[))
+        (end (evil-get-marker ?\]))
+        (handler (car-safe (get-text-property 0 'yank-handler (current-kill 0 t)))))
+    (when (and beg end)
+      (evil-visual-make-selection beg end (pcase handler
+                                            ('evil-yank-line-handler 'line)
+                                            ('evil-yank-block-handler 'block)
+                                            (_ 'char))))))
+
 (defun evil-column-of-last-char ()
   "Column of the last selected character when in visual state, or `current-column' otherwise."
   ;; This is necessary because when in visual mode, (current-column) returns the column one after
