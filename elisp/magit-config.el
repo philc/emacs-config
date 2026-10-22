@@ -284,14 +284,19 @@ Date: %ad
   "Opens the magit-status view and focuses the cursor on the first unstaged file."
   (interactive)
   (magit-status-setup-buffer)
-  ;; Untracked files are collapsed by default. Show them, so I can resolve them. I tried to instead
-  ;; customize magit-section-initial-visibility-alist to achieve this, but it had no effect.
-  (call-interactively #'magit-jump-to-untracked)
-  (let ((section (magit-current-section)))
-    (when (eq (oref section type) 'untracked)
-      (magit-section-show section)))
-  ;; Put the cursor on the unstaged section.
-  (call-interactively #'magit-jump-to-unstaged))
+  ;; Look the sections up directly rather than calling magit-jump-to-untracked and
+  ;; magit-jump-to-unstaged, which echo "Section ... wasn't found" when the section is absent.
+  (let ((find (lambda (type)
+                (magit-get-section (cons (cons type nil)
+                                         (magit-section-ident magit-root-section))))))
+    ;; Untracked files are collapsed by default. Show them, so I can resolve them. I tried to
+    ;; instead customize magit-section-initial-visibility-alist to achieve this, but it had no
+    ;; effect.
+    (when-let* ((section (funcall find 'untracked)))
+      (magit-section-show section))
+    ;; Put the cursor on the unstaged section.
+    (when-let* ((section (funcall find 'unstaged)))
+      (goto-char (oref section start)))))
 
 (defun show-git-status-in-left-column ()
   (interactive)
