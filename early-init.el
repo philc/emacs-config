@@ -17,6 +17,11 @@
   (startup-redirect-eln-cache
    (convert-standard-filename (expand-file-name "var/eln-cache/" user-emacs-directory))))
 
+;; Don't pop up the *Warnings* buffer when a package is natively compiled in the background. The
+;; warnings are almost always harmless ones in third-party code (e.g. browse-at-remote calling
+;; dired functions without requiring dired). They're still logged to *Warnings*.
+(setq native-comp-async-report-warnings-errors 'silent)
+
 ;; This allows Emacs to occupy the full screen width and height, so that nothing below it (e.g. the
 ;; desktop) is visible. The default behavior in Emacs is to allow only resizing by whole
 ;; character-columns and rows.
