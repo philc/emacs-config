@@ -1373,6 +1373,26 @@
 ;; have bold and underline faces; it's distracting.
 (setq html-tag-face-alist '())
 
+;; Work around a bug in mhtml-mode (still in Emacs 31.1) that breaks highlighting partway through
+;; a <style> or <script> block. mhtml marks CSS/JS text with an `mhtml-submode' property while
+;; syntax-propertizing, and when a later pass starts, it checks that property on the pass's first
+;; character. But each pass marks text only up to its end, exclusive, so when the next pass starts
+;; right there, it sees no submode and treats the rest of the block as HTML: CSS goes unhighlighted,
+;; and an apostrophe in a comment ("it's") starts a string that runs on for hundreds of lines. Fix
+;; it by starting such a pass one character earlier, on text that has the submode property.
+;; As of 2026-10, there's no report of this on bug-gnu-emacs, and `mhtml-syntax-propertize' is
+;; unchanged on Emacs master.
+(defun mhtml-extend-region-into-submode (start end)
+  (when (and (> start (point-min))
+             (not (get-text-property start 'mhtml-submode))
+             (get-text-property (1- start) 'mhtml-submode))
+    (cons (1- start) end)))
+
+(add-hook 'mhtml-mode-hook
+          (lambda ()
+            (add-hook 'syntax-propertize-extend-region-functions
+                      #'mhtml-extend-region-into-submode nil t)))
+
 (defun preview-html ()
   "Pipes the buffer's contents into a script which opens the HTML in a browser."
   (interactive)
