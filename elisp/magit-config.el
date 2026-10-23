@@ -37,6 +37,10 @@
 ;; Don't refresh the status buffer unless it's currently focused. This should improve performance.
 (setq magit-refresh-status-buffer nil)
 
+;; Don't warn when a diff has a very long line (e.g. a minified file) and Emacs switches the buffer
+;; to its long-line optimizations, which disable section highlighting.
+(setq magit-show-long-lines-warning nil)
+
 ;; Have Magit open buffers in the current window, rather than a new split.
 ;; https://github.com/magit/magit/issues/2541
 (setq magit-display-buffer-function (lambda (buffer)
