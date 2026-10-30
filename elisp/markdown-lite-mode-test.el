@@ -359,8 +359,7 @@
       (should (null (mlm-test/list-levels-mismatches))))))
 
 (ert-deftest markdown-lite-mode-test/list-levels-updated-after-demote ()
-  "Demoting a list item changes the list levels after it, although it edits with the change hooks
-   inhibited."
+  "Demoting a list item changes the list levels after it."
   (with-temp-buffer
     (insert "* a\n* b\n* c\n")
     (markdown-lite-mode)
