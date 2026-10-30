@@ -86,7 +86,6 @@
                       tempel ;; Insert snippets
                       vertico ; Nicely show menu completions
                       yaml-mode ; For editing YAML files
-                      yascroll ; For rendering scroll bars in the right fringe
                       ))
 
 (defvar my-packages-at-head '(ag
@@ -97,8 +96,7 @@
                               goto-chg ; A dependency of evil.
                               powerline
                               smartparens
-                              yaml-mode
-                              yascroll)
+                              yaml-mode)
   "Packages which `make upgrade-packages' moves to the newest commit on their default branch, rather
    than to their newest version tag. These are packages whose last release is years older than their
    latest code. (Packages which have no version tags, e.g. better-jumper, are always moved to the

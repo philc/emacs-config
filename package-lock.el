@@ -34,6 +34,5 @@
  ("vertico" . "a9998a777f1d92348f84d091bb15b87df933a7a2")
  ("with-editor" . "5021ef6885381cf5b2852f7a3f67ca8c4be1dca2")
  ("xr" . "fc4d6b5ddae9eb2c8adc2b117e6f33f3a09a4e96")
- ("yaml-mode" . "93dba98c050e9abfc623ec66aa499dbbb46b2fe1")
- ("yascroll" . "b6d7c792a01411401a34ca61c82ebfb4d9fc1d04"))
+ ("yaml-mode" . "93dba98c050e9abfc623ec66aa499dbbb46b2fe1"))
 :epsilon
