@@ -244,76 +244,11 @@
 (add-function :after after-focus-change-function #'on-focus-change)
 
 ;;
-;; Scrollbars, in the right fringe. Provided by yascroll mode.
+;; Scrollbars, in the right fringe. Provided by fringe-scroll-bar-mode, in elisp/.
 ;; I use this to as an indicator to indicate where I am in the file.
 ;;
-(global-yascroll-bar-mode 1)
-;; By default, the scroll bar only shows when you're scrolling the buffer. Show it all the time.
-;; Note: some report performance issues in some modes.
-;; https://github.com/emacsorphanage/yascroll/issues/38
-(setq-default yascroll:delay-to-hide nil)
-;; yascroll:window-height calls line-pixel-height for pixel-accurate scrollbar thumb sizing. Because
-;; yascroll:delay-to-hide is nil above, that runs synchronously on every buffer edit (via
-;; after-change-functions), and line-pixel-height forces jit-lock to fontify whatever line point is
-;; on right then. This makes evil-shift-right and other bulk edits very slow in modes with expensive
-;; font-lock. Since my buffers are almost always monospace text and each line is the same height,
-;; pixel accuracy doesn't matter. A plain line count is just as good and never touches font-lock.
-(advice-add 'yascroll:window-height :override (lambda () (window-height)))
-;; yascroll also redraws the scroll bar far more often than it needs to. Each redraw deletes and
-;; recreates the thumb overlays in every window showing the buffer, and changing overlays makes
-;; redisplay redraw each of those windows in full rather than just the edited line. It redraws on
-;; every edit, and again from window-scroll-functions, which redisplay runs for every other window
-;; showing an edited buffer even when that window hasn't scrolled. In a large Markdown file this
-;; added ~3ms per keystroke with one window, and ~9ms with two side by side. So only redraw when the
-;; thumb could have moved: after an edit adds or removes a newline, or when a window really scrolls.
-(defvar-local yascroll-deleting-newline nil
-  "Whether the change about to happen deletes a newline.")
-(advice-add 'yascroll:before-change :override
-            (lambda (beg end)
-              (setq yascroll-deleting-newline
-                    (and (< beg end) (save-excursion (goto-char beg) (search-forward "\n" end t))))))
-(advice-add 'yascroll:after-change :override
-            (lambda (beg end _old-len)
-              (when (or yascroll-deleting-newline
-                        (save-excursion (goto-char beg) (search-forward "\n" end t)))
-                (yascroll:safe-show-scroll-bar))))
-;; Remember each window's start when its thumb was drawn, as a marker, which moves along with edits
-;; above it just as window-start does, so the two only differ once the window scrolls.
-(advice-add 'yascroll:show-scroll-bar-internal :after
-            (lambda ()
-              (set-marker (or (window-parameter nil 'yascroll-start)
-                              (set-window-parameter nil 'yascroll-start (make-marker)))
-                          (window-start))))
-(advice-add 'yascroll:after-window-scroll :before-until
-            (lambda (window start)
-              (let ((drawn-start (window-parameter window 'yascroll-start)))
-                (and (yascroll:scroll-bar-visible-p)
-                     drawn-start
-                     (eq (marker-buffer drawn-start) (window-buffer window))
-                     (= drawn-start start)))))
-;; magit-log-mode and others are very slow due to yascroll. I don't need scrollbars when using
-;; Magit, so hide them.
-(setq yascroll:disabled-modes '(magit-log-mode
-                                magit-mode
-                                magit-log-select-mode
-                                magit-blob-mode
-                                magit-refs-mode
-                                magit-blame-mode
-                                magit-section-mode
-                                magit-reflog-mode
-                                magit-rev-mode
-                                magit-revision-mode
-                                magit-stash-mode
-                                magit-stashes-mode
-                                magit-process-mode
-                                magit-diff-mode
-                                magit-status-mode
-                                git-rebase-mode
-                                ;; Some of the complicated help pages become slow
-                                help-mode
-                                package-menu-mode))
-(set-face-attribute 'yascroll:thumb-fringe nil :background "#666666")
-(set-face-attribute 'yascroll:thumb-fringe nil :foreground "#666666")
+(require 'fringe-scroll-bar)
+(fringe-scroll-bar-mode 1)
 
 ;;
 ;; Evil mode -- Vim keybindings for Emacs.
