@@ -259,6 +259,38 @@
 ;; font-lock. Since my buffers are almost always monospace text and each line is the same height,
 ;; pixel accuracy doesn't matter. A plain line count is just as good and never touches font-lock.
 (advice-add 'yascroll:window-height :override (lambda () (window-height)))
+;; yascroll also redraws the scroll bar far more often than it needs to. Each redraw deletes and
+;; recreates the thumb overlays in every window showing the buffer, and changing overlays makes
+;; redisplay redraw each of those windows in full rather than just the edited line. It redraws on
+;; every edit, and again from window-scroll-functions, which redisplay runs for every other window
+;; showing an edited buffer even when that window hasn't scrolled. In a large Markdown file this
+;; added ~3ms per keystroke with one window, and ~9ms with two side by side. So only redraw when the
+;; thumb could have moved: after an edit adds or removes a newline, or when a window really scrolls.
+(defvar-local yascroll-deleting-newline nil
+  "Whether the change about to happen deletes a newline.")
+(advice-add 'yascroll:before-change :override
+            (lambda (beg end)
+              (setq yascroll-deleting-newline
+                    (and (< beg end) (save-excursion (goto-char beg) (search-forward "\n" end t))))))
+(advice-add 'yascroll:after-change :override
+            (lambda (beg end _old-len)
+              (when (or yascroll-deleting-newline
+                        (save-excursion (goto-char beg) (search-forward "\n" end t)))
+                (yascroll:safe-show-scroll-bar))))
+;; Remember each window's start when its thumb was drawn, as a marker, which moves along with edits
+;; above it just as window-start does, so the two only differ once the window scrolls.
+(advice-add 'yascroll:show-scroll-bar-internal :after
+            (lambda ()
+              (set-marker (or (window-parameter nil 'yascroll-start)
+                              (set-window-parameter nil 'yascroll-start (make-marker)))
+                          (window-start))))
+(advice-add 'yascroll:after-window-scroll :before-until
+            (lambda (window start)
+              (let ((drawn-start (window-parameter window 'yascroll-start)))
+                (and (yascroll:scroll-bar-visible-p)
+                     drawn-start
+                     (eq (marker-buffer drawn-start) (window-buffer window))
+                     (= drawn-start start)))))
 ;; magit-log-mode and others are very slow due to yascroll. I don't need scrollbars when using
 ;; Magit, so hide them.
 (setq yascroll:disabled-modes '(magit-log-mode
