@@ -10,12 +10,16 @@
 ;;
 ;; - It updates just before a window is redisplayed (and when redisplay scrolls a window), rather
 ;;   than from the buffer change hooks, so a command which edits many lines updates the thumb once.
-;; - It only recomputes the thumb when the window has scrolled or resized, or an edit has added or
-;;   removed a newline. Other edits (e.g. typing a character) can't move the thumb.
+;; - It only recomputes the thumb when the window has scrolled or resized, an edit has added or
+;;   removed a newline, or outline folding has changed. Other edits (e.g. typing a character) can't
+;;   move the thumb.
 ;; - Each window's thumb overlays are reused and moved, rather than deleted and recreated, and only
 ;;   moved when their positions change. While typing on a line, they don't change.
 ;; - Lines are counted with `line-number-at-pos', not `count-lines'. count-lines narrows the
 ;;   buffer, and narrowing during redisplay also makes redisplay redraw the window in full.
+;;
+;; The thumb's size and position are in visible lines: lines hidden by folding (by invisible
+;; overlays, as outline-mode uses) aren't counted, so the thumb matches what can be scrolled to.
 ;;
 ;; Placing the thumb uses `vertical-motion', so that it counts screen lines (skipping folded text,
 ;; and counting wrapped lines). That lays out the text, which can font-lock it, but only text that
@@ -50,15 +54,48 @@
   (when (or fsb/deleting-newline (save-excursion (goto-char beg) (search-forward "\n" end t)))
     (cl-incf fsb/newline-edits)))
 
+(defvar-local fsb/visibility-changes 0
+  "How many times outline folding has changed in this buffer.")
+
+(defun fsb/note-visibility-change ()
+  (cl-incf fsb/visibility-changes))
+
+(defun fsb/hidden-lines (start)
+  "Returns (BEFORE . TOTAL): how many lines invisible overlays hide before START, and in the whole
+   buffer."
+  (let ((before 0) (total 0) (covered (point-min))
+        (overlays (seq-filter (lambda (o) (invisible-p (overlay-get o 'invisible)))
+                              (overlays-in (point-min) (point-max)))))
+    (dolist (overlay (sort overlays (lambda (a b) (< (overlay-start a) (overlay-start b)))))
+      ;; Skip any part of this overlay which an earlier one already hides.
+      (let ((beg (max (overlay-start overlay) covered))
+            (end (overlay-end overlay)))
+        (when (< beg end)
+          ;; line-number-at-pos counts from the start of the buffer, so with hundreds of small folds,
+          ;; subtracting line numbers is ~15x slower than counting each fold's newlines in a loop.
+          ;; But for one large fold, the loop is ~10x slower.
+          (let ((lines 0))
+            (if (> (- end beg) 10000)
+                (setq lines (- (line-number-at-pos end) (line-number-at-pos beg)))
+              (save-excursion
+                (goto-char beg)
+                (while (search-forward "\n" end t)
+                  (cl-incf lines))))
+            (cl-incf total lines)
+            (when (<= end start) (cl-incf before lines)))
+          (setq covered end))))
+    (cons before total)))
+
 (defun fsb/thumb-positions (window start)
   "Returns the buffer positions of the lines where WINDOW's thumb goes, if WINDOW's display starts
    at START, or nil if it shouldn't have a thumb."
-  (let ((window-lines (window-body-height window))
-        (buffer-lines (line-number-at-pos (point-max))))
+  (let* ((window-lines (window-body-height window))
+         (hidden (fsb/hidden-lines start))
+         (buffer-lines (- (line-number-at-pos (point-max)) (cdr hidden))))
     (when (and (< window-lines buffer-lines)
                (> (cadr (window-fringes window)) 0)
                (not (memq major-mode fsb/disabled-modes)))
-      (let* ((top (1- (line-number-at-pos start)))
+      (let* ((top (- (line-number-at-pos start) 1 (car hidden)))
              (size (max 1 (floor (* window-lines (/ (float window-lines) buffer-lines)))))
              (thumb-line (floor (* window-lines (/ (float top) buffer-lines))))
              (positions nil))
@@ -82,7 +119,8 @@
   "Updates WINDOW's thumb, if its display starts at START (by default, its current start)."
   (let* ((start (or start (window-start window)))
          (state (gethash window fsb/windows))
-         (key (list (current-buffer) start fsb/newline-edits (window-body-height window)
+         (key (list (current-buffer) start fsb/newline-edits fsb/visibility-changes
+                    (window-body-height window)
                     (window-fringes window))))
     ;; The thumb only depends on these, so skip the line counting when none have changed.
     (unless (equal key (plist-get state :key))
@@ -123,11 +161,13 @@
       (progn
         (add-hook 'before-change-functions #'fsb/before-change)
         (add-hook 'after-change-functions #'fsb/after-change)
+        (add-hook 'outline-view-change-hook #'fsb/note-visibility-change)
         (add-hook 'pre-redisplay-functions #'fsb/before-redisplay)
         (add-hook 'window-scroll-functions #'fsb/after-scroll)
         (add-hook 'window-configuration-change-hook #'fsb/forget-deleted-windows))
     (remove-hook 'before-change-functions #'fsb/before-change)
     (remove-hook 'after-change-functions #'fsb/after-change)
+    (remove-hook 'outline-view-change-hook #'fsb/note-visibility-change)
     (remove-hook 'pre-redisplay-functions #'fsb/before-redisplay)
     (remove-hook 'window-scroll-functions #'fsb/after-scroll)
     (remove-hook 'window-configuration-change-hook #'fsb/forget-deleted-windows)
