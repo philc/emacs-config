@@ -3,3 +3,5 @@
 /etc
 # Byte-compiled elisp, from `make compile`
 *.elc
+# Native-compiled elisp from `emacs -Q` runs, which don't redirect it to var/
+/eln-cache
