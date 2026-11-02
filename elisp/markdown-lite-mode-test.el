@@ -70,6 +70,58 @@
     (should (equal (buffer-substring-no-properties (point-min) (point-max))
                    "* Hey\n  * One\n  * \n"))))
 
+(defun mlm-test/move-item (text heading command)
+  "Inserts TEXT into a new markdown-lite-mode buffer, puts point at the end of the line containing
+   HEADING, and runs COMMAND. Returns the buffer's contents, with a \"|\" where point ended up."
+  (with-temp-buffer
+    (insert text)
+    (markdown-lite-mode)
+    (goto-char (point-min))
+    (search-forward heading)
+    (funcall command)
+    (insert "|")
+    (buffer-substring-no-properties (point-min) (point-max))))
+
+(ert-deftest markdown-lite-mode-test/move-heading-down ()
+  "A heading moves down past its sibling's whole section, including list items and fenced code."
+  (should (equal (mlm-test/move-item
+                  "## A\n* a\n  * a2\n\n## B\n```\n## not\n```\n\n## C\n" "## A" #'mlm/move-item-down)
+                 "## B\n```\n## not\n```\n\n## A|\n* a\n  * a2\n\n## C\n")))
+
+(ert-deftest markdown-lite-mode-test/move-heading-into-last-section ()
+  "Swapping with the buffer's last section keeps the sections separated by a blank line, and the
+   buffer's trailing newline unchanged."
+  (should (equal (mlm-test/move-item "## A\na\n\n## B\nb\n" "## A" #'mlm/move-item-down)
+                 "## B\nb\n\n## A|\na\n"))
+  (should (equal (mlm-test/move-item "## A\na\n\n## B\nb" "## B" #'mlm/move-item-up)
+                 "## B|\nb\n\n## A\na")))
+
+(ert-deftest markdown-lite-mode-test/move-heading-stops-at-title ()
+  "A \"##\" section isn't swapped with the \"#\" title, even though they have the same outline
+   level, nor with a parent heading."
+  (should (equal (mlm-test/move-item "# Title\n\n## A\na\n" "## A" #'mlm/move-item-up)
+                 "# Title\n\n## A|\na\n"))
+  (should (equal (mlm-test/move-item "## A\n\n### B\nb\n\n## C\n" "### B" #'mlm/move-item-up)
+                 "## A\n\n### B|\nb\n\n## C\n")))
+
+(ert-deftest markdown-lite-mode-test/move-heading-in-fenced-code-block-is-not-a-heading ()
+  "A \"#\" line in a fenced code block isn't treated as a heading."
+  (should (equal (mlm-test/move-item "* a\n```\n## x\n```\n* b\n" "## x" #'mlm/move-item-up)
+                 "* a\n```\n## x|\n```\n* b\n")))
+
+(ert-deftest markdown-lite-mode-test/move-heading-keeps-fold ()
+  "A folded section stays folded after it's moved, and its sibling's visibility is unchanged."
+  (with-temp-buffer
+    (insert "## A\na\n\n## B\nb\n")
+    (markdown-lite-mode)
+    (goto-char (point-min))
+    (outline-hide-subtree)
+    (mlm/move-item-down)
+    (should (equal (buffer-string) "## B\nb\n\n## A\na\n"))
+    (should (outline-invisible-p (save-excursion (search-forward "a\n") (1- (point)))))
+    (should-not (outline-invisible-p (save-excursion (goto-char (point-min))
+                                                     (search-forward "b") (point))))))
+
 (ert-deftest markdown-lite-mode-test/hashtag-line-does-not-end-list-item ()
   "A line starting with a #hashtag isn't a heading, so it doesn't end the list item before it."
   (with-temp-buffer

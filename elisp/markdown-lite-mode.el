@@ -326,8 +326,8 @@
   (mapc (lambda (state)
           (evil-define-key state markdown-lite-mode-map
             (kbd "M-b") 'mlm/markdown-bold
-            (kbd "C-S-K") 'mlm/markdown-move-list-item-up
-            (kbd "C-S-J") 'mlm/markdown-move-list-item-down
+            (kbd "C-S-K") 'mlm/move-item-up
+            (kbd "C-S-J") 'mlm/move-item-down
             ;; Note for this C-S-I keybinding to work, you must (define-key input-decode-map [?\C-i]
             ;; [C-i]) https://emacs.stackexchange.com/a/221
             (kbd "C-S-I") 'mlm/markdown-create-list-item
@@ -585,9 +585,60 @@ e.g. the \"images/foo.svg\" in ![alt](images/foo.svg).")
   "^\\(.*\\)\n\\(-+\\)$"
   "Regular expression for level 2 setext-style (underline) headers.")
 
+(defun mlm/move-item-up ()
+  "Move the heading or list item under the cursor, along with its subtree, above its previous
+   sibling."
+  (interactive)
+  (if (mlm/on-atx-heading-p)
+      (mlm/move-heading -1)
+    (mlm/markdown-move-list-item-up)))
+
+(defun mlm/move-item-down ()
+  "Move the heading or list item under the cursor, along with its subtree, below its next sibling."
+  (interactive)
+  (if (mlm/on-atx-heading-p)
+      (mlm/move-heading 1)
+    (mlm/markdown-move-list-item-down)))
+
+(defun mlm/on-atx-heading-p ()
+  "Whether the current line is an ATX heading, and not a line in a fenced code block."
+  (save-excursion
+    (beginning-of-line)
+    (and (looking-at "#+ ")
+         (not (mlm/in-fenced-code-block-p (point) (cdr (mlm/outline-structure)))))))
+
+(defun mlm/move-heading (direction)
+  "Swap the section of the heading on the current line with the adjacent section of a heading with
+   the same number of \"#\"s, in DIRECTION: 1 for down, -1 for up. Does nothing if there's no such
+   section before reaching a parent heading."
+  (let* ((offset (- (point) (line-beginning-position)))
+         (hashes (lambda () (save-excursion
+                              (beginning-of-line)
+                              (looking-at "#+")
+                              (match-string 0))))
+         (own-hashes (funcall hashes)))
+    ;; `mlm/outline-level' treats "#" and "##" as the same level, so outline-mode considers a "#"
+    ;; title to be a sibling of the "##" sections. Don't swap the sections with the title.
+    (when (save-excursion
+            (and (if (> direction 0) (outline-get-next-sibling) (outline-get-last-sibling))
+                 (equal (funcall hashes) own-hashes)))
+      ;; A section is moved along with the blank lines at its end, so that sections stay separated.
+      ;; The buffer's last section may not end in a blank line, so temporarily add one.
+      (let ((added (save-excursion
+                     (goto-char (point-max))
+                     (let ((n (cond ((looking-back "\n\n" 2) 0)
+                                    ((bolp) 1)
+                                    (t 2))))
+                       (insert (make-string n ?\n))
+                       n))))
+        (outline-move-subtree-down direction)
+        (save-excursion
+          (goto-char (point-max))
+          (delete-char (- added))))
+      (forward-char offset))))
+
 (defun mlm/markdown-move-list-item-up ()
   "Move the current list item up in the list when possible."
-  (interactive)
   (outline-show-subtree) ; When moving list items, expand any collaped subtrees to avoid corruption.
   (let (cur prev old)
     (when (setq cur (mlm/markdown-cur-list-item-bounds))
@@ -608,7 +659,6 @@ e.g. the \"images/foo.svg\" in ![alt](images/foo.svg).")
 
 (defun mlm/markdown-move-list-item-down ()
   "Move the current list item down in the list when possible."
-  (interactive)
   (outline-show-subtree) ; When moving list items, expand any collaped subtrees to avoid corruption.
   (let (cur next old)
     (when (setq cur (mlm/markdown-cur-list-item-bounds))
