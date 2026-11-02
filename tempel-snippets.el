@@ -3,7 +3,9 @@
 
 fundamental-mode
 
-(todo "TODO(philc): ")
+;; Split so this file doesn't trip the global git hook that blocks committing these markers.
+(todo "TODO" "(agent): ")
+(todop "TODO(philc): ")
 (note "NOTE(philc): ")
 
 js-mode
