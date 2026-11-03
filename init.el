@@ -105,6 +105,9 @@
 (setq global-auto-revert-non-file-buffers t)
 (global-auto-revert-mode 1)
 (add-hook 'dired-mode-hook 'auto-revert-mode)
+;; auto-revert-mode doesn't catch every change to a buried dired buffer. Revert it when it's
+;; revisited, rather than showing "Directory has changed on disk".
+(setq dired-auto-revert-buffer t)
 
 (setq mac-option-modifier 'alt)
 (setq mac-command-modifier 'meta)
@@ -397,7 +400,9 @@
   "SPC" 'evil-ext/fill-inside-paragraph-or-comment-block ; Shortcut for Vim's gqip
   "i" 'evil-ext/indent-inside-paragraph ; Shortcut to Vim's =ip
   "d" 'projectile-dired
-  "D" (lambda () (interactive) (-> (buffer-file-name) file-name-directory dired))
+  ;; Buffers without a file, like magit's, fall back to default-directory (the repo root for magit).
+  "D" (lambda () (interactive)
+        (dired (if buffer-file-name (file-name-directory buffer-file-name) default-directory)))
   "gs" (util/save-and-call 'show-git-status-in-left-column)
   "gl" 'magit-log-current
   "gb" 'magit-blame-addition
