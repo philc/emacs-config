@@ -1290,6 +1290,9 @@
 ;;
 (require 'rainbow-delimiters)
 (add-hook 'prog-mode-hook 'rainbow-delimiters-mode)
+;; mhtml-mode also runs prog-mode-hook. In HTML, rainbow-delimiters treats tags' <> as delimiters,
+;; and mismatches them with {} and [] in the page's text, coloring them as unbalanced.
+(add-hook 'mhtml-mode-hook (lambda () (rainbow-delimiters-mode -1)))
 
 ;;
 ;; Smartparens utility functions. Used by emacs lisp and clojure.
