@@ -281,9 +281,32 @@
   (mlm/replace-region-with-contents (lambda (existing-text)
                                       (concat "**" existing-text "**"))))
 
+(defvar mlm/dprint-fallback-config (expand-file-name "dprint.json" user-emacs-directory)
+  "The dprint config `mlm/format-buffer' uses for a file with no dprint config of its own.")
+
+(defun mlm/format-buffer ()
+  "Format the buffer, or the selected region, with dprint. dprint uses the config in the file's
+   directory or one of its parents, or if there isn't one, `mlm/dprint-fallback-config'."
+  (interactive)
+  (setenv "NO_COLOR" "1")
+  (let* ((file (buffer-file-name))
+         (has-config (locate-dominating-file
+                      default-directory
+                      (lambda (dir)
+                        (cl-some (lambda (name) (file-exists-p (expand-file-name name dir)))
+                                 '("dprint.json" ".dprint.json" "dprint.jsonc" ".dprint.jsonc"))))))
+    (util/replace-region-with-command-output
+     (concat "dprint fmt --stdin "
+             ;; dprint needs the file to exist to use its path. For a new file, the extension is
+             ;; enough to pick the markdown plugin.
+             (if (and file (file-exists-p file)) (shell-quote-argument file) "md")
+             (unless has-config
+               (concat " --config " (shell-quote-argument mlm/dprint-fallback-config)))))))
+
 (defun mlm/setup-markdown-mode ()
   (interactive)
   (define-leader-keys 'markdown-lite-mode-map
+    "i" 'mlm/format-buffer
     "0" 'outline-show-all
     "1" (lambda () (interactive) (mlm/show-level 1))
     "2" (lambda () (interactive) (mlm/show-level 2))
