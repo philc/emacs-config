@@ -2,6 +2,7 @@
   "version": "5",
   "specifiers": {
     "jsr:@philc/lint-rules@0.1": "0.1.0",
+    "jsr:@philc/lint-rules@0.2": "0.2.0",
     "jsr:@philc/shoulda@2": "2.0.0",
     "jsr:@std/fs@*": "1.0.19",
     "jsr:@std/fs@^1.0.18": "1.0.19",
@@ -15,6 +16,9 @@
   "jsr": {
     "@philc/lint-rules@0.1.0": {
       "integrity": "fcd4bfdb32ed89884395d0425a2687acc2cef3d990653d9e97db1ed8c9e20560"
+    },
+    "@philc/lint-rules@0.2.0": {
+      "integrity": "8555b8af305425a0d6ce385bff63f087f1242806a189922a6f1c4f8206b7a6af"
     },
     "@philc/shoulda@2.0.0": {
       "integrity": "2bc8b2eb9e5dee41fcd77760b009d3b3527980edf5b29cbf9f25443489a5faa9"

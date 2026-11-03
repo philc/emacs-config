@@ -560,7 +560,7 @@ export function applyEdits(text, edits) {
 
 // Renames the variable and writes the changes to disk. Returns the number of occurrences and files
 // changed.
-export async function rename(path, line, column, oldName, newName, projectRoot) {
+export async function run(path, line, column, oldName, newName, projectRoot) {
   const edits = await computeEdits(path, line, column, oldName, newName, projectRoot);
   let occurrences = 0;
   for (const [p, { text, edits: fileEdits }] of edits) {
@@ -579,7 +579,7 @@ if (!isUnitTesting) {
       throw new Error("Usage: rename.js filePath:line:column oldName newName projectRoot");
     }
     const [path, line, col] = filenameArg.split(":");
-    const result = await rename(path, parseInt(line), parseInt(col), oldName, newName, projectRoot);
+    const result = await run(path, parseInt(line), parseInt(col), oldName, newName, projectRoot);
     const plural = result.occurrences == 1 ? "occurrence" : "occurrences";
     const inFiles = result.files > 1 ? ` in ${result.files} files` : "";
     console.log(`${result.occurrences} ${plural} replaced${inFiles}`);

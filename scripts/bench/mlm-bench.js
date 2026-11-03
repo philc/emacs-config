@@ -13,7 +13,7 @@
 //
 // Without FILEs, it runs on the synthetic files from write-synthetic-files.js.
 
-import { writeSyntheticFiles } from "./write-synthetic-files.js";
+import * as syntheticFiles from "./write-synthetic-files.js";
 
 const emacs = Deno.env.get("EMACS") ?? "/opt/homebrew/bin/emacs";
 const emacsclient = emacs.slice(0, emacs.lastIndexOf("/") + 1) + "emacsclient";
@@ -163,7 +163,7 @@ async function main() {
   try {
     if (files.length == 0) {
       await Deno.mkdir(`${tmp}/files`);
-      files = await writeSyntheticFiles(`${tmp}/files`);
+      files = await syntheticFiles.write(`${tmp}/files`);
     }
     await compileVersions(rev, tmp);
     for (const [version, daemon] of Object.entries(daemons)) {

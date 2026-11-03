@@ -83,7 +83,7 @@ const generators = {
 };
 
 // Writes the files into `dir`, which must exist, and returns their paths.
-export async function writeSyntheticFiles(dir) {
+export async function write(dir) {
   const paths = [];
   for (const [name, generate] of Object.entries(generators)) {
     const path = `${dir}/${name}`;
@@ -100,7 +100,7 @@ if (import.meta.main) {
     Deno.exit(1);
   }
   await Deno.mkdir(dir, { recursive: true });
-  for (const path of await writeSyntheticFiles(dir)) {
+  for (const path of await write(dir)) {
     console.log(path);
   }
 }

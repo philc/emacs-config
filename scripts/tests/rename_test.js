@@ -1,5 +1,5 @@
 import { assert, context, setup, should, teardown } from "@philc/shoulda";
-import { positionToOffset, rename } from "../rename.js";
+import * as rename from "../rename.js";
 import * as stdPath from "@std/path";
 
 let projectDir;
@@ -36,17 +36,17 @@ async function renameAt(relativePath, marker, oldName, newName) {
   const lines = text.slice(0, offset).split("\n");
   const line = lines.length;
   const column = lines[lines.length - 1].length;
-  return await rename(path, line, column, oldName, newName, projectDir);
+  return await rename.run(path, line, column, oldName, newName, projectDir);
 }
 
 context("positionToOffset", () => {
   should("count lines and columns", () => {
-    assert.equal(6, positionToOffset("abc\ndef", 2, 2));
+    assert.equal(6, rename.positionToOffset("abc\ndef", 2, 2));
   });
 
   should("count characters outside the BMP as one column", () => {
     // "😀" is two UTF-16 code units, but one character in Emacs.
-    assert.equal(3, positionToOffset("😀 a", 1, 2));
+    assert.equal(3, rename.positionToOffset("😀 a", 1, 2));
   });
 });
 

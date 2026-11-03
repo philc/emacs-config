@@ -11,7 +11,7 @@ const regexps = [
   /^\s*(?:export )?(?:async )?([^( ]+)\([^()]*\) {\s*}?$/,
 ];
 
-export function getSymbols(text) {
+export function parse(text) {
   const lines = text.split("\n");
   const results = [];
   for (let i = 0; i < lines.length; i++) {
@@ -34,7 +34,7 @@ const isUnitTesting = import.meta.url != Deno.mainModule;
 if (!isUnitTesting) {
   const file = Deno.args[0];
   const text = await Deno.readTextFile(file);
-  const results = getSymbols(text);
+  const results = parse(text);
   for (const [line, column, symbol] of results) {
     console.log(`${line}:${column}`, symbol);
   }
