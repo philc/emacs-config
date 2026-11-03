@@ -6,6 +6,7 @@
 
 (require 'ert)
 (require 'cl-lib)
+(require 's)
 (require 'evil)
 (require 'evil-ext)
 (require 'markdown-lite-mode)
@@ -25,21 +26,54 @@
     (evil-ext/fill-inside-paragraph-or-comment-block)
     (buffer-substring-no-properties (point-min) (point-max))))
 
-(ert-deftest markdown-lite-mode-test/fill-preserves-indentation-of-code-block-in-list-item ()
-  "A paragraph indented more deeply than its enclosing list item -- e.g. a code block nested inside a
-   bullet point, as opposed to a plain wrapped continuation of the bullet's own text -- should keep
-   that deeper indentation on every line after filling, rather than having it collapsed down to align
-   with the bullet's text (2 spaces, to match \"* \")."
-  (let ((result
-         (mlm-test/fill-at-marker
-          (concat "* one:\n"
-                  "\n"
-                  "        |aaa bbb ccc ddd\n"))))
-    (should (equal result
-                   (concat "* one:\n"
-                           "\n"
-                           "        aaa bbb\n"
-                           "        ccc ddd\n")))))
+(defun mlm-test/fill-buffer (text)
+  "Inserts TEXT into a new markdown-lite-mode buffer and fills all of it, as selecting the whole
+   buffer and pressing `SPC` does. Returns the buffer's contents afterwards."
+  (with-temp-buffer
+    (insert text)
+    (markdown-lite-mode)
+    (setq-local fill-column 15)
+    (evil-fill (point-min) (point-max))
+    (buffer-substring-no-properties (point-min) (point-max))))
+
+(ert-deftest markdown-lite-mode-test/fill-skips-code-block-in-list-item ()
+  "A paragraph indented more deeply than its enclosing list item is a code block nested inside the
+   item, as opposed to a wrapped continuation of the item's own text. Filling leaves it alone, as
+   dprint does."
+  (let ((text (concat "* one:\n"
+                      "\n"
+                      "        aaa bbb ccc ddd\n")))
+    (should (equal (mlm-test/fill-at-marker (s-replace "aaa" "|aaa" text)) text))
+    (should (equal (mlm-test/fill-buffer text) text))))
+
+(ert-deftest markdown-lite-mode-test/fill-skips-fenced-code-block ()
+  "The code block's lines aren't joined, though the paragraphs around it are."
+  (should (equal (mlm-test/fill-buffer
+                  (concat "aaa\n"
+                          "bbb\n"
+                          "```\n"
+                          "x = 1\n"
+                          "y = 2\n"
+                          "```\n"
+                          "ccc\n"
+                          "ddd\n"))
+                 (concat "aaa bbb\n"
+                         "```\n"
+                         "x = 1\n"
+                         "y = 2\n"
+                         "```\n"
+                         "ccc ddd\n"))))
+
+(ert-deftest markdown-lite-mode-test/fill-skips-table ()
+  (let ((table (concat "| a | b |\n"
+                       "|---|---|\n"
+                       "| 1 | 2 |\n")))
+    (should (equal (mlm-test/fill-buffer table) table))))
+
+(ert-deftest markdown-lite-mode-test/fill-keeps-long-word-on-list-marker-line ()
+  "When a list item's first word doesn't fit, it stays on the marker's line, as dprint does."
+  (should (equal (mlm-test/fill-buffer "* https://example.com/long aaa\n")
+                 "* https://example.com/long\n  aaa\n")))
 
 (ert-deftest markdown-lite-mode-test/promote-last-list-item-in-buffer ()
   (with-temp-buffer

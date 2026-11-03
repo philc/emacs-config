@@ -67,6 +67,9 @@
   (make-local-variable 'fill-nobreak-predicate)
   (add-hook 'fill-nobreak-predicate 'mlm/markdown-nobreak-p)
 
+  ;; Don't fill code blocks and tables.
+  (setq-local fill-forward-paragraph-function 'mlm/markdown-fill-forward-paragraph)
+
   ;; Compute and store list levels, used by mlm/markdown-calculate-list-levels.
   (setq-local syntax-propertize-function 'mlm/syntax-propertize)
 
@@ -847,8 +850,97 @@ If the point is not in a list item, do nothing."
 
 (defun mlm/markdown-nobreak-p ()
   "Return nil if it is acceptable to break the current line at the point."
-  ;; inside in square brackets (e.g., link anchor text)
-  (looking-back "\\[[^]]*" (line-beginning-position)))
+  (or
+   ;; inside in square brackets (e.g., link anchor text)
+   (looking-back "\\[[^]]*" (line-beginning-position))
+   ;; Right after a list marker. When the item's first word is too long to fit (e.g. a URL), keep it
+   ;; on the marker's line, as dprint does, rather than leaving the marker alone on its line.
+   (looking-back "^[ \t]*\\(?:[0-9]+\\.\\|[*+-]\\)[ \t]*" (line-beginning-position))))
+
+;; Filling joins a paragraph's lines, which would mangle code blocks and tables. dprint leaves them
+;; alone, and so does filling, by treating their lines as paragraph separators.
+
+(defun mlm/markdown-indented-code-line-p ()
+  "Whether the line at point is in an indented code block: it's indented at least as far as a code
+   block must be here (see `mlm/markdown-required-pre-column'), and it doesn't continue a
+   paragraph, since an indented code block can't interrupt one."
+  (let ((column (mlm/markdown-required-pre-column (mlm/markdown-calculate-list-levels))))
+    (save-excursion
+      (and (>= (current-indentation) column)
+           (not (mlm/markdown-cur-line-blank-p))
+           (progn
+             ;; Look back past the block's previous lines, for the blank line which must precede it.
+             (while (and (= 0 (forward-line -1))
+                         (not (mlm/markdown-cur-line-blank-p))
+                         (>= (current-indentation) column)))
+             (mlm/markdown-cur-line-blank-p))))))
+
+(defun mlm/markdown-fill-protected-line-p ()
+  "Whether the line at point is part of a fenced code block, an indented code block, or a table."
+  (save-excursion
+    (beginning-of-line)
+    (or (looking-at "[ \t]*|")
+        (looking-at mlm/markdown-regex-fence)
+        (mlm/markdown-fence-at-line-start)
+        (mlm/markdown-indented-code-line-p))))
+
+(defun mlm/markdown-fill-separator-line-p ()
+  "Whether filling should treat the line at point as a paragraph separator."
+  (save-excursion
+    (beginning-of-line)
+    (or (looking-at paragraph-separate)
+        (mlm/markdown-fill-protected-line-p))))
+
+(defun mlm/markdown-fill-forward-paragraph (arg)
+  "The `fill-forward-paragraph-function'. Like `forward-paragraph', but treats code blocks and
+   tables as paragraph separators (see `mlm/markdown-fill-protected-line-p'). Returns the number of
+   paragraphs left to move."
+  (let ((n (abs arg)))
+    (while (and (> n 0)
+                (if (> arg 0)
+                    (mlm/markdown-fill-forward-one-paragraph)
+                  (mlm/markdown-fill-backward-one-paragraph)))
+      (setq n (1- n)))
+    (if (> arg 0) n (- n))))
+
+(defun mlm/markdown-fill-forward-one-paragraph ()
+  "Moves to the end of the paragraph at or after point. Returns nil if there's no paragraph."
+  (while (and (not (eobp)) (mlm/markdown-fill-separator-line-p))
+    (forward-line 1))
+  (unless (eobp)
+    (let ((end (save-excursion (forward-paragraph 1) (point))))
+      ;; End the paragraph early at a code block or table, which forward-paragraph doesn't know of.
+      (forward-line 1)
+      (while (and (< (point) end) (not (mlm/markdown-fill-protected-line-p)))
+        (forward-line 1))
+      (goto-char (min (point) end))
+      t)))
+
+(defun mlm/markdown-fill-backward-one-paragraph ()
+  "Moves to the start of the paragraph at or before point. Returns nil if there's no paragraph. It
+   doesn't move back past a code block or table to find one, because when `fill-region' does that
+   from the start of the region, it fills from the region's start, including the code block."
+  (let ((orig (point)))
+    (when (and (bolp) (not (bobp)))
+      (forward-line -1))
+    (while (and (not (bobp))
+                (mlm/markdown-fill-separator-line-p)
+                (not (mlm/markdown-fill-protected-line-p)))
+      (forward-line -1))
+    (when (mlm/markdown-fill-protected-line-p)
+      (goto-char orig)))
+  (unless (or (eobp) (mlm/markdown-fill-separator-line-p))
+    (end-of-line)
+    (let ((start (save-excursion (backward-paragraph 1) (point))))
+      ;; Start the paragraph after a code block or table, which backward-paragraph doesn't know of.
+      (beginning-of-line)
+      (while (and (> (point) start)
+                  (= 0 (forward-line -1))
+                  (not (mlm/markdown-fill-protected-line-p))))
+      (when (mlm/markdown-fill-protected-line-p)
+        (forward-line 1))
+      (goto-char (max (point) start))
+      t)))
 
 (defun mlm/markdown-adaptive-fill-function ()
   "Return prefix for filling paragraph or nil if not determined."
