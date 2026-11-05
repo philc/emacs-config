@@ -13,7 +13,7 @@
       "scripts/"
     ],
     "plugins": [
-      "jsr:@philc/lint-rules@^0.2.0"
+      "jsr:@philc/lint-rules@^0.2.1"
     ]
   },
   "imports": {
