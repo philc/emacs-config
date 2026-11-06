@@ -187,9 +187,14 @@
              (other-windows (->> (get-buffer-window-list nil nil t)
                                  (remq win)
                                  (mapcar (lambda (w) (cons w (copy-marker (window-point w)))))))
+             (folds (cl-loop for ov in (overlays-in beg end)
+                             when (overlay-get ov 'invisible)
+                             collect (list ov (copy-marker (overlay-start ov))
+                                           (copy-marker (overlay-end ov)))))
              (markers (append (list pt)
                               (and (mark t) (list (mark-marker)))
-                              (mapcar #'cdr other-windows))))
+                              (mapcar #'cdr other-windows)
+                              (cl-loop for (_ s e) in folds append (list s e)))))
         (combine-change-calls beg end
           (save-restriction
             (narrow-to-region beg end)
@@ -210,48 +215,18 @@
                        (ee (- be s))
                        (old-mid (substring old-block p (- (length old-block) s)))
                        (new-mid (substring new-block p (- (length new-block) s)))
-                       (delta (- (length new-mid) (length old-mid)))
-                       (inside-p (lambda (pos) (and (< eb pos) (<= pos ee))))
-                       ;; Deleting the span would collapse these to its start, so map them into
-                       ;; the new text first. A position at the span's start stays there anyway.
-                       (moved-markers (cl-loop for m in markers
-                                               when (funcall inside-p m)
-                                               collect (cons m (marker-position m))))
-                       (folds (cl-remove-if-not
-                               (lambda (ov)
-                                 (and (overlay-get ov 'invisible)
-                                      (or (funcall inside-p (overlay-start ov))
-                                          (funcall inside-p (overlay-end ov)))))
-                               (overlays-in eb (min (1+ ee) (point-max)))))
-                       (fold-ends (mapcar (lambda (ov) (list ov (overlay-start ov) (overlay-end ov)))
-                                          folds))
-                       (positions (delete-dups
-                                   (append (mapcar #'cdr moved-markers)
-                                           (cl-loop for (_ s e) in fold-ends
-                                                    append (cl-remove-if-not inside-p (list s e))))))
-                       (mapped (and positions
-                                    (cl-mapcar #'cons positions
-                                               (util/map-offsets old-mid new-mid
-                                                                 (mapcar (lambda (pos) (- pos eb))
-                                                                         positions)))))
-                       (new-pos (lambda (pos)
-                                  (cond ((<= pos eb) pos)
-                                        ((> pos ee) (+ pos delta))
-                                        (t (+ eb (cdr (assq pos mapped))))))))
+                       ;; Deleting the span would collapse these markers to its start, so map
+                       ;; them into the new text first. Mapping also puts a marker at a pure
+                       ;; insertion after the inserted text, e.g. point after indentation added
+                       ;; before it.
+                       (moved (cl-remove-if-not (lambda (m) (<= eb m ee)) markers))
+                       (offsets (and moved (util/map-offsets old-mid new-mid
+                                                             (mapcar (lambda (m) (- m eb))
+                                                                     moved)))))
                   (goto-char eb)
                   (delete-region eb ee)
                   (insert new-mid)
-                  ;; `new-pos' takes positions from before the edit, as recorded above.
-                  (pcase-dolist (`(,m . ,pos) moved-markers)
-                    (set-marker m (funcall new-pos pos)))
-                  ;; `move-overlay' also restores a fold that the deletion evaporated.
-                  (cl-loop for (ov s e) in fold-ends
-                           do (move-overlay ov (funcall new-pos s) (funcall new-pos e)
-                                            (current-buffer)))
-                  ;; Point at a pure insertion goes after the inserted text, e.g. after a line
-                  ;; inserted above point's line, or indentation added before point.
-                  (when (and (= eb ee) (= pt eb))
-                    (set-marker pt (+ eb (length new-mid))))
+                  (cl-mapc (lambda (m o) (set-marker m (+ eb o))) moved offsets)
                   (goto-char bs))))
             (unless (string= (buffer-substring-no-properties (point-min) (point-max)) new-text)
               ;; Shouldn't happen, but never leave the buffer with the wrong text.
@@ -262,9 +237,13 @@
         (when row
           (recenter row))
         (pcase-dolist (`(,w . ,m) other-windows)
-          (set-window-point w m)
-          (set-marker m nil))
-        (set-marker pt nil)))))
+          (set-window-point w m))
+        ;; This also restores any fold that evaporated when its text was deleted.
+        (pcase-dolist (`(,ov ,s ,e) folds)
+          (move-overlay ov s e (current-buffer)))
+        (dolist (m markers)
+          (unless (eq m (mark-marker))
+            (set-marker m nil)))))))
 
 (defun util/get-line (&optional offset)
   "Returns the text (without string properties) of the line offset by `offset` from the current.

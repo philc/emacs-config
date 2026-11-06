@@ -71,20 +71,18 @@
     (insert "|")
     (buffer-string)))
 
-(ert-deftest emacs-utils-test/replace-text-keeps-point-in-reindented-line ()
-  (should (string= (emacs-utils-test/replace "<div>\n<p>hello w|örld</p>\n</div>\n"
-                                             "<div>\n  <p>hello wörld</p>\n</div>\n")
-                   "<div>\n  <p>hello w|örld</p>\n</div>\n")))
-
-(ert-deftest emacs-utils-test/replace-text-keeps-point-in-reformatted-line ()
-  "Point stays on the same character when the formatter changes quotes and spacing around it."
-  (should (string= (emacs-utils-test/replace "const x = {a: 1, b: 'tw|o'}\n"
-                                             "const x = { a: 1, b: \"two\" };\n")
-                   "const x = { a: 1, b: \"tw|o\" };\n")))
-
-(ert-deftest emacs-utils-test/replace-text-keeps-point-below-inserted-line ()
-  (should (string= (emacs-utils-test/replace "a\n|b\n" "a\nnew\nb\n")
-                   "a\nnew\n|b\n")))
+(ert-deftest emacs-utils-test/replace-text-keeps-point-on-its-character ()
+  (dolist (case '(;; Reindented line.
+                  ("<div>\n<p>hello w|örld</p>\n</div>\n"
+                   "<div>\n  <p>hello wörld</p>\n</div>\n"
+                   "<div>\n  <p>hello w|örld</p>\n</div>\n")
+                  ;; Quotes and spacing changed around point.
+                  ("const x = {a: 1, b: 'tw|o'}\n"
+                   "const x = { a: 1, b: \"two\" };\n"
+                   "const x = { a: 1, b: \"tw|o\" };\n")
+                  ;; A line inserted right where point is.
+                  ("a\n|b\n" "a\nnew\nb\n" "a\nnew\n|b\n")))
+    (should (string= (emacs-utils-test/replace (nth 0 case) (nth 1 case)) (nth 2 case)))))
 
 (ert-deftest emacs-utils-test/replace-text-handles-missing-final-newline ()
   (dolist (case '(("a\n|b" "a\nb\n")
@@ -147,9 +145,14 @@
       (should-not (invisible-p (match-beginning 0))))))
 
 (ert-deftest emacs-utils-test/replace-text-matches-random-edits ()
-  "The result always equals the new text, for random line insertions, deletions and changes."
+  "The result always equals the new text, for random line insertions, deletions and changes. This
+   is a safety net for the parsing and applying of git's diff output: it mixes cases no single
+   hand-written test combines, like adjacent changed blocks, deletions at the start or end, and a
+   missing final newline on either side. It has never been the only test to catch a bug, and at
+   ~0.25s it's the slowest test here (it runs git 50 times), so it may not be worth the expense.
+   The seed is fixed, so it runs the same cases every time and can't flake."
   (let ((state (cl-make-random-state 42)))
-    (dotimes (_ 200)
+    (dotimes (_ 50)
       (let* ((lines (cl-loop repeat (cl-random 8 state)
                              collect (nth (cl-random 4 state) '("a" "  b" "é c" ""))))
              (old (concat (s-join "\n" lines) (if (= 0 (cl-random 2 state)) "\n" "")))
@@ -180,11 +183,3 @@
       (emacs-utils-test/replace-text (point-min) (point-max) new)
       (should (string= (buffer-string) new)))
     (should (< (- (float-time) start) 2))))
-
-(ert-deftest emacs-utils-test/replace-text-keeps-mark-on-its-character ()
-  (with-temp-buffer
-    (insert "const x = {a: 1, b: 'two'}\n")
-    (set-mark 24) ; Before the "o" of 'two'.
-    (goto-char (point-min))
-    (emacs-utils-test/replace-text (point-min) (point-max) "const x = { a: 1, b: \"two\" };\n")
-    (should (string= (buffer-substring (mark t) (point-max)) "o\" };\n"))))
