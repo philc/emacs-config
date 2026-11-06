@@ -104,6 +104,19 @@ context("goto_def_test", () => {
     assert.equal("1", line);
   });
 
+  should("handle class declarations", async () => {
+    await writeFixture("class FooBar {}\nclass Foo extends FooBar {}");
+    const got = await gotoDef.search("Foo", fixture1);
+    assert.equal([fixture1 + ":2:6"], got);
+  });
+
+  should("resolve classes imported from on-disk modules", async () => {
+    await writeFixture("export class Foo {}", fixture1);
+    await writeFixture('import { Foo } from "./goto_def_fixture1.js";\nnew Foo()', fixture2);
+    const got = await gotoDef.search("Foo", fixture2);
+    assert.equal([fixture1 + ":1:13"], got);
+  });
+
   should("search for the last part when no earlier part refers to a module", async () => {
     await writeFixture("function foo() {}", fixture1);
     const got = await gotoDef.search("this.foo", fixture1);

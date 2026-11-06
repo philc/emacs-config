@@ -151,6 +151,10 @@ export async function search(query, startingFile, projectRoot) {
     // async foo(a) {
     "-e",
     `^\\s*(async )?${query}\\s*\\([^)]*\\)\\s*\\{`,
+    // class Foo {
+    // export class Foo extends Bar {
+    "-e",
+    `class\\s+${query}\\b`,
   ];
 
   // Search the current file.
