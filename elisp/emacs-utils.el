@@ -74,22 +74,197 @@
     (delete-region (line-beginning-position) (line-end-position))
     (insert new-line)))
 
-(defun util/replace-buffer-text (new-text)
-  "Replaces the entire buffer with the new text."
-  (save-excursion
-    ;; We're using replace-region-contents because it very helpfully preserves the scroll positions
-    ;; of all windows displaying this buffer.
-    ;; https://emacs.stackexchange.com/a/47889/2278
-    (let ((tmp-buf (generate-new-buffer " *temp*")))
-      (with-current-buffer tmp-buf (insert new-text))
-      (replace-region-contents (point-min) (point-max) tmp-buf)
-      (kill-buffer tmp-buf))))
+(defun util/diff-hunks (old new)
+  "Compares strings OLD and NEW line by line. Returns the changed blocks as a list of
+   (OLD-START-LINE OLD-LINE-COUNT NEW-TEXT), last block first. This uses git's diff, which takes
+   0.08s on a 2MB file where macOS's diff takes 27s."
+  (let ((old-file (make-temp-file "util-diff-old"))
+        (new-file (make-temp-file "util-diff-new"))
+        (coding-system-for-write 'utf-8-unix)
+        (coding-system-for-read 'utf-8-unix)
+        (default-directory temporary-file-directory)
+        hunks)
+    (unwind-protect
+        (with-temp-buffer
+          (write-region old nil old-file nil 'silent)
+          (write-region new nil new-file nil 'silent)
+          (let ((status (call-process "git" nil t nil "diff"
+                                      ;; Compare two files, rather than files in a repo.
+                                      "--no-index"
+                                      ;; Plain diff output, unaffected by the user's git config:
+                                      ;; no color codes, no external diff tool (diff.external),
+                                      ;; and no textconv filters (diff.<driver>.textconv).
+                                      "--no-color" "--no-ext-diff" "--no-textconv"
+                                      ;; Diff the text even if git would deem it binary, e.g. if
+                                      ;; it contains a NUL byte.
+                                      "--text"
+                                      ;; No context lines, so each hunk is only changed lines.
+                                      "-U0"
+                                      old-file new-file)))
+            (unless (memq status '(0 1))
+              (error "git diff failed: %s" (buffer-string))))
+          (goto-char (point-min))
+          ;; Hunk bodies' lines start with -, + or \, so only hunk headers match ^@@.
+          (while (re-search-forward
+                  "^@@ -\\([0-9]+\\)\\(?:,\\([0-9]+\\)\\)? \\+[0-9]+\\(?:,\\([0-9]+\\)\\)? @@.*\n"
+                  nil t)
+            (let* ((old-line (string-to-number (match-string 1)))
+                   (old-count (if (match-string 2) (string-to-number (match-string 2)) 1))
+                   (new-count (if (match-string 3) (string-to-number (match-string 3)) 1))
+                   (new-lines nil))
+              (forward-line old-count)
+              (when (looking-at-p "\\\\")
+                (forward-line 1)) ; "\ No newline at end of file"
+              (dotimes (_ new-count)
+                (let ((line (buffer-substring-no-properties (1+ (point)) (line-end-position))))
+                  (forward-line 1)
+                  (if (looking-at-p "\\\\")
+                      (forward-line 1)
+                    (setq line (concat line "\n")))
+                  (push line new-lines)))
+              ;; For a pure insertion, git gives the line *after which* to insert.
+              (push (list (if (= old-count 0) (1+ old-line) old-line)
+                          old-count
+                          (apply #'concat (nreverse new-lines)))
+                    hunks))))
+      (delete-file old-file)
+      (delete-file new-file))
+    hunks))
 
-(defun util/replace-region (new-text)
-  "Replaces the entire buffer with the new text."
-  (save-excursion
-    (delete-region (region-beginning) (region-end))
-    (insert new-text)))
+(defun util/map-offsets (old new offsets)
+  "Returns where each character offset in OFFSETS, into string OLD, lands in string NEW, using a
+   character-level diff. An offset at the end of OLD maps to the end of NEW. The diff runs in
+   unibyte buffers, which avoids the slow position conversions of multibyte ones."
+  (if (string-empty-p old)
+      (mapcar (lambda (_) (length new)) offsets)
+    (let ((src (generate-new-buffer " *util-map-offsets*" t)))
+      (unwind-protect
+          (with-temp-buffer
+            (set-buffer-multibyte nil)
+            (insert (encode-coding-string old 'utf-8-unix))
+            (let ((markers (mapcar (lambda (o)
+                                     (copy-marker (1+ (string-bytes (substring old 0 o)))
+                                                  (= o (length old))))
+                                   offsets)))
+              (with-current-buffer src
+                (set-buffer-multibyte nil)
+                (insert (encode-coding-string new 'utf-8-unix)))
+              ;; The diff is fast for the few lines a formatter usually changes, but when one span
+              ;; is huge, like a minified file being reformatted, it can take over a minute (84s on
+              ;; a 1.9MB file). Past the time limit, place the offsets proportionally.
+              (if (replace-region-contents (point-min) (point-max) src 0.5)
+                  (mapcar (lambda (m)
+                            (min (length new)
+                                 (length (decode-coding-string (buffer-substring (point-min) m)
+                                                               'utf-8-unix))))
+                          markers)
+                (mapcar (lambda (o) (round (* o (/ (float (length new)) (length old)))))
+                        offsets))))
+        (kill-buffer src)))))
+
+(defun util/common-prefix-length (a b)
+  (let ((r (compare-strings a nil nil b nil nil)))
+    (if (eq r t) (min (length a) (length b)) (1- (abs r)))))
+
+;; Why not `replace-region-contents' on the whole text: it diffs character by character, and in a
+;; buffer with any non-ASCII text, each comparison converts character positions to byte positions
+;; by scanning the buffer. Reformatting a 67KB HTML file with a few em dashes took 33s that way,
+;; versus 0.08s for the same file in ASCII. Instead, diff line by line, edit only the changed
+;; blocks, and do the character-level work only to place point, in a small unibyte buffer.
+(defun util/replace-text (beg end new-text)
+  "Replaces the text between BEG and END with NEW-TEXT, editing only the parts that differ. Point,
+   markers and overlays outside those parts stay put. Inside a changed part, point, the mark, the
+   points of other windows showing the buffer, and the ends of folds (overlays with an `invisible'
+   property, as outline and hideshow use) are placed on the same characters in the new text. The
+   selected window keeps point on the same screen row. The whole replacement is one change for
+   undo and change hooks."
+  (let ((old (buffer-substring-no-properties beg end)))
+    (unless (string= old new-text)
+      (let* ((hunks (util/diff-hunks old new-text))
+             (pt (copy-marker (point)))
+             (win (and (eq (window-buffer) (current-buffer)) (selected-window)))
+             (row (and win (-some-> (posn-at-point (point) win) posn-col-row cdr)))
+             (other-windows (->> (get-buffer-window-list nil nil t)
+                                 (remq win)
+                                 (mapcar (lambda (w) (cons w (copy-marker (window-point w)))))))
+             (markers (append (list pt)
+                              (and (mark t) (list (mark-marker)))
+                              (mapcar #'cdr other-windows))))
+        (combine-change-calls beg end
+          (save-restriction
+            (narrow-to-region beg end)
+            (goto-char (point-min))
+            (let ((line 1))
+              (dolist (h hunks)
+                (forward-line (- (nth 0 h) line))
+                (setq line (nth 0 h))
+                (let* ((bs (point))
+                       (be (progn (forward-line (nth 1 h)) (point)))
+                       (old-block (buffer-substring-no-properties bs be))
+                       (new-block (nth 2 h))
+                       ;; Trim the block to the span that actually changed.
+                       (p (util/common-prefix-length old-block new-block))
+                       (s (min (util/common-prefix-length (reverse old-block) (reverse new-block))
+                               (- (min (length old-block) (length new-block)) p)))
+                       (eb (+ bs p))
+                       (ee (- be s))
+                       (old-mid (substring old-block p (- (length old-block) s)))
+                       (new-mid (substring new-block p (- (length new-block) s)))
+                       (delta (- (length new-mid) (length old-mid)))
+                       (inside-p (lambda (pos) (and (< eb pos) (<= pos ee))))
+                       ;; Deleting the span would collapse these to its start, so map them into
+                       ;; the new text first. A position at the span's start stays there anyway.
+                       (moved-markers (cl-loop for m in markers
+                                               when (funcall inside-p m)
+                                               collect (cons m (marker-position m))))
+                       (folds (cl-remove-if-not
+                               (lambda (ov)
+                                 (and (overlay-get ov 'invisible)
+                                      (or (funcall inside-p (overlay-start ov))
+                                          (funcall inside-p (overlay-end ov)))))
+                               (overlays-in eb (min (1+ ee) (point-max)))))
+                       (fold-ends (mapcar (lambda (ov) (list ov (overlay-start ov) (overlay-end ov)))
+                                          folds))
+                       (positions (delete-dups
+                                   (append (mapcar #'cdr moved-markers)
+                                           (cl-loop for (_ s e) in fold-ends
+                                                    append (cl-remove-if-not inside-p (list s e))))))
+                       (mapped (and positions
+                                    (cl-mapcar #'cons positions
+                                               (util/map-offsets old-mid new-mid
+                                                                 (mapcar (lambda (pos) (- pos eb))
+                                                                         positions)))))
+                       (new-pos (lambda (pos)
+                                  (cond ((<= pos eb) pos)
+                                        ((> pos ee) (+ pos delta))
+                                        (t (+ eb (cdr (assq pos mapped))))))))
+                  (goto-char eb)
+                  (delete-region eb ee)
+                  (insert new-mid)
+                  ;; `new-pos' takes positions from before the edit, as recorded above.
+                  (pcase-dolist (`(,m . ,pos) moved-markers)
+                    (set-marker m (funcall new-pos pos)))
+                  ;; `move-overlay' also restores a fold that the deletion evaporated.
+                  (cl-loop for (ov s e) in fold-ends
+                           do (move-overlay ov (funcall new-pos s) (funcall new-pos e)
+                                            (current-buffer)))
+                  ;; Point at a pure insertion goes after the inserted text, e.g. after a line
+                  ;; inserted above point's line, or indentation added before point.
+                  (when (and (= eb ee) (= pt eb))
+                    (set-marker pt (+ eb (length new-mid))))
+                  (goto-char bs))))
+            (unless (string= (buffer-substring-no-properties (point-min) (point-max)) new-text)
+              ;; Shouldn't happen, but never leave the buffer with the wrong text.
+              (message "util/replace-text: patching failed; replaced the text wholesale")
+              (delete-region (point-min) (point-max))
+              (insert new-text))))
+        (goto-char pt)
+        (when row
+          (recenter row))
+        (pcase-dolist (`(,w . ,m) other-windows)
+          (set-window-point w m)
+          (set-marker m nil))
+        (set-marker pt nil)))))
 
 (defun util/get-line (&optional offset)
   "Returns the text (without string properties) of the line offset by `offset` from the current.
@@ -465,8 +640,8 @@
         ;; This will throw an error if the command exits with an error status.
         (let ((out (util/call-process-and-check "/bin/bash" input "-c" command-string)))
           (if (region-active-p)
-              (util/replace-region out)
-            (util/replace-buffer-text out)))
+              (util/replace-text (region-beginning) (region-end) out)
+            (util/replace-text (point-min) (point-max) out)))
       (error
        (message "%s failed: %s"
                 (cl-first (s-split " " command-string))
