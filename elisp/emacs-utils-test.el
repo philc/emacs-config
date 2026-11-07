@@ -118,7 +118,7 @@
     (undo-boundary)
     (let ((old (buffer-string)))
       (emacs-utils-test/replace-text (point-min) (point-max)
-                         "<div>\n  <p>héllo</p>\n  <span>x</span>\n</div>\n")
+                                     "<div>\n  <p>héllo</p>\n  <span>x</span>\n</div>\n")
       (undo-boundary)
       (primitive-undo 1 (cdr buffer-undo-list))
       (should (string= (buffer-string) old)))))
