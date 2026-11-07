@@ -411,7 +411,7 @@
   ;; Grep (using the "ag" command) for files in the current directory.
   "s" (util/save-and-call 'ag-project-in-current-window)
   ;; "v" is a mnemonic prefix for "view X".
-  "vp" (util/save-and-call 'project-nav/navigate-to-project)
+  "vp" (util/save-and-call 'ws/picker)
   ;; "vn" 'project-nav/open-file-from-notes-folder
   "vn" (util/save-and-call 'project-nav/open-file-from-notes-folder)
   ;; View my org-mode task list.
@@ -599,7 +599,7 @@
                   (kbd "M-`") 'other-frame
                   (kbd "M-~") '(lambda () (interactive) (other-frame -1))
                   (kbd "M-w") 'vimlike-quit
-                  (kbd "M-W") 'tab-close ; Close the current tab, including every window.
+                  (kbd "M-W") 'ws/close-tab ; Close the current tab, including every window.
                   (kbd "M-q") 'quit-emacs-after-confirmation
                   (kbd "M-n") 'make-frame
                   (kbd "M-a") 'mark-whole-buffer
@@ -619,6 +619,9 @@
                   (kbd "M-<") 'tab-bar-move-tab-backward
                   (kbd "M->") 'tab-bar-move-tab
                   (kbd "M-x") 'my-execute-extended-command-mru
+                  (kbd "M-p") 'ws/picker
+                  (kbd "M-J") 'ws/prev-workspace
+                  (kbd "M-K") 'ws/next-workspace
                   ;; These aren't specifically replicating MacOS shortcuts, but they manipulate the
                   ;; window, so I want them to take precedence over everything else.
                   (kbd "A-f") (lambda () (interactive) (switch-window 'windmove-right))
@@ -693,7 +696,7 @@
       nil)
      ;; If there are multiple tabs, close the current tab.
      ((not one-tab)
-      (tab-bar-close-tab)
+      (ws/close-tab)
       nil)
      ;; If there is only one tab remaining, just try to quit Emacs.
      ;; Calling tab-bar-close-tab will fail when there's only one tab in the frame.
@@ -983,32 +986,20 @@
               (my-minibuffer-keyboard-quit)))
 
 ;; Tab-bar-mode (built into Emacs)
-;; I use one tab per "workspace" -- a set of Emacs windows representing a project. The list of tabs
-;; is local to each Emacs frame. I previously used escreen, and elscreen before that. They are
-;; messier and do not work cleanly with multiple frames.
+;; I use two levels of tabs: a workspace per project, and a tab per task within it. Each tab is a
+;; set of Emacs windows. See elisp/workspaces.el. The list of tabs is local to each Emacs frame. I
+;; previously used escreen, and elscreen before that. They are messier and do not work cleanly with
+;; multiple frames.
 ;; https://github.com/emacs-mirror/emacs/blob/master/lisp/tab-bar.el
 
+(require 'workspaces)
 (setq tab-bar-show t)
-(setq tab-bar-tab-hints t)
-;; Show no gap between tabs. I notice that if this is set to nil, " " gets used.
-(setq tab-bar-separator "")
-;; Hide the "+" button for creating a new tab.
-(setq tab-bar-format (remq 'tab-bar-format-add-tab tab-bar-format))
-(setq tab-bar-close-button-show nil)
-;; Which tab to select when a tab is closed. The default value for this is 'recent, but that
-;; behavior doesn't match most MacOS applications, notably Chrome and Safari.
+;; Two rows: the workspaces, then the current workspace's tabs.
+(setq tab-bar-format '(ws/format-tab-bar))
+;; Which tab to select when a tab is closed, for commands other than ws/close-tab. The default
+;; value for this is 'recent, but that behavior doesn't match most MacOS applications, notably
+;; Chrome and Safari.
 (setq tab-bar-close-tab-select 'right)
-
-;; Returns a caption for the tab in the form of " 1 tab-name ". The difference between this and the
-;; default tab formatter is that it has a space prefix so that the text isn't directly adjacent to
-;; the next tab. This is based on tab-bar-tab-name-format-default.
-(defun format-tab-name (tab i)
-  (propertize
-   (concat (if tab-bar-tab-hints (format " %d " i) "")
-           (alist-get 'name tab))
-   'face (funcall tab-bar-tab-face-function tab)))
-
-(setq tab-bar-tab-name-format-function 'format-tab-name)
 
 (tab-bar-mode)
 
@@ -1018,13 +1009,8 @@
   (evil-ext/switch-to-normal-state))
 
 ;; I have Karabiner-Elements configured to translate M-j and M-k to these keys.
-(global-set-key (kbd "<A-M-left>") (lambda () (interactive)
-                                     (call-interactively 'tab-bar-switch-to-prev-tab)
-                                     (evil-ext/switch-to-normal-state)))
-
-(global-set-key (kbd "<A-M-right>") (lambda () (interactive)
-                                      (call-interactively 'tab-bar-switch-to-next-tab)
-                                      (evil-ext/switch-to-normal-state)))
+(global-set-key (kbd "<A-M-left>") 'ws/prev-tab)
+(global-set-key (kbd "<A-M-right>") 'ws/next-tab)
 
 (defun open-current-buffer-in-new-tab ()
   (interactive)
