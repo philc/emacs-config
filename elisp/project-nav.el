@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 ;;
-;; Project navigation functions for jumping to different projects/workspaces.
+;; Opening files from my notes folders.
 ;;
 (provide 'project-nav)
 (require 'cl-lib)
@@ -11,35 +11,25 @@
 ;; Customize this to include the paths of folders containing notes.
 (defvar project-nav/notes-directories '())
 
-;; This is set to 600 by default. It shouldn't be the case, but for some reason, the
-;; filter-files-in-directory function hits this limit.
-(setq max-lisp-eval-depth 9999)
-
-(defun project-nav/filter-files-in-directory (directory filter-fn include-subdirectories)
-  "Filters the files in the given directory and subdirectories using filter-fn. Excludes .git
-   subdirectories."
-  (when (file-exists-p directory)
-    (->> (directory-files directory t)
-         (--remove (or (s-ends-with? "." it)
-                       (s-ends-with? ".." it)
-                       (s-ends-with? ".git" it)))
-         (--map (if (and include-subdirectories (file-directory-p it))
-                    (project-nav/filter-files-in-directory it filter-fn include-subdirectories)
-                  it))
-         flatten-tree
-         (-filter filter-fn))))
-
 (defvar project-nav/notes-file-extensions '(".md" ".sql" ".txt"))
+
+(defun project-nav/notes-files (directory)
+  "The notes files in DIRECTORY and its subdirectories, except in .git directories, following
+   symlinks."
+  (when (file-directory-p directory)
+    (directory-files-recursively
+     directory
+     (concat (regexp-opt project-nav/notes-file-extensions) "\\'")
+     nil
+     (lambda (dir) (not (string= (file-name-nondirectory dir) ".git")))
+     t)))
 
 (defun project-nav/open-file-from-notes-folder ()
   "Prompts for the name of a notes file to open."
   (interactive)
-  (let* ((file-matches-pattern? (lambda (file)
-                                  (cl-some (lambda (ext) (s-ends-with? ext file))
-                                           project-nav/notes-file-extensions)))
-         (file-list (->> project-nav/notes-directories
-                         (--map (project-nav/filter-files-in-directory it file-matches-pattern? t))
-                         flatten-tree project-nav/sort-by-file-mtime)))
+  (let ((file-list (->> project-nav/notes-directories
+                        (mapcan #'project-nav/notes-files)
+                        project-nav/sort-by-file-mtime)))
     (let ((file-to-open (completing-read "Notes file: "
                                          (mapcar 'file-name-nondirectory file-list))))
       (->> file-list
@@ -69,22 +59,3 @@
                          (time-less-p (cl-second b) (cl-second a)))))
          (sorted-names (-map 'cl-first sorted)))
     sorted-names))
-
-(defun project-nav/open-root-of-project (project-path)
-  "Opens the project at path. If it's a clojure project, find the project's main file and open
-   that. Otherwise, used dired to open the file in `path`."
-  ;; NOTE(philc): This function opens the "main" files in the project types that I typically work
-  ;; on. Customzie this to meet your needs if you want this functionality.
-  (let* ((project-name (file-name-nondirectory project-path))
-         (is-clojure (file-exists-p (concat project-path "/project.clj")))
-         (main-files (-> (if is-clojure
-                             (->> ["core.clj" "handler.clj"]
-                                  (--map (concat project-path "/src/" project-name "/" it)))
-                           [])
-                         (append (list (concat project-path "/" "README.md")))))
-         (main-file (->> main-files
-                         (cl-remove-if-not 'file-exists-p)
-                         cl-first)))
-    (if main-file
-        (set-window-buffer (selected-window) (find-file main-file))
-      (dired project-path))))

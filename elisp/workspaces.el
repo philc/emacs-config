@@ -22,7 +22,6 @@
 (require 'seq)
 (require 'tab-bar)
 (require 'evil-ext)
-(require 'project-nav)
 
 (defvar ws/project-dirs '("~/projects/*/" "~/projects/claude/*/" "~/sys/")
   "Wildcards for my project directories. These are the same as in
@@ -138,15 +137,22 @@
 ;; Creating and closing.
 ;;
 
+(defun ws/open-project-root (dir)
+  "Show project DIR's README.md in the current window, or dired if it has none."
+  (let ((readme (expand-file-name "README.md" dir)))
+    (if (file-exists-p readme)
+        (find-file readme)
+      (dired dir))))
+
 (defun ws/create (name &optional dir)
-  "Open a tab in a new workspace NAME. If DIR is given, show the project's main file or dired, as
-   `project-nav/open-root-of-project' does; otherwise, show dired in ~."
+  "Open a tab in a new workspace NAME, showing project DIR (see `ws/open-project-root'), or dired in
+   ~ if DIR isn't given."
   ;; The new tab goes at the end, so it doesn't land in the middle of another workspace's tabs.
   (let ((tab-bar-new-tab-to 'rightmost))
     (tab-bar-new-tab))
   (tab-bar-change-tab-group name)
   (if dir
-      (project-nav/open-root-of-project dir)
+      (ws/open-project-root dir)
     (dired "~"))
   (evil-ext/switch-to-normal-state))
 
@@ -273,7 +279,7 @@
         (funcall action)))))
 
 (defun ws/open-project ()
-  "Open a project's main file or dired in the current window, without changing workspaces."
+  "Open a project in the current window (see `ws/open-project-root'), without changing workspaces."
   (interactive)
   (let* ((dirs (mapcar (lambda (dir)
                          (cons (format "%s  %s" (file-name-nondirectory dir)
@@ -283,5 +289,5 @@
          (completion-styles '(substring))
          (completion-ignore-case t)
          (choice (completing-read "Project: " dirs nil t)))
-    (project-nav/open-root-of-project (cdr (assoc choice dirs)))
+    (ws/open-project-root (cdr (assoc choice dirs)))
     (evil-ext/switch-to-normal-state)))
