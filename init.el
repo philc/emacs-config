@@ -411,7 +411,7 @@
   ;; Grep (using the "ag" command) for files in the current directory.
   "s" (util/save-and-call 'ag-project-in-current-window)
   ;; "v" is a mnemonic prefix for "view X".
-  "vp" (util/save-and-call 'ws/picker)
+  "vp" (util/save-and-call 'ws/open-project)
   ;; "vn" 'project-nav/open-file-from-notes-folder
   "vn" (util/save-and-call 'project-nav/open-file-from-notes-folder)
   ;; View my org-mode task list.
@@ -1661,8 +1661,6 @@
 ;; Project navigation functions for opening project folders in dired-mode.
 ;;
 (require 'project-nav)
-(setq project-nav/project-folders
-      '("~/p" "~/src" "~/src/liftoff" "~/src/liftoff/exp" "~/"))
 (setq project-nav/notes-directories
       '("~/Desktop" "~/Dropbox/scratch" "~/Dropbox/notes" "~/projects/book-notes"))
 

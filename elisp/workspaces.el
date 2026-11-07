@@ -9,7 +9,14 @@
 ;; workspaces are too.
 ;;
 ;; The tab bar shows two rows: every workspace, sorted by name, and then the current workspace's
-;; tabs. `ws/picker' jumps to any tab in any workspace, or creates a workspace for a project.
+;; tabs.
+;;
+;; There are two ways to get to a project, for two different intents:
+;; - `ws/picker' (Cmd-P) goes to a project's workspace: it jumps to any tab in any workspace, or
+;;   creates a workspace for a project which doesn't have one yet.
+;; - `ws/open-project' (leader vp) opens a project in the current window, without changing
+;;   workspaces. This is for looking at another project from the one I'm working in, e.g. reading
+;;   my tmux scripts in ~/sys while working on this Emacs config.
 (provide 'workspaces)
 (require 'cl-lib)
 (require 'seq)
@@ -18,8 +25,14 @@
 (require 'project-nav)
 
 (defvar ws/project-dirs '("~/projects/*/" "~/projects/claude/*/" "~/sys/")
-  "Wildcards for the project directories which the picker offers as new workspaces. These are the
-   same as in ~/sys/scripts/tmux/tmux_workspace_picker.sh.")
+  "Wildcards for my project directories. These are the same as in
+   ~/sys/scripts/tmux/tmux_workspace_picker.sh.")
+
+(defun ws/project-paths ()
+  "The paths of my project directories, expanded from `ws/project-dirs'."
+  (mapcar #'directory-file-name
+          (mapcan (lambda (w) (file-expand-wildcards (expand-file-name w)))
+                  ws/project-dirs)))
 
 (defvar ws/default-name "misc"
   "The workspace of tabs which have no group, such as the first tab of a new frame.")
@@ -231,11 +244,7 @@
   "Jump to a tab in any workspace, or create a workspace for a project directory. Option-Enter
    creates a workspace named what was typed, in ~."
   (interactive)
-  (let* ((candidates (ws/picker-candidates
-                      (ws/tabs)
-                      (mapcar #'directory-file-name
-                              (mapcan (lambda (w) (file-expand-wildcards (expand-file-name w)))
-                                      ws/project-dirs))))
+  (let* ((candidates (ws/picker-candidates (ws/tabs) (ws/project-paths)))
          (labels (mapcar #'car candidates))
          ;; Keep the candidates in the order given, rather than letting vertico sort them.
          (table (lambda (string pred action)
@@ -262,3 +271,17 @@
             (ws/switch-or-create name)))
       (when-let* ((action (cdr (assoc choice candidates))))
         (funcall action)))))
+
+(defun ws/open-project ()
+  "Open a project's main file or dired in the current window, without changing workspaces."
+  (interactive)
+  (let* ((dirs (mapcar (lambda (dir)
+                         (cons (format "%s  %s" (file-name-nondirectory dir)
+                                       (abbreviate-file-name dir))
+                               dir))
+                       (ws/project-paths)))
+         (completion-styles '(substring))
+         (completion-ignore-case t)
+         (choice (completing-read "Project: " dirs nil t)))
+    (project-nav/open-root-of-project (cdr (assoc choice dirs)))
+    (evil-ext/switch-to-normal-state)))

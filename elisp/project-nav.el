@@ -8,8 +8,7 @@
 (require 's)
 (require 'evil-ext)
 
-;; Customize this to include the paths of folders containing projects, and notes.
-(defvar project-nav/project-folders '())
+;; Customize this to include the paths of folders containing notes.
 (defvar project-nav/notes-directories '())
 
 ;; This is set to 600 by default. It shouldn't be the case, but for some reason, the
@@ -89,24 +88,3 @@
     (if main-file
         (set-window-buffer (selected-window) (find-file main-file))
       (dired project-path))))
-
-(defun project-nav/navigate-to-project ()
-  "Prompts for the name of a project which exists in your common project folders and opens a dired
-   window in the root of the project folder. This is a fast way to open a new project and be able to
-   run projectile-find-file.
-   Once a project is chosen, the current elscreen-tab is set to be the name of that project."
-  (interactive)
-  (let* ((all-project-folders
-          (->> project-nav/project-folders
-               (--map (project-nav/filter-files-in-directory it 'file-directory-p nil))
-               flatten-tree))
-         (project-to-open (completing-read "Project folder: "
-                                           (-map 'file-name-nondirectory all-project-folders)
-                                           nil t))
-         (project (->> all-project-folders
-                       (--filter (s-ends-with? (concat "/" project-to-open) it))
-                       cl-first)))
-    (project-nav/open-root-of-project project)
-    ;; If we invoke this inside of a split, don't set the tab's title.
-    (when (= 1 (length (window-list)))
-      (tab-bar-rename-tab (file-name-nondirectory project)))))
