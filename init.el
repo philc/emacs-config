@@ -412,8 +412,7 @@
   "s" (util/save-and-call 'ag-project-in-current-window)
   ;; "v" is a mnemonic prefix for "view X".
   "vp" (util/save-and-call 'ws/open-project)
-  ;; "vn" 'project-nav/open-file-from-notes-folder
-  "vn" (util/save-and-call 'project-nav/open-file-from-notes-folder)
+  "vn" (util/save-and-call 'notes/open-file)
   ;; View my org-mode task list.
   "vo" (util/save-and-call (lambda () (find-file "~/Dropbox/notes/tasks/tasks.org")))
   ;; "View Emacs init.el"
@@ -1658,11 +1657,40 @@
 (require 'magit-config)
 
 ;;
-;; Project navigation functions for opening project folders in dired-mode.
+;; Notes: opening a file from my notes folders.
 ;;
-(require 'project-nav)
-(setq project-nav/notes-directories
-      '("~/Desktop" "~/Dropbox/scratch" "~/Dropbox/notes" "~/projects/book-notes"))
+
+(defvar notes/dirs '("~/Desktop" "~/Dropbox/scratch" "~/Dropbox/notes" "~/projects/book-notes"))
+
+(defun notes/get-files ()
+  "The notes files in `notes/dirs', most recently modified first."
+  (let ((notes-file-regexp "\\.\\(md\\|sql\\|txt\\)\\'"))
+    (sort (mapcan (lambda (dir)
+                    (when (file-directory-p dir)
+                      (directory-files-recursively
+                       dir notes-file-regexp nil
+                       (lambda (d) (not (string= (file-name-nondirectory d) ".git")))
+                       t)))
+                  notes/dirs)
+          :key (lambda (f) (file-attribute-modification-time (file-attributes f)))
+          :lessp #'time-less-p
+          :reverse t)))
+
+(defun notes/open-file ()
+  "Prompts for the name of a notes file to open, listing the most recently modified first."
+  (interactive)
+  (let* ((files (notes/get-files))
+         (names (mapcar #'file-name-nondirectory files))
+         ;; Keep the files in the order given, rather than letting vertico sort them.
+         (table (lambda (string pred action)
+                  (if (eq action 'metadata)
+                      '(metadata (display-sort-function . identity)
+                                 (cycle-sort-function . identity))
+                    (complete-with-action action names string pred))))
+         (choice (completing-read "Notes file: " table nil t)))
+    (find-file (seq-find (lambda (f) (string= (file-name-nondirectory f) choice)) files))
+    ;; If the file is open in another window in insert mode, it stays in insert mode here.
+    (evil-ext/switch-to-normal-state)))
 
 ;;
 ;; JSON
