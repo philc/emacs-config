@@ -19,7 +19,9 @@
 
 ;; Don't pop up the *Warnings* buffer when a package is natively compiled in the background. The
 ;; warnings are almost always harmless ones in third-party code (e.g. browse-at-remote calling
-;; dired functions without requiring dired). They're still logged to *Warnings*.
+;; dired functions without requiring dired). They're still logged to *Warnings*. The variable is
+;; defined in comp-run.el, which isn't loaded yet, so declare it to avoid a compile warning.
+(defvar native-comp-async-report-warnings-errors)
 (setq native-comp-async-report-warnings-errors 'silent)
 
 ;; This allows Emacs to occupy the full screen width and height, so that nothing below it (e.g. the
