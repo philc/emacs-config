@@ -155,10 +155,13 @@
          ;; (use-clipboard (not (string= stylesheet "google-docs")))
          (use-clipboard (not show-in-browser))
          ;; NOTE(philc): line-number-at-pos is 1-indexed.
-         (command (format "~/scripts/publishing/markdown_page.js %s --css %s --scroll-to-line %s"
+         ;; The HTML is written to a temp file, so pass the buffer's directory for resolving
+         ;; relative image and link paths.
+         (command (format "~/scripts/publishing/markdown_page.js %s --css %s --scroll-to-line %s --base-dir %s"
                           (if use-clipboard "--clipboard" "")
                           stylesheet
-                          (- (line-number-at-pos) 1)))
+                          (- (line-number-at-pos) 1)
+                          (shell-quote-argument (expand-file-name default-directory))))
          (markdown (buffer-substring-no-properties beg end))
          ;; This will throw an error if there's any issue with the mardkown->html conversion.
          (html (util/call-process-and-check "/bin/bash" markdown "-c" command)))
