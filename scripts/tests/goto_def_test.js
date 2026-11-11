@@ -2,7 +2,7 @@ import { assert, context, should, teardown } from "@philc/shoulda";
 import * as gotoDef from "../goto_def.js";
 import * as fs from "@std/fs";
 
-const fixturesDir = "tests/tmpFixtures";
+const fixturesDir = import.meta.dirname + "/tmpFixtures";
 const fixture1 = fixturesDir + "/goto_def_fixture1.js";
 const fixture2 = fixturesDir + "/goto_def_fixture2.js";
 
