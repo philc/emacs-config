@@ -1,7 +1,7 @@
 #!/usr/bin/env -S deno run --allow-write
 // Generates markdown files for benchmarking markdown-lite-mode, so that `make bench` doesn't need
-// real notes files. The files are the same on every run. There's one file like a typical large notes
-// file, and several worst cases for highlighting, each a structure which makes some part of
+// real notes files. The files are the same on every run. There's one file like a typical large
+// notes file, and several worst cases for highlighting, each a structure which makes some part of
 // markdown-lite-mode scan far.
 //
 // mlm-bench.js imports this. To write the files somewhere to look at them:

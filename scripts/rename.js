@@ -202,7 +202,7 @@ function localRenameSites(file, variable) {
   // - from: the Scope that use is in.
   // - resolved: the Variable it refers to.
   // The naming-collision checks use `from` and `resolved`. A declaration with an initializer, like
-  // `let x = 1`, is also a Reference, whose identifier is the declaration's; those are filtered out.
+  // `let x = 1`, is also a Reference, whose identifier is the declaration's; those are skipped.
   const refs = variables.flatMap((v) => v.references)
     .filter((ref) => !identifiers.has(ref.identifier));
   for (const ref of refs) {
