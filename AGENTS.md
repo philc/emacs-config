@@ -1,7 +1,7 @@
 # Formatting and linting
 
-After editing any JS file in `scripts`, run `deno task fix` from the repo root. It formats
-and fixes lint errors.
+After editing any JS file in `scripts`, run `deno task fix` from the repo root. It formats and fixes
+lint errors.
 
-After editing any elisp file, run `make fmt` from the repo root. It reindents the elisp files and removes
-trailing whitespace.
+After editing any elisp file, run `make fmt` from the repo root. It reindents the elisp files and
+removes trailing whitespace.

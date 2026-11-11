@@ -20,10 +20,11 @@ that require Deno.
    xcode-select --install # A C compiler, for jinx's module and the tree-sitter grammars
    ```
 
-   enchant and pkgconf are needed to compile jinx (the spell checker). the_silver_searcher is used by
-   `ag`. deno runs the scripts in `scripts/`.
+   enchant and pkgconf are needed to compile jinx (the spell checker). the_silver_searcher is used
+   by `ag`. deno runs the scripts in `scripts/`.
 
 TODO(philc): Remove this; too obvious.
+
 2. Clone the repo and link it as `~/.emacs.d`:
 
    ```sh
@@ -39,16 +40,17 @@ TODO(philc): Remove this; too obvious.
    ```
 
    This step is optional: starting Emacs installs any missing packages too. But doing it first shows
-   any errors in the terminal, rather than during Emacs's startup. It needs network access to GitHub.
+   any errors in the terminal, rather than during Emacs's startup. It needs network access to
+   GitHub.
 
 4. Start Emacs. On first start it also compiles `elisp/` and installs tree-sitter grammars.
 
 ## Packages
 
-Packages are installed with [straight.el](https://github.com/radian-software/straight.el) rather than
-package.el. straight.el clones each package's git repo into `var/straight/repos/` and builds it into
-`var/straight/build/`. The packages to install are listed in `my-packages` in `packages.el`, and
-their dependencies are installed automatically.
+Packages are installed with [straight.el](https://github.com/radian-software/straight.el) rather
+than package.el. straight.el clones each package's git repo into `var/straight/repos/` and builds it
+into `var/straight/build/`. The packages to install are listed in `my-packages` in `packages.el`,
+and their dependencies are installed automatically.
 
 ### Pinned versions
 
@@ -64,11 +66,11 @@ commit on their default branch instead.
 
 ### Commands
 
-| Command | What it does |
-|---|---|
-| `make sync-packages` | Installs missing packages, and checks out the versions in `package-lock.el`. |
-| `make upgrade-packages` | Moves each package to its newest release (or commit) |
-| `make package-versions` | Prints the installed version of each package. |
+| Command                 | What it does                                                                 |
+| ----------------------- | ---------------------------------------------------------------------------- |
+| `make sync-packages`    | Installs missing packages, and checks out the versions in `package-lock.el`. |
+| `make upgrade-packages` | Moves each package to its newest release (or commit)                         |
+| `make package-versions` | Prints the installed version of each package.                                |
 
 To add a package, add it to `my-packages`, run `make sync-packages`, then `make upgrade-packages` to
 move it to its latest release. To roll back an upgrade, revert `package-lock.el` and run `make
