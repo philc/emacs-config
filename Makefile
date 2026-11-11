@@ -7,15 +7,22 @@ ELISP_FILES := init.el early-init.el packages.el tangotango-theme.el \
 	scripts/bench/mlm-bench-measure.el \
 	$(wildcard $(ELISP_DIR)/*.el)
 
-# -Q skips the real init.el, loading only what the test files themselves require.
 .PHONY: test
-test: ## Run the ERT tests in elisp/*-test.el
+test: test-elisp test-js ## Run test-elisp and test-js
+
+# -Q skips the real init.el, loading only what the test files themselves require.
+.PHONY: test-elisp
+test-elisp: ## Run the ERT tests in elisp/*-test.el
 	$(EMACS) -Q --batch \
 		-l scripts/package-load-path.el \
 		--eval '(setq load-prefer-newer t)' \
 		-L $(ELISP_DIR) \
 		$(foreach f,$(wildcard $(ELISP_DIR)/*-test.el),-l $(f)) \
 		-f ert-run-tests-batch-and-exit
+
+.PHONY: test-js
+test-js: ## Run the JS tests in scripts/tests
+	deno run -A @philc/shoulda/run scripts/tests
 
 # Byte-compiles the files in elisp/ (except the tests), and puts the .elc files next to them, so Emacs
 # loads them as compiled code (and natively compiles them in the background), which is much faster
