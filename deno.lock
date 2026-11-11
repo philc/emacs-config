@@ -2,7 +2,7 @@
   "version": "5",
   "specifiers": {
     "jsr:@philc/lint-rules@~0.2.1": "0.2.1",
-    "jsr:@philc/shoulda@2": "2.0.0",
+    "jsr:@philc/shoulda@^2.1.0": "2.1.0",
     "jsr:@std/fs@*": "1.0.19",
     "jsr:@std/fs@^1.0.18": "1.0.19",
     "jsr:@std/internal@^1.0.10": "1.0.10",
@@ -16,8 +16,8 @@
     "@philc/lint-rules@0.2.1": {
       "integrity": "5da438129a2387b6e057c6408682ab01fae3278f270d6560c326050b2bad74e0"
     },
-    "@philc/shoulda@2.0.0": {
-      "integrity": "2bc8b2eb9e5dee41fcd77760b009d3b3527980edf5b29cbf9f25443489a5faa9"
+    "@philc/shoulda@2.1.0": {
+      "integrity": "064b3c7335b86dcbb1af35ed10b49455445ae18a988adb60114b82354907c261"
     },
     "@std/fs@1.0.19": {
       "integrity": "051968c2b1eae4d2ea9f79a08a3845740ef6af10356aff43d3e2ef11ed09fb06",
@@ -85,7 +85,7 @@
   },
   "workspace": {
     "dependencies": [
-      "jsr:@philc/shoulda@2",
+      "jsr:@philc/shoulda@^2.1.0",
       "jsr:@std/fs@^1.0.18",
       "jsr:@std/path@^1.1.2",
       "npm:eslint-scope@^9.1.2",

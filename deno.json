@@ -8,7 +8,7 @@
     ]
   },
   "imports": {
-    "@philc/shoulda": "jsr:@philc/shoulda@^2.0.0",
+    "@philc/shoulda": "jsr:@philc/shoulda@^2.1.0",
     "@std/fs": "jsr:@std/fs@^1.0.18",
     "@std/path": "jsr:@std/path@^1.1.2",
     "eslint-scope": "npm:eslint-scope@^9.1.2",
