@@ -38,13 +38,33 @@ bench: ## Benchmark markdown-lite-mode, e.g. make bench FILES='a.md b.md'
 fmt: ## Reindent the elisp files
 	$(EMACS) -Q --batch -L $(ELISP_DIR) -l scripts/format-elisp.el -f format-elisp-batch $(ELISP_FILES)
 
+# Formats everything: the elisp files, and everything else with dprint. Then lints the JS in
+# scripts/, applying automatic fixes.
+.PHONY: fix
+fix: fmt ## Format everything, and lint the JS, applying automatic fixes
+	dprint fmt
+	deno lint --fix
+
 # Runs all checks, and fails if any of them fail.
 .PHONY: check
-check: ## Run check-compile and check-regexps
+check: ## Run check-compile, check-regexps, and check-format
 	@status=0; \
 	$(MAKE) --no-print-directory check-compile || status=1; \
 	$(MAKE) --no-print-directory check-regexps || status=1; \
+	$(MAKE) --no-print-directory check-format || status=1; \
 	exit $$status
+
+# Checks that the files dprint formats are formatted, and lints the JS in scripts/, without changing
+# any files.
+.PHONY: check-format
+check-format: ## Check formatting with dprint, and lint the JS
+	dprint check
+	deno lint
+
+# Enables the git hooks in .githooks, e.g. the pre-push hook which runs `make check`.
+.PHONY: hooks
+hooks: ## Enable the git hooks in .githooks
+	git config core.hooksPath .githooks
 
 # Byte-compiles each elisp file in its own fresh Emacs, and fails on any warning. See
 # scripts/compile-elisp.sh.

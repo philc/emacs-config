@@ -1,11 +1,29 @@
 {
-  "markdown": {
-    "lineWidth": 100,
-    "textWrap": "always",
-    "unorderedListKind": "asterisks"
+  "lineWidth": 100,
+  "typescript": {
+    "deno": true,
+    "lineWidth": 100
   },
-  "excludes": [],
+  "json": {
+    "deno": true,
+    "lineWidth": 100
+  },
+  "markdown": {
+    "textWrap": "always",
+    "list.unorderedMarker": "asterisks"
+  },
+  "markup": {
+    "scriptIndent": true,
+    "styleIndent": true
+  },
+  "excludes": [
+    ".claude/"
+  ],
   "plugins": [
-    "https://plugins.dprint.dev/markdown-0.23.2.wasm"
+    "npm:@dprint/typescript@0.99.2",
+    "npm:@dprint/json@0.26.0",
+    "npm:@dprint/markdown@0.29.0",
+    "npm:dprint-plugin-markup@0.27.6",
+    "npm:dprint-plugin-malva@0.16.0"
   ]
 }

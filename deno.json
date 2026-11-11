@@ -1,13 +1,4 @@
 {
-  "tasks": {
-    "fix": "deno fmt && deno lint --fix"
-  },
-  "fmt": {
-    "include": [
-      "scripts/"
-    ],
-    "lineWidth": 100
-  },
   "lint": {
     "include": [
       "scripts/"
