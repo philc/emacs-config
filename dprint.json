@@ -16,9 +16,7 @@
     "scriptIndent": true,
     "styleIndent": true
   },
-  "excludes": [
-    ".claude/"
-  ],
+  "excludes": [],
   "plugins": [
     "npm:@dprint/typescript@0.99.2",
     "npm:@dprint/json@0.26.0",
