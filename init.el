@@ -301,9 +301,6 @@
 (define-key evil-normal-state-map (kbd "C-k") 'move-to-previous-paragraph-start)
 (define-key evil-normal-state-map (kbd "C-j") 'move-to-next-paragraph-start)
 
-;; Originally evil-paste-after-cursor-after
-(define-key evil-normal-state-map "gp" 'evil-ext/select-pasted-text)
-
 (defun describe-symbol-at-point ()
   "Describe the symbol at point without prompting. Show error if no symbol is found."
   (interactive)

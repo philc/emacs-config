@@ -197,21 +197,31 @@
 (advice-add 'evil-fill :around #'evil-ext/remember-edited-region)
 (advice-add 'evil-indent :around #'evil-ext/remember-edited-region)
 
-;; Select the text just pasted, like the common Vim mapping for gp. I use this to paste some
-;; paragraphs or list items and then select them so I can reindent them. Evil's paste commands
-;; record the pasted text's bounds in the `[ and `] marks. The selection type comes from the latest
-;; kill, so it can be wrong after pasting from a register of a different type. It's a motion, like
-;; `gv', because otherwise Evil exits a block selection when the command ends.
-(evil-define-motion evil-ext/select-pasted-text ()
-  "Visually select the most recently pasted text."
-  (let ((beg (evil-get-marker ?\[))
-        (end (evil-get-marker ?\]))
-        (handler (car-safe (get-text-property 0 'yank-handler (current-kill 0 t)))))
-    (when (and beg end)
-      (evil-visual-make-selection beg end (pcase handler
-                                            ('evil-yank-line-handler 'line)
-                                            ('evil-yank-block-handler 'block)
-                                            (_ 'char))))))
+;; Make `gv' select the text just pasted, so I don't need a separate command for it (many Vim users
+;; remap gp to do this). I use this to paste some paragraphs or list items and then select them so
+;; I can reindent them. The downside is that after a paste, gv no longer reselects the selection
+;; from before the paste.
+;;
+;; Evil's paste commands record the pasted text's bounds in the `[ and `] marks. Pasting over a
+;; visual selection goes through `evil-visual-paste', which calls these paste commands again outside
+;; of visual state, so this advice runs for that case too.
+(defun evil-ext/remember-pasted-region (_count &optional register &rest _)
+  "After advice which makes `gv' select the text just pasted from REGISTER."
+  (let* ((beg (evil-get-marker ?\[))
+         (end (evil-get-marker ?\]))
+         (text (if register (evil-get-register register t) (current-kill 0 t)))
+         (handler (car-safe (and (stringp text) (get-text-property 0 'yank-handler text)))))
+    (when (and beg end (not (evil-visual-state-p)))
+      (setq evil-visual-selection (pcase handler
+                                    ('evil-yank-line-handler 'line)
+                                    ('evil-yank-block-handler 'block)
+                                    (_ 'char)))
+      ;; These markers are nil in a buffer which hasn't yet been in visual state.
+      (setq evil-visual-mark (set-marker (or evil-visual-mark (make-marker)) beg)
+            evil-visual-point (set-marker (or evil-visual-point (make-marker)) end)))))
+
+(advice-add 'evil-paste-after :after #'evil-ext/remember-pasted-region)
+(advice-add 'evil-paste-before :after #'evil-ext/remember-pasted-region)
 
 (defun evil-column-of-last-char ()
   "Column of the last selected character when in visual state, or `current-column' otherwise."
