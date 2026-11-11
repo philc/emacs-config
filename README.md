@@ -78,4 +78,16 @@ sync-packages`.
 
 ## Development
 
-Run `make help`.
+Formatting needs [dprint](https://dprint.dev/install/).
+
+* Format and lint everything, applying automatic fixes: `make fix`. Run it after editing.
+* Check formatting and lint without changing files: `make check`.
+* Run the tests: `make test`.
+* Enable the git hooks in a new clone: `make hooks`. The pre-push hook runs `make check` before
+  every push, and refuses to push if it fails.
+
+`make fmt` reindents the elisp. Everything else is formatted with [dprint](https://dprint.dev),
+configured in `dprint.json`. The JS in `scripts/` is linted with `deno lint`, with the rules in
+[`jsr:@philc/lint-rules`](https://jsr.io/@philc/lint-rules), configured in `deno.json`.
+
+Run `make help` for the other targets.
