@@ -143,7 +143,49 @@ Date: %ad
 (evil-define-key 'normal magit-diff-mode-map
   (kbd "RET") 'my-magit/diff-visit-file
   "o" 'my-magit/diff-visit-file
-  "O" 'my-magit/diff-visit-file)
+  "O" 'my-magit/diff-visit-file
+  ;; Without this, evil's TAB (evil-jump-forward) shadows magit's section toggle.
+  (kbd "TAB") 'magit-section-toggle
+  ;; From a line in a hunk, this goes to the file's heading; from a heading, to its parent's.
+  "gu" 'magit-section-up
+  "gn" 'my-magit/next-hunk
+  "gp" 'my-magit/previous-hunk)
+
+(defun my-magit/hunk-stop-p (section)
+  "Whether `my-magit/next-hunk' stops at SECTION: a hunk, a collapsed section, or a file with no
+hunks (e.g. a binary or untracked file), which would otherwise be skipped over."
+  (or (magit-section-match 'hunk section)
+      (oref section hidden)
+      (and (magit-section-match 'file section)
+           (not (oref section children)))))
+
+(defun my-magit/move-to-hunk (move)
+  "Call MOVE, `magit-section-forward' or `magit-section-backward', until reaching a section where
+`my-magit/hunk-stop-p' holds. The intermediate moves skip `magit-section-movement-hook', so it
+runs only once, on the final section."
+  (let ((start (point))
+        target)
+    (condition-case nil
+        (let ((magit-section-movement-hook nil))
+          (while (not target)
+            (funcall move)
+            (when (my-magit/hunk-stop-p (magit-current-section))
+              (setq target (magit-current-section)))))
+      (user-error nil))
+    (goto-char start)
+    (if target
+        (magit-section-goto target)
+      (message "No more hunks"))))
+
+(defun my-magit/next-hunk ()
+  "Go to the next hunk, skipping the headings of expanded sections, but stopping at collapsed ones."
+  (interactive)
+  (my-magit/move-to-hunk #'magit-section-forward))
+
+(defun my-magit/previous-hunk ()
+  "Go to the start of this hunk, or the previous one. See `my-magit/next-hunk'."
+  (interactive)
+  (my-magit/move-to-hunk #'magit-section-backward))
 
 (evil-define-key 'normal git-commit-mode-map
   ";wk" 'git-commit-abort
@@ -230,7 +272,10 @@ Date: %ad
    "U" (lambda () (interactive (util/without-confirmation 'magit-unstage-all)))
    "-" 'magit-diff-smaller-hunks
    "+" 'magit-diff-larger-hunks
-   "gu" 'magit-jump-to-unstaged
+   "gu" 'magit-section-up
+   "gU" 'magit-jump-to-unstaged
+   "gn" 'my-magit/next-hunk
+   "gp" 'my-magit/previous-hunk
    "zi" 'magit-stash-index
    "zp" 'magit-stash-pop
    "K" 'magit-section-backward
