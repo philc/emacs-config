@@ -7,3 +7,5 @@
 /eln-cache
 # Claude Code working plans for past changes
 /.claude/plans/
+# Claude Code per-user settings
+/.claude/settings.local.json
