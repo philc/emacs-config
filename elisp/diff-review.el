@@ -49,13 +49,32 @@
 ;;   or reversing a hunk turns its text into a patch. Visiting is advised to take the comments out
 ;;   of the buffer while it runs, and applying or reversing a hunk with comments is refused.
 ;;
+;; Threads: Claude replies to a comment in review.json (see the /cr skill), and I reply to Claude,
+;; as in a thread on a GitHub PR.
+;; - A thread shows below its comment. Claude's replies are read-only, and commit hashes in them are
+;;   links (RET), e.g. to the fixup commit which addressed the comment. A link opens in another
+;;   window, keeping the focus on the thread, like `o' on a commit in the log.
+;; - `o' anywhere on a thread starts a reply at its end. Replying reopens a resolved thread.
+;; - Claude marks a thread resolved when there's nothing left for me to answer, and R on a thread
+;;   resolves or reopens it. A resolved thread is marked with a checkmark, and stays unfolded, since
+;;   I read Claude's replies to see what it did.
+;; - gn and gp go to the next and previous comment, rather than hunk, when there are any. Reading
+;;   the comments is what these buffers are for.
+;; - X on a thread deletes the comment and its thread.
+;; - Saving a comment merges it into the file's latest version of it, so that saving doesn't
+;;   overwrite replies Claude has added since the buffer was refreshed.
+;;
 ;; A comment in .git/review.json looks like:
 ;;   {"id": "3f2a9c1e", "kind": "line", "commit": "<hash>", "subject": "link-hints: add ...",
 ;;    "patch_id": "<patch-id>", "file": "content_scripts/link_hints.js", "side": "new",
-;;    "line": 142, "code": "    const text = el.innerText.trim();", "comment": "Use textContent..."}
+;;    "line": 142, "code": "    const text = el.innerText.trim();", "comment": "Use textContent...",
+;;    "thread": [{"author": "claude", "text": "Done in a1b2c3d."},
+;;               {"id": "9e8d7c6b", "author": "you", "text": "Thanks. Also..."}],
+;;    "resolved": true}
 ;; "kind" is "line", "file", or "commit". "side" is "new" for an added or context line, whose "line"
 ;; is in the commit's version of the file, and "old" for a removed line, whose "line" is in the
-;; parent's version.
+;; parent's version. "thread" and "resolved" are optional. My replies have ids, so that each can be
+;; saved on its own.
 (provide 'diff-review)
 (require 'cl-lib)
 (require 'seq)
@@ -77,6 +96,22 @@
   "Face for the bar to the left of review comments."
   :group 'magit-faces)
 
+(defface dr/reply
+  '((((background dark)) :background "#2e2b3a" :extend t)
+    (t :background "#f4f0f9" :extend t))
+  "Face for Claude's replies in a comment's thread."
+  :group 'magit-faces)
+
+(defface dr/reply-header
+  '((t :inherit dr/comment-bar :weight bold))
+  "Face for the line naming who wrote each reply in a thread."
+  :group 'magit-faces)
+
+(defface dr/link
+  '((t :inherit link))
+  "Face for commit hashes in replies, which RET shows."
+  :group 'magit-faces)
+
 (defvar dr/comment-map (make-sparse-keymap)
   "The local keymap while point is in a comment. It has no parent, so that magit's keys don't
 shadow evil's, and only the keys bound here, such as section navigation, keep a magit meaning.")
@@ -93,6 +128,7 @@ shadow evil's, and only the keys bound here, such as section navigation, keep a 
 (defvar-local dr--commit nil
   "The plist (:sha :subject :patch-id) of the commit this buffer shows.")
 
+
 (defvar-local dr--comments nil
   "A hash table from the id of each comment shown in this buffer to the comment's alist.")
 
@@ -100,11 +136,15 @@ shadow evil's, and only the keys bound here, such as section navigation, keep a 
   "A hash table from the id of each comment shown in this buffer to (SECTION . BAR): the magit
 section its text belongs to, and the bar to display before its lines.")
 
+(defvar-local dr--units nil
+  "A hash table from the id of each piece of text I can edit, to (COMMENT-ID . REPLY-ID). The text
+of a comment itself has the comment's id, and REPLY-ID nil. Each of my replies has its own id.")
+
 (defvar-local dr--dirty nil
-  "The ids of the comments whose text has changed since they were last saved.")
+  "The ids of the units (see `dr--units') whose text has changed since they were last saved.")
 
 (defvar-local dr--changing nil
-  "The ids of the comments a change in progress may affect. See `dr--before-change'.")
+  "The ids of the units a change in progress may affect. See `dr--before-change'.")
 
 (defvar-local dr--chars-tick nil
   "`buffer-chars-modified-tick' when the change in progress began.")
@@ -134,13 +174,21 @@ section its text belongs to, and the bar to display before its lines.")
           (json-parse-buffer :object-type 'alist :array-type 'list
                              :null-object nil :false-object nil))))))
 
+(defun dr--json-ready (comment)
+  "COMMENT with its thread as a vector, which `json-encode' writes as an array rather than guessing."
+  (mapcar (lambda (pair)
+            (if (eq (car pair) 'thread)
+                (cons 'thread (vconcat (cdr pair)))
+              pair))
+          comment))
+
 (defun dr--write-store (comments)
   "Write COMMENTS to the review file, or delete the file when there are none."
   (let ((file (dr--store-file)))
     (if comments
         (let ((json-encoding-pretty-print t))
           (with-temp-file file
-            (insert (json-encode (vconcat comments)) "\n")))
+            (insert (json-encode (vconcat (mapcar #'dr--json-ready comments))) "\n")))
       (when (file-exists-p file)
         (delete-file file)))))
 
@@ -199,7 +247,7 @@ a merge commit, which have more than one parent's line numbers."
               (new (car to-range))
               lines)
           (while (< (point) end)
-            (unless (dr--comment-id-at (point))
+            (unless (get-text-property (point) 'dr-block)
               (let* ((eol (line-end-position))
                      (code (buffer-substring-no-properties (min (1+ (point)) eol) eol)))
                 (pcase (char-after)
@@ -283,19 +331,117 @@ commit's comments if its line can't be found. ORPHAN is non-nil in that case."
 ;;
 ;; Comment text in the buffer.
 
-(defun dr--props (id)
-  (pcase-let ((`(,section . ,bar) (gethash id dr--placements)))
-    (list 'dr-comment id
-          'magit-section section
-          'font-lock-face 'dr/comment
-          'line-prefix bar
-          'wrap-prefix bar)))
+(defun dr--props (unit)
+  "The text properties of editable UNIT, the text of a comment or of one of my replies."
+  (let ((cid (car (gethash unit dr--units))))
+    (pcase-let ((`(,section . ,bar) (gethash cid dr--placements)))
+      (list 'dr-comment unit
+            'dr-block cid
+            'magit-section section
+            'font-lock-face 'dr/comment
+            'dr-face 'dr/comment
+            'line-prefix bar
+            'wrap-prefix bar))))
 
-(defun dr--region (id)
-  "The (BEG . END) of comment ID's text, including its final newline, or nil."
+(defvar dr--thread-map
+  (let ((map (make-sparse-keymap))
+        (show `(menu-item "" dr/show-commit
+                          :filter ,(lambda (cmd) (and (get-text-property (point) 'dr-rev) cmd)))))
+    ;; Off a hash, RET keeps its meaning, since a filter which returns nil leaves the key unbound in
+    ;; this map.
+    (dolist (key '("RET" "<return>"))
+      (define-key map (kbd key) show))
+    map)
+  "The keymap of the read-only text of a thread. As a `keymap' text property, it takes precedence
+over evil's keymaps.")
+
+(defun dr--fixed (cid text face &rest props)
+  "TEXT as read-only text in the block of comment CID, e.g. one of Claude's replies, in FACE."
+  (pcase-let ((`(,section . ,bar) (gethash cid dr--placements)))
+    (apply #'propertize text
+           'read-only t
+           'dr-block cid
+           'magit-section section
+           'font-lock-face face
+           'dr-face face
+           'line-prefix bar
+           'wrap-prefix bar
+           'keymap dr--thread-map
+           props)))
+
+(defun dr--linkify (text)
+  "TEXT with the commit hashes in it made into links."
+  (let ((case-fold-search nil)
+        (start 0))
+    (while (string-match "\\b[0-9a-f]\\{7,40\\}\\b" text start)
+      (let ((rev (match-string 0 text))
+            (beg (match-beginning 0)))
+        (setq start (match-end 0))
+        (when (magit-commit-p rev)
+          (add-text-properties beg start (list 'dr-rev rev
+                                               'font-lock-face '(dr/link dr/reply)
+                                               'dr-face '(dr/link dr/reply))
+                               text))))
+    text))
+
+(defun dr--wrap (text)
+  "TEXT with each line too long for `fill-column', after the bar, broken at spaces. A continuation
+is indented to line up with the line's text, after any indentation or list marker. Lines in
+fenced code blocks are left alone. This is for Claude's replies, whose paragraphs are one line."
+  (let ((width (- (default-value 'fill-column) (string-width dr--bar)))
+        (in-code nil))
+    (mapconcat
+     (lambda (line)
+       (when (string-prefix-p "```" (string-trim-left line))
+         (setq in-code (not in-code)))
+       (if (or in-code (<= (string-width line) width))
+           line
+         (string-match "\\`[ \t]*\\(?:[-*] \\|[0-9]+[.)] \\)?" line)
+         (with-temp-buffer
+           (insert line)
+           (let ((fill-column width)
+                 (fill-prefix (make-string (match-end 0) ?\s))
+                 (adaptive-fill-mode nil))
+             (fill-region-as-paragraph (point-min) (point-max)))
+           (string-trim-right (buffer-string)))))
+     (split-string text "\n")
+     "\n")))
+
+(defun dr--block-text (comment)
+  "The text of COMMENT's block: the comment, then its thread."
+  (let-alist comment
+    (let ((cid .id))
+      (puthash cid (cons cid nil) dr--units)
+      (apply #'concat
+             (apply #'propertize (concat .comment "\n") (dr--props cid))
+             (mapcar (lambda (entry) (dr--entry-text cid entry)) .thread)))))
+
+(defun dr--entry-text (cid entry)
+  "The text of ENTRY, a reply in the thread of comment CID: a line naming its author, then the
+reply. Mine are editable, and Claude's aren't."
+  (let-alist entry
+    (let ((mine (equal .author "you")))
+      (concat (dr--fixed cid (if mine "── You\n" "── Claude\n") '(dr/reply-header dr/comment)
+                         'dr-header (or .id t))
+              (if (and mine .id)
+                  (progn
+                    (puthash .id (cons cid .id) dr--units)
+                    (apply #'propertize (concat .text "\n") (dr--props .id)))
+                (dr--linkify (dr--fixed cid (concat (if mine .text (dr--wrap .text)) "\n")
+                                        (if mine 'dr/comment 'dr/reply))))))))
+
+(defun dr--region (unit)
+  "The (BEG . END) of editable UNIT's text, including its final newline, or nil."
   (save-excursion
     (goto-char (point-min))
-    (when-let* ((match (text-property-search-forward 'dr-comment id t)))
+    (when-let* ((match (text-property-search-forward 'dr-comment unit t)))
+      (cons (prop-match-beginning match) (prop-match-end match)))))
+
+(defun dr--block-region (cid)
+  "The (BEG . END) of all of comment CID's text, its thread included, or nil."
+  (save-excursion
+    (goto-char (point-min))
+    (when-let* ((match (text-property-search-forward 'dr-block cid t)))
       (cons (prop-match-beginning match) (prop-match-end match)))))
 
 (defun dr--unstick (pos)
@@ -305,12 +451,12 @@ commit's comments if its line can't be found. ORPHAN is non-nil in that case."
       (unless (or (eq nonsticky t) (memq 'read-only nonsticky))
         (put-text-property (1- pos) pos 'rear-nonsticky (cons 'read-only nonsticky))))))
 
-(defun dr--insert (id text pos section bar)
-  "Insert TEXT as the text of comment ID at POS, in SECTION. TEXT ends with a newline."
-  (puthash id (cons section bar) dr--placements)
+(defun dr--insert (text pos section)
+  "Insert TEXT, the text of a comment's block or part of one, at POS in SECTION. TEXT ends with a
+newline."
   (save-excursion
     (goto-char pos)
-    (insert (apply #'propertize text (dr--props id)))
+    (insert text)
     ;; Text inserted at the very end of a section lands outside of it, because a section's end
     ;; marker doesn't advance when text is inserted at it. That happens for a comment on the last
     ;; line of a hunk, which belongs inside the hunk.
@@ -318,8 +464,17 @@ commit's comments if its line can't be found. ORPHAN is non-nil in that case."
       (while s
         (when (= (oref s end) pos)
           (set-marker (oref s end) (point)))
-        (setq s (oref s parent)))))
-  (dr--unstick pos))
+        (setq s (oref s parent))))
+    (let ((unit-pos pos))
+      (while (setq unit-pos (text-property-not-all unit-pos (point) 'dr-comment nil))
+        (dr--unstick unit-pos)
+        (setq unit-pos (next-single-property-change unit-pos 'dr-comment nil (point)))))))
+
+(defun dr--places ()
+  "The comments this buffer shows, and where each goes, as a list of (COMMENT POS SECTION ORPHAN)."
+  (mapcar (lambda (comment) (cons comment (dr--place comment)))
+          (seq-filter (lambda (comment) (dr--matches-commit-p comment dr--commit))
+                      (dr--read-store))))
 
 (defun dr--render ()
   "Insert the comments on this buffer's commit, and make all other text read-only."
@@ -331,14 +486,13 @@ commit's comments if its line can't be found. ORPHAN is non-nil in that case."
     (put-text-property (point-min) (point-max) 'read-only t)
     (setq dr--comments (make-hash-table :test #'equal))
     (setq dr--placements (make-hash-table :test #'equal))
-    (dolist (comment (dr--read-store))
-      (when (dr--matches-commit-p comment dr--commit)
-        (puthash (alist-get 'id comment) comment dr--comments)
-        (let ((place (dr--place comment)))
-          ;; Orphans go after the comments which really belong at the same place.
-          (push (cons (cl-incf i (if (nth 2 place) 100000 1))
-                      (cons comment place))
-                placed))))
+    (setq dr--units (make-hash-table :test #'equal))
+    (pcase-dolist (`(,comment . ,place) (dr--places))
+      (puthash (alist-get 'id comment) comment dr--comments)
+      ;; Orphans go after the comments which really belong at the same place.
+      (push (cons (cl-incf i (if (nth 2 place) 100000 1))
+                  (cons comment place))
+            placed))
     ;; Inserting from the end of the buffer backwards keeps the positions of the places before
     ;; each insertion valid. At the same position, the later comment is inserted first.
     (setq placed (sort placed (lambda (a b)
@@ -347,8 +501,22 @@ commit's comments if its line can't be found. ORPHAN is non-nil in that case."
                                   (or (> pos-a pos-b)
                                       (and (= pos-a pos-b) (> (car a) (car b))))))))
     (pcase-dolist (`(,_ ,comment ,pos ,section ,orphan) placed)
-      (dr--insert (alist-get 'id comment) (concat (alist-get 'comment comment) "\n")
-                  pos section (if orphan dr--orphan-bar dr--bar)))))
+      (puthash (alist-get 'id comment) (cons section (if orphan dr--orphan-bar dr--bar))
+               dr--placements)
+      (dr--insert (dr--block-text comment) pos section)
+      (when (alist-get 'resolved comment)
+        (dr--mark-resolved pos)))))
+
+(defconst dr--resolved-mark (propertize "✓ " 'face 'dr/comment-bar)
+  "Displayed before the first line of a resolved comment.")
+
+(defun dr--mark-resolved (pos)
+  "Show a checkmark before the line at POS, the first of a resolved comment's block. It's an
+overlay, rather than text, so that it isn't part of the comment. It's deleted along with the
+block's text."
+  (let ((overlay (make-overlay pos (dr--next-bol pos) nil t nil)))
+    (overlay-put overlay 'evaporate t)
+    (overlay-put overlay 'before-string dr--resolved-mark)))
 
 (defun dr--remove-all ()
   "Delete the text of every comment from the buffer."
@@ -356,11 +524,12 @@ commit's comments if its line can't be found. ORPHAN is non-nil in that case."
         (dr--quiet t)
         (buffer-undo-list t)
         (pos (point-min)))
-    (while (setq pos (text-property-not-all pos (point-max) 'dr-comment nil))
-      (delete-region pos (or (next-single-property-change pos 'dr-comment) (point-max))))))
+    (while (setq pos (text-property-not-all pos (point-max) 'dr-block nil))
+      (delete-region pos (or (next-single-property-change pos 'dr-block) (point-max))))))
 
 (defun dr--any-p (&optional beg end)
-  (text-property-not-all (or beg (point-min)) (or end (point-max)) 'dr-comment nil))
+  "Whether there's any comment text, editable or not, in BEG..END."
+  (text-property-not-all (or beg (point-min)) (or end (point-max)) 'dr-block nil))
 
 ;;
 ;; Editing.
@@ -408,37 +577,70 @@ commit's comments if its line can't be found. ORPHAN is non-nil in that case."
           (let ((buffer-undo-list t))
             (dr--unstick (car region))))))))
 
+(defun dr--delete-unit (region reply-id)
+  "Delete the text in REGION, of a blank comment, or of my blank reply REPLY-ID with the line
+naming its author. This isn't an edit to undo: undoing it would only bring back the blank text,
+which would be deleted again. Since it's left out of the undo history, the positions in that
+history are now wrong, so clear it."
+  (let ((inhibit-read-only t)
+        (dr--quiet t)
+        (was-in (<= (car region) (point) (1- (cdr region))))
+        (beg (car region)))
+    (when reply-id
+      (save-excursion
+        (goto-char beg)
+        (forward-line -1)
+        (when (equal (get-text-property (point) 'dr-header) reply-id)
+          (setq beg (point)))))
+    (delete-region beg (cdr region))
+    ;; Back to the line before, as when cancelling an `o' in vim.
+    (when was-in
+      (goto-char beg)
+      (forward-line -1)))
+  (setq buffer-undo-list nil))
+
+(defun dr--set-reply (comment reply-id text)
+  "COMMENT with my reply REPLY-ID set to TEXT, or removed when TEXT is nil. Replying reopens a
+resolved thread."
+  (let* ((thread (copy-tree (alist-get 'thread comment)))
+         (entry (seq-find (lambda (e) (equal (alist-get 'id e) reply-id)) thread)))
+    (cond ((null text) (setq thread (delq entry thread)))
+          (entry (setf (alist-get 'text entry) text))
+          (t (setq thread (append thread `(((id . ,reply-id) (author . "you") (text . ,text)))))))
+    (setf (alist-get 'thread comment nil t) thread)
+    (when text
+      (setf (alist-get 'resolved comment nil t) nil))
+    comment))
+
 (defun dr--save ()
-  "Write the comments which have changed to the review file. A comment left blank is deleted."
+  "Write the comments and replies which have changed to the review file. A blank reply is deleted,
+and so is a blank comment, unless it has a thread."
   (when dr--dirty
     (let ((store (dr--read-store)))
-      (dolist (id dr--dirty)
-        (let* ((region (dr--region id))
-               (text (and region (string-remove-suffix
-                                  "\n" (buffer-substring-no-properties (car region)
-                                                                       (cdr region)))))
-               (comment (gethash id dr--comments))
-               (index (seq-position store id (lambda (c id) (equal (alist-get 'id c) id)))))
-          (if (or (null text) (string-blank-p text))
-              (progn
-                (when region
-                  ;; This isn't an edit to undo. Undoing it would only bring back the blank
-                  ;; comment, which would be deleted again. Since it's left out of the undo
-                  ;; history, the positions in that history are now wrong, so clear it.
-                  (let ((inhibit-read-only t)
-                        (dr--quiet t)
-                        (was-in (<= (car region) (point) (1- (cdr region)))))
-                    (delete-region (car region) (cdr region))
-                    ;; Back to the line the comment was on, as when cancelling an `o' in vim.
-                    (when was-in
-                      (forward-line -1)))
-                  (setq buffer-undo-list nil))
-                (when index
-                  (setq store (append (seq-take store index) (seq-drop store (1+ index))))))
-            (setf (alist-get 'comment comment) text)
-            (if index
-                (setf (nth index store) comment)
-              (setq store (append store (list comment)))))))
+      (dolist (unit dr--dirty)
+        (pcase-let* ((`(,cid . ,reply-id) (gethash unit dr--units))
+                     (region (dr--region unit))
+                     (text (and region (string-remove-suffix
+                                        "\n" (buffer-substring-no-properties (car region)
+                                                                             (cdr region)))))
+                     (blank (or (null text) (string-blank-p text)))
+                     (index (seq-position store cid (lambda (c id) (equal (alist-get 'id c) id))))
+                     ;; The file's version may have replies the buffer doesn't show yet.
+                     (comment (copy-alist (if index (nth index store) (gethash cid dr--comments))))
+                     (keep (or reply-id (not blank) (alist-get 'thread comment))))
+          (when (and blank region (or reply-id (not keep)))
+            (dr--delete-unit region reply-id))
+          (when keep
+            (setq comment (if reply-id
+                              (dr--set-reply comment reply-id (unless blank text))
+                            (setf (alist-get 'comment comment) (if blank "" text))
+                            comment))
+            ;; When a comment is deleted, this keeps it, so that undo can bring it back.
+            (puthash cid comment dr--comments))
+          (setq store (cond ((and keep index) (progn (setf (nth index store) comment) store))
+                            (index (append (seq-take store index) (seq-drop store (1+ index))))
+                            (keep (append store (list comment)))
+                            (t store)))))
       (dr--write-store store)
       (setq dr--dirty nil))))
 
@@ -482,41 +684,168 @@ comment :file, :side, :line, :code), and where it goes (:pos :section)."
          (equal .side (plist-get anchor :side))
          (equal .line (plist-get anchor :line)))))
 
+(defun dr--reply (cid)
+  "Start typing a reply at the end of comment CID's thread."
+  (let ((comment (gethash cid dr--comments)))
+    (let* ((last (car (last (alist-get 'thread comment))))
+           (last-id (and (equal (alist-get 'author last) "you") (alist-get 'id last)))
+           (inhibit-read-only t))
+      (if last-id
+          ;; My reply is already the last word, so add a line to it.
+          (progn
+            (goto-char (1- (cdr (dr--region last-id))))
+            (insert "\n"))
+        (let ((reply-id (dr--new-id))
+              (end (cdr (dr--block-region cid))))
+          (puthash reply-id (cons cid reply-id) dr--units)
+          (let ((dr--quiet t))
+            (dr--insert (concat (dr--fixed cid "── You\n" '(dr/reply-header dr/comment)
+                                           'dr-header reply-id)
+                                (apply #'propertize "\n" (dr--props reply-id)))
+                        end (car (gethash cid dr--placements))))
+          (push reply-id dr--dirty)
+          (goto-char (car (dr--region reply-id))))))))
+
 (defun dr/open-comment ()
   "Open a comment below the line at point, and start typing it. On a line of a hunk, the comment is
 about that line. On a file's heading, it's about the whole file, and in the commit's headers or
-message, the whole commit. If there's already a comment there, open a new line at its top."
+message, the whole commit. If there's already a comment there, open a new line at its top, or if
+it has a thread, reply to it. On a thread, reply to it."
   (interactive)
   (unless (derived-mode-p 'magit-revision-mode)
     (user-error "Comments go in a revision buffer"))
-  (let* ((anchor (dr--anchor-at-point))
-         (pos (plist-get anchor :pos))
-         (existing (dr--comment-id-at pos))
-         (inhibit-read-only t))
-    (if (and existing (dr--same-anchor-p (gethash existing dr--comments) anchor))
-        (progn
-          (goto-char pos)
-          (insert "\n")
-          (goto-char pos))
-      (let* ((id (dr--new-id))
-             (info dr--commit)
-             (comment `((id . ,id)
-                        (kind . ,(plist-get anchor :kind))
-                        (commit . ,(plist-get info :sha))
-                        (subject . ,(plist-get info :subject))
-                        (patch_id . ,(plist-get info :patch-id))
-                        (file . ,(plist-get anchor :file))
-                        (side . ,(plist-get anchor :side))
-                        (line . ,(plist-get anchor :line))
-                        (code . ,(plist-get anchor :code))
-                        (comment . ""))))
-        (puthash id comment dr--comments)
-        (let ((dr--quiet t))
-          (dr--insert id "\n" pos (plist-get anchor :section) dr--bar))
-        (push id dr--dirty)
-        (goto-char pos))))
+  (if-let* ((cid (get-text-property (point) 'dr-block)))
+      (dr--reply cid)
+    (let* ((anchor (dr--anchor-at-point))
+           (pos (plist-get anchor :pos))
+           (existing (and (< pos (point-max)) (get-text-property pos 'dr-block)))
+           (existing-comment (and existing (gethash existing dr--comments)))
+           (inhibit-read-only t))
+      (cond
+       ((not (and existing-comment (dr--same-anchor-p existing-comment anchor)))
+        (let* ((id (dr--new-id))
+               (info dr--commit)
+               (comment `((id . ,id)
+                          (kind . ,(plist-get anchor :kind))
+                          (commit . ,(plist-get info :sha))
+                          (subject . ,(plist-get info :subject))
+                          (patch_id . ,(plist-get info :patch-id))
+                          (file . ,(plist-get anchor :file))
+                          (side . ,(plist-get anchor :side))
+                          (line . ,(plist-get anchor :line))
+                          (code . ,(plist-get anchor :code))
+                          (comment . ""))))
+          (puthash id comment dr--comments)
+          (puthash id (cons id nil) dr--units)
+          (puthash id (cons (plist-get anchor :section) dr--bar) dr--placements)
+          (let ((dr--quiet t))
+            (dr--insert (apply #'propertize "\n" (dr--props id)) pos (plist-get anchor :section)))
+          (push id dr--dirty)
+          (goto-char pos)))
+       ((or (alist-get 'thread existing-comment) (alist-get 'resolved existing-comment))
+        (dr--reply existing))
+       (t
+        (goto-char pos)
+        (insert "\n")
+        (goto-char pos)))))
   (dr--update-in-comment)
   (evil-insert-state))
+
+(defun dr/toggle-resolved ()
+  "Mark the thread at point resolved, or reopen it."
+  (interactive)
+  (let ((cid (get-text-property (point) 'dr-block)))
+    (unless cid
+      (user-error "Not on a comment or its thread"))
+    (dr--save)
+    (let* ((store (dr--read-store))
+           (index (seq-position store cid (lambda (c id) (equal (alist-get 'id c) id)))))
+      (unless index
+        (user-error "This comment hasn't been saved"))
+      (let* ((comment (copy-alist (nth index store)))
+             (resolved (not (alist-get 'resolved comment))))
+        (setf (alist-get 'resolved comment nil t) resolved)
+        (setf (nth index store) comment)
+        (dr--write-store store)
+        (puthash cid comment dr--comments)
+        (dr--rerender)
+        (message (if resolved "Resolved" "Reopened"))))))
+
+(defun dr/delete-thread ()
+  "Delete the comment at point, with its thread, after asking."
+  (interactive)
+  (let* ((cid (get-text-property (point) 'dr-block))
+         (region (and cid (dr--block-region cid))))
+    (unless cid
+      (user-error "Not on a comment or its thread"))
+    (when (y-or-n-p "Delete this comment and its thread? ")
+      (dr--save)
+      (dr--write-store (seq-remove (lambda (c) (equal (alist-get 'id c) cid)) (dr--read-store)))
+      (let ((line (save-excursion (goto-char (car region)) (forward-line -1) (point-marker))))
+        (dr--rerender)
+        (goto-char line)
+        (set-marker line nil))
+      (dr--update-in-comment))))
+
+(defun dr--block-starts ()
+  "The positions where comments' blocks start, leaving out those in folded sections."
+  (let ((pos (point-min))
+        starts)
+    (while (setq pos (dr--any-p pos))
+      (unless (invisible-p pos)
+        (push pos starts))
+      (setq pos (next-single-property-change pos 'dr-block nil (point-max))))
+    (nreverse starts)))
+
+(defun dr/any-comments-p ()
+  (and (derived-mode-p 'magit-revision-mode) (dr--any-p) t))
+
+(defun dr--here ()
+  "Point, or if it's in a comment's block, the block's start."
+  (if-let* ((cid (get-text-property (point) 'dr-block)))
+      (car (dr--block-region cid))
+    (point)))
+
+(defun dr/next-comment ()
+  "Go to the next comment, skipping those in folded sections."
+  (interactive)
+  (if-let* ((pos (seq-find (lambda (p) (> p (dr--here))) (dr--block-starts))))
+      (goto-char pos)
+    (message "No more comments")))
+
+(defun dr/previous-comment ()
+  "Go to the start of this comment, or the previous one. See `dr/next-comment'."
+  (interactive)
+  (if-let* ((pos (car (last (seq-filter (lambda (p) (< p (point))) (dr--block-starts))))))
+      (goto-char pos)
+    (message "No more comments")))
+
+(defun dr/show-commit ()
+  "Show the commit whose hash is at point, in a reply, in another window, keeping the focus here.
+The commit gets a revision buffer of its own, rather than replacing the commit this one shows."
+  (interactive)
+  (let ((magit-display-buffer-noselect t)
+        (magit-display-buffer-function
+         (lambda (buffer)
+           (display-buffer buffer '((display-buffer-reuse-window
+                                     display-buffer-use-some-window
+                                     display-buffer-pop-up-window)
+                                    (inhibit-same-window . t)))))
+        (magit-revision-use-dedicated-buffers t))
+    (magit-revision-setup-buffer (get-text-property (point) 'dr-rev)
+                                 (car (magit-show-commit--arguments)) nil)))
+
+(defun dr--rerender (&optional cid)
+  "Take the comments out and put them back, e.g. after a thread is resolved. With CID, leave point
+at the start of that comment's block."
+  (dr--save)
+  (let ((spot (if cid (list :block cid 0) (dr--point-spot)))
+        (dr--quiet t))
+    (dr--remove-all)
+    (dr--render)
+    (dr--goto-spot spot))
+  (setq buffer-undo-list nil)
+  (dr--update-in-comment))
 
 ;;
 ;; Hooks and advice.
@@ -547,18 +876,30 @@ message, the whole commit. If there's already a comment there, open a new line a
   (dr--update-in-comment))
 
 (defun dr--point-spot ()
-  "Where point is, as (ID . OFFSET) if it's in comment ID, or else a marker which stays after
-comments inserted at it."
-  (if-let* ((id (dr--comment-id-at (point))))
-      (cons id (- (point) (car (dr--region id))))
-    (copy-marker (point) t)))
+  "Where point is: (:unit ID OFFSET) if it's in editable text, (:block CID LINES) if it's on the
+read-only text of a thread, or else a marker which stays after comments inserted at it."
+  (let ((unit (dr--comment-id-at (point)))
+        (cid (and (< (point) (point-max)) (get-text-property (point) 'dr-block))))
+    (cond (unit (list :unit unit (- (point) (car (dr--region unit)))))
+          (cid (list :block cid (count-lines (car (dr--block-region cid))
+                                             (line-beginning-position))))
+          (t (copy-marker (point) t)))))
 
 (defun dr--goto-spot (spot)
-  (if (markerp spot)
-      (progn (goto-char spot)
-             (set-marker spot nil))
-    (when-let* ((region (dr--region (car spot))))
-      (goto-char (min (+ (car region) (cdr spot)) (1- (cdr region)))))))
+  (pcase spot
+    ((pred markerp)
+     (goto-char spot)
+     (set-marker spot nil))
+    (`(:unit ,unit ,offset)
+     (when-let* ((region (dr--region unit)))
+       (goto-char (min (+ (car region) offset) (1- (cdr region))))))
+    (`(:block ,cid ,lines)
+     (when-let* ((region (dr--block-region cid)))
+       (goto-char (car region))
+       (forward-line lines)
+       (when (>= (point) (cdr region))
+         (goto-char (cdr region))
+         (forward-line -1))))))
 
 (defun dr--around-refresh (refresh &rest args)
   "Take the comments out before magit refreshes the buffer, so that the positions it saves and
@@ -626,10 +967,10 @@ comments, and from recording the paint in the undo history, which holds only com
       (apply paint section args)
       (let ((pos (oref section start)))
         (while (setq pos (dr--any-p pos end))
-          (let ((comment-end (or (next-single-property-change pos 'dr-comment nil end) end)))
-            (put-text-property pos comment-end 'font-lock-face 'dr/comment)
-            (remove-text-properties pos comment-end '(face nil))
-            (setq pos comment-end)))))))
+          (let ((next (or (next-single-property-change pos 'dr-face nil end) end)))
+            (put-text-property pos next 'font-lock-face (get-text-property pos 'dr-face))
+            (remove-text-properties pos next '(face nil))
+            (setq pos next)))))))
 
 (defun dr--setup ()
   ;; Auto-fill, which my init.el turns on, works in comments. These keep it from treating the diff

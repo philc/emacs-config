@@ -149,8 +149,17 @@ Date: %ad
   (kbd "TAB") 'magit-section-toggle
   ;; From a line in a hunk, this goes to the file's heading; from a heading, to its parent's.
   "gu" 'magit-section-up
-  "gn" 'my-magit/next-hunk
-  "gp" 'my-magit/previous-hunk)
+  "gn" 'my-magit/next-hunk-or-comment
+  "gp" 'my-magit/previous-hunk-or-comment
+  ;; Back and forward through the commits shown in this buffer, e.g. after following a link in a
+  ;; review comment's thread.
+  "gb" 'magit-go-backward
+  "gf" 'magit-go-forward
+  ;; Magit's own refresh key is g, which is evil's prefix key.
+  "r" 'magit-refresh
+  ;; Resolve or reopen the review comment thread at point, or delete it.
+  "R" 'dr/toggle-resolved
+  "X" 'dr/delete-thread)
 
 (defun my-magit/diff-open ()
   "In a commit's revision buffer, open a review comment (see diff-review.el). In other diffs,
@@ -171,8 +180,8 @@ comment always goes below its line."
 ;; navigation keys.
 (evil-define-key 'normal dr/comment-map
   "gu" 'magit-section-up
-  "gn" 'my-magit/next-hunk
-  "gp" 'my-magit/previous-hunk
+  "gn" 'my-magit/next-hunk-or-comment
+  "gp" 'my-magit/previous-hunk-or-comment
   (kbd "C-j") 'magit-section-forward
   (kbd "C-k") 'magit-section-backward)
 
@@ -211,6 +220,20 @@ runs only once, on the final section."
   "Go to the start of this hunk, or the previous one. See `my-magit/next-hunk'."
   (interactive)
   (my-magit/move-to-hunk #'magit-section-backward))
+
+(defun my-magit/next-hunk-or-comment ()
+  "In a revision buffer with review comments, go to the next comment. Otherwise, the next hunk."
+  (interactive)
+  (if (dr/any-comments-p)
+      (dr/next-comment)
+    (my-magit/next-hunk)))
+
+(defun my-magit/previous-hunk-or-comment ()
+  "Like `my-magit/next-hunk-or-comment', but backward."
+  (interactive)
+  (if (dr/any-comments-p)
+      (dr/previous-comment)
+    (my-magit/previous-hunk)))
 
 (evil-define-key 'normal git-commit-mode-map
   ";wk" 'git-commit-abort

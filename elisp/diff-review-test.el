@@ -215,12 +215,8 @@
     (let ((hunk (magit-current-section)))
       (should (eq (oref hunk type) 'hunk))
       (should (= (oref hunk end) (save-excursion (forward-line) (point)))))
-    ;; Hunk navigation from inside the comment goes to the next file's hunk.
-    (dr-test/keys "gn")
-    (should (equal (oref (oref (magit-current-section) parent) value) "b.txt"))
-    (dr-test/keys "gp")
-    (should (looking-at "@@ -1,5"))
     ;; Folding a hunk folds its comments.
+    (dr-test/goto "^@@ -1,5")
     (dr-test/keys "TAB")
     (dr-test/goto "^last")
     (should (invisible-p (point)))))
@@ -255,7 +251,9 @@
     (dr-test/keys "o note <escape>")
     (setq buffer-undo-list nil)
     ;; Moving between hunks makes magit repaint them.
-    (dr-test/keys "gn gp gn")
+    (my-magit/next-hunk)
+    (my-magit/previous-hunk)
+    (my-magit/next-hunk)
     (should (null buffer-undo-list))
     (dr-test/goto "^note")
     (should (eq (get-text-property (point) 'font-lock-face) 'dr/comment))))
@@ -289,3 +287,125 @@
     ;; Another commit doesn't show them.
     (dr-test/show "HEAD~1")
     (should-not (dr--any-p))))
+
+(defun dr-test/claude-replies (text &optional resolved)
+  "Add TEXT to the first saved comment's thread as Claude's reply, as the /cr skill does."
+  (let* ((store (dr--read-store))
+         (comment (car store)))
+    (setf (alist-get 'thread comment nil t)
+          (append (alist-get 'thread comment) `(((author . "claude") (text . ,text)))))
+    (setf (alist-get 'resolved comment nil t) resolved)
+    (dr--write-store (cons comment (cdr store)))))
+
+(defun dr-test/thread ()
+  "The first saved comment's thread, as (AUTHOR TEXT)."
+  (mapcar (lambda (e) (let-alist e (list .author .text)))
+          (alist-get 'thread (car (dr--read-store)))))
+
+(ert-deftest dr-test/threads ()
+  (dr-test/with-repo
+    (dr-test/show "HEAD")
+    (dr-test/goto "^\\+TWO")
+    (dr-test/keys "o note <escape>")
+    (let ((sha (magit-rev-parse "--short" "HEAD")))
+      (dr-test/claude-replies (format "Done in %s." sha))
+      (magit-refresh)
+      (should (string-match-p (format "\\+TWO\n\\[\\[note\n\\]\\]── Claude\nDone in %s.\n three" sha)
+                              (dr-test/text)))
+      ;; A hash in a reply is a link.
+      (dr-test/goto "^Done in")
+      (search-forward sha)
+      (should (equal (get-text-property (1- (point)) 'dr-rev) sha))
+      ;; RET on it shows that commit in another window and buffer, keeping the focus here.
+      (let ((window (selected-window))
+            (buffer (current-buffer)))
+        (backward-char)
+        (dr-test/keys "RET")
+        (should (eq (selected-window) window))
+        (should (eq (window-buffer window) buffer))
+        (should (equal magit-buffer-revision-oid (magit-rev-parse "HEAD")))
+        (let ((shown (window-buffer (next-window window))))
+          (should-not (eq shown buffer))
+          (should (equal (buffer-local-value 'magit-buffer-revision shown) sha)))))
+    ;; Claude's replies can't be edited.
+    (let ((text (dr-test/text)))
+      (dr-test/goto "^Done in")
+      (ignore-errors (dr-test/keys "x"))
+      (should (equal (dr-test/text) text)))
+    ;; o on the thread starts a reply, and o again adds a line to it.
+    (dr-test/keys "o reply <escape>")
+    (dr-test/goto "^Done in")
+    (dr-test/keys "o more <escape>")
+    (should (equal (cadr (dr-test/thread)) '("you" "reply\nmore")))
+    ;; Saving keeps a reply Claude added since the buffer was refreshed.
+    (dr-test/claude-replies "later")
+    (dr-test/goto "^more")
+    (dr-test/keys "A ! <escape>")
+    (should (equal (cdr (dr-test/thread)) '(("you" "reply\nmore!") ("claude" "later"))))
+    ;; A reply left blank is dropped, along with the line naming its author.
+    (magit-refresh)
+    (dr-test/goto "^later")
+    (dr-test/keys "o <escape>")
+    (should (= (length (dr-test/thread)) 3))
+    (should (equal (dr-test/line) "later"))
+    (should-not (string-match-p "later\n── You" (dr-test/text)))))
+
+(ert-deftest dr-test/long-replies-wrap ()
+  (let ((fill-column 30))
+    (should (equal (dr--wrap "Short.\n- a list item which is long enough to wrap twice over\n```\nlong code line which isn't wrapped, though\n```")
+                   (concat "Short.\n"
+                           "- a list item which is long\n"
+                           "  enough to wrap twice over\n"
+                           "```\nlong code line which isn't wrapped, though\n```")))))
+
+(ert-deftest dr-test/resolved-threads ()
+  (dr-test/with-repo
+    (dr-test/show "HEAD")
+    (dr-test/goto "^\\+TWO")
+    (dr-test/keys "o note <escape>")
+    (dr-test/claude-replies "Fixed." t)
+    (magit-refresh)
+    ;; A resolved thread stays unfolded, with a checkmark before it.
+    (should (string-match-p "\\[\\[note\n\\]\\]── Claude\nFixed.\n" (dr-test/text)))
+    (dr-test/goto "^note")
+    (should (seq-find (lambda (o) (equal (overlay-get o 'before-string) dr--resolved-mark))
+                      (overlays-at (point))))
+    ;; Replying reopens it.
+    (dr-test/goto "^Fixed")
+    (dr-test/keys "o why? <escape>")
+    (should (equal (dr-test/thread) '(("claude" "Fixed.") ("you" "why?"))))
+    (should-not (alist-get 'resolved (car (dr--read-store))))
+    ;; R resolves it, and R again reopens it.
+    (dr-test/goto "^Fixed")
+    (dr-test/keys "R")
+    (should (alist-get 'resolved (car (dr--read-store))))
+    (should (equal (dr-test/line) "Fixed."))
+    (dr-test/keys "R")
+    (should-not (alist-get 'resolved (car (dr--read-store))))))
+
+(ert-deftest dr-test/navigating-comments ()
+  (dr-test/with-repo
+    (dr-test/show "HEAD")
+    ;; With no comments, gn and gp go between hunks.
+    (dr-test/goto "^modified   a.txt")
+    (dr-test/keys "gn gn")
+    (should (equal (oref (oref (magit-current-section) parent) value) "b.txt"))
+    (dr-test/goto "^\\+TWO")
+    (dr-test/keys "o first <escape>")
+    (dr-test/goto "^\\+BETA")
+    (dr-test/keys "o second <escape>")
+    ;; With comments, they go between comments, from inside a comment or not.
+    (goto-char (point-min))
+    (dr-test/keys "gn")
+    (should (equal (dr-test/line) "first"))
+    (dr-test/keys "gn")
+    (should (equal (dr-test/line) "second"))
+    (dr-test/keys "gp")
+    (should (equal (dr-test/line) "first"))
+    ;; Comments in folded sections are skipped.
+    (dr-test/goto "^modified   a.txt")
+    (magit-section-hide (magit-current-section))
+    (goto-char (point-min))
+    (dr-test/keys "gn")
+    (should (equal (dr-test/line) "second"))))
+
