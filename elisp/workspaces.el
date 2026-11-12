@@ -23,7 +23,7 @@
 (require 'tab-bar)
 (require 'evil-ext)
 
-(defvar ws/project-dirs '("~/projects/*/" "~/projects/claude/*/" "~/sys/")
+(defvar ws/project-dirs '("~/projects/*/" "~/sys/")
   "Wildcards for my project directories. These are the same as in
    ~/sys/scripts/tmux/tmux_workspace_picker.sh.")
 
