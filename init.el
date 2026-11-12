@@ -402,6 +402,7 @@
         (dired (if buffer-file-name (file-name-directory buffer-file-name) default-directory)))
   "gs" (util/save-and-call 'show-git-status-in-left-column)
   "gl" 'magit-log-current
+  "gcr" 'dr/show-review ; "Go to code review": the branch's review comments. See diff-review.el.
   "gb" 'magit-blame-addition
   "o" (util/save-and-call 'util/open-file-at-cursor)
   "wc" 'count-chars-region

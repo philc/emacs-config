@@ -64,6 +64,14 @@
 ;; - Saving a comment merges it into the file's latest version of it, so that saving doesn't
 ;;   overwrite replies Claude has added since the buffer was refreshed.
 ;;
+;; The review buffer (`dr/show-review') shows every comment on the branch, with its thread, in one
+;; place, like the conversation tab of a GitHub PR, so that after Claude replies I don't have to
+;; open each commit to read the replies. Comments are in the order they appear in the branch's
+;; diffs: oldest commit first, then by file, then by line. Each line comment shows the few lines
+;; of the diff above it. The keys work as in a revision buffer, and RET opens the commit at the
+;; comment. The review buffer's mode derives from magit-revision-mode, so all of the machinery for
+;; comments in revision buffers applies to it; what differs is where each comment's text goes.
+;;
 ;; A comment in .git/review.json looks like:
 ;;   {"id": "3f2a9c1e", "kind": "line", "commit": "<hash>", "subject": "link-hints: add ...",
 ;;    "patch_id": "<patch-id>", "file": "content_scripts/link_hints.js", "side": "new",
@@ -128,6 +136,12 @@ shadow evil's, and only the keys bound here, such as section navigation, keep a 
 (defvar-local dr--commit nil
   "The plist (:sha :subject :patch-id) of the commit this buffer shows.")
 
+(defvar-local dr--review-places nil
+  "In the review buffer, where each comment goes, as a list of (COMMENT POS SECTION ORPHAN), made
+when the buffer is refreshed.")
+
+(defvar-local dr--review-infos nil
+  "In the review buffer, a hash table from each commit's hash to its plist from `dr--commit-info'.")
 
 (defvar-local dr--comments nil
   "A hash table from the id of each comment shown in this buffer to the comment's alist.")
@@ -203,8 +217,8 @@ of a comment itself has the comment's id, and REPLY-ID nil. Each of my replies h
                          "patch-id" "--stable")
     (car (split-string (buffer-string)))))
 
-(defun dr--commit-info ()
-  (let ((sha magit-buffer-revision-oid))
+(defun dr--commit-info (&optional sha)
+  (let ((sha (or sha magit-buffer-revision-oid)))
     (list :sha sha
           :subject (magit-rev-format "%s" sha)
           :patch-id (dr--patch-id sha))))
@@ -472,9 +486,11 @@ newline."
 
 (defun dr--places ()
   "The comments this buffer shows, and where each goes, as a list of (COMMENT POS SECTION ORPHAN)."
-  (mapcar (lambda (comment) (cons comment (dr--place comment)))
-          (seq-filter (lambda (comment) (dr--matches-commit-p comment dr--commit))
-                      (dr--read-store))))
+  (if (derived-mode-p 'dr/review-mode)
+      dr--review-places
+    (mapcar (lambda (comment) (cons comment (dr--place comment)))
+            (seq-filter (lambda (comment) (dr--matches-commit-p comment dr--commit))
+                        (dr--read-store)))))
 
 (defun dr--render ()
   "Insert the comments on this buffer's commit, and make all other text read-only."
@@ -673,9 +689,24 @@ comment :file, :side, :line, :code), and where it goes (:pos :section)."
      ((eq (oref file type) 'file)
       (pcase-let ((`(,pos ,section) (dr--file-place file)))
         (list :kind "file" :file (oref file value) :pos pos :section section)))
+     ((derived-mode-p 'dr/review-mode)
+      (unless (eq (oref section type) 'commit)
+        (user-error "Comments go on a commit, file, or line"))
+      (list :kind "commit" :pos (oref section content) :section section))
      (t
       (pcase-let ((`(,pos ,section) (dr--commit-place)))
         (list :kind "commit" :pos pos :section section))))))
+
+(defun dr--commit-at-point ()
+  "The plist from `dr--commit-info' of the commit a comment opened at point would be on."
+  (if (derived-mode-p 'dr/review-mode)
+      (let ((section (magit-current-section)))
+        (while (and section (not (eq (oref section type) 'commit)))
+          (setq section (oref section parent)))
+        (unless section
+          (user-error "Not on a commit"))
+        (gethash (oref section value) dr--review-infos))
+    dr--commit))
 
 (defun dr--same-anchor-p (comment anchor)
   (let-alist comment
@@ -724,7 +755,7 @@ it has a thread, reply to it. On a thread, reply to it."
       (cond
        ((not (and existing-comment (dr--same-anchor-p existing-comment anchor)))
         (let* ((id (dr--new-id))
-               (info dr--commit)
+               (info (dr--commit-at-point))
                (comment `((id . ,id)
                           (kind . ,(plist-get anchor :kind))
                           (commit . ,(plist-get info :sha))
@@ -822,7 +853,8 @@ it has a thread, reply to it. On a thread, reply to it."
 
 (defun dr/show-commit ()
   "Show the commit whose hash is at point, in a reply, in another window, keeping the focus here.
-The commit gets a revision buffer of its own, rather than replacing the commit this one shows."
+From a revision buffer, the commit gets a revision buffer of its own, rather than replacing the
+commit this one shows."
   (interactive)
   (let ((magit-display-buffer-noselect t)
         (magit-display-buffer-function
@@ -831,7 +863,7 @@ The commit gets a revision buffer of its own, rather than replacing the commit t
                                      display-buffer-use-some-window
                                      display-buffer-pop-up-window)
                                     (inhibit-same-window . t)))))
-        (magit-revision-use-dedicated-buffers t))
+        (magit-revision-use-dedicated-buffers (not (derived-mode-p 'dr/review-mode))))
     (magit-revision-setup-buffer (get-text-property (point) 'dr-rev)
                                  (car (magit-show-commit--arguments)) nil)))
 
@@ -841,11 +873,224 @@ at the start of that comment's block."
   (dr--save)
   (let ((spot (if cid (list :block cid 0) (dr--point-spot)))
         (dr--quiet t))
+    (when (derived-mode-p 'dr/review-mode)
+      ;; The review buffer's places are made by its refresh, which this doesn't redo. Each
+      ;; comment's place is a position in the text without comments, so use its latest version.
+      (setq dr--review-places
+            (let ((store (dr--read-store)))
+              (delq nil (mapcar (pcase-lambda (`(,comment . ,place))
+                                  (when-let* ((latest (seq-find (lambda (c)
+                                                                  (equal (alist-get 'id c)
+                                                                         (alist-get 'id comment)))
+                                                                store)))
+                                    (cons latest place)))
+                                dr--review-places)))))
     (dr--remove-all)
     (dr--render)
     (dr--goto-spot spot))
   (setq buffer-undo-list nil)
   (dr--update-in-comment))
+
+;;
+;; The review buffer.
+
+(define-derived-mode dr/review-mode magit-revision-mode "Review"
+  "Every review comment on the branch, with its thread, in the order of the branch's diffs.")
+
+(defconst dr--excerpt-lines 4
+  "How many lines of the diff a line comment's excerpt shows, ending with the commented line.")
+
+(defun dr/show-review ()
+  "Show every review comment on the branch, with its thread."
+  (interactive)
+  (let ((name (format "magit-review: %s" (file-name-nondirectory
+                                          (directory-file-name (magit-toplevel))))))
+    (magit-setup-buffer #'dr/review-mode nil :buffer name)))
+
+(defun dr--review-commits ()
+  "The commits a comment may be on, oldest first: the branch's, or if HEAD is on the main branch,
+its recent history."
+  (let* ((main (magit-main-branch))
+         (base (and main (magit-git-string "merge-base" "HEAD" main))))
+    (if (and base (not (equal base (magit-rev-parse "HEAD"))))
+        (magit-git-lines "rev-list" "--reverse" (concat base "..HEAD"))
+      (magit-git-lines "rev-list" "--reverse" "-n" "100" "HEAD"))))
+
+(defun dr--diff-lines (sha file)
+  "The lines of FILE's diff in commit SHA, as plists (:side :line :old :new :text :hunk), where :old
+and :new are the line numbers on each side, and :hunk counts the hunks."
+  (let ((old 0) (new 0) (hunk 0) lines)
+    (dolist (text (magit-git-lines "show" "--format=" "--no-color" "--no-ext-diff" "-U3"
+                                   sha "--" file))
+      (cond
+       ((string-match "^@@ -\\([0-9]+\\)\\(?:,[0-9]+\\)? \\+\\([0-9]+\\)" text)
+        (setq old (string-to-number (match-string 1 text))
+              new (string-to-number (match-string 2 text)))
+        (cl-incf hunk))
+       ((zerop hunk))
+       ((string-prefix-p "-" text)
+        (push (list :side "old" :line old :old old :new new :text text :hunk hunk) lines)
+        (cl-incf old))
+       ((string-prefix-p "+" text)
+        (push (list :side "new" :line new :old old :new new :text text :hunk hunk) lines)
+        (cl-incf new))
+       ((string-prefix-p " " text)
+        (push (list :side "new" :line new :old old :new new :text text :hunk hunk) lines)
+        (cl-incf old)
+        (cl-incf new))))
+    (nreverse lines)))
+
+(defun dr--excerpt (lines comment)
+  "The lines of LINES, from `dr--diff-lines', to show above line COMMENT, or nil if its line isn't
+there."
+  (let-alist comment
+    (let ((target (seq-reduce (lambda (best l)
+                                (if (and (equal (plist-get l :side) .side)
+                                         (equal (substring (plist-get l :text) 1) .code)
+                                         (or (null best)
+                                             (< (abs (- (plist-get l :line) .line))
+                                                (abs (- (plist-get best :line) .line)))))
+                                    l
+                                  best))
+                              lines nil)))
+      (when target
+        (let* ((before (seq-take-while (lambda (l) (not (eq l target))) lines))
+               (same-hunk (seq-filter (lambda (l) (= (plist-get l :hunk) (plist-get target :hunk)))
+                                      before)))
+          (append (last same-hunk (1- dr--excerpt-lines)) (list target)))))))
+
+(defun dr--insert-excerpt (file excerpt)
+  "Insert EXCERPT, from `dr--excerpt', as a hunk of FILE. Return its section."
+  (let* ((first (car excerpt))
+         (old-count (seq-count (lambda (l) (not (string-prefix-p "+" (plist-get l :text)))) excerpt))
+         (new-count (seq-count (lambda (l) (not (string-prefix-p "-" (plist-get l :text)))) excerpt))
+         (from (list (plist-get first :old) old-count))
+         (to (list (plist-get first :new) new-count)))
+    (magit-insert-section section
+        (hunk (cons nil (list from to)) nil :from-range from :to-range to :combined nil)
+      (magit-insert-heading
+        (propertize (format "@@ -%d,%d +%d,%d @@\n" (car from) old-count (car to) new-count)
+                    'font-lock-face 'magit-diff-hunk-heading))
+      (dolist (line excerpt)
+        (let ((text (plist-get line :text)))
+          (insert (propertize (concat text "\n")
+                              'font-lock-face (pcase (aref text 0)
+                                                (?+ 'magit-diff-added)
+                                                (?- 'magit-diff-removed)
+                                                (_ 'magit-diff-context))))))
+      (ignore file)
+      section)))
+
+(defun dr--review-match (comments commits)
+  "Group COMMENTS by the commit each is on, as an alist from hash to comments, in the order of
+COMMITS. Comments on no commit in COMMITS go last, under nil."
+  (let ((infos (make-hash-table :test #'equal))
+        (groups nil)
+        (left comments))
+    ;; Matching by hash first saves computing a patch-id for every commit.
+    (dolist (sha commits)
+      (let ((mine (seq-filter (lambda (c) (equal (alist-get 'commit c) sha)) left)))
+        (when mine
+          (puthash sha (dr--commit-info sha) infos)
+          (push (cons sha mine) groups)
+          (setq left (seq-difference left mine #'eq)))))
+    (when left
+      (dolist (sha commits)
+        (let* ((info (or (gethash sha infos) (dr--commit-info sha)))
+               (mine (seq-filter (lambda (c) (dr--matches-commit-p c info)) left)))
+          (when mine
+            (puthash sha info infos)
+            (setf (alist-get sha groups nil nil #'equal)
+                  (append (alist-get sha groups nil nil #'equal) mine))
+            (setq left (seq-difference left mine #'eq))))))
+    (setq dr--review-infos infos)
+    (append (seq-filter #'car (mapcar (lambda (sha) (assoc sha groups)) commits))
+            (and left (list (cons nil left))))))
+
+(defun dr/review-refresh-buffer ()
+  "Insert the branch's commits which have comments, and their files and excerpts. Record where
+each comment goes in `dr--review-places', for `dr--render' to insert them."
+  (let* ((comments (dr--read-store))
+         (groups (dr--review-match comments (dr--review-commits)))
+         (places nil))
+    (magit-set-header-line-format
+     (format "Review: %d %s" (length comments) (if (= (length comments) 1) "comment" "comments")))
+    (magit-insert-section (review)
+      (if (null comments)
+          (insert "No review comments.\n")
+        (pcase-dolist (`(,sha . ,mine) groups)
+          (magit-insert-section commit-section (commit sha)
+            (magit-insert-heading
+              (if sha
+                  (concat (propertize (magit-rev-abbrev sha) 'font-lock-face 'magit-hash) " "
+                          (propertize (plist-get (gethash sha dr--review-infos) :subject)
+                                      'font-lock-face 'magit-section-heading))
+                (propertize "Comments on commits which aren't on this branch"
+                            'font-lock-face 'magit-section-heading)))
+            (dolist (c (seq-filter (lambda (c) (equal (alist-get 'kind c) "commit")) mine))
+              (push (list c (point) commit-section (null sha)) places))
+            (let* ((files (and sha (magit-git-lines "diff-tree" "--no-commit-id" "--name-only"
+                                                    "-r" "-M" sha)))
+                   (by-file (seq-filter (lambda (c) (alist-get 'file c)) mine))
+                   (ordered (append (seq-filter (lambda (f) (seq-find (lambda (c) (equal (alist-get 'file c) f))
+                                                                      by-file))
+                                                files)
+                                    (seq-difference (delete-dups (mapcar (lambda (c) (alist-get 'file c))
+                                                                         by-file))
+                                                    files))))
+              (dolist (file ordered)
+                (dr--insert-review-file sha file
+                                        (seq-filter (lambda (c) (equal (alist-get 'file c) file))
+                                                    by-file)
+                                        (lambda (place) (push place places)))))
+            (insert "\n")))))
+    (setq dr--review-places (nreverse places))))
+
+(defun dr--insert-review-file (sha file comments add-place)
+  "Insert FILE's section, with an excerpt for each of its line COMMENTS on commit SHA, and call
+ADD-PLACE with where each comment goes."
+  (magit-insert-section file-section (file file)
+    (magit-insert-heading
+      (propertize (concat file "\n") 'font-lock-face 'magit-diff-file-heading))
+    (let* ((lines (and sha (dr--diff-lines sha file)))
+           (excerpts nil))
+      (dolist (c comments)
+        (let ((excerpt (and (equal (alist-get 'kind c) "line") (dr--excerpt lines c))))
+          (if excerpt
+              (push (cons c excerpt) excerpts)
+            ;; File comments, and line comments whose line is gone, go under the heading.
+            (funcall add-place (list c (point) file-section
+                                     (not (equal (alist-get 'kind c) "file")))))))
+      ;; In the order of the lines in the diff.
+      (setq excerpts (sort (nreverse excerpts)
+                           (lambda (a b) (< (seq-position lines (car (last (cdr a))))
+                                            (seq-position lines (car (last (cdr b))))))))
+      (pcase-dolist (`(,c . ,excerpt) excerpts)
+        (let ((hunk (dr--insert-excerpt file excerpt)))
+          (funcall add-place (list c (point) hunk nil)))))))
+
+(defun dr/review-visit ()
+  "Show the commit at point, at the comment at point or the comment below the excerpt at point."
+  (interactive)
+  (let* ((section (magit-current-section))
+         (cid (or (get-text-property (point) 'dr-block)
+                  (and (eq (oref section type) 'hunk)
+                       (when-let* ((pos (dr--any-p (oref section start) (oref section end))))
+                         (get-text-property pos 'dr-block)))))
+         (commit section))
+    (while (and commit (not (eq (oref commit type) 'commit)))
+      (setq commit (oref commit parent)))
+    (unless (and commit (oref commit value))
+      (user-error "Not on a commit"))
+    (magit-show-commit (oref commit value))
+    (when cid
+      (let ((buffer (magit-get-mode-buffer 'magit-revision-mode)))
+        (with-current-buffer buffer
+          (when-let* ((region (dr--block-region cid)))
+            (goto-char (car region))
+            (forward-line -1)
+            (dolist (window (get-buffer-window-list buffer nil t))
+              (set-window-point window (point)))))))))
 
 ;;
 ;; Hooks and advice.
@@ -912,7 +1157,8 @@ restores are of diff text only, and then put them back in."
           (dr--quiet t))
       (dr--remove-all)
       (apply refresh args)
-      (setq dr--commit (dr--commit-info))
+      (unless (derived-mode-p 'dr/review-mode)
+        (setq dr--commit (dr--commit-info)))
       ;; Magit has restored point to where it was in the diff, so keep it after any comment
       ;; inserted there, unless it was in a comment.
       (let ((after-comments (copy-marker (point) t)))

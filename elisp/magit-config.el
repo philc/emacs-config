@@ -340,8 +340,11 @@ runs only once, on the final section."
 ;; to show the visited file in.
 (defun my-magit/diff-visit-file ()
   (interactive)
-  ;; Like magit's own magit-diff-visit-file-other-window, which also uses this internal function.
-  (magit-diff-visit-file--internal nil #'wm/show-buffer-rightward))
+  (if (derived-mode-p 'dr/review-mode)
+      ;; In the review buffer, the commit is more useful than the file.
+      (dr/review-visit)
+    ;; Like magit's own magit-diff-visit-file-other-window, which also uses this internal function.
+    (magit-diff-visit-file--internal nil #'wm/show-buffer-rightward)))
 
 (add-hook 'git-commit-mode-hook 'init-git-commit-mode)
 (defun init-git-commit-mode ()
