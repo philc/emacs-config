@@ -436,11 +436,18 @@
     ;; In the order of the diffs: oldest commit first, then file, then line.
     (should (< (dr-test/pos " change: edit") (dr-test/pos "^on two") (dr-test/pos "^on beta")
                (dr-test/pos "second$") (dr-test/pos "^whole") (dr-test/pos "^on four")))
-    ;; A line comment has the lines of the diff above it.
+    ;; A line comment has the lines of the diff above it, and a blank line before and after its
+    ;; thread.
     (dr-test/goto "^on four")
-    (forward-line -4)
-    (should (equal (buffer-substring-no-properties (point) (line-end-position 4))
-                   " TWO\n three\n-four\n+FOUR"))
+    (forward-line -5)
+    (should (equal (buffer-substring-no-properties (point) (line-end-position 7))
+                   " TWO\n three\n-four\n+FOUR\n\non four\n"))
+    ;; gn goes to the comment, not the blank line before it.
+    (goto-char (point-min))
+    (dr-test/keys "gn")
+    (should (equal (dr-test/line) "on two"))
+    (dr-test/keys "gn")
+    (should (equal (dr-test/line) "on beta"))
     ;; Replying to a thread from the review buffer.
     (let* ((store (dr--read-store))
            (comment (dr-test/comment-with "on two")))
@@ -462,7 +469,7 @@
     (should (dr-test/pos "^new one"))
     ;; RET opens the commit at the comment, in another window, keeping the focus here.
     (dr-test/goto "^on four")
-    (forward-line -1)
+    (forward-line -2)
     (dr-test/keys "RET")
     (should (eq major-mode 'dr/review-mode))
     (should (eq (window-buffer (selected-window)) (current-buffer)))

@@ -58,6 +58,9 @@
 ;; - Claude marks a thread resolved when there's nothing left for me to answer, and R on a thread
 ;;   resolves or reopens it. A resolved thread is marked with a checkmark, and stays unfolded, since
 ;;   I read Claude's replies to see what it did.
+;; - In the review buffer, a blank line comes before and after each thread, to set it apart from
+;;   the excerpts and headings around it. When the diff line above a thread is itself blank, it
+;;   serves as the blank line before, as margins collapse in CSS.
 ;; - gn and gp go to the next and previous comment, rather than hunk, when there are any. Reading
 ;;   the comments is what these buffers are for.
 ;; - X on a thread deletes the comment and its thread.
@@ -519,9 +522,25 @@ newline."
     (pcase-dolist (`(,_ ,comment ,pos ,section ,orphan) placed)
       (puthash (alist-get 'id comment) (cons section (if orphan dr--orphan-bar dr--bar))
                dr--placements)
-      (dr--insert (dr--block-text comment) pos section)
-      (when (alist-get 'resolved comment)
-        (dr--mark-resolved pos)))))
+      (let* ((cid (alist-get 'id comment))
+             (gap (and (derived-mode-p 'dr/review-mode) (not (dr--blank-line-before-p pos))
+                       (propertize "\n" 'read-only t 'dr-block cid 'dr-gap t
+                                   'magit-section section))))
+        (dr--insert (concat gap (dr--block-text comment)) pos section)
+        (when (alist-get 'resolved comment)
+          (dr--mark-resolved (if gap (1+ pos) pos)))))))
+
+(defun dr--blank-line-before-p (pos)
+  "Whether the line before POS is blank, or a diff line of a blank line."
+  (save-excursion
+    (goto-char pos)
+    (and (zerop (forward-line -1))
+         (looking-at-p "[-+ ]?[ \t]*$"))))
+
+(defun dr--skip-gap ()
+  "Move off the blank line before a thread in the review buffer, onto the thread's first line."
+  (when (get-text-property (point) 'dr-gap)
+    (forward-line 1)))
 
 (defconst dr--resolved-mark (propertize "✓ " 'face 'dr/comment-bar)
   "Displayed before the first line of a resolved comment.")
@@ -824,17 +843,22 @@ it has a thread, reply to it. On a thread, reply to it."
         starts)
     (while (setq pos (dr--any-p pos))
       (unless (invisible-p pos)
-        (push pos starts))
+        (push (dr--past-gap pos) starts))
       (setq pos (next-single-property-change pos 'dr-block nil (point-max))))
     (nreverse starts)))
 
 (defun dr/any-comments-p ()
   (and (derived-mode-p 'magit-revision-mode) (dr--any-p) t))
 
+(defun dr--past-gap (pos)
+  "POS, the start of a comment's block, or the line after it if it's the blank line before a
+thread in the review buffer. This is where the comment's navigation stops."
+  (if (get-text-property pos 'dr-gap) (1+ pos) pos))
+
 (defun dr--here ()
-  "Point, or if it's in a comment's block, the block's start."
+  "Point, or if it's in a comment's block, where the block's navigation stops."
   (if-let* ((cid (get-text-property (point) 'dr-block)))
-      (car (dr--block-region cid))
+      (dr--past-gap (car (dr--block-region cid)))
     (point)))
 
 (defun dr/next-comment ()
@@ -1032,8 +1056,11 @@ each comment goes in `dr--review-places', for `dr--render' to insert them."
                                       'font-lock-face 'magit-section-heading))
                 (propertize "Comments on commits which aren't on this branch"
                             'font-lock-face 'magit-section-heading)))
-            (dolist (c (seq-filter (lambda (c) (equal (alist-get 'kind c) "commit")) mine))
-              (push (list c (point) commit-section (null sha)) places))
+            (when-let* ((commit-comments (seq-filter (lambda (c) (equal (alist-get 'kind c) "commit"))
+                                                     mine)))
+              (dolist (c commit-comments)
+                (push (list c (point) commit-section (null sha)) places))
+              (dr--insert-gap))
             (let* ((files (and sha (magit-git-lines "diff-tree" "--no-commit-id" "--name-only"
                                                     "-r" "-M" sha)))
                    (by-file (seq-filter (lambda (c) (alist-get 'file c)) mine))
@@ -1047,8 +1074,7 @@ each comment goes in `dr--review-places', for `dr--render' to insert them."
                 (dr--insert-review-file sha file
                                         (seq-filter (lambda (c) (equal (alist-get 'file c) file))
                                                     by-file)
-                                        (lambda (place) (push place places)))))
-            (insert "\n")))))
+                                        (lambda (place) (push place places)))))))))
     (setq dr--review-places (nreverse places))))
 
 (defun dr--insert-review-file (sha file comments add-place)
@@ -1066,13 +1092,21 @@ ADD-PLACE with where each comment goes."
             ;; File comments, and line comments whose line is gone, go under the heading.
             (funcall add-place (list c (point) file-section
                                      (not (equal (alist-get 'kind c) "file")))))))
+      (when (length< excerpts (length comments))
+        (dr--insert-gap))
       ;; In the order of the lines in the diff.
       (setq excerpts (sort (nreverse excerpts)
                            (lambda (a b) (< (seq-position lines (car (last (cdr a))))
                                             (seq-position lines (car (last (cdr b))))))))
       (pcase-dolist (`(,c . ,excerpt) excerpts)
         (let ((hunk (dr--insert-excerpt file excerpt)))
-          (funcall add-place (list c (point) hunk nil)))))))
+          (funcall add-place (list c (point) hunk nil))
+          (dr--insert-gap))))))
+
+(defun dr--insert-gap ()
+  "Insert the blank line which follows each thread in the review buffer, keeping it apart from the
+next heading. The thread goes before it, at the place recorded before this is called."
+  (insert "\n"))
 
 (defun dr/review-visit ()
   "Show the commit at point in another window, keeping the focus here, at the comment at point or
@@ -1149,7 +1183,8 @@ read-only text of a thread, or else a marker which stays after comments inserted
        (forward-line lines)
        (when (>= (point) (cdr region))
          (goto-char (cdr region))
-         (forward-line -1))))))
+         (forward-line -1))
+       (dr--skip-gap)))))
 
 (defun dr--around-refresh (refresh &rest args)
   "Take the comments out before magit refreshes the buffer, so that the positions it saves and
