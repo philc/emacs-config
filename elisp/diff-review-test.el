@@ -460,15 +460,16 @@
       (should (equal (list .commit .file .line .code) (list (magit-rev-parse "HEAD") "a.txt" 3 "three"))))
     (magit-refresh)
     (should (dr-test/pos "^new one"))
-    ;; RET opens the commit at the comment.
+    ;; RET opens the commit at the comment, in another window, keeping the focus here.
     (dr-test/goto "^on four")
     (forward-line -1)
     (dr-test/keys "RET")
+    (should (eq major-mode 'dr/review-mode))
+    (should (eq (window-buffer (selected-window)) (current-buffer)))
     (with-current-buffer (magit-get-mode-buffer 'magit-revision-mode)
       (should (equal magit-buffer-revision-oid (magit-rev-parse "HEAD")))
       (should (equal (dr-test/line) "+FOUR")))
     ;; X deletes a thread.
-    (switch-to-buffer (magit-get-mode-buffer 'dr/review-mode))
     (dr-test/goto "^Done\\.")
     (cl-letf (((symbol-function 'y-or-n-p) (lambda (&rest _) t)))
       (dr-test/keys "X"))

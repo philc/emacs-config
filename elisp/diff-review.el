@@ -856,16 +856,21 @@ it has a thread, reply to it. On a thread, reply to it."
 From a revision buffer, the commit gets a revision buffer of its own, rather than replacing the
 commit this one shows."
   (interactive)
+  (dr--show-commit-elsewhere (get-text-property (point) 'dr-rev)
+                             (not (derived-mode-p 'dr/review-mode))))
+
+(defun dr--show-commit-elsewhere (rev dedicated)
+  "Show commit REV in another window, keeping the focus here, and return its buffer. With
+DEDICATED, in a revision buffer of its own, rather than the repo's usual one. This picks the
+window itself, overriding `magit-display-buffer-function' and `display-buffer-alist', since my
+rules for revision buffers may use this window, e.g. when there's no window to its right."
   (let ((magit-display-buffer-noselect t)
-        (magit-display-buffer-function
-         (lambda (buffer)
-           (display-buffer buffer '((display-buffer-reuse-window
-                                     display-buffer-use-some-window
-                                     display-buffer-pop-up-window)
-                                    (inhibit-same-window . t)))))
-        (magit-revision-use-dedicated-buffers (not (derived-mode-p 'dr/review-mode))))
-    (magit-revision-setup-buffer (get-text-property (point) 'dr-rev)
-                                 (car (magit-show-commit--arguments)) nil)))
+        (display-buffer-overriding-action '((display-buffer-reuse-window
+                                             display-buffer-use-some-window
+                                             display-buffer-pop-up-window)
+                                            (inhibit-same-window . t)))
+        (magit-revision-use-dedicated-buffers dedicated))
+    (magit-revision-setup-buffer rev (car (magit-show-commit--arguments)) nil)))
 
 (defun dr--rerender (&optional cid)
   "Take the comments out and put them back, e.g. after a thread is resolved. With CID, leave point
@@ -1070,7 +1075,8 @@ ADD-PLACE with where each comment goes."
           (funcall add-place (list c (point) hunk nil)))))))
 
 (defun dr/review-visit ()
-  "Show the commit at point, at the comment at point or the comment below the excerpt at point."
+  "Show the commit at point in another window, keeping the focus here, at the comment at point or
+the comment below the excerpt at point."
   (interactive)
   (let* ((section (magit-current-section))
          (cid (or (get-text-property (point) 'dr-block)
@@ -1082,9 +1088,8 @@ ADD-PLACE with where each comment goes."
       (setq commit (oref commit parent)))
     (unless (and commit (oref commit value))
       (user-error "Not on a commit"))
-    (magit-show-commit (oref commit value))
-    (when cid
-      (let ((buffer (magit-get-mode-buffer 'magit-revision-mode)))
+    (let ((buffer (dr--show-commit-elsewhere (oref commit value) nil)))
+      (when cid
         (with-current-buffer buffer
           (when-let* ((region (dr--block-region cid)))
             (goto-char (car region))
