@@ -19,6 +19,9 @@
   :group 'evil-org)
 
 (add-hook 'org-mode-hook 'evil-org-mode) ;; only load with org-mode
+;; Evil doesn't activate evil-org-mode's normal-state keys until some later command refreshes its
+;; keymaps, so keys typed right after opening an org file (like "gh") would otherwise fall through.
+(add-hook 'evil-org-mode-hook 'evil-normalize-keymaps)
 
 ;; Highlight the TODO keywords using various colors.
 ;; See http://orgmode.org/manual/Faces-for-TODO-keywords.html.
