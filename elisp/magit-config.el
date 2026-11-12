@@ -17,6 +17,7 @@
 (require 'git-rebase) ; for git-rebase-mode-map.
 (require 'evil)
 (require 'window-management)
+(require 'diff-review)
 (provide 'magit-config)
 
 ;; When committing, don't have Magit show the diff of what's changed. This feature is annoying
@@ -142,14 +143,38 @@ Date: %ad
 
 (evil-define-key 'normal magit-diff-mode-map
   (kbd "RET") 'my-magit/diff-visit-file
-  "o" 'my-magit/diff-visit-file
-  "O" 'my-magit/diff-visit-file
+  "o" 'my-magit/diff-open
+  "O" 'my-magit/diff-open-above
   ;; Without this, evil's TAB (evil-jump-forward) shadows magit's section toggle.
   (kbd "TAB") 'magit-section-toggle
   ;; From a line in a hunk, this goes to the file's heading; from a heading, to its parent's.
   "gu" 'magit-section-up
   "gn" 'my-magit/next-hunk
   "gp" 'my-magit/previous-hunk)
+
+(defun my-magit/diff-open ()
+  "In a commit's revision buffer, open a review comment (see diff-review.el). In other diffs,
+visit the file."
+  (interactive)
+  (if (derived-mode-p 'magit-revision-mode)
+      (dr/open-comment)
+    (my-magit/diff-visit-file)))
+
+(defun my-magit/diff-open-above ()
+  "Like `my-magit/diff-open', except that in a revision buffer it does nothing, because a review
+comment always goes below its line."
+  (interactive)
+  (unless (derived-mode-p 'magit-revision-mode)
+    (my-magit/diff-visit-file)))
+
+;; Inside a review comment, keys mean what they do when editing text, except for these section
+;; navigation keys.
+(evil-define-key 'normal dr/comment-map
+  "gu" 'magit-section-up
+  "gn" 'my-magit/next-hunk
+  "gp" 'my-magit/previous-hunk
+  (kbd "C-j") 'magit-section-forward
+  (kbd "C-k") 'magit-section-backward)
 
 (defun my-magit/hunk-stop-p (section)
   "Whether `my-magit/next-hunk' stops at SECTION: a hunk, a collapsed section, or a file with no
