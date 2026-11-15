@@ -288,7 +288,8 @@ runs only once, on the final section."
   "If the magit-revision buffer is showing in the current frame, scroll it using fn."
   (let* ((windows-in-visible-frames (-mapcat 'window-list (visible-frame-list)))
          (window (-find (lambda (w)
-                          (->> w window-buffer buffer-name (s-starts-with? "magit-revision:")))
+                          (eq (buffer-local-value 'major-mode (window-buffer w))
+                              'magit-revision-mode))
                         windows-in-visible-frames)))
     (when window
       (with-selected-window window (funcall fn)))))
@@ -425,7 +426,10 @@ runs only once, on the final section."
   "Magit modes whose buffers are restored by desktop, and the functions which recreate them.")
 
 (defun magit-config/desktop-buffer-data (_desktop-dirname)
-  "The state desktop saves for the current Magit buffer: its repo, and its setup function's args."
+  "The state desktop saves for the current Magit buffer: its repo, its setup function's args, and
+whether it's locked. Locking is Magit's own concept: a locked buffer keeps showing one commit (or
+log, or diff), and Magit opens a new buffer for the next one, rather than reusing this buffer. See
+`magit-toggle-buffer-lock'."
   (list default-directory
         (pcase major-mode
           ('magit-status-mode nil)
@@ -435,16 +439,25 @@ runs only once, on the final section."
            (list magit-buffer-revision magit-buffer-diff-args magit-buffer-diff-files))
           ('magit-diff-mode
            (list magit-buffer-diff-range magit-buffer-diff-typearg magit-buffer-diff-args
-                 magit-buffer-diff-files magit-buffer-diff-type)))))
+                 magit-buffer-diff-files magit-buffer-diff-type)))
+        magit-buffer-locked-p))
 
 (defun magit-config/desktop-restore-buffer (_file-name _buffer-name data)
   "Recreate a Magit buffer from DATA, saved by `magit-config/desktop-buffer-data'."
-  (seq-let (dir args) data
+  (seq-let (dir args locked) data
     (when (file-directory-p dir)
       (let ((default-directory dir)
             ;; Only create the buffer. Desktop puts it back in its windows.
             (magit-display-buffer-function #'ignore)
-            (magit-display-buffer-noselect t))
+            (magit-display-buffer-noselect t)
+            ;; Recreate a locked buffer locked (see above). Desktop renames the buffer to its saved
+            ;; name, so an unlocked buffer would take a locked one's name, which has the commit in it,
+            ;; e.g. "magit-revision(4bc7bf3): repo". Then Magit would reuse it for every commit.
+            (magit-revision-use-dedicated-buffers locked)
+            (args (if (memq desktop-buffer-major-mode '(magit-log-mode magit-diff-mode))
+                      ;; These setup functions take whether to lock as their next argument.
+                      (append args (list locked))
+                    args)))
         (apply (alist-get desktop-buffer-major-mode magit-config/desktop-setup-functions)
                args)))))
 

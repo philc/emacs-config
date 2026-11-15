@@ -60,9 +60,11 @@
                (wm/show-ephemeral-buffer-in-a-sensible-window)))
 
 ;; Show magit-revision buffers (the contents of a diff, from magit's log view) to the
-;; right of the log view window.
+;; right of the log view window. This matches on the mode rather than the name, because some
+;; revision buffers have the commit in their name, e.g. "magit-revision(4bc7bf3): repo". (Magit
+;; names a buffer that way when it's pinned to one commit, which Magit calls "locked".)
 (add-to-list 'display-buffer-alist
-             '("^magit-revision:"
+             '((major-mode . magit-revision-mode)
                (lambda (buffer action-alist)
                  (wm/show-buffer-rightward buffer))))
 
