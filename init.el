@@ -1202,7 +1202,7 @@
   ;; golang in particular has long compile error messages which don't wrap.
   (visual-line-mode 1))
 
-(add-hook 'compilation-filter-hook 'init-compilation-mode)
+(add-hook 'compilation-mode-hook 'init-compilation-mode)
 
 ;; If a previous compile/run command is still running, you will get prompted to kill the other
 ;; process. This avoids that prompt by killing any still-running compile process.
