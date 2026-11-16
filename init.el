@@ -2085,33 +2085,13 @@
 (defvar session/window-buffer-names nil
   "Names of the buffers used by the windows of every tab, recorded when the desktop is saved.")
 
-(defun session/window-state-buffer-names (state)
-  "Names of the buffers shown in, or recently shown in, the windows in window STATE.
-STATE is from `window-state-get' with WRITABLE non-nil, so buffers are stored by name."
-  (when (proper-list-p state)
-    (mapcan (lambda (entry)
-              (cond
-               ;; (buffer NAME . PROPERTIES): the buffer shown in a window.
-               ((and (eq (car-safe entry) 'buffer) (consp (cdr entry)))
-                (list (cadr entry)))
-               ;; (prev-buffers (NAME START POINT) ...): the window's history, most recent first.
-               ((eq (car-safe entry) 'prev-buffers)
-                (mapcar #'car (seq-take (cdr entry) session/window-history-to-save)))
-               (t (session/window-state-buffer-names entry))))
-            state)))
-
 (defun session/record-window-buffers ()
   "Record the buffers used by the windows of every tab, in every frame."
   (setq session/window-buffer-names
         (delete-dups
-         (mapcan (lambda (frame)
-                   (mapcan (lambda (tab)
-                             (session/window-state-buffer-names
-                              (if (eq (car tab) 'current-tab)
-                                  (window-state-get (frame-root-window frame) t)
-                                (alist-get 'ws (cdr tab)))))
-                           (funcall tab-bar-tabs-function frame)))
-                 (frame-list)))))
+         (mapcan (lambda (state)
+                   (util/window-state-buffer-names state session/window-history-to-save))
+                 (util/tab-window-states)))))
 
 (defun session/save-buffer-p (_filename bufname &rest _)
   "Whether to save buffer BUFNAME in the desktop. See `desktop-buffers-not-to-save-function'."

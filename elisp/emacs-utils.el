@@ -12,6 +12,7 @@
 (declare-function evil-visual-select "evil-states")
 (declare-function View-scroll-to-buffer-end "view")
 (declare-function wm/show-buffer-rightward "window-management")
+(defvar tab-bar-tabs-function)
 
 (defvar global-leader-prefix ";"
   "The key sequence which prefixes the keybindings defined by `define-leader-keys`.")
@@ -500,29 +501,38 @@
       (printall "Killing" (buffer-name b))
       (kill-buffer b))))
 
+(defun util/tab-window-states ()
+  "The window state of every tab, in every frame, from `window-state-get' with WRITABLE non-nil."
+  (mapcan (lambda (frame)
+            (mapcar (lambda (tab)
+                      (if (eq (car tab) 'current-tab)
+                          (window-state-get (frame-root-window frame) t)
+                        ;; A tab which isn't current has its window state saved as `ws'. Its
+                        ;; `wc' (window configuration) is missing in tabs restored by desktop.
+                        (alist-get 'ws (cdr tab))))
+                    (funcall tab-bar-tabs-function frame)))
+          (frame-list)))
+
+(defun util/window-state-buffer-names (state &optional history)
+  "Names of the buffers shown in the windows in window STATE, from `util/tab-window-states', plus
+   the HISTORY most recent buffers of each window's history."
+  (when (proper-list-p state)
+    (mapcan (lambda (entry)
+              (cond
+               ;; (buffer NAME . PROPERTIES): the buffer shown in a window.
+               ((and (eq (car-safe entry) 'buffer) (consp (cdr entry)))
+                (list (cadr entry)))
+               ;; (prev-buffers (NAME START POINT) ...): the window's history, most recent first.
+               ((eq (car-safe entry) 'prev-buffers)
+                (mapcar #'car (seq-take (cdr entry) (or history 0))))
+               (t (util/window-state-buffer-names entry history))))
+            state)))
+
 (defun util/visible-buffers-in-all-tabs ()
-  "Returns all visible buffers in all tabs."
-  (interactive)
-  (let* ((original-wc (current-window-configuration))
-         (visible-buffers '()))
-    ;; Iterate over all tabs
-    (dolist (tab (tab-bar-tabs))
-      (let* ((tab-buffers '())
-             (wc (alist-get 'wc tab)))
-        ;; NOTE(philc): I don't really understand this code, but from printing values, it seems `wc`
-        ;; is nil for whichever is the current tab in tab-bar-mode.
-        (when wc
-          (set-window-configuration wc)
-          (dolist (win (window-list))
-            (let ((buffer (window-buffer win)))
-              (unless (memq buffer tab-buffers)
-                (push buffer tab-buffers))))
-          ;; Combine buffers from all tabs, avoiding duplicates
-          (dolist (buf tab-buffers)
-            (unless (memq buf visible-buffers)
-              (push buf visible-buffers))))))
-    (set-window-configuration original-wc)
-    visible-buffers))
+  "Returns the buffers shown in the windows of every tab, in every frame."
+  (delq nil (mapcar #'get-buffer
+                    (delete-dups (mapcan #'util/window-state-buffer-names
+                                         (util/tab-window-states))))))
 
 (defun util/replace-string-in-buffer (from to)
   "Replace string in entire buffer using selected text or prompt. If region is active, use its
