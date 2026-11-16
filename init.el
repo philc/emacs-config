@@ -729,8 +729,6 @@
 ;; Don't show previews of buffers in consult-buffer.
 (setq consult-preview-key nil)
 
-(define-key vertico-map (kbd "C-k") #'wm/kill-buffer-in-buffer-selection-menu)
-
 (defun my-execute-extended-command-mru ()
   "A replacement for the M-x menu: show a list of the most recently used interactive commands, as
    saved by savehist-mode, and then all other commands after that."

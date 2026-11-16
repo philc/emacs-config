@@ -468,6 +468,12 @@
                         (s-ends-with? "*" name))
                (get-buffer-window-list buf t t))))))
 
+(defvar wm/buffer-switcher-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "C-k") #'wm/kill-buffer-in-buffer-selection-menu)
+    map)
+  "Keys for the minibuffer of `wm/switch-to-recent-buffer'.")
+
 (defun wm/switch-to-recent-buffer ()
   "Show recent buffers in a menu and switch to the selected one."
   (interactive)
@@ -481,7 +487,14 @@
                            (buffer-list)))
          (buffer-names (-map #'buffer-name buffers)))
     (let ((vertico-sort-override-function #'identity))
-      (when-let* ((selection (completing-read "Switch to: " buffer-names nil t)))
+      (when-let* ((selection
+                   (minibuffer-with-setup-hook
+                       ;; :append, so this runs after vertico's setup hook, and this map takes
+                       ;; priority over vertico's.
+                       (:append (lambda ()
+                                  (use-local-map (make-composed-keymap wm/buffer-switcher-map
+                                                                       (current-local-map)))))
+                     (completing-read "Switch to: " buffer-names nil t))))
         (switch-to-buffer selection)))))
 
 (defun wm/kill-buffer-in-buffer-selection-menu ()
@@ -491,8 +504,6 @@
   (let* ((buffer-name (->> (vertico--candidate)
                            substring-no-properties))
          (buffer (get-buffer buffer-name)))
-    (progn (print "buffer") (prin1 buffer t))
-    (progn (print "vertico--candidate") (prin1 (vertico--candidate) t))
     (when buffer
       (kill-buffer buffer)
       ;; We quit the completing-read UI and redisplay it without the buffer that was killed.
