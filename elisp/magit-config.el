@@ -321,9 +321,8 @@ runs only once, on the final section."
    "s" 'magit-stage
    ;; Stage everything
    "S" (lambda () (interactive) (util/without-confirmation 'magit-stage-modified t))
-   "d" 'magit-discard
    "u" 'magit-unstage
-   "U" (lambda () (interactive (util/without-confirmation 'magit-unstage-all)))
+   "U" (lambda () (interactive) (util/without-confirmation 'magit-unstage-all))
    "-" 'magit-diff-smaller-hunks
    "+" 'magit-diff-larger-hunks
    "gu" 'magit-section-up
