@@ -1681,14 +1681,26 @@
   (interactive)
   (let* ((files (notes/get-files))
          (names (mapcar #'file-name-nondirectory files))
+         (name-counts (let ((counts (make-hash-table :test #'equal)))
+                        (dolist (name names) (cl-incf (gethash name counts 0)))
+                        counts))
+         ;; Label each file with its name, plus its directory if another file has the same name.
+         (candidates (cl-mapcar (lambda (file name)
+                                  (cons (if (> (gethash name name-counts) 1)
+                                            (format "%s  %s" name (abbreviate-file-name
+                                                                   (file-name-directory file)))
+                                          name)
+                                        file))
+                                files names))
+         (labels (mapcar #'car candidates))
          ;; Keep the files in the order given, rather than letting vertico sort them.
          (table (lambda (string pred action)
                   (if (eq action 'metadata)
                       '(metadata (display-sort-function . identity)
                                  (cycle-sort-function . identity))
-                    (complete-with-action action names string pred))))
+                    (complete-with-action action labels string pred))))
          (choice (completing-read "Notes file: " table nil t)))
-    (find-file (seq-find (lambda (f) (string= (file-name-nondirectory f) choice)) files))
+    (find-file (cdr (assoc choice candidates)))
     ;; If the file is open in another window in insert mode, it stays in insert mode here.
     (evil-ext/switch-to-normal-state)))
 
