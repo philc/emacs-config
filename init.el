@@ -402,9 +402,15 @@
         (dired (if buffer-file-name (file-name-directory buffer-file-name) default-directory)))
   "gs" (util/save-and-call 'show-git-status-in-left-column)
   "gl" 'magit-log-current
-  "gcr" 'dr/show-review ; "Go to code review": the branch's review comments. See diff-review.el.
   "gb" 'magit-blame-addition
   "o" (util/save-and-call 'util/open-file-at-cursor)
+  ;; "a" is for annotating: review comments on a commit's lines, in its revision buffer, or on a
+  ;; file's lines, in its buffer. See diff-review.el.
+  "a" (cons "annotate" (make-sparse-keymap))
+  "aa" (cons "comment or reply" 'dr/comment)
+  "ar" (cons "resolve or reopen" 'dr/toggle-resolved)
+  "ax" (cons "delete thread" 'dr/delete-thread)
+  "al" (cons "list threads" 'dr/show-review)
   "wc" 'count-chars-region
   ;; Grep (using the "ag" command) for files in the current directory.
   "s" (util/save-and-call 'ag-project-in-current-window)
@@ -1607,7 +1613,7 @@
          (interactive)
          (go-save-and-compile (format "go build \"%s\"" (buffer-file-name))))
   ;; "cc" (go-save-and-compile-fn "go build")
-  "ai" 'go-import-add)
+  "ci" 'go-import-add)
 
 ;; goimports formats your code and also adds or removes imports as needed. goimports needs to be on
 ;; your path. See https://godoc.org/code.google.com/p/go.tools/cmd/goimports

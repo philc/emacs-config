@@ -11,6 +11,8 @@
 (require 'diff-review)
 
 (evil-mode 1)
+;; As in my init.el.
+(evil-set-undo-system 'undo-redo)
 
 (defun dr-test/git (&rest args)
   (apply #'call-process "git" nil nil nil args))
@@ -495,3 +497,228 @@
       (dr-test/keys "X"))
     (should-not (dr-test/comment-with "on two"))
     (should-not (save-excursion (goto-char (point-min)) (re-search-forward "^on two" nil t)))))
+
+;;
+;; Comments on files.
+
+(defmacro dr-test/with-file (file text &rest body)
+  "Run BODY in the buffer of FILE, committed with TEXT, in a fresh repo."
+  (declare (indent 2))
+  `(dr-test/with-repo
+     (dr-test/write ,file ,text)
+     (dr-test/git "add" ,file)
+     (dr-test/git "commit" "-qm" "add a file")
+     (let ((buffer (find-file-noselect (expand-file-name ,file))))
+       (unwind-protect
+           (progn
+             (switch-to-buffer buffer)
+             (evil-normal-state)
+             ,@body)
+         (dolist (b (buffer-list))
+           (when (and (buffer-file-name b)
+                      (string-prefix-p (file-truename repo) (file-truename (buffer-file-name b))))
+             (with-current-buffer b
+               (set-buffer-modified-p nil))
+             (kill-buffer b)))))))
+
+(defun dr-test/buffer-text ()
+  "The buffer's text, with the text of each comment and reply of mine in [[ ]]."
+  (let ((out "")
+        (pos (point-min)))
+    (while (< pos (point-max))
+      (let ((id (get-text-property pos 'dr-comment))
+            (next (or (next-single-property-change pos 'dr-comment) (point-max))))
+        (setq out (concat out (if id "[[" "") (buffer-substring-no-properties pos next)
+                          (if id "]]" "")))
+        (setq pos next)))
+    out))
+
+(defun dr-test/disk (file)
+  (with-temp-buffer
+    (insert-file-contents file)
+    (buffer-string)))
+
+(defun dr-test/comment-on (regexp text)
+  "Comment TEXT on the line matching REGEXP."
+  (dr-test/goto regexp)
+  (dr/comment)
+  (dr-test/keys (concat text " <escape>")))
+
+(ert-deftest dr-test/file-comment ()
+  (dr-test/with-file "c.txt" "one\ntwo\nthree\n"
+    (dr-test/comment-on "^two" "hi")
+    (should (equal (dr-test/store) '(("text" "c.txt" 2 "hi"))))
+    (should (equal (dr-test/buffer-text) "one\ntwo\n[[hi\n]]three\n"))
+    (should-not (buffer-modified-p))
+    ;; Editing the file and saving it leaves the comment out of the file.
+    (dr-test/goto "^three")
+    (dr-test/keys "A SPC 3 <escape>")
+    (save-buffer)
+    (should (equal (dr-test/disk "c.txt") "one\ntwo\nthree 3\n"))
+    (should (equal (dr-test/buffer-text) "one\ntwo\n[[hi\n]]three 3\n"))
+    (should-not (buffer-modified-p))
+    ;; The comment shows when the file is opened again.
+    (kill-buffer)
+    (switch-to-buffer (find-file-noselect (expand-file-name "c.txt" repo)))
+    (should dr/file-mode)
+    (should (equal (dr-test/buffer-text) "one\ntwo\n[[hi\n]]three 3\n"))))
+
+(ert-deftest dr-test/undo-in-a-file-with-comments ()
+  (dr-test/with-file "c.txt" "one\ntwo\nthree\nfour\n"
+    (dr-test/goto "^four")
+    (dr-test/keys "A SPC 4 <escape>")
+    (dr-test/goto "^three")
+    (dr-test/keys "A SPC 3 <escape>")
+    ;; A comment above the edits, which isn't an edit of the file.
+    (dr-test/comment-on "^one" "hi")
+    (dr-test/goto "^two")
+    (dr-test/keys "A SPC 2 <escape>")
+    ;; Saving takes the comments out and puts them back, which mustn't throw off undo either.
+    (save-buffer)
+    (dr-test/keys "u")
+    (should (equal (dr-test/buffer-text) "one\n[[hi\n]]two\nthree 3\nfour 4\n"))
+    (dr-test/keys "u")
+    (should (equal (dr-test/buffer-text) "one\n[[hi\n]]two\nthree\nfour 4\n"))
+    (dr-test/keys "u")
+    (should (equal (dr-test/buffer-text) "one\n[[hi\n]]two\nthree\nfour\n"))))
+
+(ert-deftest dr-test/undo-history-adjusts-for-comments ()
+  (with-temp-buffer
+    (buffer-enable-undo)
+    (insert "aaa\nbbb\nccc\n")
+    (undo-boundary)
+    (goto-char 5)
+    (delete-char 2)
+    (undo-boundary)
+    (goto-char (point-max))
+    (insert "ddd\n")
+    (undo-boundary)
+    ;; Text inserted and then deleted without being recorded, before each change.
+    (let ((pos 4))
+      (dr--undo-insert pos 3)
+      (let ((buffer-undo-list t))
+        (goto-char pos)
+        (insert "XYZ")))
+    (should (equal (buffer-string) "aaaXYZ\nb\nccc\nddd\n"))
+    ;; An edit of the inserted text, which is recorded.
+    (goto-char 6)
+    (insert "!")
+    (undo-boundary)
+    (should (equal (buffer-string) "aaaXY!Z\nb\nccc\nddd\n"))
+    ;; Part of the inserted text deleted without being recorded.
+    (dr--undo-delete 5 7)
+    (let ((buffer-undo-list t))
+      (delete-region 5 7))
+    (should (equal (buffer-string) "aaaXZ\nb\nccc\nddd\n"))
+    ;; The edit inside the deleted text is gone from the history.
+    (undo-start)
+    (undo-more 1)
+    (should (equal (buffer-string) "aaaXZ\nb\nccc\n"))
+    (undo-more 1)
+    (should (equal (buffer-string) "aaaXZ\nbbb\nccc\n"))
+    ;; The first insertion is split around the text inserted into it.
+    (undo-more 1)
+    (should (equal (buffer-string) "XZ"))))
+
+(ert-deftest dr-test/editing-around-file-comments ()
+  (dr-test/with-file "c.txt" "one\ntwo\nthree\n"
+    (dr-test/comment-on "^two" "hi")
+    ;; o on the line opens a line below its comment, and so does pasting a line with p.
+    (dr-test/goto "^two")
+    (dr-test/keys "o new <escape>")
+    (should (equal (dr-test/buffer-text) "one\ntwo\n[[hi\n]]new\nthree\n"))
+    (dr-test/goto "^one")
+    (dr-test/keys "yy")
+    (dr-test/goto "^two")
+    (dr-test/keys "p")
+    (should (equal (dr-test/buffer-text) "one\ntwo\n[[hi\n]]one\nnew\nthree\n"))
+    ;; Joining the line with the comment, or deleting across the comment, is refused.
+    (dr-test/goto "^two")
+    (should-error (evil-join (point) (line-end-position)))
+    (should-error (delete-region (point) (save-excursion (forward-line 3) (point))))
+    (should (equal (dr-test/buffer-text) "one\ntwo\n[[hi\n]]one\nnew\nthree\n"))
+    ;; Text typed in the comment is the comment's.
+    (dr-test/goto "^hi")
+    (dr-test/keys "A ! <escape>")
+    (should (equal (dr-test/store) '(("text" "c.txt" 2 "hi!"))))
+    ;; Deleting the line leaves the comment below the line above, where saving records it.
+    (dr-test/goto "^two")
+    (dr-test/keys "dd")
+    (should (equal (dr-test/buffer-text) "one\n[[hi!\n]]one\nnew\nthree\n"))
+    (save-buffer)
+    (should (equal (dr-test/disk "c.txt") "one\none\nnew\nthree\n"))
+    (should (equal (dr-test/store) '(("text" "c.txt" 1 "hi!"))))))
+
+(ert-deftest dr-test/file-comments-follow-their-lines ()
+  (dr-test/with-file "c.txt" "one\ntwo\nthree\n"
+    (dr-test/comment-on "^two" "hi")
+    ;; As when Claude edits the file.
+    (dr-test/write "c.txt" "zero\none\ntwo\nthree\n")
+    (revert-buffer t t t)
+    (should (equal (dr-test/buffer-text) "zero\none\ntwo\n[[hi\n]]three\n"))
+    ;; A comment whose line is gone goes at the top.
+    (dr-test/write "c.txt" "zero\none\nthree\n")
+    (revert-buffer t t t)
+    (should (equal (dr-test/buffer-text) "[[hi\n]]zero\none\nthree\n"))))
+
+(ert-deftest dr-test/comment-on-a-files-last-line ()
+  (dr-test/with-file "c.txt" "one\ntwo"
+    (dr-test/comment-on "^two" "hi")
+    (should (equal (dr-test/buffer-text) "one\ntwo\n[[hi\n]]"))
+    (dr-test/goto "^one")
+    (dr-test/keys "A SPC 1 <escape>")
+    (save-buffer)
+    (should (equal (dr-test/disk "c.txt") "one 1\ntwo"))
+    (should (equal (dr-test/buffer-text) "one 1\ntwo\n[[hi\n]]"))))
+
+(ert-deftest dr-test/file-comments-arent-code ()
+  (dr-test/with-file "c.el" "(a)\n(b \"x\")\n"
+    (dr-test/comment-on "^(a)" "don't (\"")
+    (dr-test/goto "^(b")
+    (let ((state (syntax-ppss)))
+      (should (= (nth 0 state) 0))
+      (should-not (nth 3 state)))
+    (font-lock-ensure)
+    (dr-test/goto "^don't")
+    (should-not (get-text-property (+ (point) 6) 'face))))
+
+(ert-deftest dr-test/replies-in-a-file ()
+  (dr-test/with-file "c.txt" "one\ntwo\n"
+    ;; This deletes trailing whitespace before saving, as my init.el does.
+    (add-hook 'before-save-hook #'delete-trailing-whitespace nil t)
+    (dr-test/comment-on "^one" "hi")
+    ;; Claude replies, which shows up without a refresh.
+    (with-temp-buffer
+      (dr-test/claude-replies "a1b2c3d: done.   "))
+    (dr--check-stores)
+    (should (equal (dr-test/buffer-text) "one\n[[hi\n]]── Claude\na1b2c3d: done.   \ntwo\n"))
+    (dr-test/goto "^two")
+    (dr-test/keys "A SPC <escape>")
+    (save-buffer)
+    (should (equal (dr-test/disk "c.txt") "one\ntwo\n"))
+    ;; A reply of mine.
+    (dr-test/goto "^a1b2")
+    (dr/comment)
+    (dr-test/keys "thanks <escape>")
+    (should (equal (dr-test/thread) '(("claude" "a1b2c3d: done.   ") ("you" "thanks"))))
+    (dr-test/goto "^thanks")
+    (dr/toggle-resolved)
+    (should (alist-get 'resolved (car (dr--read-store))))))
+
+(ert-deftest dr-test/file-comments-in-the-review-buffer ()
+  (dr-test/with-file "c.txt" "one\ntwo\nthree\n"
+    (dr-test/comment-on "^two" "hi")
+    ;; Not in the revision buffer of the commit which added the file.
+    (dr-test/show "HEAD")
+    (should-not (dr--any-p))
+    (dr/show-review)
+    (switch-to-buffer (get-buffer (format "magit-review: %s" (file-name-nondirectory
+                                                              (directory-file-name repo)))))
+    (should (string-search "Comments on files\nc.txt\none\ntwo\n\nhi\n\n"
+                           (buffer-substring-no-properties (point-min) (point-max))))
+    ;; RET shows the file at the comment.
+    (dr-test/goto "^hi")
+    (dr/review-visit)
+    (with-current-buffer (get-file-buffer (expand-file-name "c.txt" repo))
+      (should (equal (dr-test/line) "two")))
+    (kill-buffer)))

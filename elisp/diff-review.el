@@ -20,8 +20,12 @@
 ;; - Besides comments on a line, there are comments on a whole file (`o' on its heading) and on the
 ;;   whole commit (`o' in the header or message), for high-level remarks like "reformat every file
 ;;   in this commit", rather than leaving those on some arbitrary first line.
-;; - Comments only appear in revision buffers (`o' on a commit in the log), not in the diffs in the
-;;   status buffer.
+;; - Comments on commits only appear in revision buffers (`o' on a commit in the log), not in the
+;;   diffs in the status buffer.
+;; - Comments can also go on the lines of a file as it is now, in the file's buffer, for reviewing
+;;   a doc or code which isn't yet committed. See "Comments on files" below.
+;; - The keys for comments are under the leader key's "a" (annotate), in revision buffers and file
+;;   buffers alike: aa comments or replies, ar resolves, ax deletes a thread, al lists them all.
 ;; - In a revision buffer, `o' opens a comment, like vim's open-line. RET visits the file, as RET
 ;;   opens a commit in the log. `O' does nothing on a diff line, since a comment always sits below
 ;;   the line it's about.
@@ -86,6 +90,10 @@
 ;; is in the commit's version of the file, and "old" for a removed line, whose "line" is in the
 ;; parent's version. "thread" and "resolved" are optional. My replies have ids, so that each can be
 ;; saved on its own.
+;;
+;; A comment on a file's text has "kind" "text", and no commit:
+;;   {"id": "5b1e0d2a", "kind": "text", "file": "docs/plan.md", "line": 12,
+;;    "code": "the line's text", "comment": "...", "thread": [...], "resolved": false}
 (provide 'diff-review)
 (require 'cl-lib)
 (require 'seq)
@@ -172,6 +180,16 @@ of a comment itself has the comment's id, and REPLY-ID nil. Each of my replies h
 (defvar-local dr--magit-map nil
   "The buffer's local keymap, while it's swapped for `dr/comment-map'.")
 
+(defvar-local dr--outside-settings nil
+  "While point is in a comment, the values of `auto-fill-function', `evil-auto-indent', and
+`electric-indent-mode' to restore when it leaves.")
+
+(defvar dr/file-mode)
+(defvar dr--store-path)
+(defvar dr--file)
+(defvar dr--change-in-comment)
+(defvar dr--store-mtime)
+
 (defvar dr--quiet nil
   "Non-nil while the comments are taken out and put back, which aren't edits.")
 
@@ -179,7 +197,8 @@ of a comment itself has the comment's id, and REPLY-ID nil. Each of my replies h
 ;; The review file.
 
 (defun dr--store-file ()
-  (expand-file-name "review.json" (magit-gitdir)))
+  (or dr--store-path
+      (expand-file-name "review.json" (magit-gitdir))))
 
 (defun dr--read-store ()
   "The list of comments in the review file, as alists."
@@ -207,7 +226,9 @@ of a comment itself has the comment's id, and REPLY-ID nil. Each of my replies h
           (with-temp-file file
             (insert (json-encode (vconcat (mapcar #'dr--json-ready comments))) "\n")))
       (when (file-exists-p file)
-        (delete-file file)))))
+        (delete-file file)))
+    (when dr/file-mode
+      (setq dr--store-mtime (dr--store-mtime-now)))))
 
 ;;
 ;; The commit, and the lines of its diff.
@@ -352,13 +373,14 @@ commit's comments if its line can't be found. ORPHAN is non-nil in that case."
   "The text properties of editable UNIT, the text of a comment or of one of my replies."
   (let ((cid (car (gethash unit dr--units))))
     (pcase-let ((`(,section . ,bar) (gethash cid dr--placements)))
-      (list 'dr-comment unit
-            'dr-block cid
-            'magit-section section
-            'font-lock-face 'dr/comment
-            'dr-face 'dr/comment
-            'line-prefix bar
-            'wrap-prefix bar))))
+      (append (list 'dr-comment unit
+                    'dr-block cid
+                    'magit-section section
+                    'font-lock-face 'dr/comment
+                    'dr-face 'dr/comment
+                    'line-prefix bar
+                    'wrap-prefix bar)
+              (dr--file-props)))))
 
 (defvar dr--thread-map
   (let ((map (make-sparse-keymap))
@@ -384,7 +406,7 @@ over evil's keymaps.")
            'line-prefix bar
            'wrap-prefix bar
            'keymap dr--thread-map
-           props)))
+           (append props (dr--file-props)))))
 
 (defun dr--linkify (text)
   "TEXT with the commit hashes in it made into links."
@@ -489,21 +511,36 @@ newline."
 
 (defun dr--places ()
   "The comments this buffer shows, and where each goes, as a list of (COMMENT POS SECTION ORPHAN)."
-  (if (derived-mode-p 'dr/review-mode)
-      dr--review-places
+  (cond
+   (dr/file-mode
+    (mapcar (lambda (comment) (cons comment (dr--text-place comment)))
+            (seq-filter (lambda (comment)
+                          (and (dr--text-comment-p comment)
+                               (equal (alist-get 'file comment) dr--file)))
+                        (dr--read-store))))
+   ((derived-mode-p 'dr/review-mode)
+    dr--review-places)
+   (t
     ;; A comment whose commit is still on the branch stays there. Otherwise a fixup's comments
     ;; would also show on every other fixup of the same commit, since they share its subject.
     (let ((branch (dr--review-commits)))
       (mapcar (lambda (comment) (cons comment (dr--place comment)))
               (seq-filter (lambda (comment)
                             (let ((sha (alist-get 'commit comment)))
-                              (or (equal sha (plist-get dr--commit :sha))
-                                  (and (not (member sha branch))
-                                       (dr--matches-commit-p comment dr--commit)))))
-                          (dr--read-store))))))
+                              (and (not (dr--text-comment-p comment))
+                                   (or (equal sha (plist-get dr--commit :sha))
+                                       (and (not (member sha branch))
+                                            (dr--matches-commit-p comment dr--commit))))))
+                          (dr--read-store)))))))
 
 (defun dr--render ()
-  "Insert the comments on this buffer's commit, and make all other text read-only."
+  "Insert the comments on this buffer's commit, and make all other text read-only. In a file
+buffer, insert the file's comments."
+  (if dr/file-mode
+      (dr--render-file)
+    (dr--render-commit)))
+
+(defun dr--render-commit ()
   (let ((inhibit-read-only t)
         (dr--quiet t)
         (buffer-undo-list t)
@@ -562,12 +599,14 @@ block's text."
 
 (defun dr--remove-all ()
   "Delete the text of every comment from the buffer."
-  (let ((inhibit-read-only t)
-        (dr--quiet t)
-        (buffer-undo-list t)
-        (pos (point-min)))
-    (while (setq pos (text-property-not-all pos (point-max) 'dr-block nil))
-      (delete-region pos (or (next-single-property-change pos 'dr-block) (point-max))))))
+  (if dr/file-mode
+      (dr--remove-all-file)
+    (let ((inhibit-read-only t)
+          (dr--quiet t)
+          (buffer-undo-list t)
+          (pos (point-min)))
+      (while (setq pos (text-property-not-all pos (point-max) 'dr-block nil))
+        (delete-region pos (or (next-single-property-change pos 'dr-block) (point-max)))))))
 
 (defun dr--any-p (&optional beg end)
   "Whether there's any comment text, editable or not, in BEG..END."
@@ -589,11 +628,22 @@ block's text."
 
 (defun dr--before-change (beg end)
   (unless dr--quiet
+    (when dr/file-mode
+      (setq dr--change-in-comment
+            (and (not (buffer-modified-p))
+                 (or (= beg end)
+                     (when-let* ((unit (get-text-property beg 'dr-comment)))
+                       (dr--equal-run-p beg end 'dr-comment unit))))))
     (setq dr--chars-tick (buffer-chars-modified-tick))
     ;; A deletion can remove all of a comment's text, after which the comment can't be found.
     (setq dr--changing (dr--ids-near beg end))))
 
-(defun dr--after-change (beg end _len)
+(defun dr--after-change (beg end len)
+  (if dr/file-mode
+      (dr--file-after-change beg end len)
+    (dr--commit-after-change beg end len)))
+
+(defun dr--commit-after-change (beg end _len)
   ;; Text property changes, such as magit painting a hunk, don't change the text.
   (unless (or dr--quiet (eql dr--chars-tick (buffer-chars-modified-tick)))
     (let ((ids dr--changing)
@@ -634,12 +684,16 @@ history are now wrong, so clear it."
         (forward-line -1)
         (when (equal (get-text-property (point) 'dr-header) reply-id)
           (setq beg (point)))))
-    (delete-region beg (cdr region))
+    (if dr/file-mode
+        (dr--file-delete beg (cdr region))
+      (delete-region beg (cdr region)))
     ;; Back to the line before, as when cancelling an `o' in vim.
     (when was-in
       (goto-char beg)
       (forward-line -1)))
-  (setq buffer-undo-list nil))
+  ;; A file buffer's undo history was adjusted for the deletion instead.
+  (unless dr/file-mode
+    (setq buffer-undo-list nil)))
 
 (defun dr--set-reply (comment reply-id text)
   "COMMENT with my reply REPLY-ID set to TEXT, or removed when TEXT is nil. Replying reopens a
@@ -735,11 +789,14 @@ comment :file, :side, :line, :code), and where it goes (:pos :section)."
     dr--commit))
 
 (defun dr--same-anchor-p (comment anchor)
+  "Whether COMMENT, which is right below where a comment at ANCHOR would go, is about the same
+thing. In a file buffer, a comment below a line is always about it."
   (let-alist comment
     (and (equal .kind (plist-get anchor :kind))
-         (equal .file (plist-get anchor :file))
-         (equal .side (plist-get anchor :side))
-         (equal .line (plist-get anchor :line)))))
+         (or (equal .kind "text")
+             (and (equal .file (plist-get anchor :file))
+                  (equal .side (plist-get anchor :side))
+                  (equal .line (plist-get anchor :line)))))))
 
 (defun dr--reply (cid)
   "Start typing a reply at the end of comment CID's thread."
@@ -755,11 +812,10 @@ comment :file, :side, :line, :code), and where it goes (:pos :section)."
         (let ((reply-id (dr--new-id))
               (end (cdr (dr--block-region cid))))
           (puthash reply-id (cons cid reply-id) dr--units)
-          (let ((dr--quiet t))
-            (dr--insert (concat (dr--fixed cid "── You\n" '(dr/reply-header dr/comment)
-                                           'dr-header reply-id)
-                                (apply #'propertize "\n" (dr--props reply-id)))
-                        end (car (gethash cid dr--placements))))
+          (dr--quiet-insert (concat (dr--fixed cid "── You\n" '(dr/reply-header dr/comment)
+                                               'dr-header reply-id)
+                                    (apply #'propertize "\n" (dr--props reply-id)))
+                            end (car (gethash cid dr--placements)))
           (push reply-id dr--dirty)
           (goto-char (car (dr--region reply-id))))))))
 
@@ -769,11 +825,11 @@ about that line. On a file's heading, it's about the whole file, and in the comm
 message, the whole commit. If there's already a comment there, open a new line at its top, or if
 it has a thread, reply to it. On a thread, reply to it."
   (interactive)
-  (unless (derived-mode-p 'magit-revision-mode)
-    (user-error "Comments go in a revision buffer"))
+  (unless (or dr/file-mode (derived-mode-p 'magit-revision-mode))
+    (user-error "Comments go in a revision buffer, or a file's buffer"))
   (if-let* ((cid (get-text-property (point) 'dr-block)))
       (dr--reply cid)
-    (let* ((anchor (dr--anchor-at-point))
+    (let* ((anchor (if dr/file-mode (dr--file-anchor-at-point) (dr--anchor-at-point)))
            (pos (plist-get anchor :pos))
            (existing (and (< pos (point-max)) (get-text-property pos 'dr-block)))
            (existing-comment (and existing (gethash existing dr--comments)))
@@ -781,30 +837,44 @@ it has a thread, reply to it. On a thread, reply to it."
       (cond
        ((not (and existing-comment (dr--same-anchor-p existing-comment anchor)))
         (let* ((id (dr--new-id))
-               (info (dr--commit-at-point))
-               (comment `((id . ,id)
-                          (kind . ,(plist-get anchor :kind))
-                          (commit . ,(plist-get info :sha))
-                          (subject . ,(plist-get info :subject))
-                          (patch_id . ,(plist-get info :patch-id))
-                          (file . ,(plist-get anchor :file))
-                          (side . ,(plist-get anchor :side))
-                          (line . ,(plist-get anchor :line))
-                          (code . ,(plist-get anchor :code))
-                          (comment . ""))))
+               (comment (if dr/file-mode
+                            `((id . ,id)
+                              (kind . "text")
+                              (file . ,dr--file)
+                              (line . ,(plist-get anchor :line))
+                              (code . ,(plist-get anchor :code))
+                              (comment . ""))
+                          (let ((info (dr--commit-at-point)))
+                            `((id . ,id)
+                              (kind . ,(plist-get anchor :kind))
+                              (commit . ,(plist-get info :sha))
+                              (subject . ,(plist-get info :subject))
+                              (patch_id . ,(plist-get info :patch-id))
+                              (file . ,(plist-get anchor :file))
+                              (side . ,(plist-get anchor :side))
+                              (line . ,(plist-get anchor :line))
+                              (code . ,(plist-get anchor :code))
+                              (comment . ""))))))
           (puthash id comment dr--comments)
           (puthash id (cons id nil) dr--units)
           (puthash id (cons (plist-get anchor :section) dr--bar) dr--placements)
-          (let ((dr--quiet t))
-            (dr--insert (apply #'propertize "\n" (dr--props id)) pos (plist-get anchor :section)))
-          (push id dr--dirty)
-          (goto-char pos)))
+          (let ((gap (and (plist-get anchor :eof) (dr--eof-gap id))))
+            (dr--quiet-insert (concat gap (apply #'propertize "\n" (dr--props id)))
+                              pos (plist-get anchor :section))
+            (when dr/file-mode
+              (dr--fix-blocks))
+            (push id dr--dirty)
+            (goto-char (+ pos (length gap))))))
        ((or (alist-get 'thread existing-comment) (alist-get 'resolved existing-comment))
         (dr--reply existing))
        (t
-        (goto-char pos)
-        (insert "\n")
-        (goto-char pos)))))
+        ;; A new line at the top of the comment. In a file buffer, text typed where a comment
+        ;; begins goes to the comment only when point is in it.
+        (let ((start (car (dr--region existing)))
+              (dr--in-comment t))
+          (goto-char start)
+          (insert "\n")
+          (goto-char start))))))
   (dr--update-in-comment)
   (evil-insert-state))
 
@@ -855,7 +925,7 @@ it has a thread, reply to it. On a thread, reply to it."
     (nreverse starts)))
 
 (defun dr/any-comments-p ()
-  (and (derived-mode-p 'magit-revision-mode) (dr--any-p) t))
+  (and (or dr/file-mode (derived-mode-p 'magit-revision-mode)) (dr--any-p) t))
 
 (defun dr--past-gap (pos)
   "POS, the start of a comment's block, or the line after it if it's the blank line before a
@@ -924,8 +994,737 @@ at the start of that comment's block."
     (dr--remove-all)
     (dr--render)
     (dr--goto-spot spot))
-  (setq buffer-undo-list nil)
-  (dr--update-in-comment))
+  ;; A file buffer's undo history was adjusted for the comments taken out and put back instead.
+  (unless dr/file-mode
+    (setq buffer-undo-list nil))
+  (dr--update-in-comment)
+  ;; With no comments left, gn and gp go back to their usual meanings.
+  (when (and dr/file-mode (not (dr--any-p)))
+    (dr/file-mode -1)))
+
+(defun dr/comment ()
+  "Comment on the line at point, or reply to the thread at point. In a revision buffer, this is
+`dr/open-comment'. In a file's buffer, the comment is on the line of the file."
+  (interactive)
+  (cond ((derived-mode-p 'magit-revision-mode) (dr/open-comment))
+        (buffer-file-name
+         (unless dr/file-mode
+           (dr/file-mode 1))
+         (dr/open-comment))
+        (t (user-error "Comments go in a revision buffer, or a file's buffer"))))
+
+;;
+;; Comments on files.
+;;
+;; In a file's buffer, `dr/file-mode' shows the comments on the file's lines below them, as a
+;; revision buffer does, and the keys work the same inside them. Unlike in a revision buffer, the
+;; text around the comments is the file's, and stays editable, so:
+;; - The comments must never reach the file on disk. They're taken out of the buffer before it's
+;;   saved, so that before-save hooks which edit the buffer (deleting trailing whitespace,
+;;   formatting) see only the file's text, and put back after. Any other write of the whole buffer,
+;;   such as an auto-save, writes a copy without them.
+;; - Taking comments out and putting them back isn't an edit of the file, so it's not recorded for
+;;   undo, and doesn't mark the buffer modified. But each change in the undo history is recorded
+;;   by its positions in the buffer, so the history is adjusted for each comment taken out or put
+;;   back (`dr--undo-insert', `dr--undo-delete'), so that undo still undoes my edits of the file.
+;; - An edit belongs either to the file's text or to one comment's text. An edit which reaches
+;;   across both, like deleting lines of the file along with a comment, is refused
+;;   (`dr--guard'). Text typed where a comment and the file's text meet goes to the comment if
+;;   point was in the comment, and otherwise to the file.
+;; - A comment stays right below its line: the newline which ends the line is marked as the
+;;   comment's anchor. Text inserted between them, like a line opened with o or pasted with p, is
+;;   moved to after the comment (`dr--fix-blocks').
+;; - Comment text is given neutral syntax, so that the file's mode doesn't parse a quote or a
+;;   bracket in a comment as code, and it isn't fontified as code.
+;; - A comment is anchored to its line's text and number, as a line comment in a commit is, so it
+;;   follows its line when the file is changed outside of Emacs, e.g. by Claude. Saving updates
+;;   the anchors, since my edits may have moved the lines.
+;; - Claude's replies show up without a refresh: a timer checks whether the review file changed.
+
+(defvar-local dr--file nil
+  "In a buffer with `dr/file-mode', the file's path relative to the repo's top level.")
+
+(defvar-local dr--store-path nil
+  "In a buffer with `dr/file-mode', the review file's path.")
+
+(defvar-local dr--store-mtime nil
+  "In a buffer with `dr/file-mode', the review file's modification time when the buffer last read
+or wrote it.")
+
+(defvar-local dr--stripped nil
+  "While the comments are out of a file buffer for saving it, where point was, from
+`dr--point-spot'.")
+
+(defvar-local dr--change-in-comment nil
+  "Whether the change in progress in a file buffer is an edit of one comment's text only, in a
+buffer which was unmodified, so that it stays unmodified.")
+
+(defvar-local dr--check-blocks nil
+  "Whether an edit in a file buffer may have moved a comment away from its line.")
+
+(defvar dr--watch-timer nil
+  "The timer which redraws file buffers' comments when their review file changes.")
+
+(defconst dr--comment-props
+  '(dr-comment dr-block dr-face dr-header dr-rev dr-gap dr-anchor magit-section font-lock-face
+               line-prefix wrap-prefix keymap read-only rear-nonsticky modification-hooks
+               syntax-table)
+  "The text properties of comments in a file buffer, which text pasted into the file must not
+carry.")
+
+(defconst dr--word-syntax (string-to-syntax "w"))
+(defconst dr--space-syntax (string-to-syntax " "))
+(defconst dr--punctuation-syntax (string-to-syntax "."))
+
+(define-minor-mode dr/file-mode
+  "Show the review comments on this file's lines below them, and add more with `dr/comment'.
+See diff-review.el."
+  :lighter nil
+  (if dr/file-mode
+      (dr--file-mode-on)
+    (dr--file-mode-off)))
+
+(defun dr--text-comment-p (comment)
+  "Whether COMMENT is on the text of a file, rather than on a commit."
+  (equal (alist-get 'kind comment) "text"))
+
+(defun dr--file-props ()
+  "The text properties which comment text has in a file buffer, besides those it has in a
+revision buffer. Text inserted next to a comment doesn't inherit its properties, since it may
+belong to the file, and `dr--guard' refuses edits which reach outside of it."
+  (when dr/file-mode
+    (list 'rear-nonsticky t
+          'modification-hooks (list #'dr--guard))))
+
+(defun dr--anchor-props (cid)
+  "The text properties of the newline which ends the line comment CID is on."
+  (list 'dr-anchor cid
+        'rear-nonsticky t
+        'modification-hooks (list #'dr--guard-anchor)))
+
+(defmacro dr--silently (&rest body)
+  "Run BODY, which inserts or deletes comments in a file buffer, without it counting as an edit of
+the file: it's not recorded for undo, doesn't mark the buffer modified or run change hooks, and
+doesn't lock the file or check whether it changed on disk."
+  (declare (indent 0) (debug t))
+  `(let ((buffer-file-name nil)
+         (buffer-file-truename nil)
+         (dr--quiet t))
+     (with-silent-modifications ,@body)))
+
+(defun dr--equal-run-p (beg end prop value)
+  "Whether every character in BEG..END has PROP equal to VALUE."
+  (let ((pos beg)
+        (ok t))
+    (while (and ok (< pos end))
+      (setq ok (equal (get-text-property pos prop) value))
+      (setq pos (next-single-property-change pos prop nil end)))
+    ok))
+
+(defun dr--guard (beg end)
+  "Refuse a change to BEG..END which reaches outside of one comment's or reply's text, e.g.
+deleting lines of the file along with a comment. It's in the `modification-hooks' of comment
+text in a file buffer, and runs before the change."
+  (unless (or dr--quiet undo-in-progress)
+    (let ((unit (get-text-property beg 'dr-comment)))
+      (unless (and unit (dr--equal-run-p beg end 'dr-comment unit))
+        (signal 'text-read-only (list "Can't edit across a review comment"))))))
+
+(defun dr--guard-anchor (beg _end)
+  "Refuse to delete the newline which ends a line with a comment below it, unless the whole line
+goes with it, as with dd. Joining the line with the comment's first line would make no sense."
+  (unless (or dr--quiet undo-in-progress (= beg (point-min)) (eq (char-before beg) ?\n))
+    (signal 'text-read-only (list "Can't join a line with the review comment below it"))))
+
+;; The undo history.
+
+(defun dr--undo-insert (pos n)
+  "Adjust `buffer-undo-list' for N characters about to be inserted at POS without being recorded,
+e.g. a comment, so that undoing the changes before it still applies each at the right place.
+Each change's positions are in the buffer as it was right after the change, so POS is carried
+back through the changes in turn. The new text goes before the restored text of a deletion at
+POS, and before the text of an insertion at POS."
+  (when (listp buffer-undo-list)
+    (let ((cell buffer-undo-list)
+          (prev nil)
+          (p pos))
+      (while cell
+        (let ((entry (car cell))
+              (stop nil))
+          (pcase entry
+            ((pred integerp)
+             (when (> entry p)
+               (setcar cell (+ entry n))))
+            (`(,(and b (pred integerp)) . ,(and e (pred integerp)))
+             (cond ((>= b p) (setcar cell (cons (+ b n) (+ e n))))
+                   ((> e p)
+                    ;; The inserted text is split in two by the new text. Undo deletes the second
+                    ;; part first, which leaves the first part's positions as they are.
+                    (setcar cell (cons (+ p n) (+ e n)))
+                    (setcdr cell (cons (cons b p) (cdr cell)))
+                    (setq prev cell
+                          cell (cdr cell))))
+             (setq p (cond ((>= p e) (- p (- e b)))
+                           ((> p b) b)
+                           (t p))))
+            (`(,(and text (pred stringp)) . ,(and at (pred integerp)))
+             (let ((x (abs at)))
+               (when (> x p)
+                 (setcar cell (cons text (if (< at 0) (- (+ x n)) (+ x n)))))
+               (when (>= p x)
+                 (setq p (+ p (length text))))))
+            (`(nil ,prop ,value ,(and b (pred integerp)) . ,(and e (pred integerp)))
+             (setcar cell `(nil ,prop ,value ,(if (>= b p) (+ b n) b) . ,(if (> e p) (+ e n) e))))
+            (`(apply . ,_) (setq stop t)))
+          (if stop
+              ;; A change which can't be adjusted. Forget it, and every change before it.
+              (progn
+                (if prev (setcdr prev nil) (setq buffer-undo-list nil))
+                (setq cell nil))
+            (setq prev cell
+                  cell (cdr cell))))))))
+
+(defun dr--undo-delete (beg end)
+  "Adjust `buffer-undo-list' for BEG..END, a comment's text, about to be deleted without being
+recorded. The changes inside of it are dropped from the history: they were edits of the comment,
+which are saved apart from the file. See `dr--undo-insert'."
+  (when (listp buffer-undo-list)
+    (let ((cell buffer-undo-list)
+          (prev nil)
+          (a beg)
+          (b end))
+      (while cell
+        (let ((entry (car cell))
+              (n (- b a))
+              (drop nil)
+              (stop nil))
+          (pcase entry
+            ((pred integerp)
+             (setcar cell (cond ((>= entry b) (- entry n))
+                                ((> entry a) a)
+                                (t entry))))
+            (`(,(and ib (pred integerp)) . ,(and ie (pred integerp)))
+             (cond ((<= ie a) (setq a (- a (- ie ib))
+                                    b (- b (- ie ib))))
+                   ((>= ib b) (setcar cell (cons (- ib n) (- ie n))))
+                   ((and (>= ib a) (<= ie b)) (setq drop t
+                                                    b (- b (- ie ib))))
+                   (t (setq stop t))))
+            (`(,(and text (pred stringp)) . ,(and at (pred integerp)))
+             (let* ((x (abs at))
+                    (len (length text))
+                    (inside (or (< a x b)
+                                (and (memql x (list a b))
+                                     (get-text-property 0 'dr-block text)))))
+               (cond (inside (setq drop t
+                                   b (+ b len)))
+                     ((<= x a) (setq a (+ a len)
+                                     b (+ b len)))
+                     (t (setcar cell (cons text (if (< at 0) (- (- x n)) (- x n))))))))
+            (`(nil ,prop ,value ,(and ib (pred integerp)) . ,(and ie (pred integerp)))
+             (cond ((<= ie a))
+                   ((>= ib b) (setcar cell `(nil ,prop ,value ,(- ib n) . ,(- ie n))))
+                   ((and (>= ib a) (<= ie b)) (setq drop t))
+                   (t (setq stop t))))
+            (`(apply . ,_) (setq stop t)))
+          (cond (stop
+                 (if prev (setcdr prev nil) (setq buffer-undo-list nil))
+                 (setq cell nil))
+                (drop
+                 (if prev (setcdr prev (cdr cell)) (setq buffer-undo-list (cdr cell)))
+                 (setq cell (cdr cell)))
+                (t
+                 (setq prev cell
+                       cell (cdr cell))))))
+      (dr--undo-tidy))))
+
+(defun dr--undo-tidy ()
+  "Remove the groups of changes in `buffer-undo-list' which no longer change anything, since
+`dr--undo-delete' dropped their changes: those left empty, or with only where point was. Undo
+would otherwise spend a step on each."
+  (let ((cell buffer-undo-list)
+        (boundary nil)
+        (useful nil))
+    ;; BOUNDARY is the boundary before the group CELL is in, or nil for the first group.
+    (while cell
+      (if (car cell)
+          (unless (integerp (car cell))
+            (setq useful t))
+        (cond (useful (setq boundary cell))
+              (boundary (setcdr boundary (cdr cell)))
+              (t (setq buffer-undo-list (cdr cell))))
+        (setq useful nil))
+      (setq cell (cdr cell)))
+    (when (and boundary (not useful))
+      (setcdr boundary nil))))
+
+;; Inserting and removing comments.
+
+(defun dr--quiet-insert (text pos section)
+  "Insert TEXT, a comment's block or part of one, at POS in SECTION, as `dr--insert' does. In a
+file buffer, this isn't an edit of the file, and the undo history is adjusted for it."
+  (if (not dr/file-mode)
+      (let ((dr--quiet t))
+        (dr--insert text pos section))
+    (dr--undo-insert pos (length text))
+    (dr--silently
+      (dr--insert text pos section)
+      (dr--neutralize-syntax pos (+ pos (length text))))
+    (syntax-ppss-flush-cache pos)))
+
+(defun dr--file-delete (beg end)
+  "Delete BEG..END, comment text in a file buffer, which isn't an edit of the file."
+  (dr--undo-delete beg end)
+  (dr--silently
+    (delete-region beg end))
+  (syntax-ppss-flush-cache beg))
+
+(defun dr--eof-gap (cid)
+  "The newline which starts comment CID's block when its line is the last of the file, and has no
+newline of its own."
+  (propertize "\n" 'read-only t 'dr-block cid 'dr-gap t 'rear-nonsticky t
+              'modification-hooks (list #'dr--guard)))
+
+(defun dr--neutralize-syntax (beg end)
+  "Give the comment text in BEG..END syntax which the file's mode can't take for code: letters,
+digits, and underscores are word characters, whitespace is whitespace, and the rest is
+punctuation. Otherwise, a quote in a comment would start a string which runs on into the code
+after it."
+  (let ((pos beg))
+    (while (setq pos (dr--any-p pos end))
+      (let ((stop (or (next-single-property-change pos 'dr-block nil end) end)))
+        (save-excursion
+          (goto-char pos)
+          (while (< (point) stop)
+            (let ((c (char-after)))
+              (put-text-property (point) (1+ (point)) 'syntax-table
+                                 (cond ((memq c '(?\s ?\t ?\n)) dr--space-syntax)
+                                       ((or (<= ?a c ?z) (<= ?A c ?Z) (<= ?0 c ?9) (eq c ?_)
+                                            (> c 127))
+                                        dr--word-syntax)
+                                       (t dr--punctuation-syntax))))
+            (forward-char)))
+        (setq pos stop)))))
+
+(defun dr--around-fontify (fontify beg end &rest args)
+  "Fontify BEG..END as the file's mode does, except for comment text, whose faces are its own."
+  (prog1 (apply fontify beg end args)
+    (with-silent-modifications
+      (let ((pos beg)
+            (end (min end (point-max))))
+        (while (setq pos (dr--any-p pos end))
+          (let ((next (or (next-single-property-change pos 'dr-block nil end) end)))
+            (remove-text-properties pos next '(face nil))
+            (setq pos next)))))))
+
+(defun dr--block-start-p (pos)
+  "Whether POS is the first character of a comment's block."
+  (when-let* ((cid (get-text-property pos 'dr-block)))
+    (or (= pos (point-min))
+        (not (equal (get-text-property (1- pos) 'dr-block) cid)))))
+
+(defun dr--blocks ()
+  "The comment blocks in the buffer, as a list of (CID BEG END), in buffer order."
+  (let ((pos (point-min))
+        blocks)
+    (while (setq pos (dr--any-p pos))
+      (let ((end (or (next-single-property-change pos 'dr-block) (point-max))))
+        (push (list (get-text-property pos 'dr-block) pos end) blocks)
+        (setq pos end)))
+    (nreverse blocks)))
+
+(defun dr--anchors (cid)
+  "The positions of the newlines marked as comment CID's anchor."
+  (save-excursion
+    (goto-char (point-min))
+    (let (anchors match)
+      (while (setq match (text-property-search-forward 'dr-anchor cid t))
+        (push (prop-match-beginning match) anchors))
+      (nreverse anchors))))
+
+(defun dr--set-anchor (cid pos)
+  "Make the newline at POS comment CID's only anchor."
+  (dr--silently
+    (dolist (anchor (dr--anchors cid))
+      (unless (eql anchor pos)
+        (remove-list-of-text-properties anchor (1+ anchor)
+                                        '(dr-anchor rear-nonsticky modification-hooks))))
+    (when pos
+      (add-text-properties pos (1+ pos) (dr--anchor-props cid)))))
+
+(defun dr--move-block (beg end to)
+  "Move the comment block BEG..END to TO, outside of it. If point is in the block, it moves with
+it. If it's at TO, it ends up after the block, as it would after text inserted at point."
+  (let* ((text (buffer-substring beg end))
+         (cid (get-text-property beg 'dr-block))
+         (offset (and (<= beg (point)) (< (point) end) (- (point) beg)))
+         (after (unless offset (copy-marker (point) t)))
+         (target (if (> to beg) (- to (- end beg)) to)))
+    (dr--file-delete beg end)
+    (dr--quiet-insert text target nil)
+    (when (alist-get 'resolved (gethash cid dr--comments))
+      (dr--mark-resolved (+ target (if (get-text-property target 'dr-gap) 1 0))))
+    (if offset
+        (goto-char (+ target offset))
+      (goto-char after)
+      (set-marker after nil))))
+
+(defun dr--fix-blocks ()
+  "Keep each comment's block right below its line, after an edit near it. The newline ending the
+line is marked as the block's anchor. If text was inserted between them, e.g. a line opened with
+o or pasted with p, the block moves up, to below its line again. If the line was deleted, the
+block stays below the line above, which becomes its anchor."
+  ;; From the last block to the first, so that moving a block doesn't move the ones still to do.
+  (pcase-dolist (`(,cid ,beg ,end) (reverse (dr--blocks)))
+    (let ((anchors (dr--anchors cid)))
+      (cond
+       ;; At the top of the file, or after its last line, there's no newline to anchor to.
+       ((or (= beg (point-min)) (get-text-property beg 'dr-gap))
+        (dr--set-anchor cid nil))
+       ((equal (get-text-property (1- beg) 'dr-anchor) cid)
+        (dr--set-anchor cid (1- beg)))
+       ;; The block is in the middle of a line, e.g. after undoing the line's newline: put it after
+       ;; that line.
+       ((not (eq (char-before beg) ?\n))
+        (when-let* ((newline (save-excursion
+                               (goto-char end)
+                               (and (search-forward "\n" nil t) (1- (point))))))
+          (dr--move-block beg end (1+ newline))
+          (dr--set-anchor cid (- newline (- end beg)))))
+       ((when-let* ((anchor (car (last (seq-filter (lambda (a) (< a beg)) anchors)))))
+          (unless (dr--any-p (1+ anchor) beg)
+            (dr--move-block beg end (1+ anchor))
+            (dr--set-anchor cid anchor)
+            t)))
+       (t (dr--set-anchor cid (1- beg)))))))
+
+(defun dr--text-place (comment)
+  "Where text COMMENT goes in this file buffer, which has no comments in it yet, as (POS SECTION
+ORPHAN EOF): below the line with its line's text nearest its line number, or at the top of the
+file, as an orphan, if there's no such line. EOF is non-nil when that line is the file's last,
+and has no newline."
+  (let-alist comment
+    (let ((case-fold-search nil)
+          (regexp (concat "^" (regexp-quote (or .code "")) "$"))
+          (line 1)
+          (from (point-min))
+          (done nil)
+          best
+          best-distance)
+      (save-excursion
+        (goto-char (point-min))
+        (while (and (not done)
+                    (re-search-forward regexp nil t)
+                    ;; The empty "line" after the file's final newline isn't a line.
+                    (not (and (= (match-beginning 0) (point-max)) (not (bobp)))))
+          (let ((bol (match-beginning 0)))
+            (setq line (+ line (count-lines from bol))
+                  from bol)
+            (let ((distance (abs (- line (or .line 1)))))
+              (when (or (null best) (< distance best-distance))
+                (setq best (match-end 0)
+                      best-distance distance))))
+          (if (eobp)
+              (setq done t)
+            (forward-line 1)))
+        (cond ((null best) (list (point-min) nil t nil))
+              ((= best (point-max)) (list best nil nil t))
+              (t (list (1+ best) nil nil nil)))))))
+
+(defun dr--render-file ()
+  "Insert the comments on this buffer's file, below their lines."
+  (setq dr--store-mtime (dr--store-mtime-now))
+  (setq dr--comments (make-hash-table :test #'equal))
+  (setq dr--placements (make-hash-table :test #'equal))
+  (setq dr--units (make-hash-table :test #'equal))
+  (let ((placed nil)
+        (i 0))
+    (pcase-dolist (`(,comment . ,place) (dr--places))
+      (puthash (alist-get 'id comment) comment dr--comments)
+      (push (cons (cl-incf i (if (nth 2 place) 100000 1)) (cons comment place)) placed))
+    ;; As in `dr--render-commit', from the end of the buffer backwards.
+    (setq placed (sort placed (lambda (a b)
+                                (let ((pos-a (nth 2 a))
+                                      (pos-b (nth 2 b)))
+                                  (or (> pos-a pos-b)
+                                      (and (= pos-a pos-b) (> (car a) (car b))))))))
+    (pcase-dolist (`(,_ ,comment ,pos ,_ ,orphan ,eof) placed)
+      (let* ((cid (alist-get 'id comment))
+             (gap (and eof (dr--eof-gap cid))))
+        (puthash cid (cons nil (if orphan dr--orphan-bar dr--bar)) dr--placements)
+        (dr--quiet-insert (concat gap (dr--block-text comment)) pos nil)
+        (when (alist-get 'resolved comment)
+          (dr--mark-resolved (+ pos (length gap))))))
+    (dr--fix-blocks)))
+
+(defun dr--remove-all-file ()
+  "Delete every comment from this file buffer, and their anchors."
+  (pcase-dolist (`(,cid ,beg ,end) (reverse (dr--blocks)))
+    (dr--file-delete beg end)
+    (dr--set-anchor cid nil)))
+
+(defun dr--text-without-comments ()
+  "The buffer's text without the comments, which is the file's."
+  (let ((pos (point-min))
+        (parts nil))
+    (pcase-dolist (`(,_ ,beg ,end) (dr--blocks))
+      (push (buffer-substring-no-properties pos beg) parts)
+      (setq pos end))
+    (push (buffer-substring-no-properties pos (point-max)) parts)
+    (apply #'concat (nreverse parts))))
+
+(defun dr--file-line (pos)
+  "The number of the line at POS, a position in the file's text, in the file without comments."
+  (let ((line (line-number-at-pos pos)))
+    (pcase-dolist (`(,_ ,beg ,end) (dr--blocks))
+      (when (< beg pos)
+        (setq line (- line (count-lines beg (min end pos))))))
+    line))
+
+(defun dr--file-anchor-at-point ()
+  "What a comment opened at point in a file buffer is about, as a plist like that of
+`dr--anchor-at-point': the line at point."
+  (let* ((bol (line-beginning-position))
+         (eol (line-end-position)))
+    (list :kind "text" :file dr--file :line (dr--file-line bol)
+          :code (buffer-substring-no-properties bol eol)
+          :pos (if (or (= eol (point-max)) (get-text-property eol 'dr-block)) eol (1+ eol))
+          :eof (= eol (point-max))
+          :section nil)))
+
+(defun dr--file-after-change (beg end _len)
+  "After an edit of a file buffer: decide whether inserted text belongs to the file or to a
+comment, and note which comments changed."
+  (unless (or dr--quiet (eql dr--chars-tick (buffer-chars-modified-tick)))
+    (let ((ids dr--changing))
+      (when (< beg end)
+        (let* ((before (and (> beg (point-min)) (dr--comment-id-at (1- beg))))
+               (after (and (< end (point-max)) (dr--comment-id-at end)))
+               (in-block (and (< end (point-max)) (get-text-property end 'dr-block)))
+               (owner (cond
+                       ;; Text which undo restores has the properties it had.
+                       (undo-in-progress (get-text-property beg 'dr-comment))
+                       ((and before (equal before after)) before)
+                       ;; Where the line above a comment ends and the comment begins.
+                       ((and after (dr--block-start-p end)) (and dr--in-comment after))
+                       (after after)
+                       ;; At the end of a comment, before a reply's header.
+                       ((and before in-block) before)
+                       ;; Where a comment ends and the line below it begins.
+                       (before (and dr--in-comment before)))))
+          (unless undo-in-progress
+            (dr--silently
+              (if owner
+                  (progn
+                    (set-text-properties beg end (dr--props owner))
+                    (dr--neutralize-syntax beg end))
+                (remove-list-of-text-properties beg end dr--comment-props))))
+          (if owner
+              (push owner ids)
+            (setq dr--change-in-comment nil))
+          ;; A newline typed at the end of a line with a comment, as with o, ends that line, and
+          ;; the comment stays below it.
+          (when-let* (((not owner))
+                      (cid (and (< end (point-max)) (get-text-property end 'dr-anchor)))
+                      (newline (save-excursion
+                                 (goto-char beg)
+                                 (and (search-forward "\n" end t) (1- (point))))))
+            (dr--set-anchor cid newline))))
+      (setq ids (delete-dups ids))
+      (setq dr--dirty (delete-dups (append ids dr--dirty)))
+      (dolist (id ids)
+        (when-let* ((region (dr--region id)))
+          ;; A comment must end with a newline, as in a revision buffer.
+          (unless (eq (char-before (cdr region)) ?\n)
+            (save-excursion
+              (goto-char (cdr region))
+              (insert (apply #'propertize "\n" (dr--props id))))
+            (dr--silently
+              (dr--neutralize-syntax (cdr region) (1+ (cdr region)))))))
+      ;; Editing a comment isn't editing the file.
+      (when dr--change-in-comment
+        (set-buffer-modified-p nil))
+      (setq dr--check-blocks t))))
+
+(defun dr--auto-fill ()
+  "Auto-fill in a comment in a file buffer, without the file's mode's comment prefixes or
+indentation."
+  (let ((comment-line-break-function (lambda (&optional _) (insert "\n")))
+        (adaptive-fill-mode nil)
+        (fill-prefix nil)
+        (comment-auto-fill-only-comments nil))
+    (do-auto-fill)))
+
+;; Saving and reverting.
+
+(defun dr--update-anchors ()
+  "Record in the review file the line each comment in this file buffer is below now, since edits
+may have moved it."
+  (let ((changes nil))
+    (pcase-dolist (`(,cid ,beg ,_) (dr--blocks))
+      (unless (or (= beg (point-min))
+                  (eq (cdr (gethash cid dr--placements)) dr--orphan-bar))
+        (save-excursion
+          (goto-char (1- beg))
+          (let* ((bol (line-beginning-position))
+                 (line (dr--file-line bol))
+                 (code (buffer-substring-no-properties bol (line-end-position)))
+                 (comment (gethash cid dr--comments)))
+            (unless (and (equal line (alist-get 'line comment))
+                         (equal code (alist-get 'code comment)))
+              (push (list cid line code) changes))))))
+    (when changes
+      (let ((store (dr--read-store)))
+        (pcase-dolist (`(,cid ,line ,code) changes)
+          (when-let* ((index (seq-position store cid (lambda (c id) (equal (alist-get 'id c) id)))))
+            (let ((comment (copy-alist (nth index store))))
+              (setf (alist-get 'line comment) line)
+              (setf (alist-get 'code comment) code)
+              (setf (nth index store) comment)
+              (puthash cid comment dr--comments))))
+        (dr--write-store store)))))
+
+(defun dr--before-save ()
+  "Take the comments out of the buffer before it's saved, so that the hooks which edit the buffer
+before saving only see the file's text."
+  (when (and dr/file-mode (not dr--stripped))
+    (dr--save)
+    (dr--update-anchors)
+    (setq dr--stripped (dr--point-spot))
+    (dr--remove-all-file)))
+
+(defun dr--after-save ()
+  "Put the comments back after saving."
+  (when (and dr/file-mode dr--stripped)
+    (let ((spot dr--stripped))
+      (setq dr--stripped nil)
+      (dr--render-file)
+      (dr--goto-spot spot))
+    (dr--update-in-comment)))
+
+(defun dr--annotate-write (start end)
+  "When the whole buffer is written with its comments in it, as by an auto-save, write a copy
+without them. This is in `write-region-annotate-functions'."
+  (when (and dr/file-mode
+             (or (null start) (and (eql start (point-min)) (eql end (point-max))))
+             (dr--any-p))
+    (let ((text (dr--text-without-comments))
+          (coding buffer-file-coding-system))
+      (set-buffer (generate-new-buffer " *dr-write*" t))
+      (setq buffer-file-coding-system coding)
+      (insert text)
+      (setq-local write-region-post-annotation-function #'kill-buffer)))
+  nil)
+
+(defun dr--before-revert ()
+  (when dr/file-mode
+    (dr--save)
+    (dr--remove-all-file)))
+
+(defun dr--after-revert ()
+  (if dr/file-mode
+      (dr--render-file)
+    ;; Reverting may have reset the buffer's modes.
+    (dr--maybe-enable)))
+
+;; Turning comments on.
+
+(defun dr--file-mode-on ()
+  (let ((root (and buffer-file-name (magit-toplevel))))
+    (unless root
+      (setq dr/file-mode nil)
+      (user-error "Comments go on files in a git repo"))
+    (setq dr--file (file-relative-name (file-truename buffer-file-name) (file-truename root)))
+    (setq dr--store-path (expand-file-name "review.json" (magit-gitdir))))
+  (setq-local yank-excluded-properties (if (eq yank-excluded-properties t)
+                                           t
+                                         (append dr--comment-props yank-excluded-properties)))
+  (setq-local parse-sexp-lookup-properties t)
+  (when syntax-propertize-function
+    (add-function :after (local 'syntax-propertize-function) #'dr--neutralize-syntax))
+  (add-function :around (local 'font-lock-fontify-region-function) #'dr--around-fontify)
+  (add-hook 'before-change-functions #'dr--before-change nil t)
+  (add-hook 'after-change-functions #'dr--after-change nil t)
+  (add-hook 'post-command-hook #'dr--post-command nil t)
+  (add-hook 'kill-buffer-hook #'dr--save nil t)
+  (add-hook 'before-save-hook #'dr--before-save -100 t)
+  (add-hook 'after-save-hook #'dr--after-save 100 t)
+  (add-hook 'write-region-annotate-functions #'dr--annotate-write nil t)
+  (dr--render-file)
+  (unless dr--watch-timer
+    (setq dr--watch-timer (run-with-timer 2 2 #'dr--check-stores))))
+
+(defun dr--file-mode-off ()
+  (dr--save)
+  (dr--remove-all-file)
+  (when dr--in-comment
+    (setq dr--in-comment nil)
+    (use-local-map dr--magit-map)
+    (pcase-let ((`(,fill ,auto-indent ,electric) dr--outside-settings))
+      (setq auto-fill-function fill)
+      (setq-local evil-auto-indent auto-indent)
+      (setq-local electric-indent-mode electric))
+    (evil-normalize-keymaps))
+  (kill-local-variable 'yank-excluded-properties)
+  (kill-local-variable 'parse-sexp-lookup-properties)
+  (remove-function (local 'syntax-propertize-function) #'dr--neutralize-syntax)
+  (remove-function (local 'font-lock-fontify-region-function) #'dr--around-fontify)
+  (remove-hook 'before-change-functions #'dr--before-change t)
+  (remove-hook 'after-change-functions #'dr--after-change t)
+  (remove-hook 'post-command-hook #'dr--post-command t)
+  (remove-hook 'kill-buffer-hook #'dr--save t)
+  (remove-hook 'before-save-hook #'dr--before-save t)
+  (remove-hook 'after-save-hook #'dr--after-save t)
+  (remove-hook 'write-region-annotate-functions #'dr--annotate-write t))
+
+(defun dr--maybe-enable ()
+  "In a file's buffer, turn on `dr/file-mode' if the file has review comments. This is in
+`find-file-hook', so it avoids running git unless the repo has a review file."
+  (when-let* (((and buffer-file-name (not dr/file-mode)))
+              (root (locate-dominating-file buffer-file-name ".git"))
+              (dot-git (expand-file-name ".git" root))
+              (store (if (file-directory-p dot-git)
+                         (expand-file-name "review.json" dot-git)
+                       (let ((default-directory root))
+                         (expand-file-name "review.json" (magit-gitdir)))))
+              ((file-exists-p store))
+              (file (file-relative-name (file-truename buffer-file-name) (file-truename root))))
+    (when (seq-find (lambda (c) (and (dr--text-comment-p c) (equal (alist-get 'file c) file)))
+                    (let ((default-directory root)) (dr--read-store)))
+      (dr/file-mode 1))))
+
+(defun dr--store-mtime-now ()
+  (file-attribute-modification-time (file-attributes (dr--store-file))))
+
+(defun dr--shown-comments-changed-p ()
+  "Whether this file buffer's comments in the review file differ from those it shows."
+  (let ((now (seq-filter (lambda (c) (and (dr--text-comment-p c)
+                                          (equal (alist-get 'file c) dr--file)))
+                         (dr--read-store))))
+    (or (/= (length now) (hash-table-count dr--comments))
+        (seq-some (lambda (c) (not (equal c (gethash (alist-get 'id c) dr--comments)))) now))))
+
+(defun dr--check-stores ()
+  "Redraw the comments of each file buffer whose review file changed since the buffer last read or
+wrote it, e.g. with Claude's replies. A buffer where I'm typing a comment waits until I'm done."
+  (let ((buffers (seq-filter (lambda (b) (buffer-local-value 'dr/file-mode b)) (buffer-list))))
+    (if (null buffers)
+        (progn
+          (cancel-timer dr--watch-timer)
+          (setq dr--watch-timer nil))
+      (dolist (buffer buffers)
+        (with-current-buffer buffer
+          (let ((mtime (dr--store-mtime-now)))
+            (unless (or (equal mtime dr--store-mtime)
+                        dr--stripped
+                        (and dr--in-comment (memq evil-state '(insert replace))))
+              (setq dr--store-mtime mtime)
+              (when (dr--shown-comments-changed-p)
+                (dr--rerender)))))))))
+
+(add-hook 'find-file-hook #'dr--maybe-enable)
+(add-hook 'before-revert-hook #'dr--before-revert)
+(add-hook 'after-revert-hook #'dr--after-revert)
 
 ;;
 ;; The review buffer.
@@ -1022,7 +1821,7 @@ there."
 COMMITS. Comments on no commit in COMMITS go last, under nil."
   (let ((infos (make-hash-table :test #'equal))
         (groups nil)
-        (left comments))
+        (left (seq-remove #'dr--text-comment-p comments)))
     ;; Matching by hash first saves computing a patch-id for every commit.
     (dolist (sha commits)
       (let ((mine (seq-filter (lambda (c) (equal (alist-get 'commit c) sha)) left)))
@@ -1081,8 +1880,73 @@ each comment goes in `dr--review-places', for `dr--render' to insert them."
                 (dr--insert-review-file sha file
                                         (seq-filter (lambda (c) (equal (alist-get 'file c) file))
                                                     by-file)
-                                        (lambda (place) (push place places)))))))))
+                                        (lambda (place) (push place places))))))))
+      (when-let* ((text-comments (seq-filter #'dr--text-comment-p comments)))
+        (dr--insert-review-text text-comments (lambda (place) (push place places)))))
     (setq dr--review-places (nreverse places))))
+
+(defun dr--text-excerpt (comment)
+  "In a buffer with a file's text, the excerpt to show above text COMMENT in the review buffer, as
+(LINE . TEXT), where LINE is the commented line's number. Nil if its line isn't there."
+  (pcase-let ((`(,pos ,_ ,orphan ,eof) (dr--text-place comment)))
+    (unless orphan
+      (let* ((end (if eof pos (1- pos)))
+             (start (save-excursion
+                      (goto-char end)
+                      (forward-line (- (1- dr--excerpt-lines)))
+                      (point))))
+        (cons (line-number-at-pos end) (buffer-substring-no-properties start end))))))
+
+(defun dr--insert-review-text (comments add-place)
+  "Insert a section with the COMMENTS on files' text, by file, each after an excerpt of the lines
+above it in the file as it is now. Call ADD-PLACE with where each comment goes."
+  (let ((root (magit-toplevel)))
+    (magit-insert-section (dr-files)
+      (magit-insert-heading
+        (propertize "Comments on files" 'font-lock-face 'magit-section-heading))
+      (dolist (file (sort (delete-dups (mapcar (lambda (c) (alist-get 'file c)) comments))
+                          #'string<))
+        (let* ((mine (seq-filter (lambda (c) (equal (alist-get 'file c) file)) comments))
+               (path (expand-file-name file root))
+               (excerpts (with-temp-buffer
+                           (when (file-exists-p path)
+                             (insert-file-contents path))
+                           (mapcar (lambda (c) (cons c (dr--text-excerpt c))) mine)))
+               (orphans (seq-remove #'cdr excerpts)))
+          (magit-insert-section file-section (file file)
+            (magit-insert-heading
+              (propertize (concat file "\n") 'font-lock-face 'magit-diff-file-heading))
+            (pcase-dolist (`(,c . ,_) orphans)
+              (funcall add-place (list c (point) file-section t)))
+            (when orphans
+              (dr--insert-gap))
+            (pcase-dolist (`(,c . (,_ . ,text))
+                           (sort (seq-filter #'cdr excerpts)
+                                 (lambda (a b) (< (cadr a) (cadr b)))))
+              (let ((section (magit-insert-section excerpt (dr-excerpt)
+                               (insert (propertize (concat text "\n")
+                                                   'font-lock-face 'magit-diff-context))
+                               excerpt)))
+                (funcall add-place (list c (point) section nil))
+                (dr--insert-gap)))))))))
+
+(defun dr--visit-text-comment (comment)
+  "Show the file which text COMMENT is on in another window, at the comment, keeping the focus
+here."
+  (let* ((buffer (find-file-noselect (expand-file-name (alist-get 'file comment) (magit-toplevel))))
+         (window (let ((display-buffer-overriding-action '((display-buffer-reuse-window
+                                                             display-buffer-use-some-window
+                                                             display-buffer-pop-up-window)
+                                                            (inhibit-same-window . t))))
+                   (display-buffer buffer))))
+    (with-current-buffer buffer
+      (unless dr/file-mode
+        (dr/file-mode 1))
+      (when-let* ((region (dr--block-region (alist-get 'id comment))))
+        (goto-char (car region))
+        (forward-line -1)
+        (when window
+          (set-window-point window (point)))))))
 
 (defun dr--insert-review-file (sha file comments add-place)
   "Insert FILE's section, with an excerpt for each of its line COMMENTS on commit SHA, and call
@@ -1115,16 +1979,20 @@ ADD-PLACE with where each comment goes."
 next heading. The thread goes before it, at the place recorded before this is called."
   (insert "\n"))
 
-(defun dr/review-visit ()
+(cl-defun dr/review-visit ()
   "Show the commit at point in another window, keeping the focus here, at the comment at point or
 the comment below the excerpt at point."
   (interactive)
   (let* ((section (magit-current-section))
          (cid (or (get-text-property (point) 'dr-block)
-                  (and (eq (oref section type) 'hunk)
+                  (and (memq (oref section type) '(hunk dr-excerpt))
                        (when-let* ((pos (dr--any-p (oref section start) (oref section end))))
                          (get-text-property pos 'dr-block)))))
+         (comment (and cid (gethash cid dr--comments)))
          (commit section))
+    (when (and comment (dr--text-comment-p comment))
+      (dr--visit-text-comment comment)
+      (cl-return-from dr/review-visit))
     (while (and commit (not (eq (oref commit type) 'commit)))
       (setq commit (oref commit parent)))
     (unless (and commit (oref commit value))
@@ -1144,26 +2012,42 @@ the comment below the excerpt at point."
 (defun dr--update-in-comment ()
   "Make the buffer editable, with `dr/comment-map' as its keymap, while point is in a comment."
   (let ((in-comment (and (dr--comment-id-at (point)) t)))
-    (setq buffer-read-only (not in-comment))
+    (unless dr/file-mode
+      (setq buffer-read-only (not in-comment)))
     (unless (eq in-comment dr--in-comment)
       (setq dr--in-comment in-comment)
       (if in-comment
           (progn
             (setq dr--magit-map (current-local-map))
             (use-local-map dr/comment-map)
-            (setq auto-fill-function #'do-auto-fill))
+            (setq dr--outside-settings (list auto-fill-function evil-auto-indent
+                                             electric-indent-mode))
+            ;; In a file buffer, the file's mode would indent a comment's lines as code.
+            (setq auto-fill-function (if dr/file-mode #'dr--auto-fill #'do-auto-fill))
+            (setq-local evil-auto-indent nil)
+            (setq-local electric-indent-mode nil))
         (use-local-map dr--magit-map)
-        (setq auto-fill-function nil))
+        (pcase-let ((`(,fill ,auto-indent ,electric) dr--outside-settings))
+          (setq auto-fill-function fill)
+          (setq-local evil-auto-indent auto-indent)
+          (setq-local electric-indent-mode electric)))
       (evil-normalize-keymaps))))
 
 (defun dr--pre-command ()
   ;; Undoing from a diff line can restore a comment deleted with dd.
-  (when (memq this-command dr--undo-commands)
+  (when (and (memq this-command dr--undo-commands) (not dr/file-mode))
     (setq buffer-read-only nil)))
 
 (defun dr--post-command ()
   (unless (memq evil-state '(insert replace))
     (dr--save))
+  (when dr/file-mode
+    ;; A save which failed, after the comments were taken out for it.
+    (when dr--stripped
+      (dr--after-save))
+    (when dr--check-blocks
+      (setq dr--check-blocks nil)
+      (dr--fix-blocks)))
   (dr--update-in-comment))
 
 (defun dr--point-spot ()

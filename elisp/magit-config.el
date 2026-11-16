@@ -161,6 +161,11 @@ Date: %ad
   "R" 'dr/toggle-resolved
   "X" 'dr/delete-thread)
 
+;; In a file's buffer with review comments, gn and gp go to them.
+(evil-define-minor-mode-key 'normal 'dr/file-mode
+  "gn" 'dr/next-comment
+  "gp" 'dr/previous-comment)
+
 (defun my-magit/diff-open ()
   "In a commit's revision buffer, open a review comment (see diff-review.el). In other diffs,
 visit the file."
