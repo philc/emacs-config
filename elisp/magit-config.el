@@ -345,12 +345,15 @@ runs only once, on the final section."
 ;; Works like magit-diff-visible-file, except that it uses my custom function to select which window
 ;; to show the visited file in.
 (defun my-magit/diff-visit-file ()
+  "Visit the file at point. On a commit, e.g. in the status buffer's Unmerged section, show the
+commit instead."
   (interactive)
-  (if (derived-mode-p 'dr/review-mode)
-      ;; In the review buffer, the commit is more useful than the file.
-      (dr/review-visit)
-    ;; Like magit's own magit-diff-visit-file-other-window, which also uses this internal function.
-    (magit-diff-visit-file--internal nil #'wm/show-buffer-rightward)))
+  (cond
+   ;; In the review buffer, the commit is more useful than the file.
+   ((derived-mode-p 'dr/review-mode) (dr/review-visit))
+   ((magit-section-match 'commit) (show-commit-and-preserve-window))
+   ;; Like magit's own magit-diff-visit-file-other-window, which also uses this internal function.
+   (t (magit-diff-visit-file--internal nil #'wm/show-buffer-rightward))))
 
 (add-hook 'git-commit-mode-hook 'init-git-commit-mode)
 (defun init-git-commit-mode ()
