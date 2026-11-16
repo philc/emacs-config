@@ -93,7 +93,10 @@
 ;;
 ;; A comment on a file's text has "kind" "text", and no commit:
 ;;   {"id": "5b1e0d2a", "kind": "text", "file": "docs/plan.md", "line": 12,
-;;    "code": "the line's text", "comment": "...", "thread": [...], "resolved": false}
+;;    "code": "the line's text", "head": "<hash>", "dirty": true, "comment": "...",
+;;    "thread": [...], "resolved": false}
+;; "head" is the commit HEAD was at when I made the comment, and "dirty" is there when the file
+;; differed from it, so that the comment can be read later against the file it was about.
 (provide 'diff-review)
 (require 'cl-lib)
 (require 'seq)
@@ -838,12 +841,13 @@ it has a thread, reply to it. On a thread, reply to it."
        ((not (and existing-comment (dr--same-anchor-p existing-comment anchor)))
         (let* ((id (dr--new-id))
                (comment (if dr/file-mode
-                            `((id . ,id)
-                              (kind . "text")
-                              (file . ,dr--file)
-                              (line . ,(plist-get anchor :line))
-                              (code . ,(plist-get anchor :code))
-                              (comment . ""))
+                            (append `((id . ,id)
+                                      (kind . "text")
+                                      (file . ,dr--file)
+                                      (line . ,(plist-get anchor :line))
+                                      (code . ,(plist-get anchor :code)))
+                                    (dr--file-version)
+                                    '((comment . "")))
                           (let ((info (dr--commit-at-point)))
                             `((id . ,id)
                               (kind . ,(plist-get anchor :kind))
@@ -1480,6 +1484,18 @@ and has no newline."
       (when (< beg pos)
         (setq line (- line (count-lines beg (min end pos))))))
     line))
+
+(defun dr--file-version ()
+  "Which version of the file a comment opened now is on, as alist fields: `head', the commit HEAD
+is at, if any, and `dirty', present when the file differs from it, with unsaved or uncommitted
+edits, or isn't committed at all. So that an archived comment can be read later against the file
+it was about."
+  (let ((head (magit-rev-parse "HEAD")))
+    (append (and head `((head . ,head)))
+            (and (or (buffer-modified-p)
+                     (null head)
+                     (magit-git-string "status" "--porcelain" "--" dr--file))
+                 '((dirty . t))))))
 
 (defun dr--file-anchor-at-point ()
   "What a comment opened at point in a file buffer is about, as a plist like that of

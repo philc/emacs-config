@@ -549,6 +549,10 @@
     (dr-test/comment-on "^two" "hi")
     (should (equal (dr-test/store) '(("text" "c.txt" 2 "hi"))))
     (should (equal (dr-test/buffer-text) "one\ntwo\n[[hi\n]]three\n"))
+    ;; Which version of the file it's on.
+    (let ((comment (car (dr--read-store))))
+      (should (equal (alist-get 'head comment) (magit-rev-parse "HEAD")))
+      (should-not (assq 'dirty comment)))
     (should-not (buffer-modified-p))
     ;; Editing the file and saving it leaves the comment out of the file.
     (dr-test/goto "^three")
@@ -557,11 +561,15 @@
     (should (equal (dr-test/disk "c.txt") "one\ntwo\nthree 3\n"))
     (should (equal (dr-test/buffer-text) "one\ntwo\n[[hi\n]]three 3\n"))
     (should-not (buffer-modified-p))
+    ;; Now the file has an uncommitted edit.
+    (dr-test/comment-on "^one" "hey")
+    (should (alist-get 'dirty (seq-find (lambda (c) (equal (alist-get 'comment c) "hey"))
+                                        (dr--read-store))))
     ;; The comment shows when the file is opened again.
     (kill-buffer)
     (switch-to-buffer (find-file-noselect (expand-file-name "c.txt" repo)))
     (should dr/file-mode)
-    (should (equal (dr-test/buffer-text) "one\ntwo\n[[hi\n]]three 3\n"))))
+    (should (equal (dr-test/buffer-text) "one\n[[hey\n]]two\n[[hi\n]]three 3\n"))))
 
 (ert-deftest dr-test/undo-in-a-file-with-comments ()
   (dr-test/with-file "c.txt" "one\ntwo\nthree\nfour\n"
