@@ -6,7 +6,7 @@
 (require 'dash)
 (require 's)
 (require 'evil)
-(require 'lisp-utils) ; For the -?> and setq-temporarily macros.
+(require 'lisp-utils) ; For the -?> macro.
 (require 'emacs-utils)
 
 ;; From vertico, which init.el loads after this file.
@@ -480,9 +480,9 @@
   (let* ((buffers (-filter 'wm/include-in-buffer-list?
                            (buffer-list)))
          (buffer-names (-map #'buffer-name buffers)))
-    (setq-temporarily vertico-sort-override-function #'identity
-                      (when-let* ((selection (completing-read "Switch to: " buffer-names nil t)))
-                        (switch-to-buffer selection)))))
+    (let ((vertico-sort-override-function #'identity))
+      (when-let* ((selection (completing-read "Switch to: " buffer-names nil t)))
+        (switch-to-buffer selection)))))
 
 (defun wm/kill-buffer-in-buffer-selection-menu ()
   "When a vertico menu is being shown, kill the buffer that's currently selected and refresh
