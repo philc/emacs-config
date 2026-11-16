@@ -730,3 +730,17 @@
     (with-current-buffer (get-file-buffer (expand-file-name "c.txt" repo))
       (should (equal (dr-test/line) "two")))
     (kill-buffer)))
+
+(ert-deftest dr-test/formatting-a-file-with-comments ()
+  (dr-test/with-file "c.txt" "one\ntwo  \nthree\n"
+    (dr-test/comment-on "^two" "hi")
+    ;; A formatter sees only the file's text, and the comment stays below its line, even though
+    ;; the line's text changed.
+    (util/replace-region-with-command-output "sed s/two/TWO/")
+    (should (equal (dr-test/buffer-text) "one\nTWO  \n[[hi\n]]three\n"))
+    (should (equal (alist-get 'code (car (dr--read-store))) "TWO  "))
+    ;; So does deleting trailing whitespace before saving.
+    (add-hook 'before-save-hook #'delete-trailing-whitespace nil t)
+    (save-buffer)
+    (should (equal (dr-test/buffer-text) "one\nTWO\n[[hi\n]]three\n"))
+    (should (equal (alist-get 'code (car (dr--read-store))) "TWO"))))

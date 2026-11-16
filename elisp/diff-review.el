@@ -516,7 +516,8 @@ newline."
   "The comments this buffer shows, and where each goes, as a list of (COMMENT POS SECTION ORPHAN)."
   (cond
    (dr/file-mode
-    (mapcar (lambda (comment) (cons comment (dr--text-place comment)))
+    (mapcar (lambda (comment) (cons comment (or (dr--kept-place comment)
+                                                (dr--text-place comment))))
             (seq-filter (lambda (comment)
                           (and (dr--text-comment-p comment)
                                (equal (alist-get 'file comment) dr--file)))
@@ -1600,23 +1601,63 @@ may have moved it."
               (puthash cid comment dr--comments))))
         (dr--write-store store)))))
 
+(defvar dr--kept-places nil
+  "While comments are put back after being taken out for a save or a formatter, an alist from each
+one's id to a marker where its block was, or nil for an orphan.")
+
 (defun dr--before-save ()
   "Take the comments out of the buffer before it's saved, so that the hooks which edit the buffer
-before saving only see the file's text."
+before saving only see the file's text. Mark where each was, since those hooks may change the
+lines they're on, e.g. by deleting trailing whitespace, after which a comment's line couldn't be
+found by its text."
   (when (and dr/file-mode (not dr--stripped))
     (dr--save)
     (dr--update-anchors)
-    (setq dr--stripped (dr--point-spot))
-    (dr--remove-all-file)))
+    (let ((spot (dr--point-spot))
+          (marks (mapcar (pcase-lambda (`(,cid ,beg ,_))
+                           (cons cid (unless (eq (cdr (gethash cid dr--placements)) dr--orphan-bar)
+                                       (copy-marker beg))))
+                         (dr--blocks))))
+      (dr--remove-all-file)
+      (setq dr--stripped (list :spot spot :marks marks)))))
 
 (defun dr--after-save ()
-  "Put the comments back after saving."
+  "Put the comments back after saving, where they were, and record their lines."
   (when (and dr/file-mode dr--stripped)
-    (let ((spot dr--stripped))
+    (let ((stripped dr--stripped))
       (setq dr--stripped nil)
-      (dr--render-file)
-      (dr--goto-spot spot))
+      (let ((dr--kept-places (plist-get stripped :marks)))
+        (dr--render-file))
+      (pcase-dolist (`(,_ . ,mark) (plist-get stripped :marks))
+        (when mark
+          (set-marker mark nil)))
+      (dr--goto-spot (plist-get stripped :spot))
+      (dr--update-anchors))
     (dr--update-in-comment)))
+
+(defun dr--kept-place (comment)
+  "Where COMMENT goes back, as from `dr--text-place', if it was taken out by `dr--before-save':
+below the line its block was below. That line's text may have changed since."
+  (when-let* ((mark (cdr (assoc (alist-get 'id comment) dr--kept-places))))
+    (save-excursion
+      (goto-char mark)
+      (unless (bolp)
+        (forward-line 1))
+      (if (and (eobp) (not (bolp)))
+          (list (point) nil nil t)
+        (list (point) nil nil nil)))))
+
+(defun dr/without-comments (fn &rest args)
+  "Call FN with ARGS with this file buffer's comments taken out, as when saving, and put them back
+after. This is :around advice for commands which hand the buffer's text to a program, such as a
+formatter, and replace it with the program's output."
+  (if (and dr/file-mode (dr--any-p) (not dr--stripped))
+      (progn
+        (dr--before-save)
+        (unwind-protect
+            (apply fn args)
+          (dr--after-save)))
+    (apply fn args)))
 
 (defun dr--annotate-write (start end)
   "When the whole buffer is written with its comments in it, as by an auto-save, write a copy
@@ -1739,6 +1780,9 @@ wrote it, e.g. with Claude's replies. A buffer where I'm typing a comment waits 
                 (dr--rerender)))))))))
 
 (add-hook 'find-file-hook #'dr--maybe-enable)
+;; My formatting commands, which replace the buffer's text with a formatter's output.
+(dolist (command '(util/replace-region-with-command-output gofmt indent-lua-buffer))
+  (advice-add command :around #'dr/without-comments))
 (add-hook 'before-revert-hook #'dr--before-revert)
 (add-hook 'after-revert-hook #'dr--after-revert)
 
