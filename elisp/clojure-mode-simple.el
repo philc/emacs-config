@@ -278,7 +278,6 @@
                         (setq last-string string)
                         (let* ((s (remove-junk-from-inf-clojure-output string))
                                (exception-occurred (s-contains? exception-output-token s)))
-                          (progn (print ">>>> s") (prin1 s t))
                           ;; (when exception-occurred
                           ;;   (setq s (s-replace exception-output-token "" s)))
                           ;; (clj/print-any-exceptions)

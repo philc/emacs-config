@@ -924,7 +924,6 @@
     (goto-char (point-min))
     (let (names)
       (while (re-search-forward "^(defun \\([^[:space:]]+\\)" nil t)
-        (printall (match-string 1) (line-number-at-pos))
         (push (substring-no-properties (match-string 1)) names))
       (nreverse names))))
 
@@ -1556,7 +1555,6 @@
   "Runs `make test` if the project has a Makefile with a test target. Otherwise runs go test ./..."
   (interactive)
   (let ((targets (get-makefile-targets (projectile-project-root))))
-    (printall "targets" targets)
     (if (-contains? targets "test")
         (go-save-and-compile "make test")
       (go-save-and-compile "go test ./..."))))
