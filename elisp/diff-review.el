@@ -491,9 +491,16 @@ newline."
   "The comments this buffer shows, and where each goes, as a list of (COMMENT POS SECTION ORPHAN)."
   (if (derived-mode-p 'dr/review-mode)
       dr--review-places
-    (mapcar (lambda (comment) (cons comment (dr--place comment)))
-            (seq-filter (lambda (comment) (dr--matches-commit-p comment dr--commit))
-                        (dr--read-store)))))
+    ;; A comment whose commit is still on the branch stays there. Otherwise a fixup's comments
+    ;; would also show on every other fixup of the same commit, since they share its subject.
+    (let ((branch (dr--review-commits)))
+      (mapcar (lambda (comment) (cons comment (dr--place comment)))
+              (seq-filter (lambda (comment)
+                            (let ((sha (alist-get 'commit comment)))
+                              (or (equal sha (plist-get dr--commit :sha))
+                                  (and (not (member sha branch))
+                                       (dr--matches-commit-p comment dr--commit)))))
+                          (dr--read-store))))))
 
 (defun dr--render ()
   "Insert the comments on this buffer's commit, and make all other text read-only."

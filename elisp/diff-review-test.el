@@ -288,6 +288,19 @@
     (dr-test/show "HEAD~1")
     (should-not (dr--any-p))))
 
+(ert-deftest dr-test/fixups-of-one-commit-keep-their-own-comments ()
+  (dr-test/with-repo
+    (dr-test/write "a.txt" "one\nTWO\nthree\nfour\nfive\nsix\nseven\n")
+    (dr-test/git "commit" "-qam" "fixup! change: edit a and b")
+    (dr-test/write "b.txt" "alpha\nBETA\ngamma\n")
+    (dr-test/git "commit" "-qam" "fixup! change: edit a and b")
+    (dr-test/show "HEAD~1")
+    (dr-test/goto "^\\+seven")
+    (dr-test/keys "o on SPC seven <escape>")
+    ;; The other fixup has the same subject, but the comment's commit is still on the branch.
+    (dr-test/show "HEAD")
+    (should-not (dr--any-p))))
+
 (defun dr-test/claude-replies (text &optional resolved)
   "Add TEXT to the first saved comment's thread as Claude's reply, as the /cr skill does."
   (let* ((store (dr--read-store))
