@@ -169,9 +169,9 @@
         (message output)
         (cond
          ((string= output "nil")
-          (message (format "Could find a definition for the symbol %s" s)))
+          (message "Could find a definition for the symbol %s" s))
          ((s-contains? "jar!" output)
-          (message (format "The var %s is defined in a JAR. Viewing source inside of a JAR is unimplemented." s)))
+          (message "The var %s is defined in a JAR. Viewing source inside of a JAR is unimplemented." s))
          (t
           (let ((file (->> output (s-split ":") (nth 0)))
                 (line (->> output (s-split ":") (nth 1) string-to-number)))

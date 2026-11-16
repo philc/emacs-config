@@ -229,7 +229,7 @@
 
 ;; When a window in a tab is maximized, we save its configuration per tab. Emacs doesn't give us an
 ;; ID number to identify a tab, so we make due by storing the window configuration by tab name.
-(defvar tab-name->window-config (make-hash-table))
+(defvar tab-name->window-config (make-hash-table :test #'equal))
 
 (defun wm/toggle-window-maximize ()
   (interactive)

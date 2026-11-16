@@ -140,7 +140,7 @@
   (when js/last-run-command
     (let ((fn-name (nth 1 js/last-run-command))
           (buf (cl-first js/last-run-command)))
-      (message (format "Saving command: %s on %s" fn-name (buffer-name buf)))
+      (message "Saving command: %s on %s" fn-name (buffer-name buf))
       (setq js/saved-run-command js/last-run-command))))
 
 (defun js/run-saved-command ()
@@ -151,7 +151,7 @@
       (let ((fn-name (nth 1 js/saved-run-command))
             (buf (cl-first js/saved-run-command)))
         (with-current-buffer buf
-          (message (format "Running %s on %s" fn-name (buffer-name buf)))
+          (message "Running %s on %s" fn-name (buffer-name buf))
           (funcall fn-name)))
     (message "No runnable command has yet been saved.")))
 

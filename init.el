@@ -1935,8 +1935,8 @@
          'display-buffer (buffer &rest _args) (progn (switch-to-buffer buffer) (selected-window))
          (ag/search search-string project-dir))
       ;; ag/search will fail if project-dir is nil.
-      (message (format "%s does not belong to a project; it's not in a version control repo."
-                       (buffer-name))))))
+      (message "%s does not belong to a project; it's not in a version control repo."
+               (buffer-name)))))
 
 ;;
 ;; Lua mode
@@ -2165,4 +2165,4 @@
     (dolist (entry jump-list)
       (let* ((file (cl-first entry))
              (file-offset (cl-second entry)))
-        (message (format "%s:' %s" file file-offset))))))
+        (message "%s:' %s" file file-offset)))))
