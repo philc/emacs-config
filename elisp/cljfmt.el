@@ -7,9 +7,8 @@
 ;;   Use of this source code is governed by a BSD-style
 ;;   license that can be found in the LICENSE file.
 ;;
-;; The LICENSE file referred to above is available in this directory as
-;; go-mode-LICENSE. See https://github.com/dominikh/go-mode.el for the full
-;; source.
+;; The LICENSE file referred to above is go-mode's: see
+;; https://github.com/dominikh/go-mode.el/blob/master/LICENSE.
 
 (require 'cl-lib)
 
@@ -99,7 +98,7 @@ function."
 (defun cljfmt ()
   "Format the current buffer according to the cljfmt tool."
   (interactive)
-  (let ((tmpfile (make-temp-file "cljfmt" nil ".go"))
+  (let ((tmpfile (make-temp-file "cljfmt" nil ".clj"))
         (patchbuf (get-buffer-create "*Cljfmt patch*"))
         (errbuf (if cljfmt-show-errors (get-buffer-create "*Cljfmt Errors*")))
         (former-col (current-column))
