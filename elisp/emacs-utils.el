@@ -659,7 +659,7 @@
                 ('js-mode "console.log(\"%s\");")
                 ('go-mode "fmt.Println(\"%s\");")
                 ('rust-mode "println!(\"%s\");")
-                ('emacs-lisp-mode "(printall \"%s\"))"))
+                ('emacs-lisp-mode "(printall \"%s\")"))
             (pcase major-mode
               ('js-mode "console.log(\"%s:\", %s);")
               ('go-mode "fmt.Println(\"%s:\", %s);")
