@@ -35,9 +35,7 @@
     "*REPL*"
     "*eldoc*"
     "*Completions*"))
-(defvar wm/ephemeral-buffer-regexps '("\\*cider.*"
-                                      "magit-process.*"
-                                      "\\*ghelp.*"))
+(defvar wm/ephemeral-buffer-regexps '("magit-process.*"))
 ;; I don't want these windows to be opened using my standard window opening logic, because I have
 ;; dedicated specific places that I like to place them, but I do want them to be closed by
 ;; wm/dismiss-ephemeral-windows.
