@@ -57,7 +57,9 @@
 (defvar-local fsb/visibility-changes 0
   "How many times outline folding has changed in this buffer.")
 
-(defun fsb/note-visibility-change ()
+(defun fsb/note-visibility-change (&rest _)
+  "Note that folding has changed. Runs from `outline-view-change-hook', and `org-cycle-hook', since
+   org's folding doesn't run outline's hook."
   (cl-incf fsb/visibility-changes))
 
 (defun fsb/hidden-lines (start)
@@ -153,6 +155,16 @@
                (remhash window fsb/windows)))
            fsb/windows))
 
+;; Adding to org-cycle-hook before org is loaded would keep org's defcustom from setting the hook's
+;; default functions, so add to it only once org is loaded.
+(defun fsb/add-org-hook ()
+  (add-hook 'org-cycle-hook #'fsb/note-visibility-change))
+
+(defvar fringe-scroll-bar-mode)
+(with-eval-after-load 'org
+  (when fringe-scroll-bar-mode
+    (fsb/add-org-hook)))
+
 (define-minor-mode fringe-scroll-bar-mode
   "Shows a scroll bar thumb in the right fringe of each window."
   :global t
@@ -162,12 +174,14 @@
         (add-hook 'before-change-functions #'fsb/before-change)
         (add-hook 'after-change-functions #'fsb/after-change)
         (add-hook 'outline-view-change-hook #'fsb/note-visibility-change)
+        (when (featurep 'org) (fsb/add-org-hook))
         (add-hook 'pre-redisplay-functions #'fsb/before-redisplay)
         (add-hook 'window-scroll-functions #'fsb/after-scroll)
         (add-hook 'window-configuration-change-hook #'fsb/forget-deleted-windows))
     (remove-hook 'before-change-functions #'fsb/before-change)
     (remove-hook 'after-change-functions #'fsb/after-change)
     (remove-hook 'outline-view-change-hook #'fsb/note-visibility-change)
+    (remove-hook 'org-cycle-hook #'fsb/note-visibility-change)
     (remove-hook 'pre-redisplay-functions #'fsb/before-redisplay)
     (remove-hook 'window-scroll-functions #'fsb/after-scroll)
     (remove-hook 'window-configuration-change-hook #'fsb/forget-deleted-windows)
