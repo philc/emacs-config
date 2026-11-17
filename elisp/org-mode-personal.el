@@ -65,12 +65,15 @@
   (kbd "TAB") 'org-cycle)
 
 (defun preview-org ()
-  "Pipes the buffer's contents into a script which renders the markdown as HTML and opens in a
-   browser."
+  "Converts the buffer to markdown, renders it as HTML, and opens it in a browser, as
+   `mlm/preview-markdown' does for markdown."
   (interactive)
   ;; This convert_org_to_markdown.rb is a primitive script I've written which fits my needs.
-  (call-process-region (point-min) (point-max) "/bin/bash" nil nil nil "-c"
-                       "convert_org_to_markdown.rb | markdown_page.rb | bcat"))
+  (let ((html (util/call-process-and-check
+               "/bin/bash" (buffer-substring-no-properties (point-min) (point-max)) "-c"
+               (concat "~/scripts/publishing/convert_org_to_markdown.rb"
+                       " | ~/scripts/publishing/markdown_page.js --css github"))))
+    (util/call-process-and-check "browser" html)))
 
 
 (define-leader-keys 'org-mode-map
