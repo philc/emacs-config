@@ -738,7 +738,10 @@
   (let* ((hist (->> extended-command-history
                     copy-sequence
                     delete-dups ; This is destructive.
-                    ;; Remove strings from the history which aren't currently commands.
+                    ;; The history holds commands' names. Look up their symbols, and remove the
+                    ;; names which aren't currently commands. (commandp is always t for a string,
+                    ;; since a string can be a keyboard macro.)
+                    (-keep #'intern-soft)
                     (-filter #'commandp)))
          (all-commands '()))
     ;; Iterate over `obarray` (via mapatoms) and returns the list of all interactive commands.
