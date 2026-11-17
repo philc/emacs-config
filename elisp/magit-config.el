@@ -276,7 +276,7 @@ runs only once, on the final section."
    ";gri" 'magit-rebase-interactive
    ";gpush" 'git-push
    ";gpull" 'git-pull
-   ";re" 'reload-vimium-extension-firefox
+   ";re" 'ext-dev/reload-extension-in-browser
    ";rr" 'reload-active-browser-tab
    "o" 'show-commit-and-preserve-window
    "O" 'show-commit-and-preserve-window
@@ -307,7 +307,7 @@ runs only once, on the final section."
    ";gca" 'magit-commit-amend
    ";gpush" 'git-push
    ";gpull" 'git-pull
-   ";re" 'reload-vimium-extension-firefox
+   ";re" 'ext-dev/reload-extension-in-browser
    ";rr" 'reload-active-browser-tab
    "o" 'my-magit/diff-visit-file
    "O" 'my-magit/diff-visit-file
