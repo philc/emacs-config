@@ -19,8 +19,6 @@
 (setq split-window-preferred-function 'wm/split-window-sensibly-reverse)
 ;; Don't auto-focus the help window. I have my own shortcuts for switching to it and closing it.
 (setq help-window-select "never")
-;; Ensure these open in the currently selected window, not a new popup.
-(setq same-window-buffer-names '("*magit-log*"))
 
 ;; I manage my windows in a 4x4 grid. I want ephemeral or status-based buffers to always show in the
 ;; lower-right or right window, in that order of preference.
