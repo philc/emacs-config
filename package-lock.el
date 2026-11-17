@@ -7,7 +7,6 @@
  ("cond-let" . "09292a77001434f59ab55c775dec2b98cb18d028")
  ("consult" . "3c64214db5cd61a8f8186e4dce89c0e04be1652c")
  ("dash.el" . "fcb5d831fc08a43f984242c7509870f30983c27c")
- ("diminish.el" . "43d0b9e0d18e4d124e3f7dad9d73275fb678fa50")
  ("el-get" . "5c1e9c10860f35a1ee6e56b8d19505913b1c2ff2")
  ("emacsmirror-mirror" . "e938d9d807d3ba13496b592a52f0721529e45481")
  ("evil" . "6a3e1ddd04ac504a016590940d0af2a3361b9efd")

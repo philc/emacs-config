@@ -69,7 +69,6 @@
                       clojure-mode ; For editing Clojure files.
                       consult
                       dash ; Dash provides modern functions for working with lists in Emacs Lisp.
-                      diminish ; For hiding and shortening minor modes in the modeline
                       evil ; Evil mode implements Vim's modal bindings and text object manipulation.
                       go-mode ; For editing Go files.
                       inf-clojure ; Clojure REPL mode
@@ -90,7 +89,6 @@
 
 (defvar my-packages-at-head '(ag
                               browse-at-remote
-                              diminish
                               evil
                               go-mode
                               goto-chg ; A dependency of evil.

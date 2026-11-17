@@ -1099,19 +1099,6 @@
         (jinx-mode 1)))))
 
 ;;
-;; Diminish - hide or shorten the names of minor modes in your modeline.
-;; To see which minor modes you have loaded and what their modeline strings are: (message
-;; minor-mode-alist)
-;;
-(require 'diminish)
-(diminish 'visual-line-mode "")
-(diminish 'global-whitespace-mode "")
-;; (diminish 'global-visual-line-mode "")
-(diminish 'auto-fill-function "")
-(diminish 'projectile-mode " p")
-(diminish 'macos-keys-minor-mode "")
-
-;;
 ;; Powerline: improve the appearance and density of the Emacs mode line (status bar).
 ;;
 (require 'powerline)
