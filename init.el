@@ -410,6 +410,7 @@
   "a" (cons "annotate" (make-sparse-keymap))
   "aa" (cons "comment or reply" 'dr/comment)
   "ar" (cons "resolve or reopen" 'dr/toggle-resolved)
+  "ah" (cons "hide or show thread" 'dr/toggle-hidden)
   "ax" (cons "delete thread" 'dr/delete-thread)
   "al" (cons "list threads" 'dr/show-review)
   "wc" 'count-chars-region

@@ -26,6 +26,7 @@
 ;;   a doc or code which isn't yet committed. See "Comments on files" below.
 ;; - The keys for comments are under the leader key's "a" (annotate), in revision buffers and file
 ;;   buffers alike: aa comments or replies, ar resolves, ax deletes a thread, al lists them all.
+;;   In a file's buffer, ah hides a thread or shows it again.
 ;; - In a revision buffer, `o' opens a comment, like vim's open-line. RET visits the file, as RET
 ;;   opens a commit in the log. `O' does nothing on a diff line, since a comment always sits below
 ;;   the line it's about.
@@ -94,9 +95,10 @@
 ;; A comment on a file's text has "kind" "text", and no commit:
 ;;   {"id": "5b1e0d2a", "kind": "text", "file": "docs/plan.md", "line": 12,
 ;;    "code": "the line's text", "head": "<hash>", "dirty": true, "comment": "...",
-;;    "thread": [...], "resolved": false}
-;; "head" is the commit HEAD was at when I made the comment, and "dirty" is there when the file
-;; differed from it, so that the comment can be read later against the file it was about.
+;;    "thread": [...], "resolved": false, "hidden": true}
+;; "hidden" is there when I've hidden the thread (see "Hidden comments" below). "head" is the
+;; commit HEAD was at when I made the comment, and "dirty" is there when the file differed from
+;; it, so that the comment can be read later against the file it was about.
 (provide 'diff-review)
 (require 'cl-lib)
 (require 'seq)
@@ -191,6 +193,7 @@ of a comment itself has the comment's id, and REPLY-ID nil. Each of my replies h
 (defvar dr--store-path)
 (defvar dr--file)
 (defvar dr--change-in-comment)
+(defvar dr--hidden)
 (defvar dr--store-mtime)
 
 (defvar dr--quiet nil
@@ -214,7 +217,8 @@ of a comment itself has the comment's id, and REPLY-ID nil. Each of my replies h
                              :null-object nil :false-object nil))))))
 
 (defun dr--json-ready (comment)
-  "COMMENT with its thread as a vector, which `json-encode' writes as an array rather than guessing."
+  "COMMENT with its thread as a vector, which `json-encode' writes as an array rather than
+guessing."
   (mapcar (lambda (pair)
             (if (eq (car pair) 'thread)
                 (cons 'thread (vconcat (cdr pair)))
@@ -463,7 +467,8 @@ fenced code blocks are left alone. This is for Claude's replies, whose paragraph
 reply. Mine are editable, and Claude's aren't."
   (let-alist entry
     (let ((mine (equal .author "you")))
-      (concat (dr--fixed cid (if mine "── You\n" "── Claude\n") '(dr/reply-header dr/comment)
+      (concat (dr--fixed cid (if mine "── You\n" "── Claude\n")
+                         '(dr/reply-header dr/comment)
                          'dr-header (or .id t))
               (if (and mine .id)
                   (progn
@@ -883,25 +888,60 @@ it has a thread, reply to it. On a thread, reply to it."
   (dr--update-in-comment)
   (evil-insert-state))
 
+(defun dr--update-stored (cid fn)
+  "Change comment CID in the review file, by calling FN with a copy of it, which FN changes in
+place and returns."
+  (dr--save)
+  (let* ((store (dr--read-store))
+         (index (seq-position store cid (lambda (c id) (equal (alist-get 'id c) id)))))
+    (unless index
+      (user-error "This comment hasn't been saved"))
+    (let ((comment (funcall fn (copy-alist (nth index store)))))
+      (setf (nth index store) comment)
+      (dr--write-store store)
+      (puthash cid comment dr--comments))))
+
 (defun dr/toggle-resolved ()
   "Mark the thread at point resolved, or reopen it."
   (interactive)
-  (let ((cid (get-text-property (point) 'dr-block)))
+  (let ((cid (get-text-property (point) 'dr-block))
+        resolved)
     (unless cid
       (user-error "Not on a comment or its thread"))
-    (dr--save)
-    (let* ((store (dr--read-store))
-           (index (seq-position store cid (lambda (c id) (equal (alist-get 'id c) id)))))
-      (unless index
-        (user-error "This comment hasn't been saved"))
-      (let* ((comment (copy-alist (nth index store)))
-             (resolved (not (alist-get 'resolved comment))))
-        (setf (alist-get 'resolved comment nil t) resolved)
-        (setf (nth index store) comment)
-        (dr--write-store store)
-        (puthash cid comment dr--comments)
+    (dr--update-stored cid (lambda (comment)
+                             (setq resolved (not (alist-get 'resolved comment)))
+                             (setf (alist-get 'resolved comment nil t) resolved)
+                             comment))
+    (dr--rerender)
+    (message (if resolved "Resolved" "Reopened"))))
+
+(defun dr/toggle-hidden ()
+  "In a file's buffer, hide the thread at point, leaving a mark in the fringe of its line, and
+resolve it. On a line with that mark, show its hidden threads again."
+  (interactive)
+  (unless dr/file-mode
+    (user-error "Only comments on a file's lines can be hidden"))
+  (if-let* ((cid (get-text-property (point) 'dr-block)))
+      (let ((line (save-excursion
+                    (goto-char (car (dr--block-region cid)))
+                    (forward-line -1)
+                    (point-marker))))
+        (dr--update-stored cid (lambda (comment)
+                                 (setf (alist-get 'hidden comment) t)
+                                 (setf (alist-get 'resolved comment) t)
+                                 comment))
         (dr--rerender)
-        (message (if resolved "Resolved" "Reopened"))))))
+        (goto-char line)
+        (set-marker line nil)
+        (dr--update-in-comment))
+    (let ((ids (dr--hidden-on-line)))
+      (unless ids
+        (user-error "Not on a comment, or a line with hidden comments"))
+      (dolist (id ids)
+        (dr--update-stored id (lambda (comment)
+                                (setf (alist-get 'hidden comment nil t) nil)
+                                comment)))
+      (dr--rerender (car ids)))))
 
 (defun dr/delete-thread ()
   "Delete the comment at point, with its thread, after asking."
@@ -1004,7 +1044,8 @@ at the start of that comment's block."
     (setq buffer-undo-list nil))
   (dr--update-in-comment)
   ;; With no comments left, gn and gp go back to their usual meanings.
-  (when (and dr/file-mode (not (dr--any-p)))
+  (when (and dr/file-mode (not (dr--any-p))
+             (zerop (hash-table-count dr--hidden)))
     (dr/file-mode -1)))
 
 (defun dr/comment ()
@@ -1045,6 +1086,16 @@ at the start of that comment's block."
 ;;   follows its line when the file is changed outside of Emacs, e.g. by Claude. Saving updates
 ;;   the anchors, since my edits may have moved the lines.
 ;; - Claude's replies show up without a refresh: a timer checks whether the review file changed.
+;;
+;; Hidden comments: once I've read a thread on a file, I can hide it, so that it stops breaking up
+;; the file's text, rather than deleting it, which would leave it out of the archive /cr finish
+;; makes.
+;; - A hidden thread takes no lines in the buffer. A mark in the left fringe of its line shows it's
+;;   there, and ah on that line shows it again. The right fringe has the scroll bar.
+;; - Hiding a thread also resolves it, so /cr doesn't treat it as waiting on Claude.
+;; - Hidden threads aren't in the review buffer (al). /cr finish archives them with the rest.
+;; - The mark is an overlay on the line, so it follows the line as I edit, and saving records the
+;;   line it's on, as it does for the comments shown.
 
 (defvar-local dr--file nil
   "In a buffer with `dr/file-mode', the file's path relative to the repo's top level.")
@@ -1055,6 +1106,10 @@ at the start of that comment's block."
 (defvar-local dr--store-mtime nil
   "In a buffer with `dr/file-mode', the review file's modification time when the buffer last read
 or wrote it.")
+
+(defvar-local dr--hidden nil
+  "In a buffer with `dr/file-mode', a hash table from the id of each hidden comment to the overlay
+which marks its line.")
 
 (defvar-local dr--stripped nil
   "While the comments are out of a file buffer for saving it, where point was, from
@@ -1442,6 +1497,7 @@ and has no newline."
   (setq dr--comments (make-hash-table :test #'equal))
   (setq dr--placements (make-hash-table :test #'equal))
   (setq dr--units (make-hash-table :test #'equal))
+  (setq dr--hidden (make-hash-table :test #'equal))
   (let ((placed nil)
         (i 0))
     (pcase-dolist (`(,comment . ,place) (dr--places))
@@ -1456,17 +1512,71 @@ and has no newline."
     (pcase-dolist (`(,_ ,comment ,pos ,_ ,orphan ,eof) placed)
       (let* ((cid (alist-get 'id comment))
              (gap (and eof (dr--eof-gap cid))))
-        (puthash cid (cons nil (if orphan dr--orphan-bar dr--bar)) dr--placements)
-        (dr--quiet-insert (concat gap (dr--block-text comment)) pos nil)
-        (when (alist-get 'resolved comment)
-          (dr--mark-resolved (+ pos (length gap))))))
+        (if (alist-get 'hidden comment)
+            (dr--mark-hidden cid pos orphan eof)
+          (puthash cid (cons nil (if orphan dr--orphan-bar dr--bar)) dr--placements)
+          (dr--quiet-insert (concat gap (dr--block-text comment)) pos nil)
+          (when (alist-get 'resolved comment)
+            (dr--mark-resolved (+ pos (length gap)))))))
     (dr--fix-blocks)))
 
+(when (fboundp 'define-fringe-bitmap)
+  (define-fringe-bitmap 'dr--hidden-bitmap
+    [#b00011000
+     #b00111100
+     #b00111100
+     #b00011000]
+    nil nil 'center))
+
+(defconst dr--hidden-mark
+  (propertize " " 'display '(left-fringe dr--hidden-bitmap dr/comment-bar))
+  "Displayed in the left fringe of a line with hidden comments.")
+
+(defun dr--mark-hidden (cid pos orphan eof)
+  "Mark the line which hidden comment CID is on, where its text would go at POS, as from
+`dr--text-place' with ORPHAN and EOF. The overlay spans the line's text, and text typed at the
+line's start or end stays out of it."
+  (save-excursion
+    (goto-char pos)
+    (unless (or orphan eof)
+      (forward-line -1))
+    (let ((overlay (make-overlay (line-beginning-position) (line-end-position) nil t nil)))
+      (overlay-put overlay 'dr-hidden cid)
+      (overlay-put overlay 'dr-orphan orphan)
+      (overlay-put overlay 'before-string dr--hidden-mark)
+      (puthash cid overlay dr--hidden))))
+
+(defun dr--hidden-on-line ()
+  "The ids of the hidden comments on the line at point."
+  (let ((ids nil))
+    (dolist (overlay (overlays-in (line-beginning-position)
+                                  (min (1+ (line-end-position)) (point-max))))
+      (when-let* ((cid (overlay-get overlay 'dr-hidden))
+                  ((<= (line-beginning-position) (overlay-start overlay) (line-end-position))))
+        (push cid ids)))
+    ids))
+
+(defun dr--hidden-line-ends ()
+  "For each hidden comment in this file buffer, (CID . POS), where POS is the end of its line, or
+nil for an orphan."
+  (let ((ends nil))
+    (maphash (lambda (cid overlay)
+               (push (cons cid (unless (overlay-get overlay 'dr-orphan)
+                                 (save-excursion
+                                   (goto-char (overlay-start overlay))
+                                   (line-end-position))))
+                     ends))
+             (or dr--hidden #s(hash-table)))
+    ends))
+
 (defun dr--remove-all-file ()
-  "Delete every comment from this file buffer, and their anchors."
+  "Delete every comment from this file buffer, their anchors, and the marks of hidden comments."
   (pcase-dolist (`(,cid ,beg ,end) (reverse (dr--blocks)))
     (dr--file-delete beg end)
-    (dr--set-anchor cid nil)))
+    (dr--set-anchor cid nil))
+  (when dr--hidden
+    (maphash (lambda (_ overlay) (delete-overlay overlay)) dr--hidden)
+    (clrhash dr--hidden)))
 
 (defun dr--text-without-comments ()
   "The buffer's text without the comments, which is the file's."
@@ -1577,12 +1687,16 @@ indentation."
 (defun dr--update-anchors ()
   "Record in the review file the line each comment in this file buffer is below now, since edits
 may have moved it."
-  (let ((changes nil))
+  (let ((changes nil)
+        (line-ends (dr--hidden-line-ends)))
     (pcase-dolist (`(,cid ,beg ,_) (dr--blocks))
       (unless (or (= beg (point-min))
                   (eq (cdr (gethash cid dr--placements)) dr--orphan-bar))
+        (push (cons cid (1- beg)) line-ends)))
+    (pcase-dolist (`(,cid . ,line-end) line-ends)
+      (when line-end
         (save-excursion
-          (goto-char (1- beg))
+          (goto-char line-end)
           (let* ((bol (line-beginning-position))
                  (line (dr--file-line bol))
                  (code (buffer-substring-no-properties bol (line-end-position)))
@@ -1614,10 +1728,15 @@ found by its text."
     (dr--save)
     (dr--update-anchors)
     (let ((spot (dr--point-spot))
-          (marks (mapcar (pcase-lambda (`(,cid ,beg ,_))
-                           (cons cid (unless (eq (cdr (gethash cid dr--placements)) dr--orphan-bar)
-                                       (copy-marker beg))))
-                         (dr--blocks))))
+          (marks (append
+                  (mapcar (pcase-lambda (`(,cid ,beg ,_))
+                            (cons cid (unless (eq (cdr (gethash cid dr--placements)) dr--orphan-bar)
+                                        (copy-marker beg))))
+                          (dr--blocks))
+                  ;; Where a hidden comment's text would go: the start of the next line.
+                  (mapcar (pcase-lambda (`(,cid . ,line-end))
+                            (cons cid (and line-end (copy-marker (min (1+ line-end) (point-max))))))
+                          (dr--hidden-line-ends)))))
       (dr--remove-all-file)
       (setq dr--stripped (list :spot spot :marks marks)))))
 
@@ -1857,12 +1976,15 @@ there."
 (defun dr--insert-excerpt (file excerpt)
   "Insert EXCERPT, from `dr--excerpt', as a hunk of FILE. Return its section."
   (let* ((first (car excerpt))
-         (old-count (seq-count (lambda (l) (not (string-prefix-p "+" (plist-get l :text)))) excerpt))
-         (new-count (seq-count (lambda (l) (not (string-prefix-p "-" (plist-get l :text)))) excerpt))
+         (count-without (lambda (prefix)
+                          (seq-count (lambda (l) (not (string-prefix-p prefix (plist-get l :text))))
+                                     excerpt)))
+         (old-count (funcall count-without "+"))
+         (new-count (funcall count-without "-"))
          (from (list (plist-get first :old) old-count))
          (to (list (plist-get first :new) new-count)))
     (magit-insert-section section
-        (hunk (cons nil (list from to)) nil :from-range from :to-range to :combined nil)
+      (hunk (cons nil (list from to)) nil :from-range from :to-range to :combined nil)
       (magit-insert-heading
         (propertize (format "@@ -%d,%d +%d,%d @@\n" (car from) old-count (car to) new-count)
                     'font-lock-face 'magit-diff-hunk-heading))
@@ -1905,45 +2027,53 @@ COMMITS. Comments on no commit in COMMITS go last, under nil."
 (defun dr/review-refresh-buffer ()
   "Insert the branch's commits which have comments, and their files and excerpts. Record where
 each comment goes in `dr--review-places', for `dr--render' to insert them."
-  (let* ((comments (dr--read-store))
+  (let* ((comments (seq-remove (lambda (c) (alist-get 'hidden c)) (dr--read-store)))
          (groups (dr--review-match comments (dr--review-commits)))
-         (places nil))
+         (places nil)
+         (add-place (lambda (place) (push place places)))
+         (count (length comments)))
     (magit-set-header-line-format
-     (format "Review: %d %s" (length comments) (if (= (length comments) 1) "comment" "comments")))
+     (format "Review: %d %s" count (if (= count 1) "comment" "comments")))
     (magit-insert-section (review)
       (if (null comments)
           (insert "No review comments.\n")
         (pcase-dolist (`(,sha . ,mine) groups)
-          (magit-insert-section commit-section (commit sha)
-            (magit-insert-heading
-              (if sha
-                  (concat (propertize (magit-rev-abbrev sha) 'font-lock-face 'magit-hash) " "
-                          (propertize (plist-get (gethash sha dr--review-infos) :subject)
-                                      'font-lock-face 'magit-section-heading))
-                (propertize "Comments on commits which aren't on this branch"
-                            'font-lock-face 'magit-section-heading)))
-            (when-let* ((commit-comments (seq-filter (lambda (c) (equal (alist-get 'kind c) "commit"))
-                                                     mine)))
-              (dolist (c commit-comments)
-                (push (list c (point) commit-section (null sha)) places))
-              (dr--insert-gap))
-            (let* ((files (and sha (magit-git-lines "diff-tree" "--no-commit-id" "--name-only"
-                                                    "-r" "-M" sha)))
-                   (by-file (seq-filter (lambda (c) (alist-get 'file c)) mine))
-                   (ordered (append (seq-filter (lambda (f) (seq-find (lambda (c) (equal (alist-get 'file c) f))
-                                                                      by-file))
-                                                files)
-                                    (seq-difference (delete-dups (mapcar (lambda (c) (alist-get 'file c))
-                                                                         by-file))
-                                                    files))))
-              (dolist (file ordered)
-                (dr--insert-review-file sha file
-                                        (seq-filter (lambda (c) (equal (alist-get 'file c) file))
-                                                    by-file)
-                                        (lambda (place) (push place places))))))))
+          (dr--insert-review-commit sha mine add-place)))
       (when-let* ((text-comments (seq-filter #'dr--text-comment-p comments)))
-        (dr--insert-review-text text-comments (lambda (place) (push place places)))))
+        (dr--insert-review-text text-comments add-place)))
     (setq dr--review-places (nreverse places))))
+
+(defun dr--insert-review-commit (sha comments add-place)
+  "Insert the section of commit SHA, or of commits off the branch if SHA is nil, with its
+COMMENTS: those on the whole commit, then those on each file. Call ADD-PLACE with where each
+comment goes."
+  (magit-insert-section commit-section
+    (commit sha)
+    (magit-insert-heading
+      (if sha
+          (concat (propertize (magit-rev-abbrev sha) 'font-lock-face 'magit-hash) " "
+                  (propertize (plist-get (gethash sha dr--review-infos) :subject)
+                              'font-lock-face 'magit-section-heading))
+        (propertize "Comments on commits which aren't on this branch"
+                    'font-lock-face 'magit-section-heading)))
+    (when-let* ((commit-comments (seq-filter (lambda (c) (equal (alist-get 'kind c) "commit"))
+                                             comments)))
+      (dolist (c commit-comments)
+        (funcall add-place (list c (point) commit-section (null sha))))
+      (dr--insert-gap))
+    (let ((by-file (seq-filter (lambda (c) (alist-get 'file c)) comments)))
+      (dolist (file (dr--review-file-order sha by-file))
+        (let ((mine (seq-filter (lambda (c) (equal (alist-get 'file c) file)) by-file)))
+          (dr--insert-review-file sha file mine add-place))))))
+
+(defun dr--review-file-order (sha comments)
+  "The files which COMMENTS are on, in the order commit SHA's diff has them. Files which aren't in
+the diff go last."
+  (let ((files (and sha (magit-git-lines "diff-tree" "--no-commit-id" "--name-only" "-r" "-M"
+                                         sha)))
+        (commented (delete-dups (mapcar (lambda (c) (alist-get 'file c)) comments))))
+    (append (seq-filter (lambda (f) (member f commented)) files)
+            (seq-difference commented files))))
 
 (defun dr--text-excerpt (comment)
   "In a buffer with a file's text, the excerpt to show above text COMMENT in the review buffer, as
@@ -1973,7 +2103,8 @@ above it in the file as it is now. Call ADD-PLACE with where each comment goes."
                              (insert-file-contents path))
                            (mapcar (lambda (c) (cons c (dr--text-excerpt c))) mine)))
                (orphans (seq-remove #'cdr excerpts)))
-          (magit-insert-section file-section (file file)
+          (magit-insert-section file-section
+            (file file)
             (magit-insert-heading
               (propertize (concat file "\n") 'font-lock-face 'magit-diff-file-heading))
             (pcase-dolist (`(,c . ,_) orphans)
@@ -1983,7 +2114,8 @@ above it in the file as it is now. Call ADD-PLACE with where each comment goes."
             (pcase-dolist (`(,c . (,_ . ,text))
                            (sort (seq-filter #'cdr excerpts)
                                  (lambda (a b) (< (cadr a) (cadr b)))))
-              (let ((section (magit-insert-section excerpt (dr-excerpt)
+              (let ((section (magit-insert-section excerpt
+                               (dr-excerpt)
                                (insert (propertize (concat text "\n")
                                                    'font-lock-face 'magit-diff-context))
                                excerpt)))
@@ -1995,9 +2127,9 @@ above it in the file as it is now. Call ADD-PLACE with where each comment goes."
 here."
   (let* ((buffer (find-file-noselect (expand-file-name (alist-get 'file comment) (magit-toplevel))))
          (window (let ((display-buffer-overriding-action '((display-buffer-reuse-window
-                                                             display-buffer-use-some-window
-                                                             display-buffer-pop-up-window)
-                                                            (inhibit-same-window . t))))
+                                                            display-buffer-use-some-window
+                                                            display-buffer-pop-up-window)
+                                                           (inhibit-same-window . t))))
                    (display-buffer buffer))))
     (with-current-buffer buffer
       (unless dr/file-mode
@@ -2011,7 +2143,8 @@ here."
 (defun dr--insert-review-file (sha file comments add-place)
   "Insert FILE's section, with an excerpt for each of its line COMMENTS on commit SHA, and call
 ADD-PLACE with where each comment goes."
-  (magit-insert-section file-section (file file)
+  (magit-insert-section file-section
+    (file file)
     (magit-insert-heading
       (propertize (concat file "\n") 'font-lock-face 'magit-diff-file-heading))
     (let* ((lines (and sha (dr--diff-lines sha file)))
@@ -2021,14 +2154,15 @@ ADD-PLACE with where each comment goes."
           (if excerpt
               (push (cons c excerpt) excerpts)
             ;; File comments, and line comments whose line is gone, go under the heading.
-            (funcall add-place (list c (point) file-section
-                                     (not (equal (alist-get 'kind c) "file")))))))
+            (let ((orphan (not (equal (alist-get 'kind c) "file"))))
+              (funcall add-place (list c (point) file-section orphan))))))
       (when (length< excerpts (length comments))
         (dr--insert-gap))
       ;; In the order of the lines in the diff.
-      (setq excerpts (sort (nreverse excerpts)
-                           (lambda (a b) (< (seq-position lines (car (last (cdr a))))
-                                            (seq-position lines (car (last (cdr b))))))))
+      (let ((diff-position (lambda (excerpt) (seq-position lines (car (last (cdr excerpt)))))))
+        (setq excerpts (sort (nreverse excerpts)
+                             (lambda (a b) (< (funcall diff-position a)
+                                              (funcall diff-position b))))))
       (pcase-dolist (`(,c . ,excerpt) excerpts)
         (let ((hunk (dr--insert-excerpt file excerpt)))
           (funcall add-place (list c (point) hunk nil))

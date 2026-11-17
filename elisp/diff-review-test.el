@@ -713,6 +713,38 @@
     (dr/toggle-resolved)
     (should (alist-get 'resolved (car (dr--read-store))))))
 
+;; A hidden thread leaves only a mark on its line, which follows the line, and isn't in the
+;; review buffer.
+(ert-deftest dr-test/hidden-file-comment ()
+  (dr-test/with-file "c.txt" "one\ntwo\nthree\n"
+    (dr-test/comment-on "^two" "hi")
+    (dr-test/goto "^hi")
+    (dr/toggle-hidden)
+    (should (equal (dr-test/buffer-text) "one\ntwo\nthree\n"))
+    (should (looking-at-p "two"))
+    (let ((comment (car (dr--read-store))))
+      (should (alist-get 'hidden comment))
+      (should (alist-get 'resolved comment)))
+    (should dr/file-mode)
+    ;; The mark follows its line through an edit and a save.
+    (goto-char (point-min))
+    (dr-test/keys "O zero <escape>")
+    (save-buffer)
+    (should (equal (dr-test/disk "c.txt") "zero\none\ntwo\nthree\n"))
+    (should (equal (alist-get 'line (car (dr--read-store))) 3))
+    (dr-test/goto "^two")
+    (should (dr--hidden-on-line))
+    (dr/show-review)
+    (with-current-buffer (get-buffer (format "magit-review: %s" (file-name-nondirectory
+                                                                 (directory-file-name repo))))
+      (should-not (dr--any-p)))
+    ;; Showing it again.
+    (switch-to-buffer (get-file-buffer (expand-file-name "c.txt" repo)))
+    (dr-test/goto "^two")
+    (dr/toggle-hidden)
+    (should (equal (dr-test/buffer-text) "zero\none\ntwo\n[[hi\n]]three\n"))
+    (should-not (alist-get 'hidden (car (dr--read-store))))))
+
 (ert-deftest dr-test/file-comments-in-the-review-buffer ()
   (dr-test/with-file "c.txt" "one\ntwo\nthree\n"
     (dr-test/comment-on "^two" "hi")
