@@ -290,15 +290,6 @@
          (message-log-max nil)) ; Don't show in the Messages buffer. http://stackoverflow.com/q/10164929
     (save-buffer)))
 
-(defun util/with-env-var (name value fn)
-  "Temporarily sets an env var to the given value and excutes fn."
-  (let ((original-value (getenv name)))
-    (unwind-protect
-        (progn
-          (setenv name value)
-          (funcall fn))
-      (setenv name original-value))))
-
 (defun util/without-confirmation (fn &rest args)
   "Applies the given fn but skips any confirmation prompts invoked via yes-or-no-p."
   ;; Taken from https://www.emacswiki.org/emacs/YesOrNoP.
