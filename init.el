@@ -622,7 +622,7 @@
                   ;; Cmd+< and Cmd+> move the current tab, as in my Ghostty config for tmux.
                   (kbd "M-<") 'tab-bar-move-tab-backward
                   (kbd "M->") 'tab-bar-move-tab
-                  (kbd "M-x") 'my-execute-extended-command-mru
+                  (kbd "M-x") 'execute-extended-command
                   (kbd "M-p") 'ws/picker
                   (kbd "M-J") 'ws/prev-workspace
                   (kbd "M-K") 'ws/next-workspace
@@ -724,44 +724,14 @@
 
 (setq vertico-count 15) ; Number of results to show.
 
+;; By default, vertico lists the entries of the minibuffer's history first, most recently used
+;; first. So M-x lists the commands I've run most recently first, since savehist-mode saves M-x's
+;; history across sessions.
 (vertico-mode)
 
 (require 'consult)
 ;; Don't show previews of buffers in consult-buffer.
 (setq consult-preview-key nil)
-
-(defun my-execute-extended-command-mru ()
-  "A replacement for the M-x menu: show a list of the most recently used interactive commands, as
-   saved by savehist-mode, and then all other commands after that."
-  ;; I wrote this because I couldn't understand why Vertico wasn't providing this UX.
-  (interactive)
-  (let* ((hist (->> extended-command-history
-                    copy-sequence
-                    delete-dups ; This is destructive.
-                    ;; The history holds commands' names. Look up their symbols, and remove the
-                    ;; names which aren't currently commands. (commandp is always t for a string,
-                    ;; since a string can be a keyboard macro.)
-                    (-keep #'intern-soft)
-                    (-filter #'commandp)))
-         (all-commands '()))
-    ;; Iterate over `obarray` (via mapatoms) and returns the list of all interactive commands.
-    (mapatoms (lambda (sym)
-                (when (commandp sym)
-                  (push sym all-commands))))
-    (setq all-commands (nreverse all-commands))
-    ;; Remove hist commands from all-commands.
-    (dolist (cmd hist)
-      (setq all-commands (delq cmd all-commands)))
-    (let* ((name (completing-read "M-x "
-                                  (append hist all-commands)
-                                  nil
-                                  t
-                                  nil
-                                  ;; Write the selected value to this history list, which is
-                                  ;; what savehist-mode persists.
-                                  'extended-command-history))
-           (cmd (intern name)))
-      (call-interactively cmd))))
 
 ;;
 ;; Dired mode - using the Emacs file browser.
