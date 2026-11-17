@@ -644,18 +644,20 @@
                     s-trim
                     (s-replace "\n" "")
                     (s-chop-suffix ";")))
-         (format-str
-          (if omit-the-value
-              (pcase major-mode
-                ('js-mode "console.log(\"%s\");")
-                ('go-mode "fmt.Println(\"%s\");")
-                ('rust-mode "println!(\"%s\");")
-                ('emacs-lisp-mode "(printall \"%s\")"))
-            (pcase major-mode
-              ('js-mode "console.log(\"%s:\", %s);")
-              ('go-mode "fmt.Println(\"%s:\", %s);")
-              ('rust-mode "println!(\"%s: {:?}\", %s);")
-              ('emacs-lisp-mode "(printall \"%s\" %s)"))))
+         ;; Each mode family's log statements, without and with the value.
+         (formats
+          (cond
+           ((derived-mode-p '(js-base-mode typescript-ts-base-mode))
+            '("console.log(\"%s\");" "console.log(\"%s:\", %s);"))
+           ((derived-mode-p '(go-mode go-ts-mode))
+            '("fmt.Println(\"%s\");" "fmt.Println(\"%s:\", %s);"))
+           ((derived-mode-p '(rust-mode rust-ts-mode))
+            '("println!(\"%s\");" "println!(\"%s: {:?}\", %s);"))
+           ;; This covers emacs-lisp-mode and lisp-interaction-mode.
+           ((derived-mode-p 'lisp-data-mode)
+            '("(printall \"%s\")" "(printall \"%s\" %s)"))
+           (t (user-error "No log statement is defined for %s" major-mode))))
+         (format-str (if omit-the-value (cl-first formats) (cl-second formats)))
          (statement
           (format format-str
                   ;; Escape any quotes.
