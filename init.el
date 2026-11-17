@@ -2108,18 +2108,6 @@
   (member bufname session/window-buffer-names))
 
 ;;
-;; Sql mode
-;;
-
-(defun sql/format-buffer ()
-  (interactive)
-  ;; Get this with `brew install sql-formatter`.
-  (util/replace-region-with-command-output "sql-formatter --language postgresql"))
-
-(define-leader-keys 'sql-mode-map
-  "i" 'sql/format-buffer)
-
-;;
 ;; Jumping
 ;;
 ;; Evil has Vim-style jumping support built-in. However, the implementation is buggy and incomplete.
