@@ -200,9 +200,9 @@
   ;; visits every heading in the buffer.
   (let ((headings nil))
     (save-excursion
-     (goto-char (point-min))
-     (while (re-search-forward "^\\* " nil t)
-       (push (cons (org-get-heading t t t t) (line-beginning-position)) headings)))
+      (goto-char (point-min))
+      (while (re-search-forward "^\\* " nil t)
+        (push (cons (org-get-heading t t t t) (line-beginning-position)) headings)))
     (nreverse headings)))
 
 (defun org/goto-top-level-heading-named (heading)
