@@ -175,8 +175,9 @@
 
 (setq sentence-end-double-space nil) ; Don't add double spaces after periods when filling strings.
 (setq-default fill-column 100) ; Wrap at 100 chars when using the Emacs fill commands.
-(auto-fill-mode t) ; When typing across the fill-column, hard-wrap the line as you type.
-(add-hook 'text-mode-hook 'turn-on-auto-fill) ; Some modes, like markdown, turn off autofill.
+;; When typing across the fill-column in a text buffer, hard-wrap the line as you type. This covers
+;; *scratch* too, since its mode, markdown-lite-mode, is a text mode.
+(add-hook 'text-mode-hook 'turn-on-auto-fill)
 
 ;; When showing long lines, truncate them and require horizontal scrolling, rather than wrapping.
 (set-default 'truncate-lines t)
