@@ -30,8 +30,6 @@
     "*clojure-simple*" "*inf-clojure*" "*Cljfmt Errors*"
     ;; Emacs lisp
     "*Backtrace*"
-    ;; Coffeescript
-    "*coffee-compiled*"
     ;; Go
     "*Compile-Log*" "*Gofmt Errors*"
     ;; Javascript
