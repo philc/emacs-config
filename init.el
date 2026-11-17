@@ -116,7 +116,6 @@
 ;; required.
 (setq use-short-answers t)
 
-;; Increase the maximum stack depth (the default is 1000).
 ;; Turn off backups and autosaves so we don't have ~ and # files strewn about the working directory.
 ;; I've tried storing backups in my home directory as suggested by
 ;; http://stackoverflow.com/q/151945/46237, but still I see the occasional backup file in the
@@ -678,7 +677,7 @@
 ;; http://zuttobenkyou.wordpress.com/2012/06/15/emacs-vimlike-tabwindow-navigation/
 (defun vimlike-quit ()
   "Vimlike ':q' behavior: close current window if there are split windows;
-   otherwise, close current tab (elscreen)."
+   otherwise, close current tab."
   (interactive)
   ;; I don't like to have unsaved buffers floating around. I save buffers when switching away from a
   ;; window, and when closing the window.
@@ -942,9 +941,9 @@
 ;; Bind "M-r" when the find-files minibuffer is open to refresh Projectile's cache. This is a common
 ;; need when you open a find files dialog and realize a newly added file is not there due to a stale
 ;; cache.
-;; NOTE(philc): Ideally we would bind this key in ido-file-completion-map, but minibuffer-local-map
-;; has M-r bound already. Also, minor note: for some reason, typing this keybinding recursively
-;; fails with "Error in post-command hook..."
+;; NOTE(philc): This binds M-r in every minibuffer, replacing minibuffer-local-map's own M-r
+;; (previous-matching-history-element). Also, minor note: for some reason, typing this keybinding
+;; recursively fails with "Error in post-command hook..."
 (define-key minibuffer-local-map (kbd "M-r")
             (lambda ()
               (interactive)
@@ -1131,7 +1130,6 @@
                           (rhs (list
                                 ;; TODO(philc): What is this?
                                 (powerline-raw global-mode-string face1 'r)
-                                ;; "Version control" - show the modeline of any active VC mode.
                                 (powerline-raw "%4l" face1 'l) ; Current line number
                                 (powerline-raw ":" face1 'l)
                                 (powerline-raw "%3c" face1 'r) ; Current column number
@@ -1906,7 +1904,7 @@
 ;; The formatter script comes from here:
 ;; http://notebook.kulchenko.com/programming/lua-beautifier-in-55-lines-of-perl
 (defun indent-lua-buffer ()
-  "Pipe the current buffer into `html-beautify`, and replace the current buffer's contents."
+  "Pipe the current buffer into `lua_indent.pl`, and replace the current buffer's contents."
   (interactive)
   ;; I don't know why, but save-excursion does not maintain the cursor position.
   (let ((p (point))

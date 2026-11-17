@@ -157,7 +157,8 @@
    the heading."
   (interactive)
   ;; NOTE(philc): These are personalized to the way I organize my org mode TODO list.
-  (message "[L] Liftoff  [B] Base  [S] Study  [N] Entertainment  [M] Emacs [J] Journal")
+  (message (concat "[L] Liftoff  [C] Civ  [B] Base  [S] Study  [J] Journal  [N] Entertainment  "
+                   "[M] Emacs  [H] Handbook  [V] Vimium"))
   (when-let* ((heading
                (or heading-arg
                    (pcase (read-char)
