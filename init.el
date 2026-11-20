@@ -1806,22 +1806,6 @@
 (add-to-list 'compilation-error-regexp-alist 'deno-lint-item)
 
 ;;
-;; Typescript
-;;
-(add-to-list 'auto-mode-alist '("\\.ts\\'" . typescript-ts-mode))
-(setq treesit-language-source-alist
-      '((typescript . ("https://github.com/tree-sitter/tree-sitter-typescript"
-                       nil
-                       "typescript/src"))))
-;; Loading treesit makes no-littering add var/treesit/ to `treesit-extra-load-path'. Without it,
-;; `treesit-language-available-p' (a builtin) wouldn't find grammars installed there.
-(require 'treesit)
-(let ((lang 'typescript))
-  (unless (treesit-language-available-p lang)
-    (message "Installing Tree-sitter grammar for %s..." lang)
-    (treesit-install-language-grammar lang (no-littering-expand-var-file-name "treesit/"))))
-
-;;
 ;; Ag (silver searcher)
 ;;
 (require 'ag)

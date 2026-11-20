@@ -17,7 +17,7 @@ that require Deno.
    brew tap d12frosted/emacs-plus
    brew install emacs-plus@31
    brew install git enchant pkgconf the_silver_searcher deno
-   xcode-select --install # A C compiler, for jinx's module and the tree-sitter grammars
+   xcode-select --install # A C compiler, for jinx's module
    ```
 
    enchant and pkgconf are needed to compile jinx (the spell checker). the_silver_searcher is used
@@ -43,7 +43,7 @@ TODO(philc): Remove this; too obvious.
    any errors in the terminal, rather than during Emacs's startup. It needs network access to
    GitHub.
 
-4. Start Emacs. On first start it also compiles `elisp/` and installs tree-sitter grammars.
+4. Start Emacs. On first start it also compiles `elisp/`.
 
 ## Packages
 
