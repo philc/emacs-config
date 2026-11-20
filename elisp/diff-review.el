@@ -240,19 +240,35 @@ guessing."
 ;;
 ;; The commit, and the lines of its diff.
 
-(defun dr--patch-id (sha)
-  "The stable patch-id of commit SHA, or nil, e.g. for an empty commit."
-  (with-temp-buffer
-    (magit-git-insert "show" "--format=" "--no-color" "--no-ext-diff" sha)
-    (call-process-region (point-min) (point-max) (magit-git-executable) t t nil
-                         "patch-id" "--stable")
-    (car (split-string (buffer-string)))))
-
 (defun dr--commit-info (&optional sha)
-  (let ((sha (or sha magit-buffer-revision-oid)))
-    (list :sha sha
-          :subject (magit-rev-format "%s" sha)
-          :patch-id (dr--patch-id sha))))
+  "The plist (:sha :subject :patch-id) of commit SHA, or of the commit this buffer shows."
+  (car (hash-table-values (dr--commit-infos (list (or sha magit-buffer-revision-oid))))))
+
+(defun dr--commit-infos (shas)
+  "A hash table from each of commits SHAS to its plist from `dr--commit-info'. A patch-id is nil
+for a commit with no diff, such as an empty one. This looks up every commit with two git calls,
+since looking them up one at a time, with three git calls each, made the review buffer take 2s
+to open: when a comment's commit was rewritten, the review buffer looks up all of the last 100
+commits, to find the comment's commit by its patch-id or subject."
+  (let ((infos (make-hash-table :test #'equal)))
+    (dolist (line (apply #'magit-git-lines "log" "--no-walk=unsorted" "--format=%H %s" shas))
+      (let ((space (string-search " " line)))
+        (puthash (substring line 0 space)
+                 (list :sha (substring line 0 space)
+                       :subject (substring line (1+ space))
+                       :patch-id nil)
+                 infos)))
+    (with-temp-buffer
+      ;; --cc gives merges the diff git show gives them.
+      (apply #'magit-git-insert "log" "--no-walk=unsorted" "-p" "--cc" "--format=commit %H"
+             "--no-color" "--no-ext-diff" shas)
+      (call-process-region (point-min) (point-max) (magit-git-executable) t t nil
+                           "patch-id" "--stable")
+      (dolist (line (split-string (buffer-string) "\n" t))
+        (pcase-let ((`(,patch-id ,sha) (split-string line)))
+          (when-let* ((info (gethash sha infos)))
+            (puthash sha (plist-put info :patch-id patch-id) infos)))))
+    infos))
 
 (defun dr--matches-commit-p (comment info)
   "Whether COMMENT is on the commit described by INFO, a plist from `dr--commit-info'."
@@ -2012,14 +2028,15 @@ COMMITS. Comments on no commit in COMMITS go last, under nil."
           (push (cons sha mine) groups)
           (setq left (seq-difference left mine #'eq)))))
     (when left
-      (dolist (sha commits)
-        (let* ((info (or (gethash sha infos) (dr--commit-info sha)))
-               (mine (seq-filter (lambda (c) (dr--matches-commit-p c info)) left)))
-          (when mine
-            (puthash sha info infos)
-            (setf (alist-get sha groups nil nil #'equal)
-                  (append (alist-get sha groups nil nil #'equal) mine))
-            (setq left (seq-difference left mine #'eq))))))
+      (let ((all (dr--commit-infos commits)))
+        (dolist (sha commits)
+          (let* ((info (gethash sha all))
+                 (mine (seq-filter (lambda (c) (dr--matches-commit-p c info)) left)))
+            (when mine
+              (puthash sha info infos)
+              (setf (alist-get sha groups nil nil #'equal)
+                    (append (alist-get sha groups nil nil #'equal) mine))
+              (setq left (seq-difference left mine #'eq)))))))
     (setq dr--review-infos infos)
     (append (seq-filter #'car (mapcar (lambda (sha) (assoc sha groups)) commits))
             (and left (list (cons nil left))))))

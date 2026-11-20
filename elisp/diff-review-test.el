@@ -290,6 +290,19 @@
     (dr-test/show "HEAD~1")
     (should-not (dr--any-p))))
 
+(ert-deftest dr-test/commit-infos ()
+  (dr-test/with-repo
+    (dr-test/git "commit" "-q" "--allow-empty" "-m" "empty")
+    (let* ((shas (magit-git-lines "rev-list" "HEAD"))
+           (infos (dr--commit-infos shas)))
+      (dolist (sha shas)
+        (let ((patch-id (car (split-string
+                              (shell-command-to-string
+                               (format "git show %s | git patch-id --stable" sha))))))
+          (should (equal (gethash sha infos)
+                         (list :sha sha :subject (magit-rev-format "%s" sha)
+                               :patch-id patch-id))))))))
+
 (ert-deftest dr-test/fixups-of-one-commit-keep-their-own-comments ()
   (dr-test/with-repo
     (dr-test/write "a.txt" "one\nTWO\nthree\nfour\nfive\nsix\nseven\n")
