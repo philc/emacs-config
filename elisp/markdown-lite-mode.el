@@ -329,7 +329,8 @@
            (mlm/preview-markdown nil t)))
 
   (evil-define-key 'visual markdown-lite-mode-map
-    (kbd "M-b") 'mlm/markdown-bold)
+    (kbd "M-b") 'mlm/markdown-bold
+    "gq" 'mlm/fill)
 
   (evil-define-key 'normal markdown-lite-mode-map
     ;; Autocomplete setext headers by typing "==" or "--" on the header's line in normal mode.
@@ -347,7 +348,8 @@
     (kbd "C-S-A-H") 'mlm/markdown-promote-subtree
     "gh" 'mlm/navigate-to-top-level-heading
     "gH" 'mlm/navigate-to-any-heading
-    "gu" 'mlm/markdown-up-heading)
+    "gu" 'mlm/markdown-up-heading
+    "gq" 'mlm/fill)
 
   (evil-define-key 'insert markdown-lite-mode-map
     (kbd "C-S-H") 'mlm/markdown-promote
@@ -916,6 +918,27 @@ If the point is not in a list item, do nothing."
     (beginning-of-line)
     (or (looking-at paragraph-separate)
         (mlm/markdown-fill-protected-line-p))))
+
+(defun mlm/markdown-fill-protected-lines-p (beg end)
+  "Whether every line from BEG to END is a line which filling skips (see
+   `mlm/markdown-fill-protected-line-p')."
+  (save-excursion
+    (goto-char beg)
+    (let ((protected t))
+      (while (and protected (< (point) end))
+        (setq protected (mlm/markdown-fill-protected-line-p))
+        (forward-line 1))
+      protected)))
+
+(evil-define-operator mlm/fill (beg end)
+  "Like `evil-fill' (gq), but when every line from BEG to END is in a code block or table, which
+   filling skips, fills them anyway as one paragraph. This lets gql wrap a long line of a code
+   block."
+  :move-point nil
+  :type line
+  (if (mlm/markdown-fill-protected-lines-p beg end)
+      (save-excursion (fill-region-as-paragraph beg end))
+    (evil-fill beg end)))
 
 (defun mlm/markdown-fill-forward-paragraph (arg)
   "The `fill-forward-paragraph-function'. Like `forward-paragraph', but treats code blocks and

@@ -64,6 +64,25 @@
                          "```\n"
                          "ccc ddd\n"))))
 
+(ert-deftest markdown-lite-mode-test/gq-fills-code-block-line ()
+  "gq on lines which are all in a code block fills them, though filling a paragraph skips them."
+  (with-temp-buffer
+    (insert (concat "aaa\n"
+                    "\n"
+                    "    bbb ccc ddd eee\n"
+                    "    fff\n"))
+    (markdown-lite-mode)
+    (setq-local fill-column 15)
+    (goto-char (point-min))
+    (forward-line 2)
+    (mlm/fill (line-beginning-position) (line-beginning-position 2))
+    (should (equal (buffer-substring-no-properties (point-min) (point-max))
+                   (concat "aaa\n"
+                           "\n"
+                           "    bbb ccc ddd\n"
+                           "    eee\n"
+                           "    fff\n")))))
+
 (ert-deftest markdown-lite-mode-test/fill-skips-table ()
   (let ((table (concat "| a | b |\n"
                        "|---|---|\n"
