@@ -802,12 +802,16 @@ comment :file, :side, :line, :code), and where it goes (:pos :section)."
       (pcase-let ((`(,pos ,section) (dr--commit-place)))
         (list :kind "commit" :pos pos :section section))))))
 
+(defun dr--enclosing-commit (section)
+  "The commit section which SECTION is in, or is, or nil."
+  (while (and section (not (eq (oref section type) 'commit)))
+    (setq section (oref section parent)))
+  section)
+
 (defun dr--commit-at-point ()
   "The plist from `dr--commit-info' of the commit a comment opened at point would be on."
   (if (derived-mode-p 'dr/review-mode)
-      (let ((section (magit-current-section)))
-        (while (and section (not (eq (oref section type) 'commit)))
-          (setq section (oref section parent)))
+      (let ((section (dr--enclosing-commit (magit-current-section))))
         (unless section
           (user-error "Not on a commit"))
         (gethash (oref section value) dr--review-infos))
@@ -2200,12 +2204,10 @@ the comment below the excerpt at point."
                        (when-let* ((pos (dr--any-p (oref section start) (oref section end))))
                          (get-text-property pos 'dr-block)))))
          (comment (and cid (gethash cid dr--comments)))
-         (commit section))
+         (commit (dr--enclosing-commit section)))
     (when (and comment (dr--text-comment-p comment))
       (dr--visit-text-comment comment)
       (cl-return-from dr/review-visit))
-    (while (and commit (not (eq (oref commit type) 'commit)))
-      (setq commit (oref commit parent)))
     (unless (and commit (oref commit value))
       (user-error "Not on a commit"))
     (let ((buffer (dr--show-commit-elsewhere (oref commit value) nil)))
@@ -2328,6 +2330,16 @@ the line to visit."
           (dr--render)
           (dr--goto-spot spot))))))
 
+(defun dr--around-diff-dwim (dwim)
+  "Magit asks this which commit the diff at point is of, e.g. to syntax-highlight a hunk with the
+file as it was then. The review buffer has no commit of its own, so answer with the commit whose
+section point is in."
+  (if-let* (((derived-mode-p 'dr/review-mode))
+            (commit (dr--enclosing-commit (magit-current-section)))
+            (sha (oref commit value)))
+      (cons 'commit sha)
+    (funcall dwim)))
+
 (defun dr--before-apply (sections &rest _)
   "Refuse to apply or reverse hunks which have comments, since magit makes the patch from the text
 of the hunks."
@@ -2375,6 +2387,7 @@ comments, and from recording the paint in the undo history, which holds only com
 (add-hook 'magit-revision-mode-hook #'dr--setup)
 (advice-add 'magit-refresh-buffer :around #'dr--around-refresh)
 (advice-add 'magit-diff-visit-file--noselect :around #'dr--around-visit)
+(advice-add 'magit-diff--dwim :around #'dr--around-diff-dwim)
 (advice-add 'magit-apply-patch :before #'dr--before-apply)
 (dolist (command '(magit-apply magit-reverse magit-discard))
   (advice-add command :before #'dr--before-apply-command))
