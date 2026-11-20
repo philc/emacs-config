@@ -13,6 +13,13 @@
 (require 'dash)
 (require 's)
 (require 'view) ; for View-scroll-half-page-backward.
+
+;; Syntax-highlight the code in diffs, using each file's major mode. Magit's diff faces color the
+;; text of added and removed lines, which would hide the syntax colors, so leave their foregrounds
+;; unset and mark lines by background color alone. This must be set before Magit is loaded, because
+;; Magit reads it when defining its faces.
+(defvar magit-diff-specify-hunk-foreground nil)
+
 (require 'magit)
 (require 'git-rebase) ; for git-rebase-mode-map.
 (require 'evil)
@@ -41,6 +48,9 @@
 ;; Don't warn when a diff has a very long line (e.g. a minified file) and Emacs switches the buffer
 ;; to its long-line optimizations, which disable section highlighting.
 (setq magit-show-long-lines-warning nil)
+
+;; Syntax-highlight diffs. See `magit-diff-specify-hunk-foreground' above.
+(setq magit-diff-fontify-hunk 'all)
 
 ;; Have Magit open buffers in the current window, rather than a new split.
 ;; https://github.com/magit/magit/issues/2541

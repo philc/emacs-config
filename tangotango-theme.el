@@ -272,6 +272,11 @@
  `(ecb-tag-header-face ((t (:background "#f57900"))))
  `(magit-header ((t (:foreground "#edd400"))))
  `(magit-diff-add ((t (:foreground "#729fcf"))))
+ ;; Dark backgrounds for added and removed lines, so the syntax colors in diffs stay readable.
+ `(magit-diff-added ((t (:extend t :background "#223d25"))))
+ `(magit-diff-added-highlight ((t (:extend t :background "#284a2c"))))
+ `(magit-diff-removed ((t (:extend t :background "#472a2a"))))
+ `(magit-diff-removed-highlight ((t (:extend t :background "#553030"))))
  `(magit-item-highlight ((t (:weight extra-bold :inverse-video t))))
  `(diff-header ((t (:background "gray30"))))
  `(diff-index ((t (:foreground "#edd400" :bold t))))
