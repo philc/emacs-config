@@ -6,6 +6,7 @@
 
 (provide 'markdown-lite-mode)
 (require 'evil)
+(require 'evil-ext)
 (require 's)
 (require 'markdown-tables)
 (require 'emacs-utils)
@@ -309,6 +310,7 @@
 (defun mlm/setup-markdown-mode ()
   (interactive)
   (define-leader-keys 'markdown-lite-mode-map
+    "SPC" 'mlm/fill-paragraph-or-code-block-comment
     "i" 'mlm/format-buffer
     "0" 'outline-show-all
     "1" (lambda () (interactive) (mlm/show-level 1))
@@ -924,21 +926,87 @@ If the point is not in a list item, do nothing."
    `mlm/markdown-fill-protected-line-p')."
   (save-excursion
     (goto-char beg)
-    (let ((protected t))
-      (while (and protected (< (point) end))
-        (setq protected (mlm/markdown-fill-protected-line-p))
-        (forward-line 1))
-      protected)))
+    (while (and (< (point) end) (mlm/markdown-fill-protected-line-p))
+      (forward-line 1))
+    (>= (point) end)))
 
 (evil-define-operator mlm/fill (beg end)
   "Like `evil-fill' (gq), but when every line from BEG to END is in a code block or table, which
-   filling skips, fills them anyway as one paragraph. This lets gql wrap a long line of a code
-   block."
+   filling skips, fills them anyway. This lets gql wrap a long line of a code block."
   :move-point nil
   :type line
-  (if (mlm/markdown-fill-protected-lines-p beg end)
-      (save-excursion (fill-region-as-paragraph beg end))
+  (let ((fill-forward-paragraph-function (if (mlm/markdown-fill-protected-lines-p beg end)
+                                             #'forward-paragraph
+                                           fill-forward-paragraph-function)))
     (evil-fill beg end)))
+
+(defconst mlm/code-block-comment-markers
+  '(("//" "c" "c++" "cpp" "go" "java" "javascript" "js" "jsx" "kotlin" "rust" "scala" "swift" "ts"
+     "tsx" "typescript")
+    ("#" "bash" "conf" "dockerfile" "make" "makefile" "perl" "py" "python" "r" "rb" "ruby" "sh"
+     "shell" "toml" "yaml" "yml" "zsh")
+    (";" "clj" "cljs" "clojure" "el" "elisp" "emacs-lisp" "lisp" "scheme")
+    ("--" "haskell" "lua" "sql"))
+  "Each line comment marker, followed by the code block languages which use it. A table, rather
+   than each language's major mode, because starting a mode can be slow, or prompt (e.g. a
+   tree-sitter mode offering to install its grammar).")
+
+(defun mlm/fenced-block-at (pos)
+  "The (START . END) of the fenced code block containing POS (see `mlm/outline-cache'), or nil."
+  (let* ((blocks (cdr (mlm/outline-structure)))
+         ;; The number of blocks which start at or before POS.
+         (i (mlm/bisect-left blocks (1+ pos) #'car))
+         (block (and (> i 0) (aref blocks (1- i)))))
+    (and block (< pos (cdr block)) block)))
+
+(defun mlm/fill-code-block-comment (block)
+  "Fills the comment surrounding point in BLOCK, the fenced code block at point (see
+   `mlm/fenced-block-at'): the adjacent lines which start with the same indentation and comment
+   marker, up to a line holding only the marker. Does nothing if point isn't on a comment line, or
+   the block's fence names no language whose comment marker is known."
+  (when-let* ((language (save-excursion
+                          (goto-char (car block))
+                          (when (looking-at
+                                 "[ \t]*\\(?:`\\{3,\\}\\|~\\{3,\\}\\)[ \t]*\\([^ \t\n`{]+\\)")
+                            (downcase (match-string-no-properties 1)))))
+              (marker (car (cl-find language mlm/code-block-comment-markers
+                                    :key #'cdr :test #'member)))
+              ;; Group 1 is the indentation and marker, which may repeat its last char (e.g. ";;"
+              ;; for ";"). Group 2 is the whitespace after it. A line holding only the marker
+              ;; doesn't match.
+              (regexp (concat "^\\([ \t]*" (regexp-quote marker)
+                              (regexp-quote (substring marker -1)) "*\\)"
+                              "\\([ \t]+\\)[^ \t\n]"))
+              ((save-excursion (beginning-of-line) (looking-at regexp))))
+    (let* ((lead (match-string-no-properties 1))
+           (prefix (concat lead (match-string-no-properties 2)))
+           ;; The fence lines don't match REGEXP, so the scans below stay inside the block.
+           (comment-line-p (lambda ()
+                             (and (looking-at regexp)
+                                  (equal (match-string-no-properties 1) lead))))
+           (beg (save-excursion
+                  (beginning-of-line)
+                  (while (and (= 0 (forward-line -1)) (funcall comment-line-p)))
+                  (unless (funcall comment-line-p) (forward-line 1))
+                  (point)))
+           (end (save-excursion
+                  (beginning-of-line)
+                  (while (and (= 0 (forward-line 1)) (funcall comment-line-p)))
+                  (point))))
+      (evil-ext/preserve-cursor-after-fill
+       (lambda ()
+         (let ((fill-prefix prefix)
+               (adaptive-fill-mode nil))
+           (fill-region-as-paragraph beg end)))))))
+
+(defun mlm/fill-paragraph-or-code-block-comment ()
+  "Like `evil-ext/fill-inside-paragraph-or-comment-block', but in a fenced code block, fills the
+   comment at point (see `mlm/fill-code-block-comment') rather than doing nothing."
+  (interactive)
+  (let ((block (and (not (use-region-p)) (mlm/fenced-block-at (point)))))
+    (if block
+        (mlm/fill-code-block-comment block)
+      (evil-ext/fill-inside-paragraph-or-comment-block))))
 
 (defun mlm/markdown-fill-forward-paragraph (arg)
   "The `fill-forward-paragraph-function'. Like `forward-paragraph', but treats code blocks and

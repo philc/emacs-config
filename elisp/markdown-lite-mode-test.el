@@ -11,11 +11,11 @@
 (require 'evil-ext)
 (require 'markdown-lite-mode)
 
-(defun mlm-test/fill-at-marker (text)
+(defun mlm-test/fill-at-marker (text &optional fill)
   "Inserts TEXT into a new markdown-lite-mode buffer, removes the \"|\" marker in it (which marks
-   where point should be), and runs evil-ext/fill-inside-paragraph-or-comment-block from there.
-   Returns the buffer's contents afterwards. This mimics a user pressing `SPC` (gqip) with their
-   cursor inside a paragraph."
+   where point should be), and calls FILL from there, by default
+   evil-ext/fill-inside-paragraph-or-comment-block. Returns the buffer's contents afterwards. This
+   mimics a user pressing `SPC` (gqip) with their cursor inside a paragraph."
   (with-temp-buffer
     (insert text)
     (markdown-lite-mode)
@@ -23,7 +23,7 @@
     (goto-char (point-min))
     (search-forward "|")
     (delete-char -1)
-    (evil-ext/fill-inside-paragraph-or-comment-block)
+    (funcall (or fill #'evil-ext/fill-inside-paragraph-or-comment-block))
     (buffer-substring-no-properties (point-min) (point-max))))
 
 (defun mlm-test/fill-buffer (text)
@@ -66,22 +66,52 @@
 
 (ert-deftest markdown-lite-mode-test/gq-fills-code-block-line ()
   "gq on lines which are all in a code block fills them, though filling a paragraph skips them."
-  (with-temp-buffer
-    (insert (concat "aaa\n"
-                    "\n"
-                    "    bbb ccc ddd eee\n"
-                    "    fff\n"))
-    (markdown-lite-mode)
-    (setq-local fill-column 15)
-    (goto-char (point-min))
-    (forward-line 2)
-    (mlm/fill (line-beginning-position) (line-beginning-position 2))
-    (should (equal (buffer-substring-no-properties (point-min) (point-max))
-                   (concat "aaa\n"
-                           "\n"
-                           "    bbb ccc ddd\n"
-                           "    eee\n"
-                           "    fff\n")))))
+  (should (equal (mlm-test/fill-at-marker
+                  (concat "aaa\n"
+                          "\n"
+                          "    |bbb ccc ddd eee\n"
+                          "    fff\n")
+                  (lambda () (mlm/fill (line-beginning-position) (line-beginning-position 2))))
+                 (concat "aaa\n"
+                         "\n"
+                         "    bbb ccc ddd\n"
+                         "    eee\n"
+                         "    fff\n"))))
+
+(ert-deftest markdown-lite-mode-test/fill-code-block-comment ()
+  "In a fenced code block, filling fills the comment at point, up to a blank comment line, and
+   leaves the code alone."
+  (should (equal (mlm-test/fill-at-marker
+                  (concat "```js\n"
+                          "x = 1;\n"
+                          "  // |aaa bbb ccc ddd\n"
+                          "  // eee\n"
+                          "  //\n"
+                          "  // fff\n"
+                          "y = 2;\n"
+                          "```\n")
+                  #'mlm/fill-paragraph-or-code-block-comment)
+                 (concat "```js\n"
+                         "x = 1;\n"
+                         "  // aaa bbb\n"
+                         "  // ccc ddd\n"
+                         "  // eee\n"
+                         "  //\n"
+                         "  // fff\n"
+                         "y = 2;\n"
+                         "```\n"))))
+
+(ert-deftest markdown-lite-mode-test/fill-code-block-leaves-code-alone ()
+  "Filling does nothing on a code line, or in a code block which names no language."
+  (let ((code (concat "```js\n"
+                      "|x = aaa + bbb + ccc;\n"
+                      "```\n"))
+        (untagged (concat "```\n"
+                          "// |aaa bbb ccc ddd\n"
+                          "```\n")))
+    (dolist (text (list code untagged))
+      (should (equal (mlm-test/fill-at-marker text #'mlm/fill-paragraph-or-code-block-comment)
+                     (s-replace "|" "" text))))))
 
 (ert-deftest markdown-lite-mode-test/fill-skips-table ()
   (let ((table (concat "| a | b |\n"
