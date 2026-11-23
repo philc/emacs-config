@@ -239,10 +239,12 @@
 
 (defun on-focus-change ()
   "When switching focus out of the Emacs app, exit insert mode, so when we return to Emacs, we're
-   in normal mode. Also save the buffer."
+   in normal mode. Also save the buffer, unless its file changed on disk: saving would prompt
+   \"Save anyway?\" while no one is at the keyboard, and the prompt gets stranded."
   (unless (frame-focus-state)
     (evil-ext/switch-to-normal-state)
-    (util/save-buffer-if-dirty)))
+    (when (verify-visited-file-modtime)
+      (util/save-buffer-if-dirty))))
 
 (add-function :after after-focus-change-function #'on-focus-change)
 
