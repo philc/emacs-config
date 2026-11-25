@@ -8,6 +8,9 @@
 # Those would prompt about the live Emacs's lock files, or overwrite its state when quitting.
 # Packages and elisp/ are on load-path, so FILE can require what it needs.
 #
+# This compiles elisp/ first, because -Q also skips early-init.el, which sets `load-prefer-newer'.
+# Without it, a stale .elc would be loaded instead of an edited .el.
+#
 # FILE runs once the event loop has started. Emacs quits when FILE finishes or signals an error, or
 # after TIMEOUT_SECONDS (default 120), without running kill-emacs-hook. The window opens in the
 # background, so it doesn't take focus. This prints Emacs's stderr, which holds any error and
@@ -25,6 +28,10 @@ timeout=${2:-120}
 app=/opt/homebrew/opt/emacs-plus@31/Emacs.app
 output=$(mktemp -t gui-emacs)
 trap 'rm -f "$output"' EXIT
+
+# If a file has compile warnings, keep going: this prints them and deletes the file's .elc, so Emacs
+# loads its .el. That runs the current code, but interpreted, so timings will be slow.
+make -s -C "$scripts/.." compile >&2 || true
 
 open -g -n -W --stdout "$output" --stderr "$output" -a "$app" --args -Q \
   -l "$scripts/package-load-path.el" -l "$scripts/gui-emacs.el" \
