@@ -35,6 +35,16 @@
   (setq tab-width 4)
   (setq-local font-lock-defaults '(mlm/markdown-mode-font-lock-keywords-basic))
   (setq-local font-lock-multiline t)
+  (setq-local font-lock-extra-managed-props '(wrap-prefix))
+
+  ;; Soft-wrap a line too long for the window onto the next screen line, at a word boundary, rather
+  ;; than cutting it off at the window's edge, as `truncate-lines' does elsewhere. Text is
+  ;; hard-wrapped by filling it, so this matters while editing a filled line: typing in its middle
+  ;; pushes its end past the window's edge until it's refilled, and without this, what's being typed
+  ;; there can't be seen. The wrapped part lines up under the start of the line's text; see
+  ;; `mlm/markdown-wrap-prefix'.
+  (setq-local truncate-lines nil)
+  (setq-local word-wrap t)
 
   ;; Paragraph filling
   (set (make-local-variable 'paragraph-start)
@@ -528,6 +538,11 @@
 (defconst mlm/markdown-regex-list
   "^\\([ \t]*\\)\\([0-9]+\\.\\|[*+-]\\)\\([ \t]+\\)"
   "Regular expression for matching list items.")
+
+(defconst mlm/markdown-regex-line-lead
+  "^\\([ \t>]*\\(?:\\(?:[0-9]+\\.\\|[*+-]\\)[ \t]+\\)?\\)[^ \t\n].*"
+  "Regular expression matching a non-blank line. Group 1 is what comes before its text: indentation,
+   blockquote markers, and a list marker.")
 
 (defconst mlm/markdown-regex-list-or-blank-line
   "^[ \t]*\\(?:$\\|\\(?:[0-9]+\\.\\|[*+-]\\)[ \t]\\)"
@@ -1338,8 +1353,20 @@ If we are at the first line, then consider the previous line to be blank."
    (cons mlm/markdown-regex-list-item '((0 (mlm/markdown-list-item-face))))
    (cons 'mlm/markdown-match-list-item-continuation '((0 mlm/markdown-list-item-continuation-face)))
    (cons 'mlm/markdown-match-code '((0 'mlm-inline-code)))
-   (cons mlm/markdown-regex-image-url '((1 'mlm-url))))
+   (cons mlm/markdown-regex-image-url '((1 'mlm-url)))
+   (cons mlm/markdown-regex-line-lead '((0 (mlm/markdown-wrap-prefix)))))
   "Syntax highlighting for Markdown files.")
+
+;; `visual-wrap-prefix-mode' also does this, but it calls `mlm/markdown-adaptive-fill-function' on
+;; each line, which searches back for a list item. That makes scrolling slow in a long file.
+(defun mlm/markdown-wrap-prefix ()
+  "The font-lock properties which align a line's wrapped text under the start of its text. The match
+   data must be for `mlm/markdown-regex-line-lead'."
+  (let ((width (save-excursion
+                 (goto-char (match-end 1))
+                 (current-column))))
+    (when (> width 0)
+      `(face nil wrap-prefix (space :width ,width)))))
 
 (defun mlm/markdown-match-code (last)
   "Match inline code from the point to LAST."

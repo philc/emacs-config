@@ -768,6 +768,19 @@
     (search-forward "h6 ")
     (should (eq (get-text-property (point) 'face) 'mlm-header-delimiter))))
 
+(ert-deftest markdown-lite-mode-test/wrap-prefix ()
+  "A line's wrapped text is aligned under the start of its text."
+  (mlm-test/with-fontified-buffer (concat "**bold**\n"
+                                          "    * nested\n"
+                                          "      continuation\n"
+                                          "10. numbered\n"
+                                          "> * quoted\n")
+    (goto-char (point-min))
+    (should (equal (cl-loop until (eobp)
+                            collect (get-text-property (point) 'wrap-prefix)
+                            do (forward-line 1))
+                   '(nil (space :width 6) (space :width 6) (space :width 4) (space :width 4))))))
+
 (ert-deftest markdown-lite-mode-test/list-item-continuation-line-refontified-alone ()
   "A continuation line is highlighted when it's refontified without its marker line, e.g. after
    it's edited, or when it's at the start of a jit-lock chunk."
