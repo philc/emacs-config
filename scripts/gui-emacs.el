@@ -4,6 +4,11 @@
 
 (add-to-list 'load-path (expand-file-name "../elisp/" (file-name-directory load-file-name)))
 
+;; Keep the window behind the other apps' windows. `open -g' keeps it from taking focus, but it can
+;; still open on top of them.
+(set-frame-parameter nil 'z-group 'below)
+(add-to-list 'default-frame-alist '(z-group . below))
+
 (defun gui-emacs--print (format-string &rest args)
   "Print a line to stderr, which gui-emacs.sh shows."
   (princ (concat "gui-emacs: " (apply #'format format-string args) "\n")
