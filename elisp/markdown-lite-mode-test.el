@@ -216,6 +216,16 @@
     (should (equal (buffer-substring-no-properties (point-min) (point-max))
                    "* b\n* a\n#tag\n"))))
 
+(ert-deftest markdown-lite-mode-test/fill-aligns-overindented-list-item-continuation ()
+  "Continuation lines indented past the list item's text, with no blank line before them, are part
+   of the item's paragraph rather than a code block, so filling aligns them under the text."
+  (should (equal (mlm-test/fill-at-marker
+                  (concat "* |aaa bbb ccc\n"
+                          "      ddd eee\n"
+                          "      fff\n"))
+                 (concat "* aaa bbb ccc\n"
+                         "  ddd eee fff\n"))))
+
 (ert-deftest markdown-lite-mode-test/fill-aligns-list-item-continuation-to-marker ()
   "Sanity/regression check for the normal case the code above also handles: a continuation paragraph
    that's indented to align with the list item's own text (not indented deeper, i.e. not a nested

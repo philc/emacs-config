@@ -1075,12 +1075,15 @@ If the point is not in a list item, do nothing."
     (make-string (length (match-string-no-properties 0)) ?\s))
    ;; A line inside an existing list item that doesn't itself start with a marker (e.g. a wrapped or
    ;; pasted continuation line). Align it under the item's text instead of preserving whatever
-   ;; indentation it happened to already have -- unless the line is already indented deeper than
-   ;; that (e.g. an indented/code sub-block nested inside the list item), in which case that deeper
-   ;; indentation is intentional and should be kept rather than collapsed to the item's text column.
+   ;; indentation it happened to already have -- unless the line is in an indented code block nested
+   ;; inside the list item (which `mlm/fill' can fill), in which case its deeper indentation is kept.
    ((let ((bounds (mlm/markdown-cur-list-item-bounds)))
       (when bounds
-        (make-string (max (nth 3 bounds) (current-indentation)) ?\s))))
+        (let* ((text-column (nth 3 bounds))
+               (column (if (mlm/markdown-indented-code-line-p)
+                           (max text-column (current-indentation))
+                         text-column)))
+          (make-string column ?\s)))))
    ;; No match
    (t nil)))
 
