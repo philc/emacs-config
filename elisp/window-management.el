@@ -11,7 +11,11 @@
 
 ;; From vertico, which init.el loads after this file.
 (defvar vertico-sort-override-function)
+(defvar vertico--index)
+(defvar vertico--input)
 (declare-function vertico--candidate "vertico")
+(declare-function vertico--goto "vertico")
+(declare-function vertico--update "vertico")
 
 ;; Settings for window splits.
 (setq split-height-threshold 40)
@@ -488,22 +492,22 @@
                        (:append (lambda ()
                                   (use-local-map (make-composed-keymap wm/buffer-switcher-map
                                                                        (current-local-map)))))
-                     (completing-read "Switch to: " buffer-names nil t))))
+                     (completing-read "Switch to: " buffer-names #'get-buffer t))))
         (switch-to-buffer selection)))))
 
 (defun wm/kill-buffer-in-buffer-selection-menu ()
-  "When a vertico menu is being shown, kill the buffer that's currently selected and refresh
-   the buffer selection UI."
+  "Kill the buffer that's selected in the buffer switcher, and remove it from the menu. Select the
+   buffer after it, or the one before it if it was the last."
   (interactive)
-  (let* ((buffer-name (->> (vertico--candidate)
-                           substring-no-properties))
-         (buffer (get-buffer buffer-name)))
-    (when buffer
-      (kill-buffer buffer)
-      ;; We quit the completing-read UI and redisplay it without the buffer that was killed.
-      ;; abort-minibuffers unwinds the call stack and executes no further code, so we must
-      ;; run wm/switch-to-recent-buffer in a timer.
-      (run-at-time nil nil
-                   (lambda ()
-                     (wm/switch-to-recent-buffer)))
-      (abort-minibuffers))))
+  ;; vertico doesn't update its candidates while there's pending input, so they may be stale if I've
+  ;; just typed something.
+  (vertico--update)
+  ;; kill-buffer returns nil if I decline to kill a modified buffer.
+  (when-let* ((buffer (get-buffer (vertico--candidate)))
+              ((kill-buffer buffer)))
+    (let ((index vertico--index))
+      ;; Force an update, which omits the killed buffer.
+      (setq vertico--input nil)
+      (vertico--update)
+      ;; The buffer after the killed one now has its index. vertico--goto clamps the index.
+      (vertico--goto index))))
