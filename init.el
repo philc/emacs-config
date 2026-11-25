@@ -1431,6 +1431,11 @@
 ;;
 ;; Go mode, for writing golang code
 ;;
+;; go-mode registers a function which recognizes Go assembly (.s) files. Emacs calls it for almost any
+;; file it opens, and calling it loads go-mode, which takes over 80ms, even if the file isn't Go. I
+;; don't use Go assembly, so remove it. go-mode then loads only for Go files.
+(setq magic-mode-alist (assq-delete-all 'go--is-go-asm magic-mode-alist))
+
 (with-eval-after-load "go-mode"
   (evil-define-key 'normal go-mode-map
     "gd" 'xref-find-definitions))
