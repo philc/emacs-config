@@ -49,8 +49,265 @@
 ;; to its long-line optimizations, which disable section highlighting.
 (setq magit-show-long-lines-warning nil)
 
-;; Syntax-highlight diffs. See `magit-diff-specify-hunk-foreground' above.
-(setq magit-diff-fontify-hunk 'all)
+;; Syntax-highlight the diff hunks which have been displayed, while Emacs is idle. See
+;; `magit-diff-specify-hunk-foreground' above. Highlighting a hunk loads the old and new versions of
+;; its file, which takes several git processes and a major mode setup per version. Magit's own `all'
+;; setting does this for every hunk before showing the buffer. Doing it during redisplay instead
+;; freezes scrolling: Emacs doesn't redraw while keys are waiting, so when C-d is held down, the
+;; delays of successive hunks run together.
+(setq magit-diff-fontify-hunk nil)
+
+(defvar magit-config--fontify-delay 0.1
+  "Seconds of idle time before highlighting hunks. Longer than the interval between key repeats.")
+
+(defvar-local magit-config--pending-hunks nil
+  "Hunk sections which have been displayed, but not yet highlighted.")
+
+(defvar-local magit-config--fontify-timer nil)
+
+(defvar-local magit-config--hunk-git-cache nil
+  "Git output cached while highlighting this buffer's hunks, in the form of `magit--refresh-cache'.
+Kept until the buffer is next refreshed, so highlighting more hunks of a file doesn't rerun git.")
+
+(defvar-local magit-config--blobs nil
+  "Hash table from a git object name, like \"REV:FILE\", to the file's contents.
+The contents are a unibyte string, or `unavailable' if they couldn't be fetched.")
+
+(defvar-local magit-config--blob-process nil
+  "The git process which is fetching file contents, if any.")
+
+(defvar magit-config--blob-buffers nil
+  "Alist from a git object name to a buffer of its contents. Bound while highlighting.")
+
+(defun magit-config--fontify-hunks (start end)
+  "Queue the diff hunks between START and END to be highlighted. Run by jit-lock."
+  (named-let collect ((section magit-root-section))
+    (when (and section
+               (< (oref section start) end)
+               (> (oref section end) start))
+      (if (magit-section-match 'hunk section)
+          (unless (or (oref section fontified)
+                      (magit--meta-hunk-p section)
+                      (memq section magit-config--pending-hunks))
+            (push section magit-config--pending-hunks))
+        (mapc #'collect (oref section children)))))
+  (when magit-config--pending-hunks
+    (magit-config--schedule-fontify)))
+
+(defun magit-config--schedule-fontify (&optional delay)
+  "Highlight this buffer's pending hunks once Emacs is idle.
+Check whether it's idle after DELAY seconds, by default `magit-config--fontify-delay'."
+  (unless (memq magit-config--fontify-timer timer-list)
+    ;; This isn't an idle timer because those count from when Emacs became idle, which may be long
+    ;; ago. If a key arrived first, the timer would then wait for another idle period that long.
+    (setq magit-config--fontify-timer
+          (run-with-timer (or delay magit-config--fontify-delay) nil
+                          #'magit-config--fontify-when-idle (current-buffer)))))
+
+(defun magit-config--fontify-when-idle (buffer)
+  "Highlight BUFFER's pending hunks if Emacs is idle. Otherwise, try again later."
+  (when (buffer-live-p buffer)
+    (with-current-buffer buffer
+      (setq magit-config--fontify-timer nil)
+      (let ((idle-time (current-idle-time)))
+        (if (and idle-time (>= (float-time idle-time) magit-config--fontify-delay))
+            (magit-config--fontify-pending)
+          (magit-config--schedule-fontify))))))
+
+(defun magit-config--hunk-visible-p (hunk)
+  "Return non-nil if part of HUNK, in the current buffer, is showing in a window."
+  (seq-some (lambda (window)
+              (and (< (oref hunk start) (window-end window))
+                   (> (oref hunk end) (window-start window))))
+            (get-buffer-window-list nil nil 'visible)))
+
+(defun magit-config--fontify-pending ()
+  "Highlight this buffer's pending hunks, first fetching the versions of files they need."
+  (let ((specs (magit-config--missing-blob-specs)))
+    (cond
+     ;; The process schedules this again when it exits.
+     ((process-live-p magit-config--blob-process))
+     (specs (magit-config--fetch-blobs specs))
+     (t (magit-config--fontify-until-input)))))
+
+(defun magit-config--fontify-until-input ()
+  "Highlight this buffer's pending hunks, visible ones first, until there's input."
+  ;; Magit caches git output only during a refresh. Without a cache, each hunk reruns the same git
+  ;; commands.
+  (let ((magit--refresh-cache (or magit-config--hunk-git-cache
+                                  (setq magit-config--hunk-git-cache (list (cons 0 0)))))
+        (magit-config--blob-buffers nil))
+    (unwind-protect
+        (while (and magit-config--pending-hunks (not (input-pending-p)))
+          (let* ((hunk (or (seq-find #'magit-config--hunk-visible-p magit-config--pending-hunks)
+                           (car magit-config--pending-hunks)))
+                 (mode (magit-config--mode-to-load hunk)))
+            (if mode
+                (magit-config--load-mode mode)
+              (setq magit-config--pending-hunks (delq hunk magit-config--pending-hunks))
+              (with-demoted-errors "Error highlighting diff hunk: %S"
+                (magit-config--fontify-hunk hunk)))))
+      (mapc #'kill-buffer (mapcar #'cdr magit-config--blob-buffers))))
+  (when magit-config--pending-hunks
+    (magit-config--schedule-fontify)))
+
+(defvar magit-config--load-attempted nil
+  "Major modes which `magit-config--load-mode' has tried to load.")
+
+(defun magit-config--mode-to-load (hunk)
+  "Return the major mode for HUNK's file if it isn't loaded yet.
+Loading a mode can take as long as highlighting several hunks, so it's a step of its own, which a
+key press can come before or after."
+  (when-let* ((file (oref (oref hunk parent) value))
+              ((stringp file))
+              (mode (assoc-default file auto-mode-alist #'string-match-p))
+              ((symbolp mode))
+              (mode (major-mode-remap mode))
+              ((autoloadp (symbol-function mode)))
+              ((not (memq mode magit-config--load-attempted))))
+    (if (and (memq mode '(css-mode scss-mode less-css-mode mhtml-mode))
+             (not (featurep 'css-mode))
+             (not (memq 'css-mode magit-config--load-attempted)))
+        'css-mode
+      mode)))
+
+(defun magit-config--load-mode (mode)
+  "Load the library which defines MODE."
+  (push mode magit-config--load-attempted)
+  (with-demoted-errors "Error loading a major mode: %S"
+    (if (eq mode 'css-mode)
+        (magit-config--load-css-mode)
+      (autoload-do-load (symbol-function mode) mode))))
+
+(defun magit-config--load-css-mode ()
+  "Load css-mode without eww, which takes over 100ms to load, since it loads shr and parts of Gnus.
+css-mode requires eww only for `css-lookup-symbol', which calls autoloaded eww functions, so they
+still load eww when they're called."
+  (if (or (featurep 'css-mode) (featurep 'eww))
+      (require 'css-mode)
+    (provide 'eww)
+    (unwind-protect
+        (require 'css-mode)
+      (setq features (delq 'eww features)))))
+
+(defun magit-config--fontify-hunk (hunk)
+  "Highlight HUNK, using the fetched versions of its file if there are any."
+  (let ((sides (magit-config--hunk-sides hunk)))
+    (if (and sides
+             magit-config--blobs
+             (seq-every-p (lambda (side) (stringp (gethash (car side) magit-config--blobs)))
+                          sides))
+        (let ((blobs magit-config--blobs))
+          ;; Magit would run several git commands per file to find and load these.
+          (cl-letf (((symbol-function 'magit-diff-visit--sides) (lambda () sides))
+                    ((symbol-function 'magit-find-file-noselect)
+                     (lambda (spec file &rest _)
+                       (magit-config--blob-buffer spec file (gethash spec blobs)))))
+            (magit-diff--update-hunk-syntax hunk)))
+      (magit-diff--update-hunk-syntax hunk))))
+
+;;; Fetching the versions of files in a commit's diff.
+
+(defun magit-config--hunk-sides (hunk)
+  "Return HUNK's old and new sides, each a list of a git object name and a file.
+Return nil unless this buffer shows a commit. In other diffs, a side can be the index or worktree."
+  (when-let* (((derived-mode-p 'magit-revision-mode))
+              (rev (or magit-buffer-revision-oid magit-buffer-revision))
+              (file-section (oref hunk parent))
+              (new-file (oref file-section value))
+              (old-file (or (oref file-section source) new-file)))
+    (list (list (format "%s^:%s" rev old-file) old-file)
+          (list (format "%s:%s" rev new-file) new-file))))
+
+(defun magit-config--missing-blob-specs ()
+  "Return the git object names which the pending hunks need and which haven't been fetched."
+  (let ((specs (mapcan (lambda (hunk) (mapcar #'car (magit-config--hunk-sides hunk)))
+                       magit-config--pending-hunks)))
+    (seq-remove (lambda (spec)
+                  (and magit-config--blobs (gethash spec magit-config--blobs)))
+                (seq-uniq specs))))
+
+(defun magit-config--fetch-blobs (specs)
+  "Fetch the contents of SPECS with one git process, then highlight the pending hunks."
+  (unless magit-config--blobs
+    (setq magit-config--blobs (make-hash-table :test #'equal)))
+  (let* ((diff-buffer (current-buffer))
+         (blobs magit-config--blobs)
+         (output (generate-new-buffer " *magit-config-blobs*"))
+         (sentinel
+          (lambda (process _event)
+            (unless (process-live-p process)
+              (magit-config--parse-blobs output specs blobs)
+              (kill-buffer output)
+              (when (buffer-live-p diff-buffer)
+                (with-current-buffer diff-buffer
+                  (when magit-config--pending-hunks
+                    (magit-config--schedule-fontify 0))))))))
+    (with-current-buffer output
+      (set-buffer-multibyte nil))
+    (setq magit-config--blob-process
+          (make-process :name "magit-config-blobs" :buffer output :noquery t
+                        :connection-type 'pipe :coding 'binary
+                        :command (list magit-git-executable "cat-file" "--batch")
+                        :sentinel sentinel))
+    (process-send-string magit-config--blob-process
+                         (encode-coding-string (concat (string-join specs "\n") "\n") 'utf-8))
+    (process-send-eof magit-config--blob-process)))
+
+(defun magit-config--parse-blobs (output specs blobs)
+  "Store in BLOBS the contents of SPECS, from OUTPUT, a buffer of `git cat-file --batch' output."
+  (with-current-buffer output
+    (goto-char (point-min))
+    (dolist (spec specs)
+      (puthash spec
+               (cond
+                ((looking-at "[0-9a-f]+ \\([a-z]+\\) \\([0-9]+\\)\n")
+                 (let* ((type (match-string 1))
+                        (start (match-end 0))
+                        (end (+ start (string-to-number (match-string 2)))))
+                   (if (>= end (point-max))
+                       'unavailable
+                     (goto-char (1+ end))
+                     (if (equal type "blob")
+                         (buffer-substring-no-properties start end)
+                       'unavailable))))
+                ;; The commit added or deleted this file.
+                ((looking-at ".* missing\n")
+                 (goto-char (match-end 0))
+                 "")
+                ;; Other responses are one line too, e.g. "OID submodule".
+                (t
+                 (forward-line 1)
+                 'unavailable))
+               blobs))))
+
+(defun magit-config--blob-buffer (spec file contents)
+  "Return a buffer in FILE's major mode with CONTENTS, the file's contents at SPEC."
+  (or (alist-get spec magit-config--blob-buffers nil nil #'equal)
+      (let* ((file (expand-file-name file))
+             (dir default-directory)
+             ;; whitespace-mode isn't enabled in buffers named with a "*".
+             (buffer (generate-new-buffer (format " magit-config-blob %s" spec))))
+        (push (cons spec buffer) magit-config--blob-buffers)
+        (with-current-buffer buffer
+          (setq default-directory dir)
+          (insert (decode-coding-string contents 'undecided))
+          (setq magit-buffer-file-name file)
+          (let ((magit-find-blob-hook nil))
+            (magit--blob-normal-mode))
+          buffer))))
+
+(defun magit-config--register-hunk-fontification ()
+  (jit-lock-register #'magit-config--fontify-hunks))
+
+(defun magit-config--reset-hunk-fontification ()
+  "Forget the hunks and git output from before this buffer was refreshed."
+  (setq magit-config--pending-hunks nil)
+  (setq magit-config--blobs nil)
+  (setq magit-config--hunk-git-cache nil))
+
+(add-hook 'magit-mode-hook #'magit-config--register-hunk-fontification)
+(add-hook 'magit-refresh-buffer-hook #'magit-config--reset-hunk-fontification)
 
 ;; Have Magit open buffers in the current window, rather than a new split.
 ;; https://github.com/magit/magit/issues/2541
