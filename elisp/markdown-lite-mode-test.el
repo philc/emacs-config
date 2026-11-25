@@ -124,6 +124,60 @@
   (should (equal (mlm-test/fill-buffer "* https://example.com/long aaa\n")
                  "* https://example.com/long\n  aaa\n")))
 
+(defun mlm-test/join (text &optional count)
+  "Inserts TEXT into a new markdown-lite-mode buffer, and calls `mlm/join' with COUNT from the \"|\"
+   marker in it. If there's a second \"|\", the text between the two is selected. Returns the buffer's
+   contents afterwards, with a \"|\" where point is."
+  (with-temp-buffer
+    (insert text)
+    (markdown-lite-mode)
+    (setq-local fill-column 15)
+    (setq-local sentence-end-double-space nil)
+    (setq-local indent-tabs-mode nil)
+    (goto-char (point-min))
+    (search-forward "|")
+    (delete-char -1)
+    (let ((beg (point))
+          (transient-mark-mode t)
+          (current-prefix-arg count))
+      (when (search-forward "|" nil t)
+        (delete-char -1)
+        (set-mark beg))
+      (mlm/join))
+    (insert "|")
+    (buffer-substring-no-properties (point-min) (point-max))))
+
+(ert-deftest markdown-lite-mode-test/join-list-items ()
+  "Joining works from any line of the item, adds missing periods, and fills the result."
+  (should (equal (mlm-test/join "* a|aa\n* bbb\n* ccc\n") "* a|aa. bbb.\n* ccc\n"))
+  (should (equal (mlm-test/join "* a|aa bbb ccc\n  ddd!\n* (eee.)\n* fff\n")
+                 "* a|aa bbb ccc\n  ddd! (eee.)\n* fff\n"))
+  ;; The cursor stays on the same character when filling moves it to another line.
+  (should (equal (mlm-test/join "* aaa\n  b|bb\n* ccc\n") "* aaa b|bb. ccc.\n"))
+  (should (equal (mlm-test/join "* a|aa:\n* bbb ccc ddd\n") "* a|aa: bbb ccc\n  ddd.\n"))
+  (should (equal (mlm-test/join "* a|aa\n* bbb") "* a|aa. bbb.")))
+
+(ert-deftest markdown-lite-mode-test/join-moves-children ()
+  "The joined item's children end up one level below the item it was joined to."
+  ;; Joining a child, and an item in an outer list.
+  (should (equal (mlm-test/join "* |a\n  * b\n    * c\n  * d\n") "* |a. b.\n  * c\n  * d\n"))
+  (should (equal (mlm-test/join "* a\n  * |b\n* c\n  * d\n* e\n")
+                 "* a\n  * |b. c.\n    * d\n* e\n")))
+
+(ert-deftest markdown-lite-mode-test/join-several-items ()
+  (should (equal (mlm-test/join "* |a\n* b\n* c\n* d\n" 3) "* |a. b. c.\n* d\n"))
+  (should (equal (mlm-test/join "* |a\n* b\n* c|\n* d\n") "* |a. b. c.\n* d\n")))
+
+(ert-deftest markdown-lite-mode-test/join-list-item-to-paragraph ()
+  (should (equal (mlm-test/join "aaa\nb|bb:\n* ccc\n  * ddd\n") "aaa b|bb: ccc.\n* ddd\n")))
+
+(ert-deftest markdown-lite-mode-test/join-plain-lines ()
+  "Where there's no list item to join, lines are joined as usual."
+  (should (equal (mlm-test/join "|aaa\nbbb\n* ccc\n") "|aaa bbb\n* ccc\n"))
+  (should (equal (mlm-test/join "* |aaa\n  bbb\n\n* ccc\n") "* |aaa bbb\n\n* ccc\n"))
+  (should (equal (mlm-test/join "# |aaa\n* bbb\n") "# |aaa * bbb\n"))
+  (should (equal (mlm-test/join "```\n* |a\n* b\n```\n") "```\n* |a * b\n```\n")))
+
 (ert-deftest markdown-lite-mode-test/promote-last-list-item-in-buffer ()
   (with-temp-buffer
     (insert "* A\n  * B\n")

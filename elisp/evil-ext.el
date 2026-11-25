@@ -39,6 +39,11 @@
                   (not (string/blank? (util/get-current-line))))
         (forward-line -1))))))
 
+(defun evil-ext/join ()
+  "Like `evil-join', but leaves the cursor where it was."
+  (interactive)
+  (util/preserve-line-and-column (lambda () (call-interactively 'evil-join))))
+
 (defun evil-ext/preserve-cursor-after-fill (f)
   "Estimates where the cursor position should be after a fill operation, and puts it there."
   ;; When we line wrap (fill) the paragraph, the default behavior is to put your cursor at the end

@@ -204,20 +204,9 @@
   ;; This show-subtree call is important because this indentation code does not work with collapsed
   ;; subtrees, which are represented as overlays. The hidden overlays get lost upon indention.
   (outline-show-subtree)
-  (let* ((line (util/get-current-line))
-         (start-level (util/line-indentation-level line))
-         (indent-amount (if should-promote -2 2))
+  (let* ((indent-amount (if should-promote -2 2))
          (region-start (line-beginning-position))
-         (region-end (line-end-position)))
-    (save-excursion
-      (forward-line 1)
-      (while (and (not (eobp))
-                  (setq line (util/get-current-line))
-                  (or (string/blank? line)
-                      (> (util/line-indentation-level line) start-level)))
-        (unless (string/blank? line)
-          (setq region-end (line-end-position)))
-        (forward-line 1)))
+         (region-end (mlm/list-item-children-end region-start (line-end-position))))
     (indent-rigidly region-start (min (1+ region-end) (point-max)) indent-amount)))
 
 (defun mlm/markdown-promote () (interactive) (mlm/markdown-perform-promote t))
@@ -351,6 +340,7 @@
     "gh" 'mlm/navigate-to-top-level-heading
     "gH" 'mlm/navigate-to-any-heading
     "gu" 'mlm/markdown-up-heading
+    "J" 'mlm/join
     "gq" 'mlm/fill)
 
   (evil-define-key 'insert markdown-lite-mode-map
@@ -1007,6 +997,146 @@ If the point is not in a list item, do nothing."
     (if block
         (mlm/fill-code-block-comment block)
       (evil-ext/fill-inside-paragraph-or-comment-block))))
+
+;; Joining list items
+
+(defun mlm/list-marker-line-p ()
+  "Whether the line at point is the first line of a list item. Sets the match data for
+   `mlm/markdown-regex-list' if so."
+  (save-excursion
+    (beginning-of-line)
+    (and (not (mlm/markdown-fill-protected-line-p))
+         (looking-at mlm/markdown-regex-list))))
+
+(defun mlm/paragraph-text-line-p ()
+  "Whether the line at point is a line of a paragraph's text, other than a list item's first line."
+  (save-excursion
+    (beginning-of-line)
+    (not (or (mlm/markdown-cur-line-blank-p)
+             (looking-at mlm/markdown-regex-list)
+             (looking-at mlm/markdown-regex-header)
+             (looking-at "[ \t]*>")
+             (mlm/markdown-fill-protected-line-p)))))
+
+(defun mlm/paragraph-beginning ()
+  "The start of the first line of the list item or paragraph whose text includes the line at point,
+   or nil if that line isn't a list item's or paragraph's text."
+  (save-excursion
+    (beginning-of-line)
+    (let ((start nil))
+      (while (and (mlm/paragraph-text-line-p)
+                  (progn (setq start (point))
+                         (= 0 (forward-line -1)))))
+      (if (mlm/list-marker-line-p) (point) start))))
+
+(defun mlm/paragraph-end (beg)
+  "The end of the last line of the list item or paragraph whose first line starts at BEG, excluding
+   the item's children and any later paragraphs."
+  (save-excursion
+    (goto-char beg)
+    (let ((end (line-end-position)))
+      (while (and (= 0 (forward-line 1))
+                  (mlm/paragraph-text-line-p))
+        (setq end (line-end-position)))
+      end)))
+
+(defun mlm/paragraph-text-start (beg)
+  "The position after the indentation, and the list marker if any, of the line which starts at BEG."
+  (save-excursion
+    (goto-char beg)
+    (if (mlm/list-marker-line-p)
+        (match-end 0)
+      (back-to-indentation)
+      (point))))
+
+(defun mlm/list-item-children-end (beg end)
+  "The end of the last line nested under the list item which starts at BEG and whose text ends at END,
+   or END if there's none."
+  (save-excursion
+    (goto-char beg)
+    (let ((indentation (current-indentation))
+          (children-end end))
+      (goto-char end)
+      (while (and (= 0 (forward-line 1))
+                  (not (eobp))
+                  (or (mlm/markdown-cur-line-blank-p)
+                      (> (current-indentation) indentation)))
+        (unless (mlm/markdown-cur-line-blank-p)
+          (setq children-end (line-end-position))))
+      children-end)))
+
+(defun mlm/end-with-punctuation (beg end)
+  "Adds a period at END if the text from BEG to END isn't empty and doesn't end in punctuation,
+   ignoring closing quotes, brackets and markup. Also deletes the text's trailing whitespace."
+  (save-excursion
+    (goto-char end)
+    (delete-region (point) (progn (skip-chars-backward " \t" beg) (point)))
+    (unless (or (= (point) beg)
+                (looking-back "[.!?:;,…—–][])}\"'”’*_`~]*" beg))
+      (insert "."))))
+
+(defun mlm/next-item-to-join (beg limit)
+  "The start of the list item which directly follows the text of the list item or paragraph starting
+   at BEG, or nil if there's none which starts before LIMIT. It may be a child of the item at BEG."
+  (save-excursion
+    (goto-char (mlm/paragraph-end beg))
+    (and (= 0 (forward-line 1))
+         (< (point) limit)
+         (mlm/list-marker-line-p)
+         (point))))
+
+(defun mlm/join-next-item (beg next-beg)
+  "Moves the text of the list item which starts at NEXT-BEG to the end of the list item or paragraph
+   which starts at BEG and directly precedes it, and indents the moved item's children to match.
+   Adds a period to either's text if it has no ending punctuation."
+  (let* ((end (mlm/paragraph-end beg))
+         (text-start (mlm/paragraph-text-start beg))
+         (next-end (mlm/paragraph-end next-beg))
+         (next-text-start (mlm/paragraph-text-start next-beg))
+         (children-end (mlm/list-item-children-end next-beg next-end))
+         (column (save-excursion (goto-char text-start) (current-column)))
+         (next-column (save-excursion (goto-char next-text-start) (current-column))))
+    ;; Expand both items if they're folded, because indenting hidden lines corrupts the fold.
+    (outline-flag-region end (max children-end (mlm/list-item-children-end beg end)) nil)
+    ;; Edit from the bottom up, so that the positions above each edit stay valid.
+    (indent-rigidly next-end children-end (- column next-column))
+    (mlm/end-with-punctuation next-text-start next-end)
+    (delete-region end next-text-start)
+    (goto-char end)
+    (unless (= text-start end)
+      (insert " "))
+    (mlm/end-with-punctuation text-start end)))
+
+(defun mlm/join ()
+  "Like `evil-ext/join', but in a list item, joins the next item to this one: moves its text to the
+   end of this item, without its list marker, and fills the result. Also does so on the last line of
+   a paragraph which a list item follows. With a count N, joins N items. When several lines are
+   selected, joins the items in the selection."
+  (interactive)
+  (let* ((selected (and (use-region-p)
+                        (> (count-lines (region-beginning) (region-end)) 1)))
+         ;; In visual state, point may be past a selected line, even when only one is selected.
+         ;; A marker, because filling can move the text before it.
+         (pos (copy-marker (if (use-region-p) (region-beginning) (point))))
+         (limit (copy-marker (if selected (region-end) (point-max))))
+         (joins (if selected
+                    most-positive-fixnum
+                  (max 1 (1- (prefix-numeric-value current-prefix-arg)))))
+         (beg (save-excursion (goto-char pos) (mlm/paragraph-beginning)))
+         (joinable (and beg
+                        (or selected
+                            (save-excursion (goto-char beg) (mlm/list-marker-line-p))
+                            (= (line-end-position) (mlm/paragraph-end beg)))
+                        (mlm/next-item-to-join beg limit))))
+    (if (not joinable)
+        (evil-ext/join)
+      (cl-loop repeat joins
+               for next-beg = (mlm/next-item-to-join beg limit)
+               while next-beg
+               do (mlm/join-next-item beg next-beg))
+      (fill-region beg (mlm/paragraph-end beg))
+      (evil-exit-visual-state)
+      (goto-char pos))))
 
 (defun mlm/markdown-fill-forward-paragraph (arg)
   "The `fill-forward-paragraph-function'. Like `forward-paragraph', but treats code blocks and

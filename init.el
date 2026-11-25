@@ -295,10 +295,7 @@
 (define-key evil-normal-state-map (kbd "j") 'evil-next-visual-line)
 (define-key evil-normal-state-map (kbd "k") 'evil-previous-visual-line)
 (define-key evil-normal-state-map (kbd "K") 'describe-symbol-at-point)
-(define-key evil-normal-state-map (kbd "J")
-            (lambda ()
-              (interactive)
-              (util/preserve-line-and-column (lambda () (call-interactively 'evil-join)))))
+(define-key evil-normal-state-map (kbd "J") 'evil-ext/join)
 
 (define-key evil-normal-state-map (kbd "C-k") 'move-to-previous-paragraph-start)
 (define-key evil-normal-state-map (kbd "C-j") 'move-to-next-paragraph-start)
