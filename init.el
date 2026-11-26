@@ -541,6 +541,10 @@
 (setq use-default-font-for-symbols nil)
 (set-fontset-font t ?✓ "Menlo")
 
+;; Add a little space between lines, to see whether it eases eye strain. At 0.15 of the 18px line
+;; height, Emacs adds 2px per line, which costs 8 of 75 lines in a full-height window.
+(setq-default line-spacing 0.15)
+
 ;;
 ;; Changing font sizes - text-scale-mode
 ;;
