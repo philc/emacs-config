@@ -48,8 +48,8 @@
 ;; Make it possible to open files via the command line in this Emacs using `emacsclient`.
 (require 'server)
 (if (not (or (server-running-p)
-             ;; I use two Emacs apps, one dedicated to Org mode. Don't start the server in that
-             ;; Emacs.
+             ;; I use two Emacs apps, one dedicated to my todo list (Org.app, named for the Org mode
+             ;; file it once was). Don't start the server in that Emacs.
              (string-match "Org\\.app" (car command-line-args))))
     (server-start))
 
@@ -159,13 +159,7 @@
   (setq whitespace-line-column 110) ; When text flows past 110 chars, highlight it.
   ;; whitespace-mode by default highlights all whitespace. Show only tabs and trailing spaces.
   (setq whitespace-style '(face trailing lines-tail)))
-(add-hook 'before-save-hook 'delete-trailing-whitespace-in-file)
-
-(defun delete-trailing-whitespace-in-file ()
-  ;; Don't trim trailing whitespace in org mode, because doing so will annoyingly convert list items
-  ;; into plaintext when saving the buffer when "* " has been typed.
-  (when (not (eq major-mode 'org-mode))
-    (delete-trailing-whitespace)))
+(add-hook 'before-save-hook 'delete-trailing-whitespace)
 
 (setq-default tab-width 2)
 (setq-default evil-shift-width 2)
@@ -919,11 +913,6 @@
     (elisp/goto-defun selected)))
 
 ;;
-;; Org mode. For TODOs and note taking.
-;;
-(require 'org-mode-personal)
-
-;;
 ;; Projectile (find file from the root of the current project).
 ;;
 (require 'projectile)
@@ -1214,14 +1203,6 @@
   (interactive)
   ;; NOTE(philc): This is a script I've written to perform this transformation.
   (util/replace-region-with-command-output "~/scripts/publishing/strip_bullets.rb"))
-
-(defun markdown-convert-to-org ()
-  (interactive)
-  (util/replace-region-with-command-output "~/scripts/publishing/convert_markdown_to_org.rb"))
-
-(defun org-convert-to-markdown()
-  (interactive)
-  (util/replace-region-with-command-output "~/scripts/publishing/convert_org_to_markdown.rb"))
 
 (defun mlm/markdown-insert-date ()
   (interactive)
@@ -2002,7 +1983,7 @@
 ;;
 
 ;; Note that I have two Emacs apps running on MacOS: one for editing files, and the other as my TODO
-;; list (org mode). I only want to save and restore desktop configurations in the Emacs app I use
+;; list (Org.app). I only want to save and restore desktop configurations in the Emacs app I use
 ;; for editing.
 (let* ((emacs-app-path (expand-file-name invocation-name invocation-directory))
        (is-org-emacs (s-contains? "Org.app" emacs-app-path)))
