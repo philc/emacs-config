@@ -46,12 +46,18 @@
 (defvar-local fsb/deleting-newline nil
   "Whether the change about to happen deletes a newline.")
 
+;; This doesn't search with a regexp, because change hooks must preserve the match data. They also
+;; run when text properties change, e.g. in the middle of a regexp replacement loop such as Magit's
+;; `git-rebase-mode-show-keybindings'.
+(defun fsb/newline-in-p (beg end)
+  "Whether the text from BEG to END holds a newline."
+  (< (save-excursion (goto-char beg) (pos-eol)) end))
+
 (defun fsb/before-change (beg end)
-  (setq fsb/deleting-newline
-        (and (< beg end) (save-excursion (goto-char beg) (search-forward "\n" end t)))))
+  (setq fsb/deleting-newline (fsb/newline-in-p beg end)))
 
 (defun fsb/after-change (beg end _old-len)
-  (when (or fsb/deleting-newline (save-excursion (goto-char beg) (search-forward "\n" end t)))
+  (when (or fsb/deleting-newline (fsb/newline-in-p beg end))
     (cl-incf fsb/newline-edits)))
 
 (defvar-local fsb/visibility-changes 0
