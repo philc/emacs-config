@@ -51,12 +51,7 @@
 (defun emacs-utils-test/replace-text (beg end new-text)
   "Calls `util/replace-text', failing the test if it fell back to replacing the text wholesale,
    which it does only when its patching is broken."
-  (cl-letf* ((orig-message (symbol-function 'message))
-             ((symbol-function 'message)
-              (lambda (fmt &rest args)
-                (when (s-starts-with? "util/replace-text: patching failed" fmt)
-                  (ert-fail "util/replace-text fell back to a wholesale replace"))
-                (apply orig-message fmt args))))
+  (let ((util/replace-text-strict t))
     (util/replace-text beg end new-text)))
 
 (defun emacs-utils-test/replace (old new)

@@ -168,6 +168,10 @@
   (let ((r (compare-strings a nil nil b nil nil)))
     (if (eq r t) (min (length a) (length b)) (1- (abs r)))))
 
+(defvar util/replace-text-strict nil
+  "When non-nil, `util/replace-text' signals an error if its patching produces the wrong text,
+   rather than falling back to replacing the text wholesale. The tests set this.")
+
 ;; Why not `replace-region-contents' on the whole text: it diffs character by character, and in a
 ;; buffer with any non-ASCII text, each comparison converts character positions to byte positions
 ;; by scanning the buffer. Reformatting a 67KB HTML file with a few em dashes took 33s that way,
@@ -232,6 +236,8 @@
                   (goto-char bs))))
             (unless (string= (buffer-substring-no-properties (point-min) (point-max)) new-text)
               ;; Shouldn't happen, but never leave the buffer with the wrong text.
+              (when util/replace-text-strict
+                (error "util/replace-text: patching failed"))
               (message "util/replace-text: patching failed; replaced the text wholesale")
               (delete-region (point-min) (point-max))
               (insert new-text))))
