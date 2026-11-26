@@ -28,6 +28,27 @@
       (error "Refusing to delete %s, which isn't in %s" dir temp))
     (delete-directory dir t)))
 
+(defvar dr-test/template nil
+  "A repo whose HEAD commit edits a.txt and b.txt, made once and copied for each test, since making
+it runs git several times.")
+
+(defun dr-test/template ()
+  (or dr-test/template
+      (let* ((repo (file-name-as-directory (make-temp-file "dr-test-template" t)))
+             (default-directory repo))
+        (dr-test/git "init" "-q")
+        (dr-test/git "config" "user.email" "t@t")
+        (dr-test/git "config" "user.name" "t")
+        (dr-test/write "a.txt" "one\ntwo\nthree\nfour\nfive\n")
+        (dr-test/write "b.txt" "alpha\nbeta\n")
+        (dr-test/git "add" ".")
+        (dr-test/git "commit" "-qm" "initial")
+        (dr-test/write "a.txt" "one\nTWO\nthree\nfour\nfive\nsix\n")
+        (dr-test/write "b.txt" "alpha\nBETA\n")
+        (dr-test/git "commit" "-qam" "change: edit a and b")
+        (add-hook 'kill-emacs-hook (lambda () (dr-test/delete-repo repo)))
+        (setq dr-test/template repo))))
+
 (defmacro dr-test/with-repo (&rest body)
   "Run BODY in a repo whose HEAD commit edits a.txt and b.txt."
   (declare (indent 0))
@@ -35,24 +56,17 @@
           (default-directory repo))
      (unwind-protect
          (progn
-           (dr-test/git "init" "-q")
-           (dr-test/git "config" "user.email" "t@t")
-           (dr-test/git "config" "user.name" "t")
-           (dr-test/write "a.txt" "one\ntwo\nthree\nfour\nfive\n")
-           (dr-test/write "b.txt" "alpha\nbeta\n")
-           (dr-test/git "add" ".")
-           (dr-test/git "commit" "-qm" "initial")
-           (dr-test/write "a.txt" "one\nTWO\nthree\nfour\nfive\nsix\n")
-           (dr-test/write "b.txt" "alpha\nBETA\n")
-           (dr-test/git "commit" "-qam" "change: edit a and b")
+           (copy-directory (dr-test/template) repo nil nil t)
            ,@body)
-       (when-let* ((buffer (magit-get-mode-buffer 'magit-revision-mode)))
-         (kill-buffer buffer))
+       ;; Find the buffer by its mode, since `magit-get-mode-buffer' runs git.
+       (mapc #'kill-buffer (match-buffers '(major-mode . magit-revision-mode)))
        (dr-test/delete-repo repo))))
 
 (defun dr-test/show (rev &optional args)
-  (magit-revision-setup-buffer rev args nil)
-  (switch-to-buffer (magit-get-mode-buffer 'magit-revision-mode))
+  ;; Cache git's answers while the buffer is set up, as magit does while it refreshes a buffer.
+  (let ((magit--refresh-cache (list (cons 0 0))))
+    (magit-revision-setup-buffer rev args nil)
+    (switch-to-buffer (magit-get-mode-buffer 'magit-revision-mode)))
   (evil-normal-state))
 
 (defun dr-test/keys (keys)
