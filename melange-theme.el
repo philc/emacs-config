@@ -148,6 +148,7 @@
    `(magit-diff-revision-summary-highlight
      ((t (:extend t :background ,bg-sel :foreground ,fg :weight bold))))
    `(magit-section-highlight ((t (:extend t :background ,bg-float))))
+   `(magit-log-author ((t (:foreground ,comment))))
    `(diff-added ((t (:extend t :background ,added))))
    `(diff-removed ((t (:extend t :background ,removed))))
    `(diff-refine-added ((t (:background ,added-word))))
