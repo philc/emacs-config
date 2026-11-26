@@ -678,3 +678,16 @@
   (interactive "P")
   (let ((recenter-redisplay nil))
     (recenter arg)))
+
+(defun util/scroll-into-view (end)
+  "Scroll so the text from point to END is in view, if it isn't already. Point goes a third of the
+way down the window, leaving room for context above it, or higher if the text needs the room,
+but no higher than `scroll-margin'. For commands which jump to a thing to read, such as the next
+comment, while leaving the window still when that thing is already in view."
+  (when (eq (window-buffer) (current-buffer))
+    (let ((last (max (point) (1- end))))
+      (unless (and (pos-visible-in-window-p (point)) (pos-visible-in-window-p last))
+        (let* ((height (window-body-height))
+               (lines (count-screen-lines (point) end))
+               (row (max scroll-margin (min (/ height 3) (- height lines)))))
+          (util/recenter-no-redraw row))))))

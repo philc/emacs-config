@@ -107,6 +107,7 @@
 (require 'text-property-search)
 (require 'magit)
 (require 'evil)
+(require 'emacs-utils)
 
 (defface dr/comment
   '((((background dark)) :background "#2a3238" :extend t)
@@ -1007,15 +1008,20 @@ thread in the review buffer. This is where the comment's navigation stops."
   "Go to the next comment, skipping those in folded sections."
   (interactive)
   (if-let* ((pos (seq-find (lambda (p) (> p (dr--here))) (dr--block-starts))))
-      (goto-char pos)
+      (dr--goto-block pos)
     (message "No more comments")))
 
 (defun dr/previous-comment ()
   "Go to the start of this comment, or the previous one. See `dr/next-comment'."
   (interactive)
   (if-let* ((pos (car (last (seq-filter (lambda (p) (< p (point))) (dr--block-starts))))))
-      (goto-char pos)
+      (dr--goto-block pos)
     (message "No more comments")))
+
+(defun dr--goto-block (pos)
+  "Go to POS, where a comment's navigation stops, scrolling its thread into view."
+  (goto-char pos)
+  (util/scroll-into-view (cdr (dr--block-region (get-text-property pos 'dr-block)))))
 
 (defun dr/show-commit ()
   "Show the commit whose hash is at point, in a reply, in another window, keeping the focus here.

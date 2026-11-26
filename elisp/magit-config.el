@@ -417,7 +417,12 @@ runs only once, on the final section."
       (user-error nil))
     (goto-char start)
     (if target
-        (magit-section-goto target)
+        (progn
+          (magit-section-goto target)
+          ;; A collapsed section shows only its heading.
+          (util/scroll-into-view (if (oref target hidden)
+                                     (line-end-position)
+                                   (oref target end))))
       (message "No more hunks"))))
 
 (defun my-magit/next-hunk ()
