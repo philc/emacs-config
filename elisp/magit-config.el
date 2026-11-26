@@ -53,6 +53,13 @@
 ;; in brighter diff colors and lose the theme's contrast.
 (setq magit-diff-highlight-hunk-body nil)
 
+;; Don't highlight the section at point in a revision buffer. The highlight's background stops short
+;; of review comments' bars, which have their own background.
+(defun magit-config--no-current-section-highlight ()
+  (setq-local magit-section-highlight-current nil))
+
+(add-hook 'magit-revision-mode-hook #'magit-config--no-current-section-highlight)
+
 ;; Narrow the log's author column from 18 characters to 12, so it cuts off fewer commit summaries.
 ;; Longer names are truncated with an ellipsis.
 (let ((margin '(t age magit-log-margin-width t 12)))
