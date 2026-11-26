@@ -1075,6 +1075,11 @@
 ;; mispelled, so don't spell check them.
 (add-to-list 'jinx-exclude-faces '(html-mode font-lock-variable-name-face font-lock-string-face))
 
+;; Don't spell check bare domains like mysite.xyz or claude.ai's. Jinx already skips URLs which
+;; have a scheme, like https://example.com.
+(add-to-list 'jinx-exclude-regexps
+             '(t "\\w+\\(?:\\.\\w+\\)*\\.[a-z]\\{2,\\}\\(?:['’]s\\)?\\>"))
+
 ;; Aspell's dictionary lists possessives as separate entries, and includes only some of them (e.g.
 ;; "window's" but not "pane's"). Accept any word ending in 's when the word without it is valid.
 (defun jinx-possessive-valid-p (start)
