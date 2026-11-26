@@ -58,10 +58,12 @@
   (evil-normalize-keymaps))
 
 (defun mtodo/maybe-enable ()
-  "Turns on `markdown-todo-mode' if the current buffer is visiting `mtodo/file'."
+  "Turns on `markdown-todo-mode' if the current buffer is visiting `mtodo/file', and folds it to
+show each section's items, with their children hidden."
   (when (and buffer-file-name
              (string= (file-truename buffer-file-name) (file-truename mtodo/file)))
-    (markdown-todo-mode 1)))
+    (markdown-todo-mode 1)
+    (mlm/show-level 2)))
 
 (add-hook 'markdown-lite-mode-hook #'mtodo/maybe-enable)
 
