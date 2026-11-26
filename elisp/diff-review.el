@@ -68,7 +68,7 @@
 ;;   serves as the blank line before, as margins collapse in CSS.
 ;; - gn and gp go to the next and previous comment, rather than hunk, when there are any. Reading
 ;;   the comments is what these buffers are for.
-;; - X on a thread deletes the comment and its thread.
+;; - # on a thread deletes the comment and its thread.
 ;; - Saving a comment merges it into the file's latest version of it, so that saving doesn't
 ;;   overwrite replies Claude has added since the buffer was refreshed.
 ;;

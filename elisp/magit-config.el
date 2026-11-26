@@ -363,7 +363,7 @@ Date: %ad
   "r" 'magit-refresh
   ;; Resolve or reopen the review comment thread at point, or delete it.
   "R" 'dr/toggle-resolved
-  "X" 'dr/delete-thread)
+  "#" 'dr/delete-thread)
 
 ;; In a file's buffer with review comments, gn and gp go to them.
 (evil-define-minor-mode-key 'normal 'dr/file-mode

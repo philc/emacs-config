@@ -504,10 +504,10 @@
     (with-current-buffer (magit-get-mode-buffer 'magit-revision-mode)
       (should (equal magit-buffer-revision-oid (magit-rev-parse "HEAD")))
       (should (equal (dr-test/line) "+FOUR")))
-    ;; X deletes a thread.
+    ;; # deletes a thread.
     (dr-test/goto "^Done\\.")
     (cl-letf (((symbol-function 'y-or-n-p) (lambda (&rest _) t)))
-      (dr-test/keys "X"))
+      (dr-test/keys "#"))
     (should-not (dr-test/comment-with "on two"))
     (should-not (save-excursion (goto-char (point-min)) (re-search-forward "^on two" nil t)))))
 
