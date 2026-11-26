@@ -117,6 +117,8 @@
     (((class color) (background light)) (:foreground "magenta4"))
     (((class color) (background dark)) (:foreground "violet"))))
  `(fringe ((t (:background "grey10"))))
+ ;; Make the dividing line between window splits less bright than tangotango's #EAEAEA.
+ `(vertical-border ((t (:foreground "#888888"))))
  `(header-line
    ((default (:inherit (mode-line)))
     (((type tty)) (:underline (:color foreground-color :style line) :inverse-video nil))

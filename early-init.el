@@ -45,13 +45,10 @@
 ;;
 (defun reload-theme ()
   (interactive)
-  ;; A reasonable color scheme which lives in my .emacs.d.
-  (load-theme 'tangotango t))
+  ;; A warm, low-contrast theme.
+  (load-theme 'melange t))
 
 (reload-theme)
-
-;; Make the dividing line between window splits less bright. It's #EAEAEA in tangotango.
-(set-face-attribute 'vertical-border nil :foreground "#888888")
 
 ;; Remove some of Emacs UI
 (setq initial-scratch-message "") ; When opening a new buffer, don't show the scratch message.
