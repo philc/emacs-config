@@ -1,7 +1,8 @@
 ;;; -*- lexical-binding: t; -*-
 ;;
 ;; Tests for diff-review.el. They drive a real magit revision buffer with keys, in a throwaway git
-;; repo.
+;; repo. Git's answers to magit's read-only questions are kept and replayed until the repo changes
+;; (see `dr-test/git-answers'), which makes the tests twice as fast.
 ;;
 ;; Run these with `make test`.
 
@@ -14,11 +15,95 @@
 ;; As in my init.el.
 (evil-set-undo-system 'undo-redo)
 
+;; Leave out my global git config, so the tests don't depend on it. Its hooks also make each commit
+;; take twice as long.
+(setenv "GIT_CONFIG_GLOBAL" "/dev/null")
+
+(defvar dr-test/git-answers (make-hash-table :test #'equal)
+  "Git's answers to the read-only commands magit runs, as (EXIT OUTPUT STDERR), keyed by the
+directory, the command, and `dr-test/repo-version'. Every test starts with the same repo at the
+same path, so most of what magit asks git while it shows a commit has the same answer in every test,
+and is worth asking only once. Running each costs about 5ms, and showing a commit runs about 20.")
+
+(defvar dr-test/repo-version 0
+  "Which version of the repo the test is on: 0 for the template, or a number used only once,
+which is changed whenever a test might have changed the repo, so that git's answers are asked
+again.")
+
+(defvar dr-test/last-repo-version 0)
+
+(defun dr-test/repo-changed ()
+  (setq dr-test/repo-version (cl-incf dr-test/last-repo-version)))
+
+(defconst dr-test/read-only-commands
+  '("rev-parse" "cat-file" "log" "show" "symbolic-ref" "config" "for-each-ref" "merge-base"
+    "rev-list" "diff" "diff-tree" "ls-files" "status")
+  "The git commands whose answers `dr-test/git-answers' keeps. Any other command, which might
+change the repo, makes the tests ask git everything again.")
+
+(defun dr-test/git-command (args)
+  "The git command in ARGS, skipping the options before it, such as \"-c x=y\"."
+  (let ((args (flatten-tree args)))
+    (while (and args (string-prefix-p "-" (car args)))
+      (when (equal (car args) "-c") (pop args))
+      (pop args))
+    (car args)))
+
+(defun dr-test/replay-git (orig process &optional infile buffer display &rest args)
+  "Replays git's answer to a read-only command run as before, since the repo last changed."
+  (let ((stderr (and (consp buffer) (stringp (cadr buffer)) (cadr buffer))))
+    (if (not (and (null infile)
+                  (or (eq buffer t) (and (consp buffer) (eq (car buffer) t)))
+                  (member (dr-test/git-command args) dr-test/read-only-commands)))
+        (progn (dr-test/repo-changed)
+               (apply orig process infile buffer display args))
+      (let* ((key (list default-directory process args dr-test/repo-version))
+             (answer
+              (or (gethash key dr-test/git-answers)
+                  (puthash key (dr-test/ask-git orig process args) dr-test/git-answers))))
+        (pcase-let ((`(,exit ,output ,error) answer))
+          (insert output)
+          (when (and stderr (not (equal error "")))
+            (with-temp-file stderr (insert error)))
+          exit)))))
+
+(defun dr-test/ask-git (orig process args)
+  "Runs git with ARGS through ORIG, `magit-process-file', and returns (EXIT OUTPUT STDERR)."
+  (let ((stderr (make-temp-file "dr-test-stderr")))
+    (unwind-protect
+        (with-temp-buffer
+          (let ((exit (apply orig process nil (list t stderr) nil args)))
+            (list exit
+                  (buffer-string)
+                  (with-temp-buffer (insert-file-contents stderr) (buffer-string)))))
+      (delete-file stderr))))
+
+(advice-add 'magit-process-file :around #'dr-test/replay-git)
+
 (defun dr-test/git (&rest args)
+  (dr-test/repo-changed)
   (apply #'call-process "git" nil nil nil args))
 
 (defun dr-test/write (file text)
   (with-temp-file file (insert text)))
+
+(defvar dr-test/repo nil
+  "The directory of each test's repo. It's the same for every test, so that git's answers are too.")
+
+(defun dr-test/repo ()
+  (or dr-test/repo
+      (let ((parent (make-temp-file "dr-test" t)))
+        (add-hook 'kill-emacs-hook (lambda () (dr-test/delete-repo parent)))
+        (setq dr-test/repo (file-name-as-directory (expand-file-name "repo" parent))))))
+
+;; Writing a file in the repo, as the tests do by saving a buffer, changes git's answers. The review
+;; file doesn't.
+(advice-add 'write-region :after
+            (lambda (_start _end file &rest _)
+              (when (and (stringp file)
+                         (string-prefix-p (file-truename (dr-test/repo)) (file-truename file))
+                         (not (equal (file-name-nondirectory file) "review.json")))
+                (dr-test/repo-changed))))
 
 (defun dr-test/delete-repo (dir)
   ;; `default-directory' is buffer-local, so it can't be trusted to still be the repo here: the
@@ -36,24 +121,26 @@ it runs git several times.")
   (or dr-test/template
       (let* ((repo (file-name-as-directory (make-temp-file "dr-test-template" t)))
              (default-directory repo))
-        (dr-test/git "init" "-q")
-        (dr-test/git "config" "user.email" "t@t")
-        (dr-test/git "config" "user.name" "t")
+        (call-process "git" nil nil nil "init" "-q")
+        (call-process "git" nil nil nil "config" "user.email" "t@t")
+        (call-process "git" nil nil nil "config" "user.name" "t")
         (dr-test/write "a.txt" "one\ntwo\nthree\nfour\nfive\n")
         (dr-test/write "b.txt" "alpha\nbeta\n")
-        (dr-test/git "add" ".")
-        (dr-test/git "commit" "-qm" "initial")
+        (call-process "git" nil nil nil "add" ".")
+        (call-process "git" nil nil nil "commit" "-qm" "initial")
         (dr-test/write "a.txt" "one\nTWO\nthree\nfour\nfive\nsix\n")
         (dr-test/write "b.txt" "alpha\nBETA\n")
-        (dr-test/git "commit" "-qam" "change: edit a and b")
+        (call-process "git" nil nil nil "commit" "-qam" "change: edit a and b")
         (add-hook 'kill-emacs-hook (lambda () (dr-test/delete-repo repo)))
         (setq dr-test/template repo))))
 
 (defmacro dr-test/with-repo (&rest body)
   "Run BODY in a repo whose HEAD commit edits a.txt and b.txt."
   (declare (indent 0))
-  `(let* ((repo (file-name-as-directory (make-temp-file "dr-test" t)))
+  `(let* ((repo (dr-test/repo))
           (default-directory repo))
+     ;; The repo starts as the template, so git's answers from before any test changed it hold.
+     (setq dr-test/repo-version 0)
      (unwind-protect
          (progn
            (copy-directory (dr-test/template) repo nil nil t)
