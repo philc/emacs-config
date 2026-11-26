@@ -127,6 +127,9 @@
    `(mlm-list-marker-4 ((t (:foreground ,blue-bright))))
    `(mlm-list-marker-5 ((t (:foreground ,blue-bright))))
    `(mlm-list-marker-6 ((t (:foreground ,blue-bright))))
+   ;; Todo list items: a done item, and the in progress and waiting markers, recede.
+   `(mlm-todo-done ((t (:foreground ,ui))))
+   `(mtodo-status-marker ((t (:foreground ,ui))))
 
    ;; Org.
    `(org-hide ((t (:foreground ,bg))))

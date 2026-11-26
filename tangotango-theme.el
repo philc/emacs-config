@@ -247,6 +247,8 @@
  `(mlm-list-item-3 ((t (:foreground "#E4BDA7"))))
  `(mlm-list-item-4 ((t (:foreground "#87D952"))))
  `(mlm-list-item-5 ((t (:foreground "#C3D9C9"))))
+ `(mlm-todo-done ((t (:foreground "#888a85"))))
+ `(mtodo-status-marker ((t (:foreground "#888a85"))))
  `(org-hide ((t (:foreground "#2e3436"))))
  `(org-level-1 ((t (:bold nil :foreground "dodger blue"))))
  `(org-level-2 ((t (:bold nil :foreground "#edd400"))))
