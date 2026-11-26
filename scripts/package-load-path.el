@@ -27,3 +27,6 @@
                                        dir)))
       (when (file-exists-p autoloads)
         (load autoloads nil t)))))
+
+;; As init.el does: don't load go-mode for every file to check whether it's Go assembly.
+(setq magic-mode-alist (assq-delete-all 'go--is-go-asm magic-mode-alist))

@@ -1548,6 +1548,9 @@
 
 (setq gofmt-in-progress nil)
 
+(declare-function gofmt "go-mode")
+(declare-function gofmt--process-errors "go-mode")
+
 (defun gofmt-ignoring-errors ()
   (interactive)
   (cl-letf (((symbol-function #'gofmt--process-errors)
