@@ -32,6 +32,11 @@
 ;; commit mode and don't need to see the changes again.
 (setq magit-commit-show-diff nil)
 
+;; Don't link "#123"-style bug references in commit buffers. Turning the mode on asks vc which
+;; backend owns the repo, which loads every vc backend the first time, and costs a little in every
+;; commit buffer, for links I don't use.
+(remove-hook 'magit-revision-mode-hook #'bug-reference-mode)
+
 ;; Magit's commit menu enables --verbose by default, which makes git embed the full staged diff
 ;; as a comment in the commit message buffer. That's slow to open for large diffs, so turn it off.
 (with-eval-after-load 'magit-commit
