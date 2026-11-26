@@ -545,6 +545,20 @@
   "^\\([ \t]*\\)\\([0-9]+\\.\\|[*+-]\\)\\([ \t]+\\)"
   "Regular expression for matching list items.")
 
+;; In a todo list, a list item's status is a marker after its list marker: "* ✓ Done", "* ⏸ Waiting",
+;; or "* → In progress". An open item has none. An archived item has the date it was archived before
+;; its marker: "* 2026-11-25 ✓ Done".
+
+(defconst mlm/todo-markers '("✓" "⏸" "→")
+  "The status markers of todo list items: done, waiting, and in progress.")
+
+(defconst mlm/todo-prefix-regexp
+  (concat mlm/markdown-regex-list
+          "\\(?:\\([0-9]\\{4\\}-[0-9][0-9]-[0-9][0-9]\\)[ \t]+\\)?"
+          "\\(?:\\(" (regexp-opt mlm/todo-markers) "\\)\\(?:[ \t]+\\|$\\)\\)?")
+  "Matches a list item's marker line, up to the start of its text. Groups 1 to 3 are those of
+   `mlm/markdown-regex-list'. Group 4 is the item's archive date, and group 5 its status marker.")
+
 (defconst mlm/markdown-regex-line-lead
   "^\\([ \t>]*\\(?:\\(?:[0-9]+\\.\\|[*+-]\\)[ \t]+\\)?\\)[^ \t\n].*"
   "Regular expression matching a non-blank line. Group 1 is what comes before its text: indentation,
@@ -913,9 +927,15 @@ If the point is not in a list item, do nothing."
   (or
    ;; inside in square brackets (e.g., link anchor text)
    (looking-back "\\[[^]]*" (line-beginning-position))
-   ;; Right after a list marker. When the item's first word is too long to fit (e.g. a URL), keep it
-   ;; on the marker's line, as dprint does, rather than leaving the marker alone on its line.
-   (looking-back "^[ \t]*\\(?:[0-9]+\\.\\|[*+-]\\)[ \t]*" (line-beginning-position))))
+   ;; Right after a list marker, and the item's archive date and status marker if it has them. When
+   ;; the item's first word is too long to fit (e.g. a URL), keep it on the marker's line, as dprint
+   ;; does, rather than leaving the marker alone on its line.
+   (save-excursion
+     (skip-chars-backward " \t")
+     (let ((pos (point)))
+       (beginning-of-line)
+       (and (looking-at mlm/todo-prefix-regexp)
+            (<= pos (match-end 0)))))))
 
 ;; Filling joins a paragraph's lines, which would mangle code blocks and tables. dprint leaves them
 ;; alone, and so does filling, by treating their lines as paragraph separators.

@@ -124,6 +124,11 @@
   (should (equal (mlm-test/fill-buffer "* https://example.com/long aaa\n")
                  "* https://example.com/long\n  aaa\n")))
 
+(ert-deftest markdown-lite-mode-test/fill-keeps-long-word-on-todo-marker-line ()
+  "A long first word stays on the line of a todo item's status marker and archive date, too."
+  (should (equal (mlm-test/fill-buffer "* 2026-11-25 ✓ https://example.com/long aaa\n")
+                 "* 2026-11-25 ✓ https://example.com/long\n  aaa\n")))
+
 (defun mlm-test/join (text &optional count)
   "Inserts TEXT into a new markdown-lite-mode buffer, and calls `mlm/join' with COUNT from the \"|\"
    marker in it. If there's a second \"|\", the text between the two is selected. Returns the buffer's
