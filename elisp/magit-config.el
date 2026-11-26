@@ -53,6 +53,25 @@
 ;; in brighter diff colors and lose the theme's contrast.
 (setq magit-diff-highlight-hunk-body nil)
 
+;; Narrow the log's author column from 18 characters to 12, so it cuts off fewer commit summaries.
+;; Longer names are truncated with an ellipsis.
+(let ((margin '(t age magit-log-margin-width t 12)))
+  (setopt magit-log-margin margin
+          magit-log-select-margin margin
+          magit-cherry-margin margin))
+
+;; Leave a blank column at the start of the right margin, so that a long commit summary doesn't run
+;; into the author's name. Every Magit margin's width comes from `magit-log-margin-width', so widen
+;; it by one column to make room.
+(defun magit-config--pad-margin-string (args)
+  "Prepend a space to the margin string in ARGS, the arguments to `magit-make-margin-overlay'."
+  (if (car args)
+      (cons (concat " " (car args)) (cdr args))
+    args))
+
+(advice-add 'magit-log-margin-width :filter-return #'1+)
+(advice-add 'magit-make-margin-overlay :filter-args #'magit-config--pad-margin-string)
+
 ;; Syntax-highlight each diff hunk when it's first displayed. See
 ;; `magit-diff-specify-hunk-foreground' above.
 ;;
