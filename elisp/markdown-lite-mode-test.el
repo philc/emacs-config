@@ -923,3 +923,7 @@
   (should (equal (mlm-test/keys "* a\n  * b\n    * |c\n  * d\n" "dai") "* a\n  * b\n  * d\n"))
   (should (equal (mlm-test/keys "* |a\n  * b\n* c\n* d\n" "dai.") "* d\n"))
   (should (equal (mlm-test/keys "x\n\n* a\n* |b" "dai") "x\n\n* a")))
+
+(ert-deftest markdown-lite-mode-test/hash-deletes-list-item ()
+  "# deletes the item with its children, as dai does, and . repeats it."
+  (should (equal (mlm-test/keys "* |a\n  * b\n* c\n* d\n" "#.") "* d\n")))

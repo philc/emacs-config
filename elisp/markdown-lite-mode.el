@@ -350,6 +350,8 @@
     "gh" 'mlm/navigate-to-top-level-heading
     "gH" 'mlm/navigate-to-any-heading
     "gu" 'mlm/markdown-up-heading
+    ;; Like Gmail's and Superhuman's "#" for deleting a message.
+    "#" 'mlm/delete-list-item
     "J" 'mlm/join
     "gq" 'mlm/fill)
 
@@ -1113,6 +1115,11 @@ If the point is not in a list item, do nothing."
            (text-end (save-excursion (goto-char (cl-second bounds)) (line-end-position))))
       ;; End after the last line's newline. With an end before it, `dai' leaves a blank line.
       (list beg (min (1+ (mlm/list-item-children-end beg text-end)) (point-max))))))
+
+(evil-define-command mlm/delete-list-item ()
+  "Deletes the list item under the cursor, with its continuation lines and children, as `dai' does."
+  (let ((range (mlm/a-list-item)))
+    (evil-delete (evil-range-beginning range) (evil-range-end range) 'line)))
 
 (defun mlm/end-with-punctuation (beg end)
   "Adds a period at END if the text from BEG to END isn't empty and doesn't end in punctuation,
