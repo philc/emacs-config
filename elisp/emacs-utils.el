@@ -695,3 +695,33 @@ comment, while leaving the window still when that thing is already in view."
                (lines (count-screen-lines (point) end))
                (row (max scroll-margin (min (/ height 3) (- height lines)))))
           (util/recenter-no-redraw row))))))
+
+;; These load a package faster, by skipping the libraries it requires but uses only in a few commands,
+;; such as magit's use of browse-url to open a link. Each skipped library loads when one of those
+;; commands first needs it, if it ever does. Packages written by others can't be changed to require
+;; such libraries lazily, so this fakes their being loaded while the package loads.
+;;
+;; `util/require-without' is the simpler to use. To load a package whose macros or special variables
+;; the file uses, though, call `util/skip-libraries' and `util/unskip-libraries' around a top-level
+;; `require': the byte compiler loads what a top-level `require' names, so the file compiles with
+;; them, but it doesn't load what a `require' in a function call names.
+(defun util/skip-libraries (libraries)
+  "Marks LIBRARIES as loaded, so that requiring them does nothing, until `util/unskip-libraries' is
+called with the return value, the libraries which weren't already loaded."
+  (let ((skipped (seq-remove #'featurep libraries)))
+    ;; Unlike `provide', this doesn't run the `with-eval-after-load' forms for the skipped libraries.
+    (setq features (append skipped features))
+    skipped))
+
+(defun util/unskip-libraries (skipped)
+  "Undoes `util/skip-libraries', so that requiring or autoloading SKIPPED loads them."
+  (setq features (seq-difference features skipped)))
+
+(defun util/require-without (feature skipped)
+  "Requires FEATURE without loading the libraries SKIPPED, which FEATURE requires but uses only in
+functions that are autoloaded or that require the library themselves. Those load the library when
+they're first called."
+  (let ((skipped (util/skip-libraries skipped)))
+    (unwind-protect
+        (require feature)
+      (util/unskip-libraries skipped))))

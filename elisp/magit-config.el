@@ -20,22 +20,24 @@
 ;; Magit reads it when defining its faces.
 (defvar magit-diff-specify-hunk-foreground nil)
 
-(defun magit-config--require-without (feature skipped)
-  "Requires FEATURE without loading the libraries SKIPPED, which FEATURE requires but uses only in
-functions that are autoloaded or that require the library themselves. Those load the library when
-they're first called."
-  (let ((faked (seq-remove #'featurep skipped)))
-    ;; Unlike `provide', this doesn't run the `with-eval-after-load' forms for the skipped libraries.
-    (setq features (append faked features))
-    (unwind-protect
-        (require feature)
-      (setq features (seq-difference features faked)))))
-
 ;; Magit requires these libraries, but uses them only when it's asked to: browse-url to open a link,
 ;; epa and epg to pick a GPG key to sign with, and dired to discard an untracked file. Skipping them
 ;; saves 85ms when Magit loads. Magit's with-editor requires shell, which can't be skipped: its
-;; advice on `shell-command' reads `shell-mode-hook'.
-(magit-config--require-without 'magit '(browse-url epa epg dired))
+;; advice on `shell-command' reads `shell-mode-hook'. This doesn't use `util/require-without', since
+;; this file uses Magit's macros and special variables (see `util/skip-libraries').
+(defvar magit-config--skipped nil)
+(setq magit-config--skipped (util/skip-libraries '(browse-url epa epg dired)))
+(require 'magit)
+(util/unskip-libraries magit-config--skipped)
+
+;; Magit caches git's answers while it refreshes a buffer, but when it shows a buffer, it finds the
+;; buffer and saves the repo's buffers before then, which ask for the repo's top level several times.
+;; Caching from the start saves 10 of the 31 git calls to show a commit.
+(defun magit-config--with-refresh-cache (fn &rest args)
+  (let ((magit--refresh-cache (or magit--refresh-cache (list (cons 0 0)))))
+    (apply fn args)))
+
+(advice-add 'magit-setup-buffer-internal :around #'magit-config--with-refresh-cache)
 
 ;; Unlike Magit's other uses of the skipped libraries, this one doesn't load dired itself.
 (advice-add 'magit-discard-files--delete :before
@@ -260,7 +262,7 @@ The contents are empty for a file which doesn't exist, e.g. the old side of an a
   "Load css-mode without eww, which takes over 100ms to load, since it loads shr and parts of Gnus.
 css-mode requires eww only for `css-lookup-symbol', which calls autoloaded eww functions, so they
 still load eww when they're called."
-  (magit-config--require-without 'css-mode '(eww)))
+  (util/require-without 'css-mode '(eww)))
 
 (defun magit-config--kill-blob-buffers (keep)
   "Kill this buffer's blob buffers, except for the KEEP most recently loaded."

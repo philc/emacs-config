@@ -364,10 +364,8 @@ it runs git several times.")
        (dr-test/delete-repo repo))))
 
 (defun dr-test/show (rev &optional args)
-  ;; Cache git's answers while the buffer is set up, as magit does while it refreshes a buffer.
-  (let ((magit--refresh-cache (list (cons 0 0))))
-    (magit-revision-setup-buffer rev args nil)
-    (switch-to-buffer (magit-get-mode-buffer 'magit-revision-mode)))
+  (magit-revision-setup-buffer rev args nil)
+  (switch-to-buffer (magit-get-mode-buffer 'magit-revision-mode))
   (evil-normal-state))
 
 (defun dr-test/keys (keys)

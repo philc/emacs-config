@@ -105,6 +105,7 @@
 (require 'subr-x)
 (require 'json)
 (require 'text-property-search)
+(require 'thunk)
 (require 'magit)
 (require 'evil)
 (require 'emacs-utils)
@@ -151,7 +152,8 @@ shadow evil's, and only the keys bound here, such as section navigation, keep a 
   "Commands which may restore a deleted comment, from a diff line.")
 
 (defvar-local dr--commit nil
-  "The plist (:sha :subject :patch-id) of the commit this buffer shows.")
+  "The plist (:sha :subject :patch-id) of the commit this buffer shows, once `dr--commit' has
+looked it up. Refreshing the buffer forgets it.")
 
 (defvar-local dr--review-places nil
   "In the review buffer, where each comment goes, as a list of (COMMENT POS SECTION ORPHAN), made
@@ -247,6 +249,12 @@ guessing."
 (defun dr--commit-info (&optional sha)
   "The plist (:sha :subject :patch-id) of commit SHA, or of the commit this buffer shows."
   (car (hash-table-values (dr--commit-infos (list (or sha magit-buffer-revision-oid))))))
+
+(defun dr--commit ()
+  "The plist from `dr--commit-info' of the commit this buffer shows. It's looked up only when it's
+needed, since that runs git twice, and most commits have no comments."
+  (with-memoization dr--commit
+    (dr--commit-info)))
 
 (defun dr--commit-infos (shas)
   "A hash table from each of commits SHAS to its plist from `dr--commit-info'. A patch-id is nil
@@ -557,15 +565,17 @@ newline."
     dr--review-places)
    (t
     ;; A comment whose commit is still on the branch stays there. Otherwise a fixup's comments
-    ;; would also show on every other fixup of the same commit, since they share its subject.
-    (let ((branch (dr--review-commits)))
+    ;; would also show on every other fixup of the same commit, since they share its subject. The
+    ;; branch's commits are looked up only for a comment on another commit, since that runs git
+    ;; several times.
+    (let ((branch (thunk-delay (dr--review-commits))))
       (mapcar (lambda (comment) (cons comment (dr--place comment)))
               (seq-filter (lambda (comment)
                             (let ((sha (alist-get 'commit comment)))
                               (and (not (dr--text-comment-p comment))
-                                   (or (equal sha (plist-get dr--commit :sha))
-                                       (and (not (member sha branch))
-                                            (dr--matches-commit-p comment dr--commit))))))
+                                   (or (equal sha magit-buffer-revision-oid)
+                                       (and (not (member sha (thunk-force branch)))
+                                            (dr--matches-commit-p comment (dr--commit)))))))
                           (dr--read-store)))))))
 
 (defun dr--render ()
@@ -825,7 +835,7 @@ comment :file, :side, :line, :code), and where it goes (:pos :section)."
         (unless section
           (user-error "Not on a commit"))
         (gethash (oref section value) dr--review-infos))
-    dr--commit))
+    (dr--commit)))
 
 (defun dr--same-anchor-p (comment anchor)
   "Whether COMMENT, which is right below where a comment at ANCHOR would go, is about the same
@@ -2323,8 +2333,7 @@ restores are of diff text only, and then put them back in."
           (dr--quiet t))
       (dr--remove-all)
       (apply refresh args)
-      (unless (derived-mode-p 'dr/review-mode)
-        (setq dr--commit (dr--commit-info)))
+      (setq dr--commit nil)
       ;; Magit has restored point to where it was in the diff, so keep it after any comment
       ;; inserted there, unless it was in a comment.
       (let ((after-comments (copy-marker (point) t)))
