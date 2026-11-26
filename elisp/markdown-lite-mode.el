@@ -531,9 +531,10 @@
 ;;
 
 (defconst mlm/markdown-regex-list-item
-  "^\\(\\(?:  \\|\t\\)*\\)\\* .*$"
-  "Regular expression matching the marker line of a highlighted list item: one with a \"*\" marker, and
-   an indentation of whole levels (two spaces or a tab each). Group 1 is the indentation.")
+  "^\\(\\(?:  \\|\t\\)*\\)\\(\\*\\) .*$"
+  "Regular expression matching the marker line of a highlighted list item: one with a \"*\" marker,
+   and an indentation of whole levels (two spaces or a tab each). Group 1 is the indentation, and
+   group 2 the marker.")
 
 (defconst mlm/markdown-regex-list
   "^\\([ \t]*\\)\\([0-9]+\\.\\|[*+-]\\)\\([ \t]+\\)"
@@ -558,11 +559,30 @@
    mlm-list-item-6]
   "The face for each level of list item, from level 1 to 6. Deeper items get the level 6 face.")
 
+(defconst mlm/markdown-list-marker-faces
+  [mlm-list-marker-1
+   mlm-list-marker-2
+   mlm-list-marker-3
+   mlm-list-marker-4
+   mlm-list-marker-5
+   mlm-list-marker-6]
+  "The face for each level of list item's \"*\" marker, from level 1 to 6. Deeper items get the level
+   6 face.")
+
+(defun mlm/markdown-list-item-index ()
+  "The level, from 0 to 5, of the list item whose marker line `mlm/markdown-regex-list-item' just
+   matched."
+  (let ((indentation (match-string 1)))
+    (min 5 (+ (cl-count ?\t indentation) (/ (cl-count ?\s indentation) 2)))))
+
 (defun mlm/markdown-list-item-face ()
   "The face for the list item whose marker line `mlm/markdown-regex-list-item' just matched."
-  (let ((indentation (match-string 1)))
-    (aref mlm/markdown-list-item-faces
-          (min 5 (+ (cl-count ?\t indentation) (/ (cl-count ?\s indentation) 2))))))
+  (aref mlm/markdown-list-item-faces (mlm/markdown-list-item-index)))
+
+(defun mlm/markdown-list-marker-face ()
+  "The face for the marker of the list item whose marker line `mlm/markdown-regex-list-item' just
+   matched."
+  (aref mlm/markdown-list-marker-faces (mlm/markdown-list-item-index)))
 
 (defconst mlm/markdown-regex-code
   "\\(\\`\\|[^\\]\\)\\(\\(`+\\)\\(\\(.\\|\n[^\n]\\)*?[^`]\\)\\3\\)\\([^`]\\|\\'\\)"
@@ -1338,6 +1358,37 @@ If we are at the first line, then consider the previous line to be blank."
   "For second-level list items."
   :group 'mlm-faces)
 
+(defface mlm-list-marker-1
+  '((t (:inherit mlm-list-item-1)))
+  "For the \"*\" marker of first-level list items. A theme can color the markers by level, and leave
+   the items' text plain."
+  :group 'mlm-faces)
+
+(defface mlm-list-marker-2
+  '((t (:inherit mlm-list-item-2)))
+  "For the \"*\" marker of second-level list items."
+  :group 'mlm-faces)
+
+(defface mlm-list-marker-3
+  '((t (:inherit mlm-list-item-3)))
+  "For the \"*\" marker of third-level list items."
+  :group 'mlm-faces)
+
+(defface mlm-list-marker-4
+  '((t (:inherit mlm-list-item-4)))
+  "For the \"*\" marker of fourth-level list items."
+  :group 'mlm-faces)
+
+(defface mlm-list-marker-5
+  '((t (:inherit mlm-list-item-5)))
+  "For the \"*\" marker of fifth-level list items."
+  :group 'mlm-faces)
+
+(defface mlm-list-marker-6
+  '((t (:inherit mlm-list-item-6)))
+  "For the \"*\" marker of list items at the sixth level or deeper."
+  :group 'mlm-faces)
+
 (defvar mlm/markdown-mode-font-lock-keywords-basic
   (list
    (cons 'mlm/markdown-match-pre-blocks '((0 'mlm-pre)))
@@ -1350,7 +1401,8 @@ If we are at the first line, then consider the previous line to be blank."
          '((1 'mlm-header-delimiter)
            (2 (aref mlm/markdown-header-faces (1- (length (match-string 1)))))
            (3 'mlm-header-delimiter)))
-   (cons mlm/markdown-regex-list-item '((0 (mlm/markdown-list-item-face))))
+   (cons mlm/markdown-regex-list-item '((0 (mlm/markdown-list-item-face))
+                                        (2 (mlm/markdown-list-marker-face) t)))
    (cons 'mlm/markdown-match-list-item-continuation '((0 mlm/markdown-list-item-continuation-face)))
    (cons 'mlm/markdown-match-code '((0 'mlm-inline-code)))
    (cons mlm/markdown-regex-image-url '((1 'mlm-url)))

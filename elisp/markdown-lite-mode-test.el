@@ -666,12 +666,14 @@
 
 (defun mlm-test/line-faces ()
   "Returns (LINE . FACE) for each line in the current buffer, where FACE is the face of the line's
-   first non-whitespace character."
+   first non-whitespace character after any \"* \" list marker."
   (save-excursion
     (goto-char (point-min))
     (let (result)
       (while (not (eobp))
         (back-to-indentation)
+        (when (looking-at "\\* ")
+          (goto-char (match-end 0)))
         (push (cons (buffer-substring-no-properties (line-beginning-position) (line-end-position))
                     (get-text-property (point) 'face))
               result)
@@ -752,6 +754,17 @@
                                      mlm-list-item-6
                                      nil
                                      nil)))))
+
+(ert-deftest markdown-lite-mode-test/list-marker-faces-by-level ()
+  "A \"*\" list item's marker gets the marker face for its level, so that a theme can color the
+   markers apart from the items' text."
+  (mlm-test/with-fontified-buffer (concat "* 1\n" "  * 2\n" "            * 7\n")
+    (should (equal (cl-loop for line in '(1 2 3)
+                            collect (progn (goto-char (point-min))
+                                           (forward-line (1- line))
+                                           (back-to-indentation)
+                                           (get-text-property (point) 'face)))
+                   '(mlm-list-marker-1 mlm-list-marker-2 mlm-list-marker-6)))))
 
 (ert-deftest markdown-lite-mode-test/atx-heading-faces-by-level ()
   "Each ATX heading's text gets the face for its level, and its \"#\"s get the delimiter face. More
