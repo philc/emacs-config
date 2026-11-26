@@ -69,6 +69,8 @@
    `(line-number-current-line ((t (:foreground ,comment))))
    `(whitespace-trailing ((t (:background ,removed-word))))
    `(minibuffer-prompt ((t (:foreground ,blue-bright :bold t))))
+   ;; Vertico inherits `highlight`, which matches the minibuffer background.
+   `(vertico-current ((t (:background ,bg-region :extend t))))
    `(link ((t (:foreground ,blue-bright :underline t))))
    `(link-visited ((t (:foreground ,magenta-bright :underline t))))
    `(button ((t (:inherit (link)))))
