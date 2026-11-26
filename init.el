@@ -415,8 +415,8 @@
   ;; "v" is a mnemonic prefix for "view X".
   "vp" (util/save-and-call 'ws/open-project)
   "vn" (util/save-and-call 'notes/open-file)
-  ;; View my org-mode task list.
-  "vo" (util/save-and-call (lambda () (find-file "~/Dropbox/notes/tasks/tasks.org")))
+  ;; View my task list. "o" is for "org", which it used to be.
+  "vo" (util/save-and-call (lambda () (find-file mtodo/file)))
   ;; "View Emacs init.el"
   "ve" (util/save-and-call (lambda () (find-file "~/.emacs.d/init.el"))))
 
