@@ -900,3 +900,26 @@
     (dolist (chunk-size '(7 31 100))
       (dolist (reverse '(nil t))
         (should (equal (mlm-test/char-faces-fontified-in-chunks text chunk-size reverse) whole))))))
+
+(defun mlm-test/keys (text keys)
+  "Inserts TEXT into a new markdown-lite-mode buffer, moves to the \"|\" marker in it, removing it,
+   and types KEYS in Evil's normal state. Returns the buffer's contents afterwards."
+  (with-temp-buffer
+    ;; Keyboard macros run in the selected window's buffer.
+    (set-window-buffer nil (current-buffer))
+    (insert text)
+    (markdown-lite-mode)
+    (evil-local-mode 1)
+    (evil-normal-state)
+    (goto-char (point-min))
+    (search-forward "|")
+    (delete-char -1)
+    (execute-kbd-macro (kbd keys))
+    (buffer-substring-no-properties (point-min) (point-max))))
+
+(ert-deftest markdown-lite-mode-test/delete-a-list-item ()
+  "dai deletes the item with its continuation lines and children, and . repeats it."
+  (should (equal (mlm-test/keys "* a\n* |b\n  more\n  * c\n\n    d\n* e\n" "dai") "* a\n* e\n"))
+  (should (equal (mlm-test/keys "* a\n  * b\n    * |c\n  * d\n" "dai") "* a\n  * b\n  * d\n"))
+  (should (equal (mlm-test/keys "* |a\n  * b\n* c\n* d\n" "dai.") "* d\n"))
+  (should (equal (mlm-test/keys "x\n\n* a\n* |b" "dai") "x\n\n* a")))

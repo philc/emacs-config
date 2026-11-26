@@ -353,6 +353,9 @@
     "J" 'mlm/join
     "gq" 'mlm/fill)
 
+  ;; "ai" selects a list item with its children, e.g. `dai' deletes it.
+  (evil-define-key '(operator visual) markdown-lite-mode-map "ai" 'mlm/a-list-item)
+
   (evil-define-key 'insert markdown-lite-mode-map
     (kbd "C-S-H") 'mlm/markdown-promote
     (kbd "C-S-L") 'mlm/markdown-demote)
@@ -1099,6 +1102,17 @@ If the point is not in a list item, do nothing."
         (unless (mlm/markdown-cur-line-blank-p)
           (setq children-end (line-end-position))))
       children-end)))
+
+(evil-define-text-object mlm/a-list-item (count &optional _beg _end _type)
+  "Select the list item under the cursor, with its continuation lines and children, as `ai'."
+  :type line
+  (let ((bounds (mlm/markdown-cur-list-item-bounds)))
+    (unless bounds
+      (user-error "Not in a list item"))
+    (let* ((beg (save-excursion (goto-char (cl-first bounds)) (line-beginning-position)))
+           (text-end (save-excursion (goto-char (cl-second bounds)) (line-end-position))))
+      ;; End after the last line's newline. With an end before it, `dai' leaves a blank line.
+      (list beg (min (1+ (mlm/list-item-children-end beg text-end)) (point-max))))))
 
 (defun mlm/end-with-punctuation (beg end)
   "Adds a period at END if the text from BEG to END isn't empty and doesn't end in punctuation,
