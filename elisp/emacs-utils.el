@@ -4,7 +4,8 @@
 ;;
 (provide 'emacs-utils)
 (require 'lisp-utils)
-(require 'browse-url)
+
+(declare-function browse-url-default-browser "browse-url")
 
 ;; This file is loaded early in init.el, before these, so it declares the functions it uses from them
 ;; rather than requiring them.
@@ -388,7 +389,10 @@
                         (let ((b (find-file-noselect path)))
                           (wm/show-buffer-rightward b)))))
     (if (string-match-p "\\`https?://" ξpath)
-        (browse-url-default-browser ξpath)
+        (progn
+          ;; Loaded here, rather than when this file is, since it takes 50ms to load.
+          (require 'browse-url)
+          (browse-url-default-browser ξpath))
       (progn ; not starting “http://”
         (if (string-match "^\\`\\(.+?\\):\\([0-9]+\\)\\'" ξpath)
             (progn
