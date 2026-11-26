@@ -43,7 +43,6 @@
 (advice-add 'magit-discard-files--delete :before
             (lambda (&rest _) (require 'dired))
             '((name . magit-config--require-dired)))
-(require 'git-rebase) ; for git-rebase-mode-map.
 (require 'evil)
 (require 'window-management)
 (require 'diff-review)
@@ -510,6 +509,7 @@ runs only once, on the final section."
 (evil-define-key 'insert git-commit-mode-map
   (kbd "M-s") 'with-editor-finish)
 
+;; git-rebase loads when a rebase's todo list opens, and evil binds these then.
 (evil-define-key 'normal git-rebase-mode-map
   ";gra" 'git-rebase-abort
   (kbd "S-C-k") 'git-rebase-move-line-up
