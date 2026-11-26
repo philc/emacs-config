@@ -1071,6 +1071,16 @@
 ;; mispelled, so don't spell check them.
 (add-to-list 'jinx-exclude-faces '(html-mode font-lock-variable-name-face font-lock-string-face))
 
+;; Aspell's dictionary lists possessives as separate entries, and includes only some of them (e.g.
+;; "window's" but not "pane's"). Accept any word ending in 's when the word without it is valid.
+(defun jinx-possessive-valid-p (start)
+  "Return t if the word between START and point is a possessive of a valid word."
+  (let ((word (buffer-substring-no-properties start (point))))
+    (and (string-match "\\`\\(.+\\)['’]s\\'" word)
+         (jinx--word-valid-p (match-string 1 word))
+         t)))
+(add-to-list 'jinx--predicates #'jinx-possessive-valid-p t)
+
 (defun add-word-to-dictionary ()
   "Adds the word under the cursor to your personal dictionary. Also re-spellchecks the buffer to
    clear any stale highlights."
