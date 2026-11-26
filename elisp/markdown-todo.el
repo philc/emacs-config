@@ -37,7 +37,8 @@
 
 (defconst mtodo/font-lock-keywords
   `((,mlm/todo-prefix-regexp
-     (5 (unless (equal (match-string 5) "✓") 'mtodo-status-marker) t t))))
+     ;; With override t, a nil face would clear the done item's face from "✓", so give it that face.
+     (5 (if (equal (match-string 5) "✓") 'mlm-todo-done 'mtodo-status-marker) t t))))
 
 (defvar-local mtodo/face-remaps nil
   "The cookies of the face remappings which `markdown-todo-mode' made in this buffer.")

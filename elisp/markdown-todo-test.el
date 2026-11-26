@@ -85,3 +85,15 @@
   ;; The last item, without a newline, and an empty section.
   (should (equal (mtodo-test/archive "# A\n\n* ✓ |a1" "# A\n")
                  (cons "# A\n\n" "# A\n\n* DATE ✓ a1\n"))))
+
+(ert-deftest mtodo-test/marker-faces ()
+  (with-temp-buffer
+    (insert "* ✓ a\n* ‖ b\n")
+    (markdown-lite-mode)
+    (markdown-todo-mode 1)
+    (font-lock-ensure)
+    (goto-char (point-min))
+    (search-forward "✓")
+    (should (eq (get-text-property (match-beginning 0) 'face) 'mlm-todo-done))
+    (search-forward "‖")
+    (should (eq (get-text-property (match-beginning 0) 'face) 'mtodo-status-marker))))
