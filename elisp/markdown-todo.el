@@ -30,15 +30,12 @@
     (?v . "Vimium"))
   "The sections which `mtodo/capture' offers, as (KEY . HEADING).")
 
-(defface mtodo-status-marker
-  '((t (:inherit shadow)))
-  "For the in progress and waiting status markers, \"→\" and \"‖\"."
-  :group 'mlm-faces)
-
 (defconst mtodo/font-lock-keywords
   `((,mlm/todo-prefix-regexp
-     ;; With override t, a nil face would clear the done item's face from "✓", so give it that face.
-     (5 (if (equal (match-string 5) "✓") 'mlm-todo-done 'mtodo-status-marker) t t))))
+     ;; Draw the in progress and waiting markers in the color of the item's "*", so the item's text
+     ;; stands out from them. A done item's "✓" keeps the done item's face.
+     (5 (unless (equal (match-string 5) "✓") (get-text-property (match-beginning 2) 'face))
+        prepend t))))
 
 (defvar-local mtodo/face-remaps nil
   "The cookies of the face remappings which `markdown-todo-mode' made in this buffer.")

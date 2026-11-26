@@ -248,7 +248,6 @@
  `(mlm-list-item-4 ((t (:foreground "#87D952"))))
  `(mlm-list-item-5 ((t (:foreground "#C3D9C9"))))
  `(mlm-todo-done ((t (:foreground "#888a85"))))
- `(mtodo-status-marker ((t (:foreground "#888a85"))))
  `(anything-header ((t (:bold t :background "grey15" :foreground "#edd400"))))
  `(anything-candidate-number ((t (:background "#f57900" :foreground "black"))))
  `(ess-jb-comment-face ((t (:background "#2e3436" :foreground "#888a85"))))

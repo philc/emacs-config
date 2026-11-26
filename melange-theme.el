@@ -127,9 +127,8 @@
    `(mlm-list-marker-4 ((t (:foreground ,blue-bright))))
    `(mlm-list-marker-5 ((t (:foreground ,blue-bright))))
    `(mlm-list-marker-6 ((t (:foreground ,blue-bright))))
-   ;; Todo list items: a done item and the in progress and waiting markers recede, the markers more.
+   ;; A done todo list item recedes.
    `(mlm-todo-done ((t (:foreground ,comment))))
-   `(mtodo-status-marker ((t (:foreground ,ui))))
 
    ;; Diffs, in Magit and diff-mode. Lines get a faint background so that syntax colors stay
    ;; readable, and changed words get a stronger one.
