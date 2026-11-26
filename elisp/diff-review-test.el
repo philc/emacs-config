@@ -71,27 +71,37 @@ change the repo, is added to `dr-test/changes'.")
                   (member (dr-test/git-command args) dr-test/read-only-commands)))
         (progn (dr-test/repo-changed args)
                (apply orig process infile buffer display args))
-      (pcase-let ((`(,exit ,output ,error)
-                   (with-memoization (gethash (dr-test/answer-key args) dr-test/git-answers)
-                     (dr-test/ask-git (lambda (out) (apply orig process nil out nil args))))))
-        (when (or (eq buffer t) (eq (car-safe buffer) t))
-          (insert output))
-        (when (and stderr (not (equal error "")))
-          (with-temp-file stderr (insert error)))
-        exit))))
+      ;; Where the caller wants stdout and stderr, with the name of a file for stderr left out.
+      (let ((destination (if stderr (list (car buffer) 'file) buffer)))
+        (pcase-let ((`(,exit ,output ,error)
+                     (with-memoization (gethash (cons destination (dr-test/answer-key args))
+                                                dr-test/git-answers)
+                       (dr-test/ask-git (lambda (out) (apply orig process nil out nil args))
+                                        destination))))
+          (when (or (eq buffer t) (eq (car-safe buffer) t))
+            (insert output))
+          (when (and stderr (not (equal error "")))
+            (with-temp-file stderr (insert error)))
+          exit)))))
 
-(defun dr-test/ask-git (run)
-  "Calls RUN with the destination for a process's output, and returns (EXIT OUTPUT STDERR)."
-  (let ((stderr (make-temp-file "dr-test-stderr"))
+(defun dr-test/ask-git (run destination)
+  "Calls RUN with DESTINATION, where a process's output goes, as `call-process' takes it, except
+that (t file) asks for stderr in a file. Returns (EXIT OUTPUT STDERR). Making a file for stderr
+takes 0.1ms, and is done only when DESTINATION asks for one."
+  (let ((stderr (and (eq (car-safe (cdr-safe destination)) 'file)
+                     (make-temp-file "dr-test-stderr")))
         (multibyte enable-multibyte-characters))
     (unwind-protect
         (with-temp-buffer
           (set-buffer-multibyte multibyte)
-          (let ((exit (funcall run (list t stderr))))
+          (let ((exit (funcall run (if stderr (list (car destination) stderr) destination))))
             (list exit
                   (buffer-string)
-                  (with-temp-buffer (insert-file-contents stderr) (buffer-string)))))
-      (delete-file stderr))))
+                  (if stderr
+                      (with-temp-buffer (insert-file-contents stderr) (buffer-string))
+                    ""))))
+      (when stderr
+        (delete-file stderr)))))
 
 (defun dr-test/replay-git-with-input (orig start end program &optional delete buffer display
                                            &rest args)
@@ -103,8 +113,10 @@ change the repo, is added to `dr-test/changes'.")
     (let* ((input (if (stringp start)
                       start
                     (buffer-substring-no-properties (or start (point-min)) (or end (point-max)))))
-           (answer (with-memoization (gethash (dr-test/answer-key args input) dr-test/git-answers)
-                     (dr-test/ask-git (lambda (out) (apply orig input nil program nil out nil args))))))
+           (answer (with-memoization (gethash (cons buffer (dr-test/answer-key args input))
+                                              dr-test/git-answers)
+                     (dr-test/ask-git (lambda (out) (apply orig input nil program nil out nil args))
+                                      buffer))))
       (when (and delete (not (stringp start)))
         (delete-region (or start (point-min)) (or end (point-max))))
       (insert (nth 1 answer))
