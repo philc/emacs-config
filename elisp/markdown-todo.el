@@ -4,7 +4,8 @@
 ;; markdown-lite-mode, which marks items done with "t" in any Markdown file, it adds:
 ;;
 ;; - T, which cycles an item through the in progress and waiting status markers ("→" and "⏸")
-;; - archiving an item to the todo list's archive file, under the same section heading
+;; - archiving an item to the todo list's archive file, under the same section heading, with ;e,
+;;   Gmail's key for archiving
 ;; - capturing a new item into a section without leaving the current one
 ;; - quieter colors: top-level items are plain, since in a todo list they're tasks, not sections
 
@@ -178,5 +179,5 @@
   "T" 'mtodo/cycle-status)
 
 (define-leader-keys 'markdown-todo-mode-map
-  "a" 'mtodo/archive
+  "e" 'mtodo/archive
   "c" 'mtodo/capture)
