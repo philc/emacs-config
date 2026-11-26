@@ -986,41 +986,47 @@ resolve it. On a line with that mark, show its hidden threads again."
         (set-marker line nil))
       (dr--update-in-comment))))
 
-(defun dr--block-starts ()
-  "The positions where comments' blocks start, leaving out those in folded sections."
+(defun dr--stops ()
+  "The positions where comment navigation stops, one per comment, leaving out those in folded
+sections. See `dr--stop'."
   (let ((pos (point-min))
-        starts)
+        stops)
     (while (setq pos (dr--any-p pos))
-      (unless (invisible-p pos)
-        (push (dr--past-gap pos) starts))
-      (setq pos (next-single-property-change pos 'dr-block nil (point-max))))
-    (nreverse starts)))
+      (let ((end (next-single-property-change pos 'dr-block nil (point-max))))
+        (unless (invisible-p pos)
+          (push (dr--stop pos end) stops))
+        (setq pos end)))
+    (nreverse stops)))
 
 (defun dr/any-comments-p ()
   (and (or dr/file-mode (derived-mode-p 'magit-revision-mode)) (dr--any-p) t))
 
-(defun dr--past-gap (pos)
-  "POS, the start of a comment's block, or the line after it if it's the blank line before a
-thread in the review buffer. This is where the comment's navigation stops."
-  (if (get-text-property pos 'dr-gap) (1+ pos) pos))
-
-(defun dr--here ()
-  "Point, or if it's in a comment's block, where the block's navigation stops."
-  (if-let* ((cid (get-text-property (point) 'dr-block)))
-      (dr--past-gap (car (dr--block-region cid)))
-    (point)))
+(defun dr--stop (beg end)
+  "Where navigation stops in the comment block from BEG to END: the text of the thread's last
+reply, which is often Claude's, naming the fixup that addressed the comment. With no replies, it's
+the comment itself, past the blank line before it in the review buffer."
+  (let ((pos beg)
+        header)
+    (while (setq pos (text-property-not-all pos end 'dr-header nil))
+      (setq header pos)
+      (setq pos (next-single-property-change pos 'dr-header nil end)))
+    (cond
+     (header (save-excursion (goto-char header) (line-beginning-position 2)))
+     ((get-text-property beg 'dr-gap) (1+ beg))
+     (t beg))))
 
 (defun dr/next-comment ()
-  "Go to the next comment, skipping those in folded sections."
+  "Go to the next comment's last reply, or the comment if it has none. Skip comments in folded
+sections."
   (interactive)
-  (if-let* ((pos (seq-find (lambda (p) (> p (dr--here))) (dr--block-starts))))
+  (if-let* ((pos (seq-find (lambda (p) (> p (point))) (dr--stops))))
       (dr--goto-block pos)
     (message "No more comments")))
 
 (defun dr/previous-comment ()
-  "Go to the start of this comment, or the previous one. See `dr/next-comment'."
+  "Like `dr/next-comment', but backward."
   (interactive)
-  (if-let* ((pos (car (last (seq-filter (lambda (p) (< p (point))) (dr--block-starts))))))
+  (if-let* ((pos (car (last (seq-filter (lambda (p) (< p (point))) (dr--stops))))))
       (dr--goto-block pos)
     (message "No more comments")))
 

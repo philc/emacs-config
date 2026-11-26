@@ -430,6 +430,23 @@
     (should (equal (dr-test/line) "second"))
     (dr-test/keys "gp")
     (should (equal (dr-test/line) "first"))
+    ;; With a thread, they go to its last reply.
+    (dr--write-store
+     (mapcar (lambda (c)
+               (when (equal (alist-get 'comment c) "first")
+                 (setf (alist-get 'thread c) '(((author . "claude") (text . "Fixed."))
+                                               ((author . "you") (text . "ok"))
+                                               ((author . "claude") (text . "Fixed again.")))))
+               c)
+             (dr--read-store)))
+    (magit-refresh)
+    (goto-char (point-min))
+    (dr-test/keys "gn")
+    (should (equal (dr-test/line) "Fixed again."))
+    (dr-test/keys "gn")
+    (should (equal (dr-test/line) "second"))
+    (dr-test/keys "gp")
+    (should (equal (dr-test/line) "Fixed again."))
     ;; Comments in folded sections are skipped.
     (dr-test/goto "^modified   a.txt")
     (magit-section-hide (magit-current-section))
