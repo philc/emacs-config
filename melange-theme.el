@@ -131,21 +131,6 @@
    `(mlm-todo-done ((t (:foreground ,comment))))
    `(mtodo-status-marker ((t (:foreground ,ui))))
 
-   ;; Org.
-   `(org-hide ((t (:foreground ,bg))))
-   `(org-level-1 ((t (:foreground ,blue-bright))))
-   `(org-level-2 ((t (:foreground ,yellow-bright))))
-   `(org-level-3 ((t (:foreground ,green-bright))))
-   `(org-level-4 ((t (:foreground ,red-bright))))
-   `(org-date ((t (:underline t :foreground ,magenta-bright))))
-   `(org-link ((t (:foreground ,blue-bright :underline nil))))
-   `(org-verbatim ((t (:foreground ,fg :underline t :slant italic))))
-   `(org-block ((t (:foreground ,comment))))
-   `(org-block-begin-line ((t (:foreground ,ui :background ,bg-float))))
-   `(org-block-end-line ((t (:foreground ,ui :background ,bg-float))))
-   `(org-todo ((t (:bold t :foreground ,red-bright))))
-   `(org-done ((t (:bold t :foreground ,green))))
-
    ;; Diffs, in Magit and diff-mode. Lines get a faint background so that syntax colors stay
    ;; readable, and changed words get a stronger one.
    `(magit-diff-added ((t (:extend t :background ,added))))
