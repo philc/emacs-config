@@ -49,6 +49,10 @@
 ;; to its long-line optimizations, which disable section highlighting.
 (setq magit-show-long-lines-warning nil)
 
+;; Highlight only the heading of the hunk at point, not its body, which would otherwise be redrawn
+;; in brighter diff colors and lose the theme's contrast.
+(setq magit-diff-highlight-hunk-body nil)
+
 ;; Syntax-highlight each diff hunk when it's first displayed. See
 ;; `magit-diff-specify-hunk-foreground' above.
 ;;
