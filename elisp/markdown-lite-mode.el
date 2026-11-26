@@ -715,44 +715,61 @@ e.g. the \"images/foo.svg\" in ![alt](images/foo.svg).")
           (delete-char (- added))))
       (forward-char offset))))
 
+(defun mlm/outline-folds (beg end)
+  "The folds in BEG to END, as (START . END) of each outline overlay which starts there. A fold
+   which goes past END is cut off there: at the end of the buffer, a fold also hides the final
+   newline, which isn't part of the list item."
+  (cl-loop for o in (overlays-in beg end)
+           when (and (eq (overlay-get o 'invisible) 'outline)
+                     (<= beg (overlay-start o) end))
+           collect (cons (overlay-start o) (min (overlay-end o) end))))
+
+(defun mlm/refold (folds shift)
+  "Hides each of FOLDS (see `mlm/outline-folds') again, moved by SHIFT characters."
+  (dolist (fold folds)
+    (outline-flag-region (+ (car fold) shift) (+ (cdr fold) shift) t)))
+
+;; Moving a list item swaps its text with its sibling's using `transpose-regions', which would
+;; corrupt folded text, so both items are unfolded first. Their folds are then restored where the
+;; items moved to, as Org does, so that moving an item through a folded list doesn't unfold it.
+
+(defun mlm/swap-list-items (a b)
+  "Swaps the text of list items A and B, as `mlm/markdown-cur-list-item-bounds' returns them, where
+   A comes before B. Each item keeps its folds, and point stays on the same text of its item."
+  (let* ((old (point))
+         (a-folds (mlm/outline-folds (nth 0 a) (nth 1 a)))
+         (b-folds (mlm/outline-folds (nth 0 b) (nth 1 b)))
+         ;; After the swap, B starts where A did, and A ends where B did.
+         (a-shift (- (nth 1 b) (nth 1 a)))
+         (b-shift (- (nth 0 a) (nth 0 b))))
+    (outline-flag-region (nth 0 a) (nth 1 b) nil)
+    (condition-case nil
+        (progn
+          (transpose-regions (nth 0 a) (nth 1 a) (nth 0 b) (nth 1 b))
+          (goto-char (+ old (if (< old (nth 0 b)) a-shift b-shift)))
+          (mlm/refold a-folds a-shift)
+          (mlm/refold b-folds b-shift))
+      ;; Catch error in case regions overlap.
+      (error (goto-char old)
+             (mlm/refold a-folds 0)
+             (mlm/refold b-folds 0)))))
+
 (defun mlm/markdown-move-list-item-up ()
   "Move the current list item up in the list when possible."
-  (outline-show-subtree) ; When moving list items, expand any collaped subtrees to avoid corruption.
-  (let (cur prev old)
-    (when (setq cur (mlm/markdown-cur-list-item-bounds))
-      (setq old (point))
-      (goto-char (nth 0 cur))
-      (if (mlm/markdown-prev-list-item (nth 3 cur))
-          (progn
-            (setq prev (mlm/markdown-cur-list-item-bounds))
-            (condition-case nil
-                (progn
-                  (outline-show-subtree)
-                  (transpose-regions (nth 0 prev) (nth 1 prev)
-                                     (nth 0 cur) (nth 1 cur) t)
-                  (goto-char (+ (nth 0 prev) (- old (nth 0 cur)))))
-              ;; Catch error in case regions overlap.
-              (error (goto-char old))))
-        (goto-char old)))))
+  (when-let* ((cur (mlm/markdown-cur-list-item-bounds))
+              (prev (save-excursion
+                      (goto-char (nth 0 cur))
+                      (and (mlm/markdown-prev-list-item (nth 3 cur))
+                           (mlm/markdown-cur-list-item-bounds)))))
+    (mlm/swap-list-items prev cur)))
 
 (defun mlm/markdown-move-list-item-down ()
   "Move the current list item down in the list when possible."
-  (outline-show-subtree) ; When moving list items, expand any collaped subtrees to avoid corruption.
-  (let (cur next old)
-    (when (setq cur (mlm/markdown-cur-list-item-bounds))
-      (setq old (point))
-      (if (mlm/markdown-next-list-item (nth 3 cur))
-          (progn
-            (outline-show-subtree)
-            (setq next (mlm/markdown-cur-list-item-bounds))
-            (condition-case nil
-                (progn
-                  (transpose-regions (nth 0 cur) (nth 1 cur)
-                                     (nth 0 next) (nth 1 next) nil)
-                  (goto-char (+ old (- (nth 1 next) (nth 1 cur)))))
-              ;; Catch error in case regions overlap.
-              (error (goto-char old))))
-        (goto-char old)))))
+  (when-let* ((cur (mlm/markdown-cur-list-item-bounds))
+              (next (save-excursion
+                      (and (mlm/markdown-next-list-item (nth 3 cur))
+                           (mlm/markdown-cur-list-item-bounds)))))
+    (mlm/swap-list-items cur next)))
 
 (defun mlm/markdown-prev-list-item (level)
   "Search backward from point for a list item with indentation LEVEL.

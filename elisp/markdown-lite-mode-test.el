@@ -264,6 +264,37 @@
     (should-not (outline-invisible-p (save-excursion (goto-char (point-min))
                                                      (search-forward "b") (point))))))
 
+(defun mlm-test/folded-lines ()
+  "The lines of the current buffer which are hidden by folding."
+  (save-excursion
+    (goto-char (point-min))
+    (let (lines)
+      (while (not (eobp))
+        (when (outline-invisible-p (line-beginning-position))
+          (push (buffer-substring-no-properties (line-beginning-position) (line-end-position))
+                lines))
+        (forward-line 1))
+      (nreverse lines))))
+
+(ert-deftest markdown-lite-mode-test/move-list-item-keeps-folds ()
+  "Moving a list item keeps the folds of both it and the sibling it swaps with."
+  (dolist (case '((mlm/markdown-move-list-item-down "* a" "* b\n  * b1\n* a\n  * a1\n    * a2\n")
+                  (mlm/markdown-move-list-item-up "* b" "* b\n  * b1\n* a\n  * a1\n    * a2\n")))
+    (with-temp-buffer
+      (insert "* a\n  * a1\n    * a2\n* b\n  * b1\n")
+      (markdown-lite-mode)
+      ;; Fold a's child a1, and all of b.
+      (goto-char (point-min))
+      (search-forward "* a1")
+      (outline-hide-subtree)
+      (search-forward "* b")
+      (outline-hide-subtree)
+      (goto-char (point-min))
+      (search-forward (nth 1 case))
+      (funcall (nth 0 case))
+      (should (equal (buffer-string) (nth 2 case)))
+      (should (equal (mlm-test/folded-lines) '("  * b1" "    * a2"))))))
+
 (ert-deftest markdown-lite-mode-test/hashtag-line-does-not-end-list-item ()
   "A line starting with a #hashtag isn't a heading, so it doesn't end the list item before it."
   (with-temp-buffer
