@@ -2,7 +2,6 @@
 ;; Run these with `make test`.
 
 (require 'ert)
-(require 'cl-lib)
 (require 'outline)
 (require 's)
 (require 'emacs-utils)
@@ -88,6 +87,25 @@
     (should (string= (s-replace "|" "" (emacs-utils-test/replace (car case) (cadr case)))
                      (cadr case)))))
 
+(ert-deftest emacs-utils-test/replace-text-applies-hunks-anywhere ()
+  "Each kind of hunk git's diff gives is applied correctly, at the start and end of the text, and
+   several in one diff."
+  (dolist (case '(("|a\nb\nc\n" "b\nc\n")                 ; Deletion at the start.
+                  ("|a\nb\nc\n" "a\nb\n")                 ; Deletion at the end.
+                  ("|b\n" "a\nb\n")                       ; Insertion at the start.
+                  ("|a\n" "a\nb\n")                       ; Insertion at the end.
+                  ("|a\nb\n" "")                          ; Everything deleted.
+                  ("|\n\n" "\n  \n")                      ; Blank lines.
+                  ;; Changes separated by one unchanged line, which git keeps as separate hunks.
+                  ("|a\nb\nc\nd\ne\n" "A\nb\nC\nd\nE\n")
+                  ;; A deletion and an insertion in one diff, which shift later line numbers.
+                  ("|a\nb\nc\nd\n" "b\nc\nd\nx\n")
+                  ("|a\nb\nc\n" "a\nx\ny\nb\n")
+                  ;; Non-ASCII text before a change, where characters and bytes differ.
+                  ("|é\nb\né\nd\n" "é\nB\né\nD\n")))
+    (should (string= (s-replace "|" "" (emacs-utils-test/replace (car case) (cadr case)))
+                     (cadr case)))))
+
 (ert-deftest emacs-utils-test/replace-text-leaves-unchanged-text-alone ()
   "Markers in unchanged lines don't move, and replacing text with itself doesn't modify the buffer."
   (with-temp-buffer
@@ -138,32 +156,6 @@
       (goto-char (point-min))
       (search-forward s)
       (should-not (invisible-p (match-beginning 0))))))
-
-(ert-deftest emacs-utils-test/replace-text-matches-random-edits ()
-  "The result always equals the new text, for random line insertions, deletions and changes. This
-   is a safety net for the parsing and applying of git's diff output: it mixes cases no single
-   hand-written test combines, like adjacent changed blocks, deletions at the start or end, and a
-   missing final newline on either side. It has never been the only test to catch a bug, and at
-   ~0.25s it's the slowest test here (it runs git 50 times), so it may not be worth the expense.
-   The seed is fixed, so it runs the same cases every time and can't flake."
-  (let ((state (cl-make-random-state 42)))
-    (dotimes (_ 50)
-      (let* ((lines (cl-loop repeat (cl-random 8 state)
-                             collect (nth (cl-random 4 state) '("a" "  b" "é c" ""))))
-             (old (concat (s-join "\n" lines) (if (= 0 (cl-random 2 state)) "\n" "")))
-             (new-lines (cl-loop for l in lines
-                                 for r = (cl-random 4 state)
-                                 append (pcase r
-                                          (0 nil)
-                                          (1 (list (concat " " l)))
-                                          (2 (list l "inserted"))
-                                          (_ (list l)))))
-             (new (concat (s-join "\n" new-lines) (if (= 0 (cl-random 2 state)) "\n" ""))))
-        (with-temp-buffer
-          (insert old)
-          (goto-char (1+ (cl-random (1+ (length old)) state)))
-          (emacs-utils-test/replace-text (point-min) (point-max) new)
-          (should (string= (buffer-string) new)))))))
 
 (ert-deftest emacs-utils-test/replace-text-is-fast-on-reformatted-non-ascii-text ()
   "Reindenting every line of a large buffer containing non-ASCII text is fast. A whole-buffer
