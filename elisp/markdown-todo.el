@@ -21,10 +21,8 @@
   "The todo list, which `markdown-todo-mode' is turned on for.")
 
 (defvar mtodo/capture-sections
-  '((?l . "Liftoff")
-    (?c . "Civ")
+  '((?c . "Civ")
     (?b . "Base")
-    (?s . "Study")
     (?j . "Journal")
     (?n . "Entertainment")
     (?m . "Emacs")
