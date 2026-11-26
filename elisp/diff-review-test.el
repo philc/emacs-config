@@ -220,8 +220,64 @@ takes 0.1ms, and is done only when DESTINATION asks for one."
 (advice-add 'call-process-region :around #'dr-test/replay-git-with-input)
 
 (defun dr-test/git (&rest args)
+  "Runs git with ARGS, a command which changes only the files in .git, such as a commit. If an
+earlier test or run made the same changes to the repo, this writes the files that git wrote then,
+rather than running git, which takes 6-15ms."
   (dr-test/repo-changed args)
-  (apply #'call-process "git" nil nil nil args))
+  (let* ((key (dr-test/portable (list 'git-files dr-test/changes)))
+         (files (gethash key (dr-test/git-cache))))
+    (if files
+        (progn (dr-test/write-git-files files) 0)
+      (let* ((before (dr-test/git-files))
+             (exit (apply #'call-process "git" nil nil nil args)))
+        (when (zerop exit)
+          (setq dr-test/git-cache-dirty t)
+          (puthash key (dr-test/written-git-files before) (dr-test/git-cache)))
+        exit))))
+
+(defun dr-test/git-files ()
+  "Each file in the repo's .git, with what changes when git writes it: git writes a new file and
+renames it into place, so its inode changes. Its modification time can change without its
+contents, when git freshens a pack holding an object that it would have written."
+  (mapcar (lambda (file)
+            (let ((attributes (file-attributes file)))
+              (list (file-relative-name file (dr-test/repo))
+                    (file-attribute-inode-number attributes)
+                    (file-attribute-size attributes))))
+          (directory-files-recursively (expand-file-name ".git" (dr-test/repo)) "")))
+
+(defun dr-test/written-git-files (before)
+  "The files in .git which were written or deleted since BEFORE, from `dr-test/git-files', as
+\(FILE . CONTENTS), with nil CONTENTS for a deleted file."
+  (let ((after (dr-test/git-files)))
+    (append
+     (cl-loop for entry in after
+              unless (member entry before)
+              collect (cons (car entry)
+                            (with-temp-buffer
+                              (set-buffer-multibyte nil)
+                              (insert-file-contents-literally
+                               (expand-file-name (car entry) (dr-test/repo)))
+                              (buffer-string))))
+     (cl-loop for entry in before
+              unless (assoc (car entry) after)
+              collect (list (car entry))))))
+
+(defvar dr-test/writing-git-files nil)
+
+(defun dr-test/write-git-files (files)
+  (let ((dr-test/writing-git-files t)
+        (coding-system-for-write 'no-conversion))
+    (pcase-dolist (`(,file . ,contents) files)
+      (let ((file (expand-file-name file (dr-test/repo))))
+        ;; Git's object files are read-only.
+        (delete-file file)
+        (when contents
+          (make-directory (file-name-directory file) t)
+          (with-temp-buffer
+            (set-buffer-multibyte nil)
+            (insert contents)
+            (write-region nil nil file nil 'silent)))))))
 
 (defun dr-test/write (file text)
   (with-temp-file file (insert text)))
@@ -241,6 +297,7 @@ are too.")
 (advice-add 'write-region :after
             (lambda (_start _end file &rest _)
               (when (and (stringp file)
+                         (not dr-test/writing-git-files)
                          (string-prefix-p (file-truename (dr-test/repo)) (file-truename file))
                          (not (equal (file-name-nondirectory file) "review.json")))
                 (dr-test/repo-changed
@@ -273,6 +330,10 @@ it runs git several times.")
           (git "config" "user.email" "t@t")
           (git "config" "user.name" "t")
           (git "config" "core.logAllRefUpdates" "false")
+          ;; No maintenance in the background after a commit, which would change .git while the tests
+          ;; read it.
+          (git "config" "maintenance.auto" "false")
+          (git "config" "gc.auto" "0")
           (dr-test/write "a.txt" "one\ntwo\nthree\nfour\nfive\n")
           (dr-test/write "b.txt" "alpha\nbeta\n")
           (git "add" ".")
