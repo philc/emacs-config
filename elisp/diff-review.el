@@ -393,6 +393,11 @@ commit's comments if its line can't be found. ORPHAN is non-nil in that case."
 ;;
 ;; Comment text in the buffer.
 
+(defun dr--bar-on (bar face)
+  "BAR drawn on the background of FACE, a face or list of faces whose last face sets the
+background, so that the background spans the bar's columns too."
+  (propertize bar 'face (list 'dr/comment-bar (car (last (ensure-list face))))))
+
 (defun dr--props (unit)
   "The text properties of editable UNIT, the text of a comment or of one of my replies."
   (let ((cid (car (gethash unit dr--units))))
@@ -402,8 +407,8 @@ commit's comments if its line can't be found. ORPHAN is non-nil in that case."
                     'magit-section section
                     'font-lock-face 'dr/comment
                     'dr-face 'dr/comment
-                    'line-prefix bar
-                    'wrap-prefix bar)
+                    'line-prefix (dr--bar-on bar 'dr/comment)
+                    'wrap-prefix (dr--bar-on bar 'dr/comment))
               (dr--file-props)))))
 
 (defvar dr--thread-map
@@ -420,7 +425,8 @@ over evil's keymaps.")
 
 (defun dr--fixed (cid text face &rest props)
   "TEXT as read-only text in the block of comment CID, e.g. one of Claude's replies, in FACE."
-  (pcase-let ((`(,section . ,bar) (gethash cid dr--placements)))
+  (pcase-let* ((`(,section . ,bar) (gethash cid dr--placements))
+               (bar (dr--bar-on bar face)))
     (apply #'propertize text
            'read-only t
            'dr-block cid
