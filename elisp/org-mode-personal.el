@@ -53,6 +53,8 @@
   ">" 'org-metaright
   "gh" 'org-goto-top-level-heading
   "gu" 'outline-up-heading
+  ;; Like Gmail's and Superhuman's "#" for deleting a message, and "#" in markdown-lite-mode.
+  "#" 'org/delete-item
   ;; Normally these go backwards-and-forward by paragraphs but skipping between headings is more
   ;; useful.
   "{" 'org-backward-heading-same-level
@@ -103,6 +105,20 @@
   (if (not (org-in-item-p))
       (insert "\n")
     (org-insert-item)))
+
+(evil-define-command org/delete-item ()
+  "Deletes the plain list item under the cursor with its children, or else the heading under the
+   cursor with its subtree."
+  (let ((item (org-in-item-p)))
+    (cond
+     (item
+      (let* ((struct (save-excursion (goto-char item) (org-list-struct)))
+             (end (org-list-get-item-end item struct)))
+        (evil-delete item end 'line)))
+     ((not (org-before-first-heading-p))
+      (let ((beg (save-excursion (org-back-to-heading t) (point)))
+            (end (save-excursion (org-end-of-subtree t t) (point))))
+        (evil-delete beg end 'line))))))
 
 (defun evil-org-eol-call (fun)
   (end-of-line)
