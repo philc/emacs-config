@@ -32,10 +32,15 @@ they're first called."
       (setq features (seq-difference features faked)))))
 
 ;; Magit requires these libraries, but uses them only when it's asked to: browse-url to open a link,
-;; and epa and epg to pick a GPG key to sign with. Skipping them saves 75ms when Magit loads. Magit's
-;; with-editor requires shell, which can't be skipped: its advice on `shell-command' reads
-;; `shell-mode-hook'.
-(magit-config--require-without 'magit '(browse-url epa epg))
+;; epa and epg to pick a GPG key to sign with, and dired to discard an untracked file. Skipping them
+;; saves 85ms when Magit loads. Magit's with-editor requires shell, which can't be skipped: its
+;; advice on `shell-command' reads `shell-mode-hook'.
+(magit-config--require-without 'magit '(browse-url epa epg dired))
+
+;; Unlike Magit's other uses of the skipped libraries, this one doesn't load dired itself.
+(advice-add 'magit-discard-files--delete :before
+            (lambda (&rest _) (require 'dired))
+            '((name . magit-config--require-dired)))
 (require 'git-rebase) ; for git-rebase-mode-map.
 (require 'evil)
 (require 'window-management)
