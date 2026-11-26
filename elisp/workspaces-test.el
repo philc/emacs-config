@@ -70,3 +70,7 @@
     ;; projects without a workspace.
     (should (equal labels '("alpha  1:a1" "beta  1:b1" "beta  2:b2" "gamma  1:c1"
                             "+ delta  /p/delta")))))
+
+(ert-deftest ws-test/project-name ()
+  (should (equal (ws/project-name "/p/alpha") "alpha"))
+  (should (equal (ws/project-name "/p/alpha/.worktrees/fix-x") "alpha/fix-x")))

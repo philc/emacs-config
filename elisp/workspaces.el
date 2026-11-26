@@ -23,15 +23,23 @@
 (require 'tab-bar)
 (require 'evil-ext)
 
-(defvar ws/project-dirs '("~/projects/*/" "~/sys/")
+(defvar ws/project-dirs '("~/projects/*/" "~/projects/*/.worktrees/*/" "~/sys/")
   "Wildcards for my project directories. These are the same as in
-   ~/sys/scripts/tmux/tmux_workspace_picker.sh.")
+   ~/sys/scripts/tmux/tmux_workspace_picker.sh, plus the git worktrees I keep in each repo's
+   .worktrees/.")
 
 (defun ws/project-paths ()
   "The paths of my project directories, expanded from `ws/project-dirs'."
   (mapcar #'directory-file-name
           (mapcan (lambda (w) (file-expand-wildcards (expand-file-name w)))
                   ws/project-dirs)))
+
+(defun ws/project-name (dir)
+  "The workspace name for project DIR: its directory's name, or \"repo/name\" for a worktree in
+   repo/.worktrees/name, so that it sorts beside its repo."
+  (if (string-match "\\([^/]+\\)/\\.worktrees/\\([^/]+\\)\\'" dir)
+      (format "%s/%s" (match-string 1 dir) (match-string 2 dir))
+    (file-name-nondirectory dir)))
 
 (defvar ws/default-name "misc"
   "The workspace of tabs which have no group, such as the first tab of a new frame.")
@@ -222,7 +230,7 @@
                                                 (lambda () (ws/select-position i))))))
          (dir-entries
           (mapcan (lambda (dir)
-                    (let ((name (file-name-nondirectory dir)))
+                    (let ((name (ws/project-name dir)))
                       (unless (member name names)
                         (list (cons (format "+ %s  %s" name (abbreviate-file-name dir))
                                     (lambda () (ws/create name dir)))))))
@@ -282,7 +290,7 @@
   "Open a project in the current window (see `ws/open-project-root'), without changing workspaces."
   (interactive)
   (let* ((dirs (mapcar (lambda (dir)
-                         (cons (format "%s  %s" (file-name-nondirectory dir)
+                         (cons (format "%s  %s" (ws/project-name dir)
                                        (abbreviate-file-name dir))
                                dir))
                        (ws/project-paths)))
