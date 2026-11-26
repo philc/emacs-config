@@ -1,8 +1,9 @@
 ;;; -*- lexical-binding: t; -*-
 ;;
 ;; Tests for diff-review.el. They drive a real magit revision buffer with keys, in a throwaway git
-;; repo. Git's answers to magit's read-only questions are kept and replayed in later tests which
-;; leave the repo the same (see `dr-test/git-answers'), which makes the tests three times as fast.
+;; repo. Git's answers to magit's read-only questions are cached, for later tests which leave the
+;; repo the same, and for later runs (see `dr-test/git-cache'), which makes the tests several times
+;; as fast. `make test-fresh' asks git everything again.
 ;;
 ;; Run these with `make test`.
 
@@ -23,11 +24,102 @@
 (setenv "GIT_AUTHOR_DATE" "2026-01-01T00:00:00Z")
 (setenv "GIT_COMMITTER_DATE" "2026-01-01T00:00:00Z")
 
-(defvar dr-test/git-answers (make-hash-table :test #'equal)
-  "Git's answers to the read-only commands magit runs, as (EXIT OUTPUT STDERR), keyed by the
-directory, the command, and `dr-test/changes'. Every test starts with the same repo at the same
-path, so most of what magit asks git while it shows a commit has the same answer in every test,
-and is worth asking only once. Running each costs about 5ms, and showing a commit runs about 20.")
+(defvar dr-test/git-cache nil
+  "A read-through cache of git's answers to the read-only commands magit runs, as (EXIT OUTPUT
+STDERR), keyed by the directory, the command, and `dr-test/changes', with the repo's path in each
+replaced by a placeholder. Every test starts with the same repo, so most of what magit asks git
+while it shows a commit has the same answer in every test, and in every run. Running each costs
+about 5ms, and showing a commit runs about 20. The cache is saved in `dr-test/git-cache-file' when
+Emacs exits.")
+
+(defconst dr-test/git-cache-file
+  (expand-file-name "../var/dr-test-git-cache.eld"
+                    (file-name-directory (or load-file-name buffer-file-name))))
+
+(defvar dr-test/git-cache-dirty nil
+  "Whether `dr-test/git-cache' changed since it was read from its file.")
+
+(defvar dr-test/git-cache-version nil)
+
+(defun dr-test/git-cache-version ()
+  "What the saved cache holds for: git's version, and the template, whose commits every test's
+repo starts from."
+  (with-memoization dr-test/git-cache-version
+    (list (car (process-lines "git" "--version"))
+          (let ((default-directory (dr-test/template)))
+            (car (process-lines "git" "rev-parse" "HEAD"))))))
+
+(defun dr-test/git-cache ()
+  (or dr-test/git-cache
+      (progn
+        ;; Before the template is deleted when Emacs exits, since saving the cache needs it.
+        (dr-test/git-cache-version)
+        (setq dr-test/git-cache
+              (or (ignore-errors
+                    (with-temp-buffer
+                      (insert-file-contents dr-test/git-cache-file)
+                      (pcase-let ((`(,version ,cache) (read (current-buffer))))
+                        (and (equal version (dr-test/git-cache-version)) cache))))
+                  (make-hash-table :test #'equal))))))
+
+(defun dr-test/save-git-cache ()
+  (when dr-test/git-cache-dirty
+    (let ((temp (make-temp-file (concat dr-test/git-cache-file ".")))
+          ;; Unibyte output, such as from `git cat-file --batch', is printed as octal escapes, so it
+          ;; reads back as the same bytes.
+          (print-escape-nonascii t)
+          (print-escape-multibyte t)
+          (print-length nil)
+          (print-level nil)
+          (coding-system-for-write 'utf-8-emacs))
+      (with-temp-file temp
+        (prin1 (list (dr-test/git-cache-version) dr-test/git-cache) (current-buffer)))
+      ;; Renaming the file into place, so that another run reading it at the same time never sees
+      ;; part of it.
+      (rename-file temp dr-test/git-cache-file t))))
+
+(add-hook 'kill-emacs-hook #'dr-test/save-git-cache)
+
+(defun dr-test/map-strings (fn object)
+  (cond ((stringp object) (funcall fn object))
+        ((consp object) (cons (dr-test/map-strings fn (car object))
+                              (dr-test/map-strings fn (cdr object))))
+        (t object)))
+
+(defvar dr-test/repo-paths nil)
+
+(defun dr-test/repo-paths ()
+  "Placeholders for the repo's path in the saved cache, and the path, in the order to replace them.
+The true name, which git prints, comes first, since it ends with the path:
+/private/var/folders/... and /var/folders/..."
+  (with-memoization dr-test/repo-paths
+    (let ((repo (directory-file-name (dr-test/repo))))
+      (list (cons "@REPO-TRUENAME@" (file-truename repo))
+            (cons "@REPO@" repo)))))
+
+(defun dr-test/portable (object)
+  "OBJECT with the repo's path in its strings replaced by placeholders, which `dr-test/local'
+replaces with the path of the repo in this run. Its strings' text properties, such as the magit
+sections on a hash taken from a buffer, are left out, so that it can be saved."
+  (dr-test/map-strings (lambda (s)
+                         (setq s (substring-no-properties s))
+                         (dolist (path (dr-test/repo-paths) s)
+                           (setq s (string-replace (cdr path) (car path) s))))
+                       object))
+
+(defun dr-test/local (object)
+  (dr-test/map-strings (lambda (s)
+                         (dolist (path (dr-test/repo-paths) s)
+                           (setq s (string-replace (car path) (cdr path) s))))
+                       object))
+
+(defun dr-test/recall (key ask)
+  "Git's answer for KEY, from `dr-test/git-cache', or else from calling ASK, which is then cached."
+  (let ((key (dr-test/portable key)))
+    (dr-test/local
+     (or (gethash key (dr-test/git-cache))
+         (progn (setq dr-test/git-cache-dirty t)
+                (puthash key (dr-test/portable (funcall ask)) (dr-test/git-cache)))))))
 
 (defvar dr-test/changes nil
   "The changes the test made to the repo since it was copied from the template, newest first: the
@@ -41,8 +133,8 @@ made the same changes.")
 (defconst dr-test/read-only-commands
   '("rev-parse" "cat-file" "log" "show" "symbolic-ref" "config" "for-each-ref" "merge-base"
     "rev-list" "diff" "diff-tree" "ls-files" "ls-tree" "status" "patch-id")
-  "The git commands whose answers `dr-test/git-answers' keeps. Any other command, which might
-change the repo, is added to `dr-test/changes'.")
+  "The git commands `dr-test/git-cache' caches. Any other command, which might change the repo, is
+added to `dr-test/changes'.")
 
 (defun dr-test/git-command (args)
   "The git command in ARGS, skipping the options before it, such as \"-c x=y\"."
@@ -52,8 +144,8 @@ change the repo, is added to `dr-test/changes'.")
       (pop args))
     (car args)))
 
-(defun dr-test/answer-key (args &optional input)
-  "The key in `dr-test/git-answers' of git's answer to ARGS, with INPUT, a string, as its input."
+(defun dr-test/cache-key (args &optional input)
+  "The key in `dr-test/git-cache' of git's answer to ARGS, with INPUT, a string, as its input."
   (let* ((command (dr-test/git-command args))
          (layout-only (and (equal command "rev-parse")
                            (cl-every (lambda (a) (member a '("--show-toplevel" "--show-cdup" "--git-dir")))
@@ -74,10 +166,11 @@ change the repo, is added to `dr-test/changes'.")
       ;; Where the caller wants stdout and stderr, with the name of a file for stderr left out.
       (let ((destination (if stderr (list (car buffer) 'file) buffer)))
         (pcase-let ((`(,exit ,output ,error)
-                     (with-memoization (gethash (cons destination (dr-test/answer-key args))
-                                                dr-test/git-answers)
-                       (dr-test/ask-git (lambda (out) (apply orig process nil out nil args))
-                                        destination))))
+                     (dr-test/recall (cons destination (dr-test/cache-key args))
+                                     (lambda ()
+                                       (dr-test/ask-git
+                                        (lambda (out) (apply orig process nil out nil args))
+                                        destination)))))
           (when (or (eq buffer t) (eq (car-safe buffer) t))
             (insert output))
           (when (and stderr (not (equal error "")))
@@ -113,10 +206,11 @@ takes 0.1ms, and is done only when DESTINATION asks for one."
     (let* ((input (if (stringp start)
                       start
                     (buffer-substring-no-properties (or start (point-min)) (or end (point-max)))))
-           (answer (with-memoization (gethash (cons buffer (dr-test/answer-key args input))
-                                              dr-test/git-answers)
-                     (dr-test/ask-git (lambda (out) (apply orig input nil program nil out nil args))
-                                      buffer))))
+           (answer (dr-test/recall (cons buffer (dr-test/cache-key args input))
+                                   (lambda ()
+                                     (dr-test/ask-git
+                                      (lambda (out) (apply orig input nil program nil out nil args))
+                                      buffer)))))
       (when (and delete (not (stringp start)))
         (delete-region (or start (point-min)) (or end (point-max))))
       (insert (nth 1 answer))
@@ -133,7 +227,8 @@ takes 0.1ms, and is done only when DESTINATION asks for one."
   (with-temp-file file (insert text)))
 
 (defvar dr-test/repo nil
-  "The directory of each test's repo. It's the same for every test, so that git's answers are too.")
+  "The directory of each test's repo. It's the same for every test in a run, so that git's answers
+are too.")
 
 (defun dr-test/repo ()
   (or dr-test/repo

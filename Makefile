@@ -20,6 +20,13 @@ test-elisp: ## Run the ERT tests in elisp/*-test.el
 		$(foreach f,$(wildcard $(ELISP_DIR)/*-test.el),-l $(f)) \
 		-f ert-run-tests-batch-and-exit
 
+# The diff-review tests cache git's answers between runs. This clears the cache, so they ask git
+# everything again.
+.PHONY: test-fresh
+test-fresh: ## Run test-elisp without the diff-review tests' git cache
+	rm -f var/dr-test-git-cache.eld
+	$(MAKE) --no-print-directory test-elisp
+
 .PHONY: test-js
 test-js: ## Run the JS tests in scripts/tests
 	deno run -A @philc/shoulda/run scripts/tests
