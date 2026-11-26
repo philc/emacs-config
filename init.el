@@ -539,6 +539,14 @@
 (advice-add 'evil-search-previous :after (lambda (&rest _) (util/recenter-no-redraw)))
 (advice-add 'isearch-exit :before (lambda (&rest _) (util/recenter-no-redraw)))
 
+;; Source Code Pro, the theme's font, draws a few characters as color glyphs, from an SVG table,
+;; which ignore the face's color. One is "✓", which marks a done item in my todo list, and draws red.
+;; Draw it from Menlo instead. A symbol is drawn from the face's font when it has one, ignoring the
+;; fontset, unless `use-default-font-for-symbols' is nil. In a test of 30 common symbols (arrows,
+;; quotes, dashes, math), turning it off changed the font of only "✓".
+(setq use-default-font-for-symbols nil)
+(set-fontset-font t ?✓ "Menlo")
+
 ;;
 ;; Changing font sizes - text-scale-mode
 ;;
