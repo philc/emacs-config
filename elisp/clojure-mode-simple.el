@@ -18,9 +18,10 @@
 (require 'dash)
 (require 's)
 (require 'smartparens)
-(require 'browse-url)
 (require 'evil)
 (require 'cljfmt)
+
+(declare-function browse-url-default-browser "browse-url")
 
 ;;
 ;; Buffer setup
@@ -124,6 +125,8 @@
   (-if-let (s (thing-at-point 'symbol))
       (let ((clojure-docs-url
              (concat "http://www.google.com/search?btnI=Im+Feeling+Lucky&q=site:clojuredocs.org+" s)))
+        ;; Loaded here, rather than when this file is, since it takes 50ms to load.
+        (require 'browse-url)
         (browse-url-default-browser clojure-docs-url))
     (message "There's no symbol under the cursor to look up documentation for.")))
 
