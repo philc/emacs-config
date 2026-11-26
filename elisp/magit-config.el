@@ -400,11 +400,13 @@ comment always goes below its line."
 
 (defun my-magit/hunk-stop-p (section)
   "Whether `my-magit/next-hunk' stops at SECTION: a hunk, a collapsed section, or a file with no
-hunks (e.g. a binary or untracked file), which would otherwise be skipped over."
-  (or (magit-section-match 'hunk section)
-      (oref section hidden)
-      (and (magit-section-match 'file section)
-           (not (oref section children)))))
+hunks (e.g. a binary or untracked file), which would otherwise be skipped over. It never stops at
+the file lines of a revision buffer's diffstat."
+  (and (not (magit-section-match [* diffstat] section))
+       (or (magit-section-match 'hunk section)
+           (oref section hidden)
+           (and (magit-section-match 'file section)
+                (not (oref section children))))))
 
 (defun my-magit/move-to-hunk (move)
   "Call MOVE, `magit-section-forward' or `magit-section-backward', until reaching a section where
