@@ -1844,7 +1844,10 @@ without them. This is in `write-region-annotate-functions'."
 ;; Turning comments on.
 
 (defun dr--file-mode-on ()
-  (let ((root (and buffer-file-name (magit-toplevel))))
+  ;; Cache git's answers, as magit does while it refreshes a buffer: finding the top level and the
+  ;; git dir each run git several times.
+  (let* ((magit--refresh-cache (list (cons 0 0)))
+         (root (and buffer-file-name (magit-toplevel))))
     (unless root
       (setq dr/file-mode nil)
       (user-error "Comments go on files in a git repo"))
