@@ -3,7 +3,7 @@
 ;; A minor mode for my todo list, a Markdown file of list items under "#" section headings. On top of
 ;; markdown-lite-mode, which marks items done with "t" in any Markdown file, it adds:
 ;;
-;; - T, which cycles an item through the in progress and waiting status markers ("→" and "⏸")
+;; - T, which cycles an item through the in progress and waiting status markers ("→" and "‖")
 ;; - archiving an item to the todo list's archive file, under the same section heading, with ;e,
 ;;   Gmail's key for archiving
 ;; - capturing a new item into a section without leaving the current one
@@ -32,7 +32,7 @@
 
 (defface mtodo-status-marker
   '((t (:inherit shadow)))
-  "For the in progress and waiting status markers, \"→\" and \"⏸\"."
+  "For the in progress and waiting status markers, \"→\" and \"‖\"."
   :group 'mlm-faces)
 
 (defconst mtodo/font-lock-keywords
@@ -73,8 +73,8 @@
   (interactive)
   (mlm/todo-set-status (pcase (mlm/todo-status)
                          ('nil "→")
-                         ("→" "⏸")
-                         ("⏸" nil)
+                         ("→" "‖")
+                         ("‖" nil)
                          ("✓" "→"))))
 
 (defun mtodo/section-regexp (heading)

@@ -541,11 +541,11 @@
   "^\\([ \t]*\\)\\([0-9]+\\.\\|[*+-]\\)\\([ \t]+\\)"
   "Regular expression for matching list items.")
 
-;; In a todo list, a list item's status is a marker after its list marker: "* ✓ Done", "* ⏸ Waiting",
+;; In a todo list, a list item's status is a marker after its list marker: "* ✓ Done", "* ‖ Waiting",
 ;; or "* → In progress". An open item has none. An archived item has the date it was archived before
 ;; its marker: "* 2026-11-25 ✓ Done".
 
-(defconst mlm/todo-markers '("✓" "⏸" "→")
+(defconst mlm/todo-markers '("✓" "‖" "→")
   "The status markers of todo list items: done, waiting, and in progress.")
 
 (defconst mlm/todo-date-regexp "[0-9]\\{4\\}-[0-9][0-9]-[0-9][0-9]"

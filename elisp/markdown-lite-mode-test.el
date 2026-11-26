@@ -969,7 +969,7 @@
    a continuation line, and the cursor stays on the same text."
   (should (equal (mlm-test/keys "* |a\n" "t") "* ✓ a\n"))
   (should (equal (mlm-test/keys "* ✓ |a\n" "t") "* a\n"))
-  (should (equal (mlm-test/keys "  * ⏸ a|b\n" "t") "  * ✓ ab\n"))
+  (should (equal (mlm-test/keys "  * ‖ a|b\n" "t") "  * ✓ ab\n"))
   (should (equal (mlm-test/keys "1. → |a\n" "t") "1. ✓ a\n"))
   (should (equal (mlm-test/keys "* a\n  |b\n" "t") "* ✓ a\n  b\n"))
   (should (equal (mlm-test/keys "* |a\n" "tix") "* ✓ xa\n")))

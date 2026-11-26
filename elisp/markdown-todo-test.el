@@ -23,8 +23,8 @@
 
 (ert-deftest mtodo-test/cycle-status ()
   (should (equal (mtodo-test/at-marker "* |a\n" #'mtodo/cycle-status) "* → |a\n"))
-  (should (equal (mtodo-test/at-marker "* → a|\n" #'mtodo/cycle-status) "* ⏸ a|\n"))
-  (should (equal (mtodo-test/at-marker "* ⏸ a|\n" #'mtodo/cycle-status) "* a|\n"))
+  (should (equal (mtodo-test/at-marker "* → a|\n" #'mtodo/cycle-status) "* ‖ a|\n"))
+  (should (equal (mtodo-test/at-marker "* ‖ a|\n" #'mtodo/cycle-status) "* a|\n"))
   (should (equal (mtodo-test/at-marker "* ✓ a|\n" #'mtodo/cycle-status) "* → a|\n")))
 
 (ert-deftest mtodo-test/capture ()
