@@ -254,6 +254,9 @@
 ;;
 (require 'fringe-scroll-bar)
 (fringe-scroll-bar-mode 1)
+;; Put the fringes outside the margins, so the thumb is at the window's edge even in buffers which
+;; draw in the right margin, like magit-log's author and date column.
+(setq-default fringes-outside-margins t)
 
 ;;
 ;; Evil mode -- Vim keybindings for Emacs.
