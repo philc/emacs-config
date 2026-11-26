@@ -241,6 +241,12 @@
  `(message-header-subject ((t (:foreground "white"))))
  `(message-header-to ((t (:foreground "white"))))
  `(message-header-cc ((t (:foreground "white"))))
+ ;; markdown-lite-mode's list items, colored by level.
+ `(mlm-list-item-1 ((t (:foreground "#ECE27C"))))
+ `(mlm-list-item-2 ((t (:foreground "#85C7FF"))))
+ `(mlm-list-item-3 ((t (:foreground "#E4BDA7"))))
+ `(mlm-list-item-4 ((t (:foreground "#87D952"))))
+ `(mlm-list-item-5 ((t (:foreground "#C3D9C9"))))
  `(org-hide ((t (:foreground "#2e3436"))))
  `(org-level-1 ((t (:bold nil :foreground "dodger blue"))))
  `(org-level-2 ((t (:bold nil :foreground "#edd400"))))

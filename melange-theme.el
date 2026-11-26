@@ -112,6 +112,22 @@
    `(show-paren-match ((t (:background ,ui :foreground ,fg))))
    `(show-paren-mismatch ((t (:background ,removed-word :foreground ,fg))))
 
+   ;; markdown-lite-mode's list items. Only top-level items are colored, since they're the sections
+   ;; of a document. Deeper items are plain, with a muted "*" marker which stands apart from their
+   ;; text.
+   `(mlm-list-item-1 ((t (:foreground ,yellow-bright))))
+   `(mlm-list-item-2 ((t (:foreground ,fg))))
+   `(mlm-list-item-3 ((t (:foreground ,fg))))
+   `(mlm-list-item-4 ((t (:foreground ,fg))))
+   `(mlm-list-item-5 ((t (:foreground ,fg))))
+   `(mlm-list-item-6 ((t (:foreground ,fg))))
+   `(mlm-list-marker-1 ((t (:foreground ,yellow-bright))))
+   `(mlm-list-marker-2 ((t (:foreground ,blue-bright))))
+   `(mlm-list-marker-3 ((t (:foreground ,blue-bright))))
+   `(mlm-list-marker-4 ((t (:foreground ,blue-bright))))
+   `(mlm-list-marker-5 ((t (:foreground ,blue-bright))))
+   `(mlm-list-marker-6 ((t (:foreground ,blue-bright))))
+
    ;; Org.
    `(org-hide ((t (:foreground ,bg))))
    `(org-level-1 ((t (:foreground ,blue-bright))))
