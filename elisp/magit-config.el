@@ -20,7 +20,22 @@
 ;; Magit reads it when defining its faces.
 (defvar magit-diff-specify-hunk-foreground nil)
 
-(require 'magit)
+(defun magit-config--require-without (feature skipped)
+  "Requires FEATURE without loading the libraries SKIPPED, which FEATURE requires but uses only in
+functions that are autoloaded or that require the library themselves. Those load the library when
+they're first called."
+  (let ((faked (seq-remove #'featurep skipped)))
+    ;; Unlike `provide', this doesn't run the `with-eval-after-load' forms for the skipped libraries.
+    (setq features (append faked features))
+    (unwind-protect
+        (require feature)
+      (setq features (seq-difference features faked)))))
+
+;; Magit requires these libraries, but uses them only when it's asked to: browse-url to open a link,
+;; and epa and epg to pick a GPG key to sign with. Skipping them saves 75ms when Magit loads. Magit's
+;; with-editor requires shell, which can't be skipped: its advice on `shell-command' reads
+;; `shell-mode-hook'.
+(magit-config--require-without 'magit '(browse-url epa epg))
 (require 'git-rebase) ; for git-rebase-mode-map.
 (require 'evil)
 (require 'window-management)
@@ -240,13 +255,7 @@ The contents are empty for a file which doesn't exist, e.g. the old side of an a
   "Load css-mode without eww, which takes over 100ms to load, since it loads shr and parts of Gnus.
 css-mode requires eww only for `css-lookup-symbol', which calls autoloaded eww functions, so they
 still load eww when they're called."
-  (if (featurep 'eww)
-      (require 'css-mode)
-    ;; Unlike `provide', this doesn't run the `with-eval-after-load' forms for eww.
-    (push 'eww features)
-    (unwind-protect
-        (require 'css-mode)
-      (setq features (delq 'eww features)))))
+  (magit-config--require-without 'css-mode '(eww)))
 
 (defun magit-config--kill-blob-buffers (keep)
   "Kill this buffer's blob buffers, except for the KEEP most recently loaded."
