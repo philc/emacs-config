@@ -10,15 +10,10 @@ ELISP_FILES := init.el early-init.el packages.el tangotango-theme.el \
 .PHONY: test
 test: test-elisp test-js ## Run test-elisp and test-js
 
-# -Q skips the real init.el, loading only what the test files themselves require.
+# Runs each test file in its own Emacs, in parallel.
 .PHONY: test-elisp
 test-elisp: ## Run the ERT tests in elisp/*-test.el
-	$(EMACS) -Q --batch \
-		-l scripts/package-load-path.el \
-		--eval '(setq load-prefer-newer t)' \
-		-L $(ELISP_DIR) \
-		$(foreach f,$(wildcard $(ELISP_DIR)/*-test.el),-l $(f)) \
-		-f ert-run-tests-batch-and-exit
+	@EMACS=$(EMACS) scripts/test-elisp.sh $(wildcard $(ELISP_DIR)/*-test.el)
 
 # The diff-review tests cache git's answers between runs. This clears the cache, so they ask git
 # everything again.
