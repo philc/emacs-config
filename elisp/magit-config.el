@@ -511,7 +511,7 @@ runs only once, on the final section."
 
 ;; git-rebase loads when a rebase's todo list opens, and evil binds these then.
 (evil-define-key 'normal git-rebase-mode-map
-  ";gra" 'git-rebase-abort
+  ";gra" 'with-editor-cancel ; Cancelling the todo list aborts the rebase.
   (kbd "S-C-k") 'git-rebase-move-line-up
   (kbd "S-C-j") 'git-rebase-move-line-down
   "e" 'git-rebase-edit
@@ -533,8 +533,8 @@ runs only once, on the final section."
   (util/define-keys
    evil-normal-state-local-map
    ";gca" 'magit-commit-amend
-   ";gra" 'git-rebase-abort
-   ";grc" 'git-rebase-continue
+   ";gra" 'magit-rebase-abort
+   ";grc" 'magit-rebase-continue
    ";gri" 'magit-rebase-interactive
    ";gpush" 'git-push
    ";gpull" 'git-pull
@@ -565,7 +565,7 @@ runs only once, on the final section."
   ;; NOTE(philc): using `evil-define-key` for these keymaps does not work.
   (util/define-keys
    evil-normal-state-local-map
-   ";grc" 'git-rebase-continue
+   ";grc" 'magit-rebase-continue
    ";gca" 'magit-commit-amend
    ";gpush" 'git-push
    ";gpull" 'git-pull
