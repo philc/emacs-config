@@ -23,7 +23,6 @@
  ("nongnu-elpa" . "c39098d5ab4b1252ee44aefcfd604044bcca7861")
  ("powerline" . "c35c35bdf5ce2d992882c1f06f0f078058870d4a")
  ("projectile" . "b60bb09927a6c78793dc96a2da3c5a8d4cec3062")
- ("rainbow-delimiters" . "7919681b0d883502155d5b26e791fec15da6aeca")
  ("relint" . "04515f5ffd2b0e4d8e638fbcd0af8954b8113d9b")
  ("s.el" . "7393fa6fa305403e628058c0ec78c35d610fab05")
  ("smartparens" . "82d2cf084a19b0c2c3812e0550721f8a61996056")
