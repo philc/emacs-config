@@ -1178,6 +1178,7 @@
 ;; Markdown
 ;;
 (require 'markdown-lite-mode)
+(require 'markdown-todo)
 
 (defun markdown-format-outline-into-sections ()
   "In a document formatted as an outline of nested lists, convert the top-level list items into
