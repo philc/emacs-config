@@ -191,7 +191,6 @@ of a comment itself has the comment's id, and REPLY-ID nil. Each of my replies h
 `electric-indent-mode' to restore when it leaves.")
 
 (defvar dr/file-mode)
-(defvar dr--store-path)
 (defvar dr--file)
 (defvar dr--change-in-comment)
 (defvar dr--hidden)
@@ -203,9 +202,13 @@ of a comment itself has the comment's id, and REPLY-ID nil. Each of my replies h
 ;;
 ;; The review file.
 
+(defvar dr--store-files (make-hash-table :test #'equal)
+  "The review file's path for each `default-directory'. Finding it runs git, and it's read after
+nearly every command in a revision buffer.")
+
 (defun dr--store-file ()
-  (or dr--store-path
-      (expand-file-name "review.json" (magit-gitdir))))
+  (with-memoization (gethash default-directory dr--store-files)
+    (expand-file-name "review.json" (magit-gitdir))))
 
 (defun dr--read-store ()
   "The list of comments in the review file, as alists."
@@ -1138,9 +1141,6 @@ at the start of that comment's block."
 (defvar-local dr--file nil
   "In a buffer with `dr/file-mode', the file's path relative to the repo's top level.")
 
-(defvar-local dr--store-path nil
-  "In a buffer with `dr/file-mode', the review file's path.")
-
 (defvar-local dr--store-mtime nil
   "In a buffer with `dr/file-mode', the review file's modification time when the buffer last read
 or wrote it.")
@@ -1849,7 +1849,8 @@ without them. This is in `write-region-annotate-functions'."
       (setq dr/file-mode nil)
       (user-error "Comments go on files in a git repo"))
     (setq dr--file (file-relative-name (file-truename buffer-file-name) (file-truename root)))
-    (setq dr--store-path (expand-file-name "review.json" (magit-gitdir))))
+    ;; While git's answers are cached.
+    (dr--store-file))
   (setq-local yank-excluded-properties (if (eq yank-excluded-properties t)
                                            t
                                          (append dr--comment-props yank-excluded-properties)))
