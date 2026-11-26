@@ -350,6 +350,8 @@
     "gh" 'mlm/navigate-to-top-level-heading
     "gH" 'mlm/navigate-to-any-heading
     "gu" 'mlm/markdown-up-heading
+    ;; This shadows Evil's "t" motion in normal state, but not after an operator, as in "dt)".
+    "t" 'mlm/todo-toggle-done
     ;; Like Gmail's and Superhuman's "#" for deleting a message.
     "#" 'mlm/delete-list-item
     "J" 'mlm/join
@@ -535,12 +537,6 @@
 ;; Much of this code is taken from markdown-mode.el.
 ;;
 
-(defconst mlm/markdown-regex-list-item
-  "^\\(\\(?:  \\|\t\\)*\\)\\(\\*\\) .*$"
-  "Regular expression matching the marker line of a highlighted list item: one with a \"*\" marker,
-   and an indentation of whole levels (two spaces or a tab each). Group 1 is the indentation, and
-   group 2 the marker.")
-
 (defconst mlm/markdown-regex-list
   "^\\([ \t]*\\)\\([0-9]+\\.\\|[*+-]\\)\\([ \t]+\\)"
   "Regular expression for matching list items.")
@@ -552,12 +548,24 @@
 (defconst mlm/todo-markers '("✓" "⏸" "→")
   "The status markers of todo list items: done, waiting, and in progress.")
 
+(defconst mlm/todo-date-regexp "[0-9]\\{4\\}-[0-9][0-9]-[0-9][0-9]"
+  "Matches the date before an archived todo item's status marker.")
+
 (defconst mlm/todo-prefix-regexp
   (concat mlm/markdown-regex-list
-          "\\(?:\\([0-9]\\{4\\}-[0-9][0-9]-[0-9][0-9]\\)[ \t]+\\)?"
+          "\\(?:\\(" mlm/todo-date-regexp "\\)[ \t]+\\)?"
           "\\(?:\\(" (regexp-opt mlm/todo-markers) "\\)\\(?:[ \t]+\\|$\\)\\)?")
   "Matches a list item's marker line, up to the start of its text. Groups 1 to 3 are those of
    `mlm/markdown-regex-list'. Group 4 is the item's archive date, and group 5 its status marker.")
+
+(defconst mlm/markdown-regex-list-item
+  (concat "^\\(\\(?:  \\|\t\\)*\\)\\(\\*\\) [ \t]*"
+          "\\(?:" mlm/todo-date-regexp "[ \t]+\\)?"
+          "\\(?:\\(✓\\)\\(?:[ \t]\\|$\\)\\)?"
+          ".*$")
+  "Regular expression matching the marker line of a highlighted list item: one with a \"*\" marker,
+   and an indentation of whole levels (two spaces or a tab each). Group 1 is the indentation, group
+   2 the marker, and group 3 the \"✓\" of a done todo item.")
 
 (defconst mlm/markdown-regex-line-lead
   "^\\([ \t>]*\\(?:\\(?:[0-9]+\\.\\|[*+-]\\)[ \t]+\\)?\\)[^ \t\n].*"
@@ -588,20 +596,13 @@
   "The face for each level of list item's \"*\" marker, from level 1 to 6. Deeper items get the level
    6 face.")
 
-(defun mlm/markdown-list-item-index ()
-  "The level, from 0 to 5, of the list item whose marker line `mlm/markdown-regex-list-item' just
-   matched."
-  (let ((indentation (match-string 1)))
-    (min 5 (+ (cl-count ?\t indentation) (/ (cl-count ?\s indentation) 2)))))
-
-(defun mlm/markdown-list-item-face ()
-  "The face for the list item whose marker line `mlm/markdown-regex-list-item' just matched."
-  (aref mlm/markdown-list-item-faces (mlm/markdown-list-item-index)))
-
-(defun mlm/markdown-list-marker-face ()
-  "The face for the marker of the list item whose marker line `mlm/markdown-regex-list-item' just
-   matched."
-  (aref mlm/markdown-list-marker-faces (mlm/markdown-list-item-index)))
+(defun mlm/markdown-list-face (faces)
+  "The face in FACES (see `mlm/markdown-list-item-faces') for the level of the list item whose
+   marker line `mlm/markdown-regex-list-item' just matched, or `mlm-todo-done' if it's done."
+  (if (match-beginning 3)
+      'mlm-todo-done
+    (let ((indentation (match-string 1)))
+      (aref faces (min 5 (+ (cl-count ?\t indentation) (/ (cl-count ?\s indentation) 2)))))))
 
 (defconst mlm/markdown-regex-code
   "\\(\\`\\|[^\\]\\)\\(\\(`+\\)\\(\\(.\\|\n[^\n]\\)*?[^`]\\)\\3\\)\\([^`]\\|\\'\\)"
@@ -922,6 +923,48 @@ If the point is not in a list item, do nothing."
     (beginning-of-line)
     (re-search-forward "^\\s *$" (line-end-position) t)))
 
+(defun mlm/list-item-bounds-or-error ()
+  "Returns `mlm/markdown-cur-list-item-bounds', or signals a `user-error' if point isn't in a list
+   item."
+  (or (mlm/markdown-cur-list-item-bounds)
+      (user-error "Not in a list item")))
+
+(defun mlm/todo-status ()
+  "The status marker of the list item at point (one of `mlm/todo-markers'), or nil if it has none.
+   Signals a `user-error' if point isn't in a list item."
+  (let ((bounds (mlm/list-item-bounds-or-error)))
+    (save-excursion
+      (goto-char (cl-first bounds))
+      (looking-at mlm/todo-prefix-regexp)
+      (match-string-no-properties 5))))
+
+(defun mlm/todo-set-status (marker)
+  "Sets the status marker of the list item at point to MARKER, one of `mlm/todo-markers', or removes
+   it if MARKER is nil. Point stays on the same character of the item's text."
+  (let ((bounds (mlm/list-item-bounds-or-error))
+        ;; A marker which advances when text is inserted at it, so that if point is at the start of
+        ;; the item's text, it stays there rather than moving onto the new status marker.
+        (pos (copy-marker (point) t)))
+    (goto-char (cl-first bounds))
+    (looking-at mlm/todo-prefix-regexp)
+    (let ((beg (or (match-beginning 5) (match-end 0)))
+          (end (match-end 0)))
+      (delete-region beg end)
+      (goto-char beg)
+      (when marker
+        (insert marker " ")))
+    ;; Font-lock refontifies only the edited line, but the item's continuation lines take their face
+    ;; from it too.
+    (font-lock-flush (cl-first bounds) (cl-second bounds))
+    (goto-char pos)
+    (set-marker pos nil)))
+
+(defun mlm/todo-toggle-done ()
+  "Marks the todo list item at point as done, replacing any other status marker it has, or if it's
+   done already, marks it as open."
+  (interactive)
+  (mlm/todo-set-status (unless (equal (mlm/todo-status) "✓") "✓")))
+
 (defun mlm/markdown-nobreak-p ()
   "Return nil if it is acceptable to break the current line at the point."
   (or
@@ -1128,13 +1171,11 @@ If the point is not in a list item, do nothing."
 (evil-define-text-object mlm/a-list-item (count &optional _beg _end _type)
   "Select the list item under the cursor, with its continuation lines and children, as `ai'."
   :type line
-  (let ((bounds (mlm/markdown-cur-list-item-bounds)))
-    (unless bounds
-      (user-error "Not in a list item"))
-    (let* ((beg (save-excursion (goto-char (cl-first bounds)) (line-beginning-position)))
-           (text-end (save-excursion (goto-char (cl-second bounds)) (line-end-position))))
-      ;; End after the last line's newline. With an end before it, `dai' leaves a blank line.
-      (list beg (min (1+ (mlm/list-item-children-end beg text-end)) (point-max))))))
+  (let* ((bounds (mlm/list-item-bounds-or-error))
+         (beg (save-excursion (goto-char (cl-first bounds)) (line-beginning-position)))
+         (text-end (save-excursion (goto-char (cl-second bounds)) (line-end-position))))
+    ;; End after the last line's newline. With an end before it, `dai' leaves a blank line.
+    (list beg (min (1+ (mlm/list-item-children-end beg text-end)) (point-max)))))
 
 (evil-define-command mlm/delete-list-item ()
   "Deletes the list item under the cursor, with its continuation lines and children, as `dai' does."
@@ -1430,6 +1471,12 @@ If we are at the first line, then consider the previous line to be blank."
   "For the \"*\" marker of list items at the sixth level or deeper."
   :group 'mlm-faces)
 
+(defface mlm-todo-done
+  '((t (:inherit shadow)))
+  "For a done todo list item, one whose status marker is \"✓\": its marker line and continuation
+   lines."
+  :group 'mlm-faces)
+
 (defvar mlm/markdown-mode-font-lock-keywords-basic
   (list
    (cons 'mlm/markdown-match-pre-blocks '((0 'mlm-pre)))
@@ -1442,8 +1489,9 @@ If we are at the first line, then consider the previous line to be blank."
          '((1 'mlm-header-delimiter)
            (2 (aref mlm/markdown-header-faces (1- (length (match-string 1)))))
            (3 'mlm-header-delimiter)))
-   (cons mlm/markdown-regex-list-item '((0 (mlm/markdown-list-item-face))
-                                        (2 (mlm/markdown-list-marker-face) t)))
+   (cons mlm/markdown-regex-list-item
+         '((0 (mlm/markdown-list-face mlm/markdown-list-item-faces))
+           (2 (mlm/markdown-list-face mlm/markdown-list-marker-faces) t)))
    (cons 'mlm/markdown-match-list-item-continuation '((0 mlm/markdown-list-item-continuation-face)))
    (cons 'mlm/markdown-match-code '((0 'mlm-inline-code)))
    (cons mlm/markdown-regex-image-url '((1 'mlm-url)))
@@ -1502,7 +1550,7 @@ If we are at the first line, then consider the previous line to be blank."
                      (looking-at mlm/markdown-regex-list)
                      (>= indent (mlm/markdown-cur-non-list-indent)))
             (setq face (and (looking-at mlm/markdown-regex-list-item)
-                            (mlm/markdown-list-item-face)))))))
+                            (mlm/markdown-list-face mlm/markdown-list-item-faces)))))))
     (when face
       (set-match-data (list (line-beginning-position) (line-end-position)))
       (end-of-line)

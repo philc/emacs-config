@@ -932,3 +932,30 @@
 (ert-deftest markdown-lite-mode-test/hash-deletes-list-item ()
   "# deletes the item with its children, as dai does, and . repeats it."
   (should (equal (mlm-test/keys "* |a\n  * b\n* c\n* d\n" "#.") "* d\n")))
+
+(ert-deftest markdown-lite-mode-test/t-toggles-done ()
+  "t marks an item done, replacing its other status marker, or marks a done item open. It works from
+   a continuation line, and the cursor stays on the same text."
+  (should (equal (mlm-test/keys "* |a\n" "t") "* ✓ a\n"))
+  (should (equal (mlm-test/keys "* ✓ |a\n" "t") "* a\n"))
+  (should (equal (mlm-test/keys "  * ⏸ a|b\n" "t") "  * ✓ ab\n"))
+  (should (equal (mlm-test/keys "1. → |a\n" "t") "1. ✓ a\n"))
+  (should (equal (mlm-test/keys "* a\n  |b\n" "t") "* ✓ a\n  b\n"))
+  (should (equal (mlm-test/keys "* |a\n" "tix") "* ✓ xa\n")))
+
+(ert-deftest markdown-lite-mode-test/t-after-operator-is-a-motion ()
+  (should (equal (mlm-test/keys "* a|bc)d\n" "dt)") "* a)d\n")))
+
+(ert-deftest markdown-lite-mode-test/done-item-face ()
+  "A done item's marker line, marker, and continuation lines get the done face."
+  (mlm-test/with-fontified-buffer (concat "* ✓ a\n"
+                                          "  more\n"
+                                          "* 2026-11-25 ✓ b\n"
+                                          "  * c\n")
+    (should (equal (mlm-test/line-faces)
+                   '(("* ✓ a" . mlm-todo-done)
+                     ("  more" . mlm-todo-done)
+                     ("* 2026-11-25 ✓ b" . mlm-todo-done)
+                     ("  * c" . mlm-list-item-2))))
+    (goto-char (point-min))
+    (should (eq (get-text-property (point) 'face) 'mlm-todo-done))))
