@@ -1,8 +1,8 @@
 ;;; -*- lexical-binding: t; -*-
 ;;
 ;; Tests for diff-review.el. They drive a real magit revision buffer with keys, in a throwaway git
-;; repo. Git's answers to magit's read-only questions are kept and replayed until the repo changes
-;; (see `dr-test/git-answers'), which makes the tests twice as fast.
+;; repo. Git's answers to magit's read-only questions are kept and replayed in later tests which
+;; leave the repo the same (see `dr-test/git-answers'), which makes the tests three times as fast.
 ;;
 ;; Run these with `make test`.
 
@@ -18,28 +18,31 @@
 ;; Leave out my global git config, so the tests don't depend on it. Its hooks also make each commit
 ;; take twice as long.
 (setenv "GIT_CONFIG_GLOBAL" "/dev/null")
+;; Give every commit the same date, so that the same changes to the repo make the same commits in
+;; every test, and git's answers about them can be replayed.
+(setenv "GIT_AUTHOR_DATE" "2026-01-01T00:00:00Z")
+(setenv "GIT_COMMITTER_DATE" "2026-01-01T00:00:00Z")
 
 (defvar dr-test/git-answers (make-hash-table :test #'equal)
   "Git's answers to the read-only commands magit runs, as (EXIT OUTPUT STDERR), keyed by the
-directory, the command, and `dr-test/repo-version'. Every test starts with the same repo at the
-same path, so most of what magit asks git while it shows a commit has the same answer in every test,
+directory, the command, and `dr-test/changes'. Every test starts with the same repo at the same
+path, so most of what magit asks git while it shows a commit has the same answer in every test,
 and is worth asking only once. Running each costs about 5ms, and showing a commit runs about 20.")
 
-(defvar dr-test/repo-version 0
-  "Which version of the repo the test is on: 0 for the template, or a number used only once,
-which is changed whenever a test might have changed the repo, so that git's answers are asked
-again.")
+(defvar dr-test/changes nil
+  "The changes the test made to the repo since it was copied from the template, newest first: the
+git commands which might have changed it, and the files written, with their contents' hashes.
+The same changes leave the repo the same, so git's answers in one test hold in another test which
+made the same changes.")
 
-(defvar dr-test/last-repo-version 0)
-
-(defun dr-test/repo-changed ()
-  (setq dr-test/repo-version (cl-incf dr-test/last-repo-version)))
+(defun dr-test/repo-changed (change)
+  (push change dr-test/changes))
 
 (defconst dr-test/read-only-commands
   '("rev-parse" "cat-file" "log" "show" "symbolic-ref" "config" "for-each-ref" "merge-base"
-    "rev-list" "diff" "diff-tree" "ls-files" "status")
+    "rev-list" "diff" "diff-tree" "ls-files" "ls-tree" "status" "patch-id")
   "The git commands whose answers `dr-test/git-answers' keeps. Any other command, which might
-change the repo, makes the tests ask git everything again.")
+change the repo, is added to `dr-test/changes'.")
 
 (defun dr-test/git-command (args)
   "The git command in ARGS, skipping the options before it, such as \"-c x=y\"."
@@ -49,39 +52,69 @@ change the repo, makes the tests ask git everything again.")
       (pop args))
     (car args)))
 
+(defun dr-test/answer-key (args &optional input)
+  "The key in `dr-test/git-answers' of git's answer to ARGS, with INPUT, a string, as its input."
+  (let* ((command (dr-test/git-command args))
+         (layout-only (and (equal command "rev-parse")
+                           (cl-every (lambda (a) (member a '("--show-toplevel" "--show-cdup" "--git-dir")))
+                                     (cdr (member "rev-parse" (flatten-tree args)))))))
+    (list default-directory args input
+          ;; Where the repo's top level and git dir are doesn't change, and nor does a patch-id.
+          (unless (or layout-only (equal command "patch-id"))
+            dr-test/changes))))
+
 (defun dr-test/replay-git (orig process &optional infile buffer display &rest args)
-  "Replays git's answer to a read-only command run as before, since the repo last changed."
+  "Replays git's answer to a read-only command run before on the same repo."
   (let ((stderr (and (consp buffer) (stringp (cadr buffer)) (cadr buffer))))
     (if (not (and (null infile)
-                  (or (eq buffer t) (and (consp buffer) (eq (car buffer) t)))
+                  (or (memq buffer '(nil t)) (and (consp buffer) (memq (car buffer) '(nil t))))
                   (member (dr-test/git-command args) dr-test/read-only-commands)))
-        (progn (dr-test/repo-changed)
+        (progn (dr-test/repo-changed args)
                (apply orig process infile buffer display args))
-      (let* ((key (list default-directory process args dr-test/repo-version))
-             (answer
-              (or (gethash key dr-test/git-answers)
-                  (puthash key (dr-test/ask-git orig process args) dr-test/git-answers))))
-        (pcase-let ((`(,exit ,output ,error) answer))
-          (insert output)
-          (when (and stderr (not (equal error "")))
-            (with-temp-file stderr (insert error)))
-          exit)))))
+      (pcase-let ((`(,exit ,output ,error)
+                   (with-memoization (gethash (dr-test/answer-key args) dr-test/git-answers)
+                     (dr-test/ask-git (lambda (out) (apply orig process nil out nil args))))))
+        (when (or (eq buffer t) (eq (car-safe buffer) t))
+          (insert output))
+        (when (and stderr (not (equal error "")))
+          (with-temp-file stderr (insert error)))
+        exit))))
 
-(defun dr-test/ask-git (orig process args)
-  "Runs git with ARGS through ORIG, `magit-process-file', and returns (EXIT OUTPUT STDERR)."
-  (let ((stderr (make-temp-file "dr-test-stderr")))
+(defun dr-test/ask-git (run)
+  "Calls RUN with the destination for a process's output, and returns (EXIT OUTPUT STDERR)."
+  (let ((stderr (make-temp-file "dr-test-stderr"))
+        (multibyte enable-multibyte-characters))
     (unwind-protect
         (with-temp-buffer
-          (let ((exit (apply orig process nil (list t stderr) nil args)))
+          (set-buffer-multibyte multibyte)
+          (let ((exit (funcall run (list t stderr))))
             (list exit
                   (buffer-string)
                   (with-temp-buffer (insert-file-contents stderr) (buffer-string)))))
       (delete-file stderr))))
 
+(defun dr-test/replay-git-with-input (orig start end program &optional delete buffer display
+                                           &rest args)
+  "Replays git's answer to a read-only command with input, such as \"git patch-id\"."
+  (if (not (and (equal program (magit-git-executable))
+                (or (eq buffer t) (equal buffer '(t nil)))
+                (member (dr-test/git-command args) dr-test/read-only-commands)))
+      (apply orig start end program delete buffer display args)
+    (let* ((input (if (stringp start)
+                      start
+                    (buffer-substring-no-properties (or start (point-min)) (or end (point-max)))))
+           (answer (with-memoization (gethash (dr-test/answer-key args input) dr-test/git-answers)
+                     (dr-test/ask-git (lambda (out) (apply orig input nil program nil out nil args))))))
+      (when (and delete (not (stringp start)))
+        (delete-region (or start (point-min)) (or end (point-max))))
+      (insert (nth 1 answer))
+      (car answer))))
+
 (advice-add 'magit-process-file :around #'dr-test/replay-git)
+(advice-add 'call-process-region :around #'dr-test/replay-git-with-input)
 
 (defun dr-test/git (&rest args)
-  (dr-test/repo-changed)
+  (dr-test/repo-changed args)
   (apply #'call-process "git" nil nil nil args))
 
 (defun dr-test/write (file text)
@@ -103,7 +136,12 @@ change the repo, makes the tests ask git everything again.")
               (when (and (stringp file)
                          (string-prefix-p (file-truename (dr-test/repo)) (file-truename file))
                          (not (equal (file-name-nondirectory file) "review.json")))
-                (dr-test/repo-changed))))
+                (dr-test/repo-changed
+                 (list (file-relative-name file (dr-test/repo))
+                       (with-temp-buffer
+                         (set-buffer-multibyte nil)
+                         (insert-file-contents-literally file)
+                         (md5 (current-buffer))))))))
 
 (defun dr-test/delete-repo (dir)
   ;; `default-directory' is buffer-local, so it can't be trusted to still be the repo here: the
@@ -139,8 +177,8 @@ it runs git several times.")
   (declare (indent 0))
   `(let* ((repo (dr-test/repo))
           (default-directory repo))
-     ;; The repo starts as the template, so git's answers from before any test changed it hold.
-     (setq dr-test/repo-version 0)
+     ;; The repo starts as the template.
+     (setq dr-test/changes nil)
      (unwind-protect
          (progn
            (copy-directory (dr-test/template) repo nil nil t)
