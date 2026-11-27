@@ -45,12 +45,15 @@
 ;; Elisp files slow, and I don't use it.
 (global-eldoc-mode -1)
 
-;; Make it possible to open files via the command line in this Emacs using `emacsclient`.
+;; I use two Emacs apps: one for editing files, and one dedicated to my todo list (Org.app, named
+;; for the Org mode file it once was).
+(defvar is-org-app (s-contains? "Org.app" (expand-file-name invocation-name invocation-directory))
+  "Whether this Emacs is Org.app, which shows my todo list, rather than my code editor.")
+
+;; Make it possible to open files via the command line in this Emacs using `emacsclient`. Don't
+;; start the server in Org.app.
 (require 'server)
-(if (not (or (server-running-p)
-             ;; I use two Emacs apps, one dedicated to my todo list (Org.app, named for the Org mode
-             ;; file it once was). Don't start the server in that Emacs.
-             (string-match "Org\\.app" (car command-line-args))))
+(if (not (or (server-running-p) is-org-app))
     (server-start))
 
 ;; Make it so that the scratch buffer uses markdown. By default it uses Emacs Lisp mode.
@@ -555,7 +558,9 @@
 (require 'face-remap) ; This loads "text-scale-mode".
 
 (setq text-scale-mode-step 1.1) ; When changing font size, do so in small increments.
-(setq current-text-zoom-level 0) ; The global text zoom level which should apply to all buffers.
+;; The global text zoom level which should apply to all buffers. Org.app, my todo list, starts two
+;; steps larger than my code editor, since it only shows tasks.md.
+(setq current-text-zoom-level (if is-org-app 2 0))
 
 ;; Here we define a global minor mode which runs on all buffers. This is needed because we must set
 ;; the text zoom level for newly created buffers, since text-scale-set works on a per-buffer basis.
@@ -1985,20 +1990,16 @@
 ;; The desktop file is saved as var/desktop/.emacs.desktop (see no-littering).
 ;;
 
-;; Note that I have two Emacs apps running on MacOS: one for editing files, and the other as my TODO
-;; list (Org.app). I only want to save and restore desktop configurations in the Emacs app I use
-;; for editing.
-(let* ((emacs-app-path (expand-file-name invocation-name invocation-directory))
-       (is-org-emacs (s-contains? "Org.app" emacs-app-path)))
-  (when (not is-org-emacs)
-    (setq desktop-save t) ; Always save without prompting.
-    ;; Restore every saved buffer before restoring the windows. A window whose buffer doesn't exist
-    ;; yet gets an arbitrary buffer instead, and loses the history `quit-window' uses to decide what
-    ;; to show next.
-    (setq desktop-restore-eager t)
-    (setq desktop-buffers-not-to-save-function 'session/save-buffer-p)
-    (add-hook 'desktop-save-hook 'session/record-window-buffers)
-    (desktop-save-mode 1)))
+;; Only save and restore desktop configurations in the Emacs app I use for editing, not Org.app.
+(when (not is-org-app)
+  (setq desktop-save t) ; Always save without prompting.
+  ;; Restore every saved buffer before restoring the windows. A window whose buffer doesn't exist
+  ;; yet gets an arbitrary buffer instead, and loses the history `quit-window' uses to decide what
+  ;; to show next.
+  (setq desktop-restore-eager t)
+  (setq desktop-buffers-not-to-save-function 'session/save-buffer-p)
+  (add-hook 'desktop-save-hook 'session/record-window-buffers)
+  (desktop-save-mode 1))
 
 ;; By default, desktop saves every file buffer, which made restoring the session on startup a bit
 ;; slow: I often have ~100 buffers open and it takes 20ms to restore each buffer in 2026. I only
