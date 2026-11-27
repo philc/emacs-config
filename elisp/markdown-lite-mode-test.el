@@ -113,6 +113,11 @@
       (should (equal (mlm-test/fill-at-marker text #'mlm/fill-paragraph-or-code-block-comment)
                      (s-replace "|" "" text))))))
 
+(ert-deftest markdown-lite-mode-test/fill-joins-line-with-trailing-spaces ()
+  "A line ending in two spaces is filled with its neighbors, rather than ending the paragraph."
+  (should (equal (mlm-test/fill-at-marker "* aaa bbb  \n  |ccc\n")
+                 "* aaa bbb ccc\n")))
+
 (ert-deftest markdown-lite-mode-test/fill-skips-table ()
   (let ((table (concat "| a | b |\n"
                        "|---|---|\n"

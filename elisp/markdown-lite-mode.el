@@ -49,8 +49,10 @@
   ;; Paragraph filling
   (set (make-local-variable 'paragraph-start)
        "\f\\|[ \t]*$\\|[ \t]*[*+-] \\|[ \t]*[0-9]+\\.[ \t]\\|[ \t]*: ")
-  (set (make-local-variable 'paragraph-separate)
-       "\\(?:[ \t\f]*\\|.*  \\)$")
+  ;; Only a blank line separates paragraphs. Markdown's hard line break, a line ending in two spaces,
+  ;; doesn't, because `delete-trailing-whitespace' removes those spaces on save. Treating it as one
+  ;; made filling skip such lines until the buffer was saved.
+  (set (make-local-variable 'paragraph-separate) "[ \t\f]*$")
   (set (make-local-variable 'adaptive-fill-first-line-regexp)
        "\\`[ \t]*>[ \t]*?\\'")
   ;; Without this, Emacs's default adaptive-fill-regexp (which treats "*" as a
