@@ -174,6 +174,14 @@
   (should (equal (mlm-test/join "* a\n  * |b\n* c\n  * d\n* e\n")
                  "* a\n  * |b. c.\n    * d\n* e\n")))
 
+(ert-deftest markdown-lite-mode-test/unwrap-joins-items-and-paragraphs ()
+  (should (equal (mlm/unwrap "# Title\naaa\nbbb\n\n* ccc\n  ddd\n  * eee\n    fff\n* ggg\n")
+                 "# Title\naaa bbb\n\n* ccc ddd\n  * eee fff\n* ggg\n")))
+
+(ert-deftest markdown-lite-mode-test/unwrap-leaves-code-tables-and-hard-breaks ()
+  (should (equal (mlm/unwrap "aaa  \nbbb\\\nccc\n\n```\nddd\neee\n```\n| a |\n| b |\n")
+                 "aaa  \nbbb\\\nccc\n\n```\nddd\neee\n```\n| a |\n| b |\n")))
+
 (ert-deftest markdown-lite-mode-test/join-several-items ()
   (should (equal (mlm-test/join "* |a\n* b\n* c\n* d\n" 3) "* |a. b. c.\n* d\n"))
   (should (equal (mlm-test/join "* |a\n* b\n* c|\n* d\n") "* |a. b. c.\n* d\n")))

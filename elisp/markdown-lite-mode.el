@@ -1274,6 +1274,46 @@ If the point is not in a list item, do nothing."
       (evil-exit-visual-state)
       (goto-char pos))))
 
+(defun mlm/wrapped-line-p ()
+  "Whether the line at point continues the text of the list item or paragraph on the line before it,
+   which doesn't end in a hard line break (two spaces or a backslash)."
+  (and (mlm/paragraph-text-line-p)
+       (save-excursion
+         (and (= 0 (forward-line -1))
+              (or (mlm/list-marker-line-p) (mlm/paragraph-text-line-p))
+              (not (looking-at ".*\\(?:  \\|\\\\\\)$"))))))
+
+(defun mlm/unwrap (text)
+  "TEXT with each list item and paragraph joined onto one line. Leaves code blocks, tables,
+   headings, blockquotes, and hard line breaks alone."
+  (with-temp-buffer
+    (insert text)
+    (markdown-lite-mode)
+    (goto-char (point-min))
+    (let ((wrapped-lines nil))
+      (while (= 0 (forward-line 1))
+        (when (mlm/wrapped-line-p)
+          (push (point) wrapped-lines)))
+      ;; `push' leaves the lines in reverse order, so these joins go from the bottom up, which keeps
+      ;; the positions of the lines above each one valid.
+      (dolist (line wrapped-lines)
+        (goto-char line)
+        (delete-region (1- line) (progn (skip-chars-forward " \t") (point)))
+        (insert " ")))
+    (buffer-substring-no-properties (point-min) (point-max))))
+
+(defun mlm/copy-unwrapped ()
+  "Copies the region, or the whole buffer if there's none, to the clipboard with its hard wrapping
+   removed (see `mlm/unwrap'), e.g. to paste into a GitHub comment, which renders every newline."
+  (interactive)
+  (let* ((beg (if (use-region-p) (region-beginning) (point-min)))
+         (end (if (use-region-p) (region-end) (point-max)))
+         (text (buffer-substring-no-properties beg end)))
+    (kill-new (mlm/unwrap text))
+    (when (use-region-p)
+      (deactivate-mark))
+    (message "Copied unwrapped text")))
+
 (defun mlm/markdown-fill-forward-paragraph (arg)
   "The `fill-forward-paragraph-function'. Like `forward-paragraph', but treats code blocks and
    tables as paragraph separators (see `mlm/markdown-fill-protected-line-p'). Returns the number of
