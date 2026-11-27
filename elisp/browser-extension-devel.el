@@ -26,21 +26,22 @@
     (_ (print "Unknown browser")))
   "")
 
+(defvar ext-dev/vimium-dir "~/projects/vimium")
+
 (defun ext-dev/reload-firefox ()
-  "Reloads the extension in Firefox."
-  (let* (;; This corresponds to the "Internal UUID" field show in about:addons for the extension.
-         ;; Sometimes this internal extension ID can change as the extension's manifest.json changes.
-         (extension-id "bb3cce7b-03e2-4751-840e-265d62e4d9f0")
-         ;; This URL is specific to the Vimium extension.
-         (url (format "moz-extension://%s/pages/reload.html" extension-id)))
-    (util/call-process-with-exit-status "open"
-                                        nil
-                                        ;; Which app to open
-                                        "-a"
-                                        "Firefox"
-                                        ;; -g means don't foreground the app.
-                                        "-g"
-                                        url)))
+  "Reloads Vimium in its dev Firefox, launching that Firefox first if it isn't running.
+This runs `./make.js run-firefox-dev`. Its output is in the *run-firefox-dev* buffer."
+  (let ((default-directory (file-name-as-directory (expand-file-name ext-dev/vimium-dir)))
+        (buffer (get-buffer-create "*run-firefox-dev*")))
+    (with-current-buffer buffer (erase-buffer))
+    (make-process
+     :name "run-firefox-dev"
+     :buffer buffer
+     :command (list (expand-file-name "make.js") "run-firefox-dev")
+     :sentinel (lambda (process _event)
+                 (when (and (eq (process-status process) 'exit)
+                            (/= (process-exit-status process) 0))
+                   (message "run-firefox-dev failed. See the *run-firefox-dev* buffer."))))))
 
 (defun ext-dev/reload-chrome ()
   "Reloads the extension in Chrome."
