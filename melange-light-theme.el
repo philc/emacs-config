@@ -19,6 +19,9 @@
    (bg-float . "#e9e1db") ; Slightly darker than bg, for the mode line and minibuffer.
    (bg-line . "#e4dcd5") ; The current line.
    (bg-sel . "#d9d3ce")
+   ;; The current tab. It's darker than bg-sel, which is too close to bg-float, the other tabs'
+   ;; background, to pick out the current one.
+   (bg-tab . "#cbbcae")
    ;; The selection. It's a warm tan, much darker than the current line, so that it's visible over
    ;; it.
    (bg-region . "#e3c9a8")

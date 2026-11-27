@@ -43,12 +43,20 @@
 ;;
 ;; Color scheme
 ;;
-(defun reload-theme ()
+(defun reload-theme (&optional appearance)
+  "Load the melange theme which matches APPEARANCE, `light' or `dark'.
+APPEARANCE defaults to the system's appearance."
   (interactive)
-  ;; A warm, low-contrast theme.
-  (load-theme 'melange t))
+  (let* ((appearance (or appearance (bound-and-true-p ns-system-appearance)))
+         ;; Warm, low-contrast themes.
+         (theme (if (eq appearance 'light) 'melange-light 'melange)))
+    (mapc #'disable-theme custom-enabled-themes)
+    (load-theme theme t)))
 
 (reload-theme)
+;; Switch themes when the system switches between light and dark mode. This hook is in the
+;; emacs-plus build of Emacs.
+(add-hook 'ns-system-appearance-change-functions #'reload-theme)
 
 ;; Remove some of Emacs UI
 (setq initial-scratch-message "") ; When opening a new buffer, don't show the scratch message.

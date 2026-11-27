@@ -40,6 +40,9 @@
      `(line-number ((t (:foreground ,.ui))))
      `(line-number-current-line ((t (:foreground ,.comment))))
      `(whitespace-trailing ((t (:background ,.removed-word))))
+     ;; Text past `whitespace-line-column'. whitespace.el's default is violet on a dark gray, even
+     ;; on a light background.
+     `(whitespace-line ((t (:background ,.bg-sel :foreground ,.magenta-bright))))
      `(minibuffer-prompt ((t (:foreground ,.blue-bright :bold t))))
      ;; Vertico inherits `highlight`, which matches the minibuffer background.
      `(vertico-current ((t (:background ,.bg-region :extend t))))
@@ -74,7 +77,7 @@
      `(mode-line-emphasis ((t (:weight bold))))
      `(header-line ((t (:background ,.bg-float :foreground ,.fg))))
      `(tab-bar ((t (:inherit mode-line :foreground ,.ui :background ,.bg))))
-     `(tab-bar-tab ((t (:inherit tab-bar :foreground ,.fg :background ,.bg-sel))))
+     `(tab-bar-tab ((t (:inherit tab-bar :foreground ,.fg :background ,.bg-tab))))
      `(tab-bar-tab-inactive ((t (:inherit tab-bar :foreground ,.comment :background ,.bg-float))))
 
      ;; Search and matching.
@@ -86,9 +89,9 @@
      `(show-paren-match ((t (:background ,.ui :foreground ,.fg))))
      `(show-paren-mismatch ((t (:background ,.removed-word :foreground ,.fg))))
 
-     ;; markdown-lite-mode's list items. Only top-level items are colored, since they're the sections
-     ;; of a document. Deeper items are plain, with a muted "*" marker which stands apart from their
-     ;; text.
+     ;; markdown-lite-mode's list items. Only top-level items are colored, since they're the
+     ;; sections of a document. Deeper items are plain, with a muted "*" marker which stands apart
+     ;; from their text.
      `(mlm-list-item-1 ((t (:foreground ,.yellow-bright))))
      `(mlm-list-item-2 ((t (:foreground ,.fg))))
      `(mlm-list-item-3 ((t (:foreground ,.fg))))
@@ -115,9 +118,10 @@
      `(magit-diff-hunk-heading ((t (:extend t :background ,.bg-float :foreground ,.ui))))
      `(magit-diff-hunk-heading-highlight ((t (:extend t :background ,.bg-sel :foreground ,.fg))))
      `(magit-diff-file-heading ((t (:weight bold))))
-     ;; A commit's summary line. Magit draws it like a hunk heading, which this theme dims, but it's the
-     ;; most important line of the commit message.
-     `(magit-diff-revision-summary ((t (:extend t :background ,.bg-float :foreground ,.fg :weight bold))))
+     ;; A commit's summary line. Magit draws it like a hunk heading, which this theme dims, but it's
+     ;; the most important line of the commit message.
+     `(magit-diff-revision-summary
+       ((t (:extend t :background ,.bg-float :foreground ,.fg :weight bold))))
      `(magit-diff-revision-summary-highlight
        ((t (:extend t :background ,.bg-sel :foreground ,.fg :weight bold))))
      `(magit-section-highlight ((t (:extend t :background ,.bg-float))))

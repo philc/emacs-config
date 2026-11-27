@@ -22,6 +22,7 @@
    (bg-float . "#34302c") ; Slightly lighter than bg, for the mode line and minibuffer.
    (bg-line . "#3b3631") ; The current line.
    (bg-sel . "#403a36")
+   (bg-tab . "#403a36") ; The current tab.
    ;; The selection. It's much lighter than the current line, so that it's visible over it.
    (bg-region . "#5e4229")
    (ui . "#867462") ; Borders, line numbers, and other UI that should recede.
