@@ -74,3 +74,8 @@
 (ert-deftest ws-test/project-name ()
   (should (equal (ws/project-name "/p/alpha") "alpha"))
   (should (equal (ws/project-name "/p/alpha/.worktrees/fix-x") "alpha/fix-x")))
+
+(ert-deftest ws-test/names ()
+  (let ((tabs (mapcar (lambda (group) (ws-test/tab "t" group 0))
+                      '("vimium-triage" "vimium/find-mode" "vimium"))))
+    (should (equal (ws/names tabs) '("vimium" "vimium/find-mode" "vimium-triage")))))

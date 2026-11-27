@@ -63,8 +63,10 @@
   (ws/workspace (seq-find #'ws/current-tab-p tabs)))
 
 (defun ws/names (tabs)
-  "The names of the workspaces in TABS, sorted."
-  (sort (delete-dups (mapcar #'ws/workspace tabs)) #'string<))
+  "The names of the workspaces in TABS, sorted by each /-separated part in turn, so that a repo's
+   worktrees (\"repo/name\") sort right after it, before \"repo-other\"."
+  (sort (delete-dups (mapcar #'ws/workspace tabs))
+        :key (lambda (name) (split-string name "/"))))
 
 (defun ws/positions (tabs name)
   "The 0-based positions in TABS of the tabs in workspace NAME, in tab order."
