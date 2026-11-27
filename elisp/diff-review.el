@@ -109,6 +109,7 @@
 (require 'magit)
 (require 'evil)
 (require 'emacs-utils)
+(require 'evil-ext)
 
 (defface dr/comment
   '((((background dark)) :background "#2a3238" :extend t)
@@ -713,6 +714,18 @@ block's text."
               (insert (apply #'propertize "\n" (dr--props id)))))
           (let ((buffer-undo-list t))
             (dr--unstick (car region))))))))
+
+(defun dr/fill-paragraph ()
+  "Fill the paragraph of the comment at point, or the selection in it. No blank line separates a
+comment from the diff lines around it, so without narrowing to the comment, its paragraph would
+take in those lines, and the fill would fail on their read-only text."
+  (interactive)
+  (let ((region (dr--region (get-text-property (point) 'dr-comment)))
+        (adaptive-fill-mode nil)
+        (fill-prefix nil))
+    (save-restriction
+      (narrow-to-region (car region) (cdr region))
+      (call-interactively #'evil-ext/fill-inside-paragraph))))
 
 (defun dr--delete-unit (region reply-id)
   "Delete the text in REGION, of a blank comment, or of my blank reply REPLY-ID with the line

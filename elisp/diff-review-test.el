@@ -691,6 +691,17 @@ it runs git several times.")
     (should (equal (dr-test/line) "later"))
     (should-not (string-match-p "later\n── You" (dr-test/text)))))
 
+(ert-deftest dr-test/fill-comment ()
+  (dr-test/with-repo
+    (dr-test/show "HEAD")
+    (dr-test/goto "^\\+TWO")
+    (let ((fill-column 20))
+      (dr-test/keys "o aaa SPC bbb RET ccc SPC ddd SPC eee SPC fff SPC ggg <escape>")
+      ;; Only the comment's lines are filled, not the diff lines next to it.
+      (dr-test/keys "; SPC")
+      (should (string-match-p "\n\\+TWO\n\\[\\[aaa bbb ccc ddd eee\nfff ggg\n\\]\\] three\n"
+                              (dr-test/text))))))
+
 (ert-deftest dr-test/long-replies-wrap ()
   (let ((fill-column 30))
     (should (equal (dr--wrap "Short.\n- a list item which is long enough to wrap twice over\n```\nlong code line which isn't wrapped, though\n```")

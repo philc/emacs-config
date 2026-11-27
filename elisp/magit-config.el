@@ -443,6 +443,9 @@ comment always goes below its line."
   "gp" 'my-magit/previous-hunk-or-comment
   (kbd "C-j") 'magit-section-forward
   (kbd "C-k") 'magit-section-backward)
+;; Filling a paragraph fills only the comment's text, not the diff lines around it.
+(define-leader-keys 'dr/comment-map
+  "SPC" 'dr/fill-paragraph)
 
 (defun my-magit/hunk-stop-p (section)
   "Whether `my-magit/next-hunk' stops at SECTION: a hunk, a collapsed section, or a file with no
